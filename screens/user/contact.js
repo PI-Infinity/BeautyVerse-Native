@@ -1,0 +1,280 @@
+import {
+  StyleSheet,
+  Text,
+  View,
+  Linking,
+  TouchableOpacity,
+} from "react-native";
+import React, { useState, useRef } from "react";
+import FontAwesome from "react-native-vector-icons/FontAwesome";
+import Entypo from "react-native-vector-icons/Entypo";
+import Map from "../../components/map";
+import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
+import MaterialIcons from "react-native-vector-icons/MaterialIcons";
+export const Contact = ({ targetUser }) => {
+  const handleLinkPress = (url) => {
+    Linking.openURL(url);
+  };
+
+  const [activeAddress, setActiveAddress] = useState(0);
+
+  const mapViewRef = useRef(null);
+
+  return (
+    <View style={styles.container}>
+      <TouchableOpacity
+        onPress={() => handleLinkPress(`tel:${targetUser.phone}`)}
+        style={[styles.item, { justifyContent: "space-between" }]}
+      >
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+          <View style={styles.title}>
+            <Entypo name="phone" size={16} color="#fff" />
+          </View>
+
+          <Text style={[styles.value, { color: "#e5e5e5" }]}>
+            {targetUser.phone}
+          </Text>
+        </View>
+        <TouchableOpacity
+          onPress={(event) => event.stopPropagation()}
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 0,
+            marginRight: 10,
+            height: "100%",
+          }}
+        >
+          {targetUser.media.whatsapp && (
+            <TouchableOpacity
+              onPress={() => {
+                handleLinkPress(`https://wa.me/${targetUser.phone}`);
+              }}
+              style={styles.title}
+            >
+              <FontAwesome name="whatsapp" size={18} color="#fff" />
+            </TouchableOpacity>
+          )}
+          {targetUser.media.telegram && (
+            <TouchableOpacity
+              onPress={() =>
+                handleLinkPress(`https://t.me/${targetUser.phone}`)
+              }
+              style={styles.title}
+            >
+              <FontAwesome name="telegram" size={16} color="#fff" />
+            </TouchableOpacity>
+          )}
+        </TouchableOpacity>
+      </TouchableOpacity>
+      <TouchableOpacity
+        onPress={() => handleLinkPress(`mailto:${targetUser.email}`)}
+        style={styles.item}
+      >
+        <View style={styles.title}>
+          <Entypo name="email" size={16} color="#fff" />
+        </View>
+        <Text style={styles.value}>{targetUser.email}</Text>
+      </TouchableOpacity>
+      {targetUser.media.web && (
+        <TouchableOpacity
+          onPress={() => handleLinkPress(`https://${targetUser.media?.web}`)}
+          style={styles.item}
+        >
+          <View style={styles.title}>
+            <MaterialCommunityIcons name="web" size={16} color="#fff" />
+          </View>
+          <Text style={styles.value}>{targetUser.media.web}</Text>
+        </TouchableOpacity>
+      )}
+      {targetUser.media.facebook && (
+        <TouchableOpacity
+          onPress={() =>
+            handleLinkPress(`fb://profile/${targetUser.media?.facebook}`)
+          }
+          style={styles.item}
+        >
+          <View style={styles.title}>
+            <FontAwesome name="facebook" size={20} color="#fff" />
+          </View>
+          <Text style={styles.value}>Facebook</Text>
+        </TouchableOpacity>
+      )}
+      {targetUser.media.instagram && (
+        <TouchableOpacity
+          onPress={() =>
+            handleLinkPress(
+              `https://www.instagram.com/${targetUser.media?.instagram}`
+            )
+          }
+          style={styles.item}
+        >
+          <View style={styles.title}>
+            <FontAwesome name="instagram" size={20} color="#fff" />
+          </View>
+          <Text style={styles.value}>{targetUser.media.instagram}</Text>
+        </TouchableOpacity>
+      )}
+      {targetUser.media.tiktok && (
+        <TouchableOpacity
+          onPress={() =>
+            handleLinkPress(
+              `https://www.tiktok.com/${targetUser.media?.tiktok}`
+            )
+          }
+          style={styles.item}
+        >
+          <Text style={styles.title}>Tiktok:</Text>
+          <Text style={styles.value}>{targetUser.media.tiktok}</Text>
+        </TouchableOpacity>
+      )}
+      {targetUser.media.youtube && (
+        <TouchableOpacity
+          onPress={() =>
+            handleLinkPress(
+              `https://www.youtube.com/${targetUser.media?.youtube}`
+            )
+          }
+          style={styles.item}
+        >
+          <View style={styles.title}>
+            <FontAwesome name="youtube" size={20} color="#fff" />
+          </View>
+          <Text style={styles.value}>{targetUser.media.youtube}</Text>
+        </TouchableOpacity>
+      )}
+      <View
+        style={{
+          height: 450,
+          marginTop: 10,
+          marginBottom: 20,
+          padding: 7.5,
+          gap: 5,
+        }}
+      >
+        <Text
+          style={{
+            color: "#e5e5e5",
+            fontSize: 14,
+            marginBottom: 10,
+            fontWeight: "bold",
+          }}
+        >
+          Address:
+        </Text>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+          <Text style={{ color: "#e5e5e5", fontWeight: "bold" }}>
+            Country:{" "}
+          </Text>
+          <Text style={{ color: "#e5e5e5" }}>
+            {targetUser.address[activeAddress].country}
+          </Text>
+        </View>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+          <Text style={{ color: "#e5e5e5", fontWeight: "bold" }}>Region: </Text>
+          <Text style={{ color: "#e5e5e5" }}>
+            {targetUser.address[activeAddress].region}
+          </Text>
+        </View>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+          <Text style={{ color: "#e5e5e5", fontWeight: "bold" }}>City: </Text>
+          <Text style={{ color: "#e5e5e5" }}>
+            {targetUser.address[activeAddress]?.city}
+          </Text>
+        </View>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+          <Text style={{ color: "#e5e5e5", fontWeight: "bold" }}>
+            District:{" "}
+          </Text>
+          <Text style={{ color: "#e5e5e5" }}>
+            {targetUser.address[activeAddress]?.district}
+          </Text>
+        </View>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+          <Text style={{ color: "#e5e5e5", fontWeight: "bold" }}>Street: </Text>
+          <Text style={{ color: "#e5e5e5" }}>
+            {targetUser.address[activeAddress]?.street}
+          </Text>
+        </View>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+          <Text style={{ color: "#e5e5e5", fontWeight: "bold" }}>Number: </Text>
+          <Text style={{ color: "#e5e5e5" }}>
+            {targetUser.address[activeAddress]?.number}
+          </Text>
+        </View>
+        <View style={{ marginTop: 10 }}>
+          {activeAddress > 0 && (
+            <TouchableOpacity
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: 50,
+                backgroundColor: "rgba(1,1,1,0.2)",
+                position: "absolute",
+                top: 135,
+                zIndex: 100,
+                left: 15,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+              onPress={() => setActiveAddress(activeAddress - 1)}
+            >
+              <MaterialIcons name={"arrow-left"} color="#fff" size={30} />
+            </TouchableOpacity>
+          )}
+          <Map
+            mapViewRef={mapViewRef}
+            latitude={targetUser.address[activeAddress]?.latitude}
+            longitude={targetUser.address[activeAddress].longitude}
+            height={300}
+          />
+          {activeAddress < targetUser.address?.length - 1 && (
+            <TouchableOpacity
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: 50,
+                backgroundColor: "rgba(1,1,1,0.2)",
+                position: "absolute",
+                top: 135,
+                zIndex: 100,
+                right: 15,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+              onPress={() => setActiveAddress(activeAddress + 1)}
+            >
+              <MaterialIcons name={"arrow-right"} color="#fff" size={30} />
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 20,
+    gap: 5,
+  },
+  item: {
+    padding: 0,
+    borderRadius: 10,
+    backgroundColor: "rgba(255,255,255,0.05)",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  title: {
+    fontSize: 14,
+    color: "#fff",
+    fontWeight: "bold",
+    margin: 10,
+  },
+  value: {
+    fontSize: 14,
+    color: "#e5e5e5",
+  },
+});
