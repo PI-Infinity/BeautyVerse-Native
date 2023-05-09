@@ -1,5 +1,13 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity, Image, StyleSheet } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Image,
+  StyleSheet,
+  Alert,
+  ScrollView,
+} from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import * as DocumentPicker from "expo-document-picker";
 import { ResizeAndCompressImage } from "../functions/compressImg";
@@ -20,53 +28,35 @@ async function readImageData(uri) {
   }
 }
 
-const InputFile = ({ setFile, Cover }) => {
+const InputFile = ({ setFile, Cover, currentTheme }) => {
   const language = Language();
-  const [resizedImg, setResizedImg] = useState(null);
+  const maxImageCount = 10;
+
   //resize image
   const ResizeAndCompressImage = async (uri, originalWidth, originalHeight) => {
-    const mobWidth = 640;
-    const newMobHeight = (originalHeight / originalWidth) * mobWidth;
+    const wdth = 1080;
+    const hght = (originalHeight / originalWidth) * wdth;
     try {
       const mobile = await ImageManipulator.manipulateAsync(
         uri,
         [
           {
             resize: {
-              width: mobWidth,
-              height: newMobHeight,
+              width: wdth,
+              height: hght,
             },
           },
         ],
         {
-          compress: 0.7,
+          compress: 0.9,
           format: ImageManipulator.SaveFormat.JPEG,
         }
       );
-      const desktopWidth = 1080;
-      const newDesktopHeight = (originalHeight / originalWidth) * desktopWidth;
-      const desktop = await ImageManipulator.manipulateAsync(
-        uri,
-        [
-          {
-            resize: {
-              width: desktopWidth,
-              height: newDesktopHeight,
-            },
-          },
-        ],
-        {
-          compress: 0.7,
-          format: ImageManipulator.SaveFormat.JPEG,
-        }
-      );
-      const desktopImageData = await readImageData(desktop.uri);
       const mobileImageData = await readImageData(mobile.uri);
 
-      setFile({
-        desktop: { ...desktop, base64: desktopImageData },
-        mobile: { ...mobile, base64: mobileImageData },
-      });
+      let m = { ...mobile, base64: mobileImageData };
+
+      setFile((prevFiles) => [...prevFiles, m]);
     } catch (err) {
       console.error("Failed to resize image:", err);
       return uri;
@@ -75,21 +65,26 @@ const InputFile = ({ setFile, Cover }) => {
   const selectImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsMultipleSelection: true, // Allow multiple selection
     });
-
-    if (!result.canceled) {
-      await ResizeAndCompressImage(
-        result.assets[0].uri,
-        result.assets[0].width,
-        result.assets[0].height
-      );
+    setFile([]);
+    if (result.assets.length > 0 && result.assets.length < 11) {
+      for (const asset of result.assets) {
+        const resizedImage = await ResizeAndCompressImage(
+          asset?.uri,
+          asset?.width,
+          asset?.height
+        );
+      }
+    } else {
+      Alert.alert("You can upload only 10 images at once time");
     }
   };
 
   return (
     <View style={styles.container}>
       <TouchableOpacity onPress={selectImage} style={styles.button}>
-        <Text style={styles.buttonText}>
+        <Text style={[styles.buttonText, { color: currentTheme.font }]}>
           {language?.language?.User?.addFeed?.selectImage}
         </Text>
       </TouchableOpacity>
@@ -108,8 +103,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   preview: {
-    width: 300,
-    height: 300,
+    width: 100,
+    height: 100,
+    marginRight: 10,
+  },
+  imagePreviewContainer: {
+    marginTop: 20,
   },
 });
 

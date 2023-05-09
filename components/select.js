@@ -72,7 +72,7 @@ const styles = StyleSheet.create({
     color: "#333",
   },
   selectedOption: {
-    backgroundColor: "#3f51b5",
+    backgroundColor: "#F866B1",
   },
   selectedOptionText: {
     color: "#fff",

@@ -6,6 +6,7 @@ import UserReducer from "./user";
 import ActionsReducer from "./actions";
 import FilterReducer from "./filter";
 import ChatReducer from "./chat";
+import FeedReducer from "./feed";
 
 export const store = configureStore({
   reducer: {
@@ -16,5 +17,6 @@ export const store = configureStore({
     storeActions: ActionsReducer,
     storeFilter: FilterReducer,
     storeChat: ChatReducer,
+    storeFeed: FeedReducer,
   },
 });

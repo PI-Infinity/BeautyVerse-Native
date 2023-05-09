@@ -7,14 +7,13 @@ import {
   Dimensions,
   Alert,
 } from "react-native";
-import { useState, useEffect } from "react";
-import { useSelector, useDispatch } from "react-redux";
+import { useState } from "react";
+import { useDispatch } from "react-redux";
 import { setCurrentUser } from "../../redux/auth";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import EmailPopup from "../../components/inputPopup";
 import { setRerenderCurrentUser } from "../../redux/rerenders";
-import { setLoading } from "../../redux/app";
 import PasswordRessetPopup from "../../screens/authentication/resetPassword";
 import { Language } from "../../context/language";
 
@@ -53,7 +52,6 @@ export const Login = ({ navigation }) => {
                 JSON.stringify(data.data.filteredUser)
               );
               dispatch(setRerenderCurrentUser());
-              // navigation.navigate("feeds");
             }
           } else {
             setVerify(true);
@@ -138,7 +136,6 @@ export const Login = ({ navigation }) => {
           />
         )}
       </View>
-      <Text style={styles.title}>{language?.language?.Auth?.auth?.login}</Text>
       <TextInput
         placeholder={language?.language?.Auth?.auth?.email}
         onChangeText={(text) => setEmail(text)}
@@ -185,7 +182,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     height: "100%",
     boxSizing: "border-box",
-    paddingBottom: 50,
+    paddingBottom: 30,
     gap: 10,
   },
   title: {
@@ -200,18 +197,18 @@ const styles = StyleSheet.create({
     padding: 12.5,
     fontSize: 14,
     color: "#e5e5e5",
-    borderRadius: 5,
+    borderRadius: 50,
   },
   button: {
     width: "45%",
     padding: 10,
-    borderRadius: 5,
-    backgroundColor: "rgba(255,255,255,0.05)",
+    backgroundColor: "#F866B1",
     marginTop: 10,
     justifyContent: "center",
+    borderRadius: 50,
   },
   buttonText: {
-    color: "green",
+    color: "#e5e5e5",
     textAlign: "center",
   },
   forgot: {
@@ -225,7 +222,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   register: {
-    color: "green",
+    color: "#F866B1",
     textAlign: "center",
   },
 });

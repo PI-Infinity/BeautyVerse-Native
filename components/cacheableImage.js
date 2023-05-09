@@ -9,9 +9,28 @@ export const CacheableImage = (props) => {
   useEffect(() => {
     const cacheImage = async () => {
       try {
+        const url = props?.source.uri;
+        if (!url) {
+          console.warn("No URI provided for image");
+          return;
+        }
+
+        // Validate the URL
+        let isValidURL = true;
+        try {
+          new URL(url);
+        } catch (_) {
+          isValidURL = false;
+        }
+
+        if (!isValidURL) {
+          console.warn("Invalid URL:", url);
+          return;
+        }
+
         const hashedName = await Crypto.digestStringAsync(
           Crypto.CryptoDigestAlgorithm.MD5,
-          props.source.uri
+          url
         );
         const path = `${FileSystem.cacheDirectory}${hashedName}.jpg`;
 
@@ -19,22 +38,21 @@ export const CacheableImage = (props) => {
         if (exists) {
           setSource({ uri: path });
         } else {
-          const { uri } = await FileSystem.downloadAsync(
-            props.source.uri,
-            path
-          );
+          const { uri } = await FileSystem.downloadAsync(url, path);
           setSource({ uri });
         }
       } catch (error) {
         console.error("Error loading cached image:", error);
       }
     };
-
-    cacheImage();
+    if (props.source.uri) {
+      cacheImage();
+    }
   }, [props.source.uri]);
 
   return (
     <Animated.Image
+      onLoad={props.onLoad}
       {...props}
       // style={{ height: props.style.height, width: props.style.width }}
       source={source}

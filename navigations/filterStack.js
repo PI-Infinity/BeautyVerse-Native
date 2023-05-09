@@ -1,9 +1,12 @@
-import { useState, useEffect } from "react";
-import { createStackNavigator } from "@react-navigation/stack";
+import { useEffect } from "react";
+import {
+  createStackNavigator,
+  CardStyleInterpolators,
+} from "@react-navigation/stack";
+
 import { View, Text, TouchableOpacity } from "react-native";
 import { Filter } from "../screens/filter";
 import { Search } from "../screens/search";
-import { ListItem, Icon, Button } from "react-native-elements";
 import { useSelector, useDispatch } from "react-redux";
 import {
   setSearch,
@@ -16,13 +19,18 @@ import {
 } from "../redux/filter";
 import { setCleanUp } from "../redux/rerenders";
 import { Language } from "../context/language";
+import { lightTheme, darkTheme } from "../context/theme";
 
 const Stack = createStackNavigator();
 
 export function FilterStack({ route, navigation }) {
+  const dispatch = useDispatch();
+  // theme state
+  const theme = useSelector((state) => state.storeApp.theme);
+  const currentTheme = theme ? darkTheme : lightTheme;
+  // language
   const language = Language();
   const lang = useSelector((state) => state.storeApp.language);
-  const dispatch = useDispatch();
   // define signed filter length
   const filter = useSelector((state) => state.storeFilter.filter);
   let filterBadge;
@@ -31,6 +39,7 @@ export function FilterStack({ route, navigation }) {
   } else {
     filterBadge = 0;
   }
+  // search state
   const search = useSelector((state) => state.storeFilter.search);
   let searchBadge;
   if (search !== "") {
@@ -38,6 +47,7 @@ export function FilterStack({ route, navigation }) {
   } else {
     searchBadge = 0;
   }
+  // city state
   const city = useSelector((state) => state.storeFilter.city);
   let cityBadge;
   if (city !== "") {
@@ -45,6 +55,7 @@ export function FilterStack({ route, navigation }) {
   } else {
     cityBadge = 0;
   }
+  // district state
   const district = useSelector((state) => state.storeFilter.district);
   let districtBadge;
   if (district !== "") {
@@ -52,6 +63,7 @@ export function FilterStack({ route, navigation }) {
   } else {
     districtBadge = 0;
   }
+  // specialist state
   const specialist = useSelector((state) => state.storeFilter.specialists);
   let specialistBadge;
   if (!specialist) {
@@ -59,7 +71,7 @@ export function FilterStack({ route, navigation }) {
   } else {
     specialistBadge = 0;
   }
-
+  // salon state
   const object = useSelector((state) => state.storeFilter.salons);
   let objectBadge;
   if (!object) {
@@ -67,7 +79,7 @@ export function FilterStack({ route, navigation }) {
   } else {
     objectBadge = 0;
   }
-
+  // sum of choiced variants of filter and create badge
   const sum =
     filterBadge +
     cityBadge +
@@ -75,46 +87,52 @@ export function FilterStack({ route, navigation }) {
     specialistBadge +
     objectBadge +
     searchBadge;
-
+  // set badge to redux for getting in different component easily (in bottom tab filter icon gettings badge sum)
   useEffect(() => {
     dispatch(setFilterBadgeSum(sum));
   }, [sum]);
 
   return (
-    <Stack.Navigator>
+    <Stack.Navigator
+      screenOptions={{
+        cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS, // Apply custom transition
+        cardStyle: { backgroundColor: "transparent" }, // Set card background to transparent
+      }}
+    >
+      {/** filter screen */}
       <Stack.Screen
         name="Filter"
         component={Filter}
         options={{
           title: language?.language?.Main?.filter?.filter,
           headerStyle: {
-            backgroundColor: "rgba(15, 15, 15, 1)",
-            height: 50,
+            backgroundColor: currentTheme.background,
+
             elevation: 0,
             shadowOpacity: 0,
             borderBottomWidth: 0,
           },
-          headerTintColor: "#fff",
+          headerTintColor: currentTheme.font,
           headerTitleStyle: {
             fontWeight: "bold",
             fontSize: 18,
           },
           cardStyle: {
-            backgroundColor: "rgba(15, 15, 15, 1)",
+            backgroundColor: currentTheme.background,
           },
-
           headerRight: () => (
             <View style={{ flexDirection: "row", alignItems: "center" }}>
               {sum > 0 && (
                 <TouchableOpacity
                   onPress={() => {
-                    dispatch(setCleanUp());
+                    // on press can be clean filter and getting starting position, also with clean() function clear imports as default
                     dispatch(setCity(""));
                     dispatch(setDistrict(""));
                     dispatch(setFilter(""));
                     dispatch(setSearch(""));
                     dispatch(setSpecialists(true));
                     dispatch(setSalons(true));
+                    dispatch(setCleanUp());
                   }}
                   style={{ marginRight: 15, padding: 5 }}
                 >
@@ -132,29 +150,26 @@ export function FilterStack({ route, navigation }) {
                         zIndex: 2,
                         right: -5,
                         top: 0,
-                        // padding: 1,
                       }}
                     >
-                      <Text style={{ color: "#fff", fontSize: 10 }}>{sum}</Text>
+                      <Text style={{ color: "#e5e5e5", fontSize: 10 }}>
+                        {sum}
+                      </Text>
                     </View>
 
-                    <Text style={{ color: "#e5e5e5", fontWeight: "bold" }}>
+                    <Text
+                      style={{ color: currentTheme.font, fontWeight: "bold" }}
+                    >
                       {language?.language?.Main?.filter?.clear}
                     </Text>
                   </View>
-                  {/* <Icon
-                  name="delete"
-                  type="MaterialIcons"
-                  color="#e5e5e5"
-                  size={18}
-                /> */}
                 </TouchableOpacity>
               )}
             </View>
           ),
         }}
       />
-
+      {/** search screen */}
       <Stack.Screen
         name="Search"
         component={Search}
@@ -162,19 +177,19 @@ export function FilterStack({ route, navigation }) {
           headerBackTitleVisible: false,
           title: language?.language?.Main?.filter?.search,
           headerStyle: {
-            backgroundColor: "rgba(15,15,15,1)",
-            height: 50,
+            backgroundColor: currentTheme.background,
+
             elevation: 0,
             shadowOpacity: 0,
             borderBottomWidth: 0,
           },
-          headerTintColor: "#fff",
+          headerTintColor: currentTheme.font,
           headerTitleStyle: {
             fontWeight: "bold",
             fontSize: 18,
           },
           cardStyle: {
-            backgroundColor: "rgba(15,15,15,1)",
+            backgroundColor: currentTheme.background,
           },
         })}
       />

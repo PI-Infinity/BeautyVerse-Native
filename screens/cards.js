@@ -8,6 +8,7 @@ import {
   Text,
   Animated,
   ScrollView,
+  Platform,
 } from "react-native";
 import { useSelector, useDispatch } from "react-redux";
 import { Card } from "../components/profileCard";
@@ -182,6 +183,8 @@ export const Cards = ({ navigation }) => {
         numColumns={2}
         contentContainerStyle={styles.contentContainer}
         columnWrapperStyle={styles.columnWrapper}
+        bounces={Platform.OS === "ios" ? false : undefined}
+        overScrollMode={Platform.OS === "ios" ? undefined : false}
         refreshControl={
           <RefreshControl
             tintColor="#ccc"
@@ -190,19 +193,17 @@ export const Cards = ({ navigation }) => {
           />
         }
         renderItem={({ item, index }) => {
-          if (item.feed) {
-            return (
-              <Card
-                key={index}
-                x={index}
-                user={item}
-                loadingSkelton={loadingSkelton}
-                users={users}
-                navigation={navigation}
-                cards={users}
-              />
-            );
-          }
+          return (
+            <Card
+              key={index}
+              x={index}
+              user={item}
+              loadingSkelton={loadingSkelton}
+              users={users}
+              navigation={navigation}
+              cards={users}
+            />
+          );
         }}
         onEndReached={() => {
           setPage((prevPage) => {
@@ -224,9 +225,10 @@ const styles = StyleSheet.create({
     width: SCREEN_WIDTH,
     zIndex: 10000,
     backgroundColor: "rgba(15,15,15,1)",
+    paddingTop: 20,
   },
   contentContainer: {
-    paddingHorizontal: 10,
+    // paddingHorizontal: 10,
   },
   columnWrapper: {
     justifyContent: "space-between",

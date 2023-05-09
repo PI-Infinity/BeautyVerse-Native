@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   View,
   StyleSheet,
@@ -8,17 +8,15 @@ import {
   Alert,
   Platform,
   KeyboardAvoidingView,
-  ScrollView,
 } from "react-native";
 import { setRerenderCurrentUser } from "../../redux/rerenders";
 import { useSelector, useDispatch } from "react-redux";
-import { setType, setCurrentUser } from "../../redux/auth";
+import { setCurrentUser } from "../../redux/auth";
 import VerifyCodePopup from "../../components/inputPopup";
 import GoogleAutocomplete from "../../components/mapAutocomplete";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { ListItem, Icon, Button } from "react-native-elements";
-import CountryCodePicker from "../../components/countryCodes";
+import { Icon } from "react-native-elements";
 import { Language } from "../../context/language";
 const Identify = ({ navigation }) => {
   const dispatch = useDispatch();
@@ -112,6 +110,8 @@ const Identify = ({ navigation }) => {
             telegram: false,
             whatsapp: false,
           },
+          experience: "",
+          orders: [],
           notifications: [
             {
               senderId: "Beautyverse",
@@ -128,7 +128,6 @@ const Identify = ({ navigation }) => {
       Alert.alert(language?.language?.Auth?.auth?.successRegister);
       await setVerify(true);
     } catch (err) {
-      // console.log(err);
       Alert.alert(err.response.data.message);
     }
   };
@@ -181,21 +180,6 @@ const Identify = ({ navigation }) => {
           <Text style={styles.itemTitle}>
             {language?.language?.Auth?.auth?.phone}
           </Text>
-          {/* <View
-            style={[
-              styles.input,
-              {
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 10,
-                padding: 0,
-              },
-            ]}
-          >
-            <CountryCodePicker
-              countrycode={countrycode}
-              onSelect={setCountrycode}
-            /> */}
           <TextInput
             placeholder="ex: +000000000"
             placeholderTextColor="#555"
@@ -335,7 +319,7 @@ const styles = StyleSheet.create({
     padding: 10,
     fontSize: 14,
     color: "#fff",
-    borderRadius: 5,
+    borderRadius: 50,
   },
   showPasswordText: {
     fontSize: 12,
@@ -345,12 +329,12 @@ const styles = StyleSheet.create({
     marginTop: 5,
   },
   button: {
-    width: "40%",
+    width: "45%",
     padding: 10,
-    borderRadius: 5,
-    backgroundColor: "green",
+    backgroundColor: "#F866B1",
     marginTop: 20,
     justifyContent: "center",
+    borderRadius: 50,
   },
   buttonText: {
     color: "#fff",

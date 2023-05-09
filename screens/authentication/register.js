@@ -74,10 +74,10 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255, 0.05)",
     width: "70%",
     height: 110,
-    marginBottom: 20,
+    marginBottom: 15,
     justifyContent: "center",
     alignItems: "center",
-    borderRadius: 5,
+    borderRadius: 20,
   },
   boxText: {
     color: "#fff",
@@ -86,10 +86,12 @@ const styles = StyleSheet.create({
   loginQuestion: {
     color: "#fff",
     textAlign: "center",
+    marginTop: 15,
   },
   login: {
-    color: "yellow",
+    color: "#F866B1",
     textAlign: "center",
+    marginTop: 15,
   },
 });
 

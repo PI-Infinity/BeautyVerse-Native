@@ -5,20 +5,27 @@ import {
   FlatList,
   View,
   RefreshControl,
-  Text,
-  Animated,
-  ScrollView,
+  Platform,
 } from "react-native";
 import { useSelector, useDispatch } from "react-redux";
-import { Feed } from "../components/feedCard";
+import { Feed } from "../components/feedCard/feedCard";
 import { setLoading } from "../redux/app";
 import axios from "axios";
-import { setRerenderUserList } from "../redux/rerenders";
-import { Skeleton } from "@rneui/themed";
+import { setRerenderCurrentUser } from "../redux/rerenders";
+import { useIsFocused } from "@react-navigation/native";
+import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
+import { useHeaderHeight } from "@react-navigation/elements";
 
-const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
+const { height: hght, width: SCREEN_WIDTH } = Dimensions.get("window");
 
 export const Feeds = ({ navigation }) => {
+  const isFocused = useIsFocused();
+
+  const headerHeight = useHeaderHeight();
+  const tabBarHeight = useBottomTabBarHeight();
+
+  const SCREEN_HEIGHT = hght - tabBarHeight - headerHeight;
+
   const dispatch = useDispatch();
   const currentUser = useSelector((state) => state.storeUser.currentUser);
 
@@ -70,7 +77,7 @@ export const Feeds = ({ navigation }) => {
           flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
         }, 300);
       } catch (error) {
-        console.log(error);
+        console.log(error.response.data.message);
       }
     };
     if (feedsCleanRef.current) {
@@ -89,6 +96,7 @@ export const Feeds = ({ navigation }) => {
       setScrollY(0);
     }
     setTimeout(() => {
+      dispatch(setRerenderCurrentUser());
       setLoadingSkelton(false);
     }, 500);
   }, [cleanUp]);
@@ -129,12 +137,11 @@ export const Feeds = ({ navigation }) => {
         }, prev);
       });
       setTimeout(() => {
-        console.log("false");
         setRefresh(false);
         dispatch(setLoading(false));
       }, 300);
     } catch (error) {
-      console.log(error);
+      console.log(error.response.data.message);
     }
   };
 
@@ -171,48 +178,66 @@ export const Feeds = ({ navigation }) => {
   const [openFeed, setOpenFeed] = useState(false);
   const [openedFeedObj, setOpenFeedObj] = useState({});
 
+  // get displayed video index
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  const onViewableItemsChangedRef = useRef(({ viewableItems, changed }) => {
+    if (viewableItems.length > 0) {
+      const topVisibleItemIndex = viewableItems[0].index;
+      setCurrentIndex(topVisibleItemIndex);
+    }
+  });
+
+  const viewabilityConfig = {
+    itemVisiblePercentThreshold: 70, // at least 50% of the item should be visible
+  };
+
   return (
-    <View style={{ flex: 1 }}>
-      <FlatList
-        ref={flatListRef}
-        data={users}
-        onScroll={handleScroll}
-        scrollEventThrottle={1}
-        refreshControl={
-          <RefreshControl
-            tintColor="#ccc"
-            refreshing={refresh}
-            onRefresh={onRefresh}
-          />
+    <FlatList
+      contentContainerStyle={{}}
+      style={{}}
+      showsVerticalScrollIndicator={false}
+      ref={flatListRef}
+      data={users}
+      onScroll={handleScroll}
+      scrollEventThrottle={1}
+      // pagingEnabled={true}
+      bounces={Platform.OS === "ios" ? false : undefined}
+      overScrollMode={Platform.OS === "ios" ? undefined : false}
+      refreshControl={
+        <RefreshControl
+          tintColor="#ccc"
+          refreshing={refresh}
+          onRefresh={onRefresh}
+        />
+      }
+      renderItem={({ item, index }) => {
+        if (item.feed) {
+          return (
+            <Feed
+              x={index}
+              user={item}
+              navigation={navigation}
+              feeds={users}
+              currentIndex={currentIndex}
+              isFocused={isFocused}
+            />
+          );
         }
-        renderItem={({ item, index }) => {
-          if (item.feed) {
-            return (
-              <Feed
-                x={index}
-                user={item}
-                loadingSkelton={loadingSkelton}
-                setOpenFeed={setOpenFeed}
-                setOpenFeedObj={setOpenFeedObj}
-                users={users}
-                navigation={navigation}
-                feeds={users}
-              />
-            );
-          }
-        }}
-        onEndReached={() => {
-          setPage((prevPage) => {
-            const nextPage = prevPage + 1;
-            GetUsersWithFeeds(nextPage);
-            return nextPage;
-          });
-        }}
-        onEndReachedThreshold={0.5}
-        keyExtractor={(item) => item?._id}
-        showsVerticalScrollIndicator={false}
-      />
-    </View>
+      }}
+      onEndReached={() => {
+        setPage((prevPage) => {
+          const nextPage = prevPage + 1;
+          GetUsersWithFeeds(nextPage);
+          return nextPage;
+        });
+      }}
+      onEndReachedThreshold={0.5}
+      keyExtractor={(item) => item?._id}
+      showsVerticalScrollIndicator={false}
+      onViewableItemsChanged={onViewableItemsChangedRef.current}
+      viewabilityConfig={viewabilityConfig}
+    />
   );
 };
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   View,
   Text,
@@ -8,30 +8,24 @@ import {
   ScrollView,
   Pressable,
   Dimensions,
-  TextInput,
+  Platform,
 } from "react-native";
-import { SectionList } from "react-native";
 import Collapsible from "react-native-collapsible";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { setRerenderCurrentUser } from "../../../redux/rerenders";
 import { setLanguage, setTheme } from "../../../redux/app";
 import { useDispatch, useSelector } from "react-redux";
-import { PersonalInfo } from "../../../screens/user/settings/personalInfo";
-import { Procedures } from "../../../screens/user/settings/procedures";
 import { Security } from "../../../screens/user/settings/security";
 import axios from "axios";
 import { setCurrentUser } from "../../../redux/user";
-import { WorkingInfo } from "../../../screens/user/settings/workingInfo";
-import { Addresses } from "../../../screens/user/settings/addresses";
-import { ListItem, Icon, Button } from "react-native-elements";
 import { Language } from "../../../context/language";
+import { lightTheme, darkTheme } from "../../../context/theme";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
 export const Settings = ({ navigation }) => {
   const language = Language();
-  const [darkMode, setDarkMode] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [status, setStatus] = useState(true);
 
@@ -44,6 +38,7 @@ export const Settings = ({ navigation }) => {
   const currentUser = useSelector((state) => state.storeUser.currentUser);
   const activeLanguage = useSelector((state) => state.storeApp.language);
   const theme = useSelector((state) => state.storeApp.theme);
+  const currentTheme = theme ? darkTheme : lightTheme;
 
   const Logout = async () => {
     await AsyncStorage.removeItem("Beautyverse:currentUser");
@@ -67,63 +62,85 @@ export const Settings = ({ navigation }) => {
   return (
     <ScrollView
       contentContainerStyle={{ alignItems: "center" }}
-      style={{ width: "100%", paddingTop: 20 }}
+      bounces={Platform.OS === "ios" ? false : undefined}
+      overScrollMode={Platform.OS === "ios" ? undefined : false}
+      style={{
+        width: "100%",
+        paddingTop: 20,
+        backgroundColor: currentTheme.background,
+      }}
     >
       <TouchableOpacity
         activeOpacity={0.5}
         onPress={() => navigation.navigate("Personal info")}
-        style={styles.item}
+        style={[styles.item, { backgroundColor: currentTheme.background2 }]}
       >
-        <Text style={styles.sectionTitle}>
+        <Text style={[styles.sectionTitle, { color: currentTheme.font }]}>
           {language?.language?.User?.userPage?.personalInfo}
         </Text>
-        <MaterialIcons name={"arrow-right"} color="#fff" size={18} />
+        <MaterialIcons
+          name={"arrow-right"}
+          color={currentTheme.pink}
+          size={18}
+        />
       </TouchableOpacity>
       <TouchableOpacity
         activeOpacity={0.5}
         onPress={() => navigation.navigate("Addresses")}
-        style={styles.item}
+        style={[styles.item, { backgroundColor: currentTheme.background2 }]}
       >
-        <Text style={styles.sectionTitle}>
+        <Text style={[styles.sectionTitle, { color: currentTheme.font }]}>
           {language?.language?.User?.userPage?.addresses}
         </Text>
-        <MaterialIcons name={"arrow-right"} color="#fff" size={18} />
+        <MaterialIcons
+          name={"arrow-right"}
+          color={currentTheme.pink}
+          size={18}
+        />
       </TouchableOpacity>
       {currentUser.type !== "user" && (
         <TouchableOpacity
           activeOpacity={0.5}
           onPress={() => navigation.navigate("Procedures")}
-          style={styles.item}
+          style={[styles.item, { backgroundColor: currentTheme.background2 }]}
         >
-          <Text style={styles.sectionTitle}>
+          <Text style={[styles.sectionTitle, { color: currentTheme.font }]}>
             {language?.language?.User?.userPage?.procedures}
           </Text>
-          <MaterialIcons name={"arrow-right"} color="#fff" size={18} />
+          <MaterialIcons
+            name={"arrow-right"}
+            color={currentTheme.pink}
+            size={18}
+          />
         </TouchableOpacity>
       )}
       {currentUser.type !== "user" && (
         <TouchableOpacity
           activeOpacity={0.5}
           onPress={() => navigation.navigate("Working info")}
-          style={styles.item}
+          style={[styles.item, { backgroundColor: currentTheme.background2 }]}
         >
-          <Text style={styles.sectionTitle}>
+          <Text style={[styles.sectionTitle, { color: currentTheme.font }]}>
             {language?.language?.User?.userPage?.workingInfo}
           </Text>
-          <MaterialIcons name={"arrow-right"} color="#fff" size={18} />
+          <MaterialIcons
+            name={"arrow-right"}
+            color={currentTheme.pink}
+            size={18}
+          />
         </TouchableOpacity>
       )}
       <TouchableOpacity
         activeOpacity={0.5}
         onPress={() => setOpenSecurity(!openSecurity)}
-        style={styles.item}
+        style={[styles.item, { backgroundColor: currentTheme.background2 }]}
       >
-        <Text style={styles.sectionTitle}>
+        <Text style={[styles.sectionTitle, { color: currentTheme.font }]}>
           {language?.language?.User?.userPage?.security}
         </Text>
         <MaterialIcons
           name={openSecurity ? "arrow-drop-up" : "arrow-drop-down"}
-          color="#fff"
+          color={currentTheme.pink}
           size={18}
         />
       </TouchableOpacity>
@@ -132,50 +149,46 @@ export const Settings = ({ navigation }) => {
       </Collapsible>
       <TouchableOpacity
         activeOpacity={0.5}
-        style={[styles.item, { marginBottom: 20 }]}
+        style={[
+          styles.item,
+          { marginBottom: 20, backgroundColor: currentTheme.background2 },
+        ]}
         onPress={() => setOpenLanguages(!openLanguages)}
       >
-        <Text style={styles.sectionTitle}>
+        <Text style={[styles.sectionTitle, { color: currentTheme.font }]}>
           {language?.language?.User?.userPage?.languages}
         </Text>
         <MaterialIcons
           name={openLanguages ? "arrow-drop-up" : "arrow-drop-down"}
-          color="#fff"
+          color={currentTheme.pink}
           size={18}
         />
       </TouchableOpacity>
       <Collapsible collapsed={openLanguages}>
-        <View
-          style={{ width: SCREEN_WIDTH - 60, backgroundColor: "Red", gap: 10 }}
-        >
+        <View style={{ width: SCREEN_WIDTH - 60, gap: 10 }}>
           <Pressable
             style={{
               width: "100%",
               paddingHorizontal: 15,
               paddingVertical: 5,
               borderRadius: 50,
-              backgroundColor: "rgba(255,255,255,0.05)",
+              backgroundColor:
+                activeLanguage === "en"
+                  ? currentTheme.pink
+                  : currentTheme.background2,
             }}
-            onPress={() => dispatch(setLanguage("ka"))}
+            onPress={async () => {
+              await AsyncStorage.setItem(
+                "Beautyverse:language",
+                JSON.stringify({ language: "en" })
+              );
+              dispatch(setLanguage("en"));
+            }}
           >
             <Text
-              style={{ color: activeLanguage === "ka" ? "orange" : "#e5e5e5" }}
-            >
-              {language?.language?.Auth?.auth?.georgian}
-            </Text>
-          </Pressable>
-          <Pressable
-            style={{
-              width: "100%",
-              paddingHorizontal: 15,
-              paddingVertical: 5,
-              borderRadius: 50,
-              backgroundColor: "rgba(255,255,255,0.05)",
-            }}
-            onPress={() => dispatch(setLanguage("en"))}
-          >
-            <Text
-              style={{ color: activeLanguage === "en" ? "orange" : "#e5e5e5" }}
+              style={{
+                color: activeLanguage === "en" ? "#e5e5e5" : currentTheme.font,
+              }}
             >
               {language?.language?.Auth?.auth?.english}
             </Text>
@@ -186,12 +199,50 @@ export const Settings = ({ navigation }) => {
               paddingHorizontal: 15,
               paddingVertical: 5,
               borderRadius: 50,
-              backgroundColor: "rgba(255,255,255,0.05)",
+              backgroundColor:
+                activeLanguage === "ka"
+                  ? currentTheme.pink
+                  : currentTheme.background2,
             }}
-            onPress={() => dispatch(setLanguage("ru"))}
+            onPress={async () => {
+              await AsyncStorage.setItem(
+                "Beautyverse:language",
+                JSON.stringify({ language: "ka" })
+              );
+              dispatch(setLanguage("ka"));
+            }}
           >
             <Text
-              style={{ color: activeLanguage === "ru" ? "orange" : "#e5e5e5" }}
+              style={{
+                color: activeLanguage === "ka" ? "#e5e5e5" : currentTheme.font,
+              }}
+            >
+              {language?.language?.Auth?.auth?.georgian}
+            </Text>
+          </Pressable>
+          <Pressable
+            style={{
+              width: "100%",
+              paddingHorizontal: 15,
+              paddingVertical: 5,
+              borderRadius: 50,
+              backgroundColor:
+                activeLanguage === "ru"
+                  ? currentTheme.pink
+                  : currentTheme.background2,
+            }}
+            onPress={async () => {
+              await AsyncStorage.setItem(
+                "Beautyverse:language",
+                JSON.stringify({ language: "ru" })
+              );
+              dispatch(setLanguage("ru"));
+            }}
+          >
+            <Text
+              style={{
+                color: activeLanguage === "ru" ? "#e5e5e5" : currentTheme.font,
+              }}
             >
               {language?.language?.Auth?.auth?.russian}
             </Text>
@@ -210,8 +261,8 @@ export const Settings = ({ navigation }) => {
           ]}
         >
           <View style={{ alignItems: "center", gap: 7, flexDirection: "row" }}>
-            <MaterialIcons name="verified" size={16} color="#1DA1F2" />
-            <Text style={styles.sectionTitle}>
+            <MaterialIcons name="verified" size={16} color="#F866B1" />
+            <Text style={[styles.sectionTitle, { color: currentTheme.font }]}>
               {language?.language?.User?.userPage?.verification}
             </Text>
           </View>
@@ -220,56 +271,136 @@ export const Settings = ({ navigation }) => {
               alignItems: "center",
               gap: 0,
               flexDirection: "row",
-              backgroundColor: "rgba(255,255,255,0.05)",
+              backgroundColor: currentTheme.background2,
               borderRadius: 50,
               paddingHorizontal: 10,
               paddingVertical: 5,
             }}
           >
-            <Text style={styles.sectionTitle}>
+            <Text style={[styles.sectionTitle, { color: currentTheme.font }]}>
               {language?.language?.Auth?.auth?.cancel}
             </Text>
-            {/* <MaterialIcons name="attach-money" size={18} color="#fff" /> */}
+            {/* <MaterialIcons name="attach-money" size={18} color={currentTheme.pink} /> */}
           </View>
         </View>
       )}
       <View style={[styles.item, { backgroundColor: "rgba(0,0,0,0)" }]}>
-        <Text style={styles.sectionTitle}>
+        <Text style={[styles.sectionTitle, { color: currentTheme.font }]}>
           {language?.language?.User?.userPage?.notifications}
         </Text>
         <Switch
+          trackColor={{ false: "#e5e5e5", true: "#F866B1" }}
+          thumbColor={notificationsEnabled ? "#e5e5e5" : "#F866B1"}
           value={notificationsEnabled}
           onValueChange={() => setNotificationsEnabled(!notificationsEnabled)}
           style={styles.switch}
         />
       </View>
       <View style={[styles.item, { backgroundColor: "rgba(0,0,0,0)" }]}>
-        <Text style={styles.sectionTitle}>
+        <Text style={[styles.sectionTitle, { color: currentTheme.font }]}>
           {language?.language?.User?.userPage?.darkMode}
         </Text>
         <Switch
+          trackColor={{ false: "#e5e5e5", true: "#F866B1" }}
+          thumbColor={theme ? "#e5e5e5" : "#F866B1"}
           value={theme}
-          onValueChange={() => dispatch(setTheme(!theme))}
+          onValueChange={async () => {
+            await AsyncStorage.setItem(
+              "Beautyverse:themeMode",
+              JSON.stringify({ theme: !theme })
+            );
+            dispatch(setTheme(!theme));
+          }}
           style={styles.switch}
         />
       </View>
       <View style={[styles.item, { backgroundColor: "rgba(0,0,0,0)" }]}>
-        <Text style={styles.sectionTitle}>
+        <Text style={[styles.sectionTitle, { color: currentTheme.font }]}>
           {language?.language?.User?.userPage?.activation}
         </Text>
         <Switch
+          trackColor={{ false: "#e5e5e5", true: "#F866B1" }}
+          thumbColor={currentUser.active ? "#e5e5e5" : "#F866B1"}
           value={currentUser.active}
           onValueChange={ControlActivity}
           style={styles.switch}
         />
       </View>
+      <TouchableOpacity
+        activeOpacity={0.5}
+        onPress={() => navigation.navigate("Terms")}
+        style={[
+          styles.item,
+          { backgroundColor: currentTheme.background2, marginTop: 30 },
+        ]}
+      >
+        <Text style={[styles.sectionTitle, { color: currentTheme.font }]}>
+          {language?.language?.Pages?.pages?.terms}
+        </Text>
+        <MaterialIcons
+          name={"arrow-right"}
+          color={currentTheme.pink}
+          size={18}
+        />
+      </TouchableOpacity>
+      <TouchableOpacity
+        activeOpacity={0.5}
+        onPress={() => navigation.navigate("QA")}
+        style={[styles.item, { backgroundColor: currentTheme.background2 }]}
+      >
+        <Text style={[styles.sectionTitle, { color: currentTheme.font }]}>
+          {language?.language?.Pages?.pages?.qa}
+        </Text>
+        <MaterialIcons
+          name={"arrow-right"}
+          color={currentTheme.pink}
+          size={18}
+        />
+      </TouchableOpacity>
+      <TouchableOpacity
+        activeOpacity={0.5}
+        onPress={() => navigation.navigate("Privacy")}
+        style={[styles.item, { backgroundColor: currentTheme.background2 }]}
+      >
+        <Text style={[styles.sectionTitle, { color: currentTheme.font }]}>
+          {language?.language?.Pages?.pages?.privacy}
+        </Text>
+        <MaterialIcons
+          name={"arrow-right"}
+          color={currentTheme.pink}
+          size={18}
+        />
+      </TouchableOpacity>
+      <TouchableOpacity
+        activeOpacity={0.5}
+        onPress={() => navigation.navigate("Usage")}
+        style={[styles.item, { backgroundColor: currentTheme.background2 }]}
+      >
+        <Text style={[styles.sectionTitle, { color: currentTheme.font }]}>
+          {language?.language?.Pages?.pages?.usage}
+        </Text>
+        <MaterialIcons
+          name={"arrow-right"}
+          color={currentTheme.pink}
+          size={18}
+        />
+      </TouchableOpacity>
 
       <TouchableOpacity
         onPress={Logout}
         activeOpacity={0.5}
-        style={[styles.item, { marginTop: 50, marginBottom: 20 }]}
+        style={[
+          styles.item,
+          {
+            marginTop: 50,
+            marginBottom: 40,
+            borderRadius: 50,
+            justifyContent: "center",
+            backgroundColor: currentTheme.background2,
+          },
+        ]}
       >
-        <Text style={styles.sectionTitle}>
+        <Text style={[styles.sectionTitle, { color: currentTheme.font }]}>
           {language?.language?.User?.userPage?.logout}
         </Text>
       </TouchableOpacity>
@@ -291,5 +422,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "bold",
     color: "#e5e5e5",
+    textAlign: "center",
   },
 });

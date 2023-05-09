@@ -11,10 +11,11 @@ import {
 import { useSelector, useDispatch } from "react-redux";
 import { setDistrict } from "../redux/filter"; // Import the setCity action from your actions file
 import { ListItem, Icon, Button } from "react-native-elements";
+import { setCleanUp } from "../redux/rerenders";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
-export const Districts = ({ districts }) => {
+export const Districts = ({ districts, currentTheme }) => {
   const dispatch = useDispatch();
   const selectedDistrict = useSelector((state) => state.storeFilter.district);
 
@@ -31,6 +32,7 @@ export const Districts = ({ districts }) => {
 
   const handlePress = (district) => {
     dispatch(setDistrict(district));
+    dispatch(setCleanUp());
   };
 
   const RenderedItem = ({ item }) => (
@@ -39,10 +41,10 @@ export const Districts = ({ districts }) => {
       activeOpacity={0.5}
       onPress={() => handlePress(item)}
     >
-      <Text style={{ color: "#e5e5e5" }}>{item}</Text>
+      <Text style={{ color: currentTheme.font }}>{item}</Text>
 
       {selectedDistrict === item && (
-        <Icon name="done" type="MaterialIcons" color="green" size={16} />
+        <Icon name="done" type="MaterialIcons" color="#F866b1" size={16} />
       )}
     </TouchableOpacity>
   );
@@ -55,7 +57,7 @@ export const Districts = ({ districts }) => {
           onChangeText={handleSearch}
           value={search}
           placeholder="Search district"
-          placeholderTextColor="#e5e5e5"
+          placeholderTextColor={currentTheme.font}
         />
       )}
 

@@ -5,6 +5,7 @@ const initialState = {
   language: "ka",
   theme: true,
   users: [],
+  machindeId: null,
 };
 
 export const App = createSlice({
@@ -24,8 +25,12 @@ export const App = createSlice({
     setUsers: (state, action) => {
       state.users = action.payload;
     },
+    setMachineId: (state, action) => {
+      state.machineId = action.payload;
+    },
   },
 });
 
-export const { setLoading, setLanguage, setTheme, setUsers } = App.actions;
+export const { setLoading, setLanguage, setTheme, setUsers, setMachineId } =
+  App.actions;
 export default App.reducer;

@@ -92,6 +92,7 @@ const User = {
     logout: "Logout",
     verification: "Verification",
     userType: "User type",
+    currency: "Currency",
   },
   ka: {
     specialist: "სპეციალისტი",
@@ -183,9 +184,10 @@ const User = {
     notifications: "შეტყობინებები",
     darkMode: "ღამის რეჟიმი",
     activation: "აქტივაცია",
-    logout: "გამოსვლა",
+    logout: "გასვლა",
     verification: "ვერიფიკაცია",
     userType: "მომხმარბელის ტიპი",
+    currency: "ვალუტა",
   },
   ru: {
     specialist: "Специалист",
@@ -280,6 +282,7 @@ const User = {
     logout: "Выйти",
     verification: "Проверка",
     userType: "Тип пользователя",
+    currency: "Валюта",
   },
 };
 

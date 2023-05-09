@@ -6,7 +6,7 @@ import { Language } from "../context/language";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
-const GoogleAutocomplete = ({ setAddress }) => {
+const GoogleAutocomplete = ({ setAddress, currentTheme }) => {
   const language = Language();
   const [h, setH] = useState(45);
 
@@ -102,7 +102,7 @@ const styles = StyleSheet.create({
     height: 38,
     color: "#e5e5e5", // Update this line
     fontSize: 14,
-    borderRadius: 5,
+    borderRadius: 50,
     backgroundColor: "rgba(255,255,255,0.05)", // Add this line
   },
   description: {

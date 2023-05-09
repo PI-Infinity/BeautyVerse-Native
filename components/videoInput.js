@@ -12,7 +12,7 @@ import { Language } from "../context/language";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
-const InputVideo = ({ file, setFile }) => {
+const InputVideo = ({ file, setFile, currentTheme }) => {
   const language = Language();
   const videoRef = useRef();
 
@@ -39,36 +39,15 @@ const InputVideo = ({ file, setFile }) => {
   return (
     <View style={styles.container}>
       <TouchableOpacity onPress={pickVideo} style={styles.button}>
-        <Text style={styles.buttonText}>
+        <Text style={[styles.buttonText, { color: currentTheme.font }]}>
           {language?.language?.User?.addFeed?.selectVideo}
         </Text>
       </TouchableOpacity>
-      {/* {file && file.uri && (
-        <Video
-          ref={videoRef}
-          source={{ uri: file.uri }}
-          useNativeControls
-          style={styles.preview}
-          //   onPlaybackStatusUpdate={handlePlaybackStatusUpdate}
-        />
-      )} */}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    // justifyContent: "center",
-    // alignItems: "center",
-    // width: SCREEN_WIDTH - 60,
-    // gap: 20,
-  },
-  button: {
-    // backgroundColor: "#007bff",
-    // paddingHorizontal: 20,
-    // paddingVertical: 10,
-    // borderRadius: 5,
-  },
   buttonText: {
     color: "#fff",
     fontSize: 14,

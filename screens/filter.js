@@ -5,6 +5,7 @@ import {
   ScrollView,
   TouchableOpacity,
   StyleSheet,
+  Platform,
 } from "react-native";
 import { useState, useEffect } from "react";
 import React from "react";
@@ -17,12 +18,18 @@ import { Cities } from "../components/cities";
 import { Districts } from "../components/districts";
 import { Search } from "../components/search";
 import { Language } from "../context/language";
+import { lightTheme, darkTheme } from "../context/theme";
+import FontAwesome5 from "react-native-vector-icons/FontAwesome5";
+import { setCleanUp } from "../redux/rerenders";
 
 export const Filter = ({ navigation }) => {
   const language = Language();
   const dispatch = useDispatch();
   const filter = useSelector((state) => state.storeFilter.filter);
   const lang = useSelector((state) => state.storeApp.language);
+
+  const theme = useSelector((state) => state.storeApp.theme);
+  const currentTheme = theme ? darkTheme : lightTheme;
 
   const specialists = useSelector((state) => state.storeFilter.specialists);
   const salons = useSelector((state) => state.storeFilter.salons);
@@ -77,8 +84,14 @@ export const Filter = ({ navigation }) => {
   }, [city]);
 
   return (
-    <ScrollView contentContainerStyle={{ gap: 7.5, alignItems: "center" }}>
-      <Search navigation={navigation} />
+    <ScrollView
+      contentContainerStyle={{ gap: 5, alignItems: "center", paddingTop: 10 }}
+      showsVerticalScrollIndicator={false}
+      x
+      bounces={Platform.OS === "ios" ? false : undefined}
+      overScrollMode={Platform.OS === "ios" ? undefined : false}
+    >
+      <Search navigation={navigation} currentTheme={currentTheme} />
       {VerseCategories?.map((item, index) => {
         return (
           <TouchableOpacity
@@ -86,52 +99,107 @@ export const Filter = ({ navigation }) => {
             style={{
               paddingHorizontal: 20,
               paddingVertical: 7.5,
-              backgroundColor: "rgba(255,255,255,0.02)",
-              width: "90%",
+              marginHorizontal: 10,
+              borderWidth: 1.5,
+              borderColor:
+                filter === item.value
+                  ? currentTheme.background2
+                  : currentTheme.background2,
+              width: "95%",
               borderRadius: 50,
               flexDirection: "row",
               alignItems: "center",
               justifyContent: "space-between",
+
+              // borderColor: "rgba(255,255,255,0.05)",
             }}
-            onPress={() => dispatch(setFilter(item.value))}
+            onPress={() => {
+              dispatch(setFilter(item.value));
+              dispatch(setCleanUp());
+            }}
           >
-            <Text style={{ color: "#e5e5e5" }}>
-              {lang === "en" ? item.eng : lang === "ka" ? item.geo : item.rus}
-            </Text>
+            <View
+              style={{ flexDirection: "row", gap: 0, alignItems: "center" }}
+            >
+              {/* {item.icon} */}
+              <Text
+                style={{
+                  color:
+                    filter === item.value
+                      ? currentTheme.pink
+                      : currentTheme.font,
+                  // fontWeight: "bold",
+                }}
+              >
+                {lang === "en" ? item.eng : lang === "ka" ? item.geo : item.rus}
+              </Text>
+            </View>
             {filter === item.value && (
-              <Icon name="done" type="MaterialIcons" color="green" size={16} />
+              <Icon
+                name="done"
+                type="MaterialIcons"
+                color={currentTheme.pink}
+                size={16}
+              />
             )}
           </TouchableOpacity>
         );
       })}
-
       <View
-        style={{ width: "100%", paddingHorizontal: 30, paddingVertical: 20 }}
+        style={{
+          height: 1,
+          width: "90%",
+          backgroundColor: currentTheme.pink,
+          opacity: 0.2,
+          marginTop: 10,
+        }}
+      ></View>
+      <View
+        style={{
+          width: "100%",
+          paddingHorizontal: 30,
+          paddingVertical: 10,
+          paddingBottom: 15,
+          alignItems: "center",
+          flexDirection: "row",
+          gap: 10,
+        }}
       >
+        {!openCities && (
+          <FontAwesome5 name="city" color={currentTheme.pink} size={14} />
+        )}
         {openCities ? (
           <View>
             <Pressable onPress={() => setOpenCities(false)} style={{}}>
               <Icon
                 name="close"
                 type="MaterialIcons"
-                color="#e5e5e5"
+                color={currentTheme.font}
                 size={20}
               />
             </Pressable>
             <Text
-              style={{ fontWeight: "bold", fontSize: 18, color: "#e5e5e5" }}
+              style={{
+                fontWeight: "bold",
+                fontSize: 16,
+                color: currentTheme.font,
+              }}
             >
               {language?.language?.Main?.filter?.city}
             </Text>
-            <Cities cities={cities} />
+            <Cities cities={cities} currentTheme={currentTheme} />
             {districts?.length > 0 && (
               <>
                 <Text
-                  style={{ fontWeight: "bold", fontSize: 18, color: "#e5e5e5" }}
+                  style={{
+                    fontWeight: "bold",
+                    fontSize: 18,
+                    color: currentTheme.font,
+                  }}
                 >
                   {language?.language?.Main?.filter?.district}
                 </Text>
-                <Districts districts={districts} />
+                <Districts districts={districts} currentTheme={currentTheme} />
               </>
             )}
           </View>
@@ -147,29 +215,95 @@ export const Filter = ({ navigation }) => {
             }}
           >
             <Text
-              style={{ fontWeight: "bold", fontSize: 18, color: "#e5e5e5" }}
+              style={{
+                fontWeight: "bold",
+                fontSize: 18,
+                color: currentTheme.font,
+              }}
             >
               {language?.language?.Main?.filter?.location}
             </Text>
-
-            <Icon name="list" type="MaterialIcons" color="#e5e5e5" size={20} />
           </Pressable>
         )}
       </View>
-      <View style={{ width: "90%", marginTop: 0, marginBottom: 20 }}>
+      <View
+        style={{
+          height: 1,
+          width: "90%",
+          backgroundColor: currentTheme.pink,
+          opacity: 0.2,
+        }}
+      ></View>
+
+      <View
+        style={{
+          width: "100%",
+          marginTop: 0,
+          marginBottom: 20,
+          alignItems: "center",
+        }}
+      >
         <CheckBox
           title={language?.language?.Main?.filter?.specialist}
           checked={specialists}
-          onPress={() => dispatch(setSpecialists(!specialists))}
-          containerStyle={styles.checkboxContainer}
-          textStyle={styles.checkboxText}
+          onPress={() => {
+            dispatch(setSpecialists(!specialists));
+            dispatch(setCleanUp());
+          }}
+          containerStyle={[
+            styles.checkboxContainer,
+            { backgroundColor: "rgba(255,255,255,0.02)", width: "90%" },
+          ]}
+          textStyle={[
+            styles.checkboxText,
+            { color: currentTheme.font, fontWeight: "normal" },
+          ]}
+          checkedColor="#F866b1"
+          checkedIcon={
+            <Icon
+              name="check-box" // Name of the checked icon
+              color="#F866b1" // Color of the checked icon
+              size={20} // Size of the checked icon
+            />
+          }
+          uncheckedIcon={
+            <Icon
+              name="check-box-outline-blank" // Name of the unchecked icon
+              color="#F866b1" // Color of the unchecked icon
+              size={20} // Size of the unchecked icon
+            />
+          }
         />
         <CheckBox
           title={language?.language?.Main?.filter?.beautySalon}
           checked={salons}
-          onPress={() => dispatch(setSalons(!salons))}
-          containerStyle={styles.checkboxContainer}
-          textStyle={styles.checkboxText}
+          onPress={() => {
+            dispatch(setSalons(!salons));
+            dispatch(setCleanUp());
+          }}
+          containerStyle={[
+            styles.checkboxContainer,
+            { backgroundColor: "rgba(255,255,255,0.02)", width: "90%" },
+          ]}
+          textStyle={[
+            styles.checkboxText,
+            { color: currentTheme.font, fontWeight: "normal" },
+          ]}
+          checkedColor="#F866b1"
+          checkedIcon={
+            <Icon
+              name="check-box" // Name of the checked icon
+              color="#F866b1" // Color of the checked icon
+              size={22} // Size of the checked icon
+            />
+          }
+          uncheckedIcon={
+            <Icon
+              name="check-box-outline-blank" // Name of the unchecked icon
+              color="#F866b1" // Color of the unchecked icon
+              size={22} // Size of the unchecked icon
+            />
+          }
         />
       </View>
     </ScrollView>
@@ -181,6 +315,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
+    paddingTop: 10,
   },
   checkboxContainer: {
     backgroundColor: "#111",

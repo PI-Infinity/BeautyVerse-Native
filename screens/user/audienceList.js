@@ -59,9 +59,7 @@ export const AudienceList = ({
   return (
     <View style={{ width: "100%" }}>
       {list?.map((item, index) => {
-        const t = capitalizeFirstLetter(
-          item.followerType || item.followingType
-        );
+        const t = capitalizeFirstLetter(item.type);
         return (
           <Pressable
             key={index}
@@ -75,17 +73,25 @@ export const AudienceList = ({
               padding: 10,
               paddingHorizontal: 15,
             }}
-            onLongPress={() => {
-              Vibration.vibrate();
-              DeleteUser(item._doc.followerId, item._doc.followingId);
-            }}
+            onPress={() => navigation.navigate("UserVisit", { user: item })}
+            onLongPress={
+              type === "followers"
+                ? () => {
+                    Vibration.vibrate();
+                    DeleteUser(item._id, targetUser._id);
+                  }
+                : () => {
+                    Vibration.vibrate();
+                    DeleteUser(targetUser._id, item._id);
+                  }
+            }
             delayLongPress={300}
           >
             <View
               style={{ flexDirection: "row", alignItems: "center", gap: 15 }}
             >
               <CacheableImage
-                source={{ uri: item.followerCover || item.followingCover }}
+                source={{ uri: item.cover }}
                 style={{ width: 40, height: 40, borderRadius: 50 }}
                 manipulationOptions={[
                   { resize: { width: 40, height: 40 } },
@@ -94,7 +100,7 @@ export const AudienceList = ({
               />
 
               <Text style={{ color: "#e5e5e5", fontWeight: "bold" }}>
-                {item.followerName || item.followingName}
+                {item.name}
               </Text>
               <Text
                 style={{ color: "#e5e5e5", fontWeight: "normal", fontSize: 12 }}

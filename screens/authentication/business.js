@@ -104,7 +104,7 @@ const styles = StyleSheet.create({
     width: "100%",
     gap: 20,
     alignItems: "center",
-    justifyContent: "start",
+    paddingBottom: 60,
   },
   title: {
     fontSize: 24,
@@ -119,13 +119,12 @@ const styles = StyleSheet.create({
     color: "#fff",
   },
   button: {
-    width: "40%",
+    width: "45%",
     padding: 10,
-    borderRadius: 5,
-    backgroundColor: "green",
+    backgroundColor: "#F866B1",
     marginTop: 10,
     justifyContent: "center",
-    zIndex: 0,
+    borderRadius: 50,
   },
   buttonText: {
     color: "#fff",

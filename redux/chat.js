@@ -6,6 +6,7 @@ const initialState = {
   rerenderRooms: false,
   rerenderMessages: false,
   rerenderScroll: false,
+  chatUser: null,
 };
 
 export const Chat = createSlice({
@@ -28,6 +29,9 @@ export const Chat = createSlice({
     setRerenderScroll: (state, action) => {
       state.rerenderScroll = !state.rerenderScroll;
     },
+    setChatUser: (state, action) => {
+      state.chatUser = action.payload;
+    },
   },
 });
 
@@ -37,5 +41,6 @@ export const {
   setRerederRooms,
   setRerenderMessages,
   setRerenderScroll,
+  setChatUser,
 } = Chat.actions;
 export default Chat.reducer;

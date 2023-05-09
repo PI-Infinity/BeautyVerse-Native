@@ -9,8 +9,10 @@ import {
   Image,
   Dimensions,
   Alert,
+  Animated,
+  PanResponder,
 } from "react-native";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import {
   setOpenAddChat,
@@ -91,57 +93,131 @@ export const AddChat = ({ navigation }) => {
       style={styles.userItem}
       onPress={() =>
         GetChatRoom({
-          member2Id: item._doc.followingId,
-          member2Name: item.followingName,
-          member2Cover: item.followingCover,
+          member2Id: item._id,
+          member2Name: item.name,
+          member2Cover: item.cover,
         })
       }
     >
-      <CacheableImage
-        style={{ height: 40, width: 40, borderRadius: 50, resizeMode: "cover" }}
-        source={{ uri: item.followingCover }}
-        manipulationOptions={[
-          { resize: { width: 40, height: 40 } },
-          { rotate: 90 },
-        ]}
-      />
+      {item.cover?.length > 10 && (
+        <CacheableImage
+          style={{
+            height: 40,
+            width: 40,
+            borderRadius: 50,
+            resizeMode: "cover",
+          }}
+          source={{ uri: item.cover }}
+          manipulationOptions={[
+            { resize: { width: 40, height: 40 } },
+            { rotate: 90 },
+          ]}
+        />
+      )}
       <Text style={{ fontSize: 14, fontWeight: "bold", color: "#e5e5e5" }}>
-        {item?.followingName}
+        {item?.name}
       </Text>
-      <Text style={{ fontSize: 14, color: "#e5e5e5" }}>
-        {item?.followingType}
-      </Text>
+      <Text style={{ fontSize: 14, color: "#e5e5e5" }}>{item?.type}</Text>
     </TouchableOpacity>
   );
 
+  const translateY = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onPanResponderMove: (_, gestureState) => {
+        if (gestureState.dy > 0) {
+          translateY.setValue(gestureState.dy);
+        }
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        if (gestureState.dy > 100) {
+          closeAddChat();
+        } else {
+          openAddChat();
+        }
+      },
+    })
+  ).current;
+
+  const openAddChat = () => {
+    Animated.timing(translateY, {
+      toValue: 0,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const closeAddChat = () => {
+    Animated.timing(translateY, {
+      toValue: SCREEN_HEIGHT,
+      duration: 300,
+      useNativeDriver: true,
+    }).start(() => {
+      dispatch(setOpenAddChat(false));
+    });
+  };
+
+  useEffect(() => {
+    openAddChat();
+  }, []);
+
+  // ... your existing components ...
+
   return (
-    <TouchableOpacity
-      onPress={() => dispatch(setOpenAddChat(false))}
-      style={{
-        backgroundColor: "#222",
-        borderTopLeftRadius: 10,
-        borderTopRightRadius: 10,
-        flex: 1,
-        position: "absolute",
-        bottom: 0,
-        width: "100%",
-        zIndex: 100,
-        height: "100%",
-      }}
+    <Animated.View
+      {...panResponder.panHandlers}
+      style={[
+        styles.container,
+        {
+          transform: [
+            {
+              translateY: translateY,
+            },
+          ],
+        },
+      ]}
     >
-      <View style={styles.modalContent}>
-        <Search />
-        <ScrollView contentContainerStyle={{ gap: 10 }}>
-          {followings?.map((item, index) => {
-            return <RenderItem key={index} item={item} />;
-          })}
-        </ScrollView>
-      </View>
-    </TouchableOpacity>
+      <TouchableOpacity
+        onPress={() => dispatch(setOpenAddChat(false))}
+        style={{
+          backgroundColor: "#222",
+          borderTopLeftRadius: 10,
+          borderTopRightRadius: 10,
+          flex: 1,
+          position: "absolute",
+          bottom: 0,
+          width: "100%",
+          zIndex: 100,
+          height: "100%",
+        }}
+      >
+        <View style={styles.modalContent}>
+          <Search />
+          <ScrollView contentContainerStyle={{ gap: 10 }}>
+            {followings?.map((item, index) => {
+              return <RenderItem key={index} item={item} />;
+            })}
+          </ScrollView>
+        </View>
+      </TouchableOpacity>
+    </Animated.View>
   );
 };
 
 const styles = StyleSheet.create({
+  container: {
+    backgroundColor: "#222",
+    borderTopLeftRadius: 10,
+    borderTopRightRadius: 10,
+    flex: 1,
+    position: "absolute",
+    bottom: 0,
+    width: "100%",
+    zIndex: 100,
+    height: "100%",
+  },
   modalContent: {
     padding: 10,
     justifyContent: "center",

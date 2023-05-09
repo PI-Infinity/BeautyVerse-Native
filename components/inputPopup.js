@@ -90,9 +90,8 @@ const styles = StyleSheet.create({
   input: {
     borderWidth: 1,
     borderColor: "gray",
-    borderRadius: 5,
-    paddingLeft: 10,
-    paddingRight: 10,
+    borderRadius: 50,
+    padding: 10,
     width: "100%",
   },
   buttonsContainer: {
@@ -102,16 +101,18 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   button: {
-    borderRadius: 5,
+    borderRadius: 50,
     padding: 10,
     width: "45%",
     alignItems: "center",
   },
   sendButton: {
-    backgroundColor: "blue",
+    color: "#e5e5e5",
+    backgroundColor: "#F866B1",
   },
   cancelButton: {
-    backgroundColor: "red",
+    backgroundColor: "gray",
+    color: "#e5e5e5",
   },
   buttonText: {
     color: "white",

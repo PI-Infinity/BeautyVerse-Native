@@ -8,6 +8,7 @@ import {
   Pressable,
   Alert,
   Vibration,
+  ActivityIndicator,
 } from "react-native";
 import React, { useState, useEffect } from "react";
 import axios from "axios";
@@ -16,10 +17,12 @@ import {
   setCurrentChat,
   setRerederRooms,
   setRerenderScroll,
+  setChatUser,
 } from "../../redux/chat";
 import GetTimesAgo from "../../functions/getTimesAgo";
 import { Language } from "../../context/language";
 import { CacheableImage } from "../../components/cacheableImage";
+import Icon from "react-native-vector-icons/FontAwesome";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -28,6 +31,7 @@ export const Rooms = ({ navigation, search, socket }) => {
   const currentChat = useSelector((state) => state.storeChat.currentChat);
   const rerenderRooms = useSelector((state) => state.storeChat.rerenderRooms);
   const currentUser = useSelector((state) => state.storeUser.currentUser);
+  const [loading, setLoading] = useState(false);
 
   const [rooms, setRooms] = useState([]);
   useEffect(() => {
@@ -38,11 +42,14 @@ export const Rooms = ({ navigation, search, socket }) => {
             currentUser._id
         );
         setRooms(response.data.data.chats);
+        setLoading(false);
       } catch (error) {
-        Alert.alert(error.response.data.message);
+        console.log(error.response.data.message);
+        setLoading(false);
       }
     };
     if (currentUser._id) {
+      setLoading(true);
       GetChats();
     }
   }, [rerenderRooms]);
@@ -98,60 +105,90 @@ export const Rooms = ({ navigation, search, socket }) => {
   }, [socket, rooms]);
 
   return (
-    <ScrollView>
-      {rooms
-        ?.filter((item) => {
-          let targetChatMember;
-          if (item?.members.member1 === currentUser._id) {
-            targetChatMember = {
-              id: item?.members.member2,
-              name: item?.members.member2Name,
-              cover: item?.members.member2Cover,
-            };
-          } else {
-            targetChatMember = {
-              id: item?.members.member1,
-              name: item?.members.member1Name,
-              cover: item?.members.member1Cover,
-            };
-          }
-          return targetChatMember?.name
-            ?.toLowerCase()
-            .includes(search.toLowerCase());
-        })
-        ?.map((item, index) => {
-          // define target member
-          let targetChatMember;
-          if (item?.members.member1 === currentUser._id) {
-            targetChatMember = {
-              id: item?.members.member2,
-              name: item?.members.member2Name,
-              cover: item?.members.member2Cover,
-            };
-          } else {
-            targetChatMember = {
-              id: item?.members.member1,
-              name: item?.members.member1Name,
-              cover: item?.members.member1Cover,
-            };
-          }
-          if (item.lastMessage !== "") {
-            if (item.hideFor !== currentUser._id) {
-              return (
-                <RoomItem
-                  key={index}
-                  targetChatMember={targetChatMember}
-                  item={item}
-                  rooms={rooms}
-                  setRooms={setRooms}
-                  navigation={navigation}
-                  socket={socket}
-                />
-              );
-            }
-          }
-        })}
-    </ScrollView>
+    <>
+      {loading ? (
+        <View
+          style={{
+            flex: 1,
+            height: SCREEN_HEIGHT,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <ActivityIndicator size="large" color="#ccc" />
+        </View>
+      ) : (
+        <ScrollView>
+          {rooms?.length > 0 ? (
+            rooms
+              ?.filter((item) => {
+                let targetChatMember;
+                if (item?.members.member1 === currentUser._id) {
+                  targetChatMember = {
+                    id: item?.members.member2,
+                    name: item?.members.member2Name,
+                    cover: item?.members.member2Cover,
+                  };
+                } else {
+                  targetChatMember = {
+                    id: item?.members.member1,
+                    name: item?.members.member1Name,
+                    cover: item?.members.member1Cover,
+                  };
+                }
+                return targetChatMember?.name
+                  ?.toLowerCase()
+                  .includes(search.toLowerCase());
+              })
+              ?.map((item, index) => {
+                // define target member
+                let targetChatMember;
+                if (item?.members.member1 === currentUser._id) {
+                  targetChatMember = {
+                    id: item?.members.member2,
+                    name: item?.members.member2Name,
+                    cover: item?.members.member2Cover,
+                  };
+                } else {
+                  targetChatMember = {
+                    id: item?.members.member1,
+                    name: item?.members.member1Name,
+                    cover: item?.members.member1Cover,
+                  };
+                }
+                if (item.lastMessage !== "") {
+                  if (item.hideFor !== currentUser._id) {
+                    return (
+                      <RoomItem
+                        key={index}
+                        targetChatMember={targetChatMember}
+                        item={item}
+                        rooms={rooms}
+                        setRooms={setRooms}
+                        navigation={navigation}
+                        socket={socket}
+                      />
+                    );
+                  }
+                }
+              })
+          ) : (
+            <View
+              style={{
+                flex: 1,
+                alignItems: "center",
+                justifyContent: "center",
+                height: SCREEN_HEIGHT / 1.4,
+              }}
+            >
+              <Text style={{ color: "rgba(255,255,255,0.3)" }}>
+                No chats found
+              </Text>
+            </View>
+          )}
+        </ScrollView>
+      )}
+    </>
   );
 };
 
@@ -169,8 +206,20 @@ const RoomItem = ({
 
   const currentChat = useSelector((state) => state.storeChat.currentChat);
   const currentUser = useSelector((state) => state.storeUser.currentUser);
+
+  const GetUser = async () => {
+    try {
+      const response = await axios.get(
+        `https://beautyverse.herokuapp.com/api/v1/users/${targetChatMember?.id}`
+      );
+      dispatch(setChatUser(response.data.data.user));
+    } catch (error) {
+      console.log(error);
+    }
+  };
   // get chat room
   const GetChatRoom = async (Room, member2) => {
+    GetUser();
     try {
       await dispatch(setCurrentChat(Room));
       navigation.navigate("Room", {
@@ -276,30 +325,45 @@ const RoomItem = ({
           justifyContent: "center",
         }}
       >
-        <CacheableImage
-          style={{
-            height: 50,
-            width: 50,
-            borderRadius: 100,
-            resizeMode: "cover",
-          }}
-          source={{ uri: targetChatMember.cover }}
-          manipulationOptions={[
-            {
-              resize: {
-                width: 50,
-                height: 50,
+        {targetChatMember.cover?.length > 30 ? (
+          <View
+            style={{
+              width: 50,
+              height: 50,
+              borderRadius: 100,
+              overflow: "hidden",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <CacheableImage
+              style={{
+                height: 52,
+                width: 52,
+                borderRadius: 100,
                 resizeMode: "cover",
-              },
-            },
-            { rotate: 90 },
-          ]}
-        />
+              }}
+              source={{ uri: targetChatMember.cover }}
+            />
+          </View>
+        ) : (
+          <View
+            style={{
+              borderRadius: 100,
+              width: 50,
+              aspectRatio: 1,
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: "rgba(255,255,255,0.1)",
+            }}
+          >
+            <Icon name="user" size={25} color="#e5e5e5" />
+          </View>
+        )}
       </View>
       <View
         style={{
           flex: 6,
-          alignItems: "start",
           justifyContent: "center",
           paddingLeft: 15,
         }}

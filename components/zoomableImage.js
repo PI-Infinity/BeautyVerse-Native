@@ -27,28 +27,19 @@ const ZoomableImage = ({ source, ...props }) => {
   };
 
   return (
-    <View
-      style={{
-        flex: 1,
-        alignItems: "center",
-        justifyContent: "center",
-        width: "100%",
-      }}
+    <PinchGestureHandler
+      onGestureEvent={onPinchEvent}
+      onHandlerStateChange={onPinchStateChange}
     >
-      <PinchGestureHandler
-        onGestureEvent={onPinchEvent}
-        onHandlerStateChange={onPinchStateChange}
-      >
-        <Animated.View style={panStyle}>
-          <CacheableImage
-            {...props}
-            source={source}
-            style={props.style}
-            manipulationOptions={props.manipulationOptions}
-          />
-        </Animated.View>
-      </PinchGestureHandler>
-    </View>
+      <Animated.View style={panStyle}>
+        <CacheableImage
+          {...props}
+          source={source}
+          style={props.style}
+          manipulationOptions={props.manipulationOptions}
+        />
+      </Animated.View>
+    </PinchGestureHandler>
   );
 };
 

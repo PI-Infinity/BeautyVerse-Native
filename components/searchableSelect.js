@@ -12,7 +12,7 @@ import { Icon } from "react-native-elements";
 import { useSelector, useDispatch } from "react-redux";
 import { Language } from "../context/language";
 
-const SearchableSelect = ({ data, onItemSelected }) => {
+const SearchableSelect = ({ data, onItemSelected, currentTheme }) => {
   const language = Language();
   const [search, setSearch] = useState("");
   // const [filteredData, setFilteredData] = useState();
@@ -22,18 +22,6 @@ const SearchableSelect = ({ data, onItemSelected }) => {
 
   const lang = useSelector((state) => state.storeApp.language);
 
-  // useEffect(() => {
-  //   setFilteredData(data);
-  // }, [lang]);
-
-  // const handleChange = (text) => {
-  //   setSearch(text);
-  //   const filtered = data.filter((item) =>
-  //     item.label.toLowerCase().includes(text.toLowerCase())
-  //   );
-  //   setFilteredData(filtered);
-  // };
-
   const handleItemPress = (item) => {
     setText(item.label);
     onItemSelected(item.value);
@@ -42,13 +30,24 @@ const SearchableSelect = ({ data, onItemSelected }) => {
 
   const RenderItem = ({ item }) => (
     <TouchableOpacity onPress={() => handleItemPress(item)} style={styles.item}>
-      <Text style={styles.itemText}>{item.label}</Text>
+      <Text
+        style={[
+          styles.itemText,
+          {
+            color: currentTheme.font,
+          },
+        ]}
+      >
+        {item.label}
+      </Text>
     </TouchableOpacity>
   );
 
   const Listed = () => {
     return (
-      <ScrollView style={{ height: 200 }}>
+      <ScrollView
+        style={{ height: 200, backgroundColor: currentTheme.background2 }}
+      >
         {data
           ?.filter((item) =>
             item.label.toLowerCase().includes(text.toLowerCase())
@@ -63,7 +62,13 @@ const SearchableSelect = ({ data, onItemSelected }) => {
   return (
     <View style={styles.container}>
       <TextInput
-        style={styles.searchInput}
+        style={[
+          styles.searchInput,
+          {
+            color: currentTheme.font,
+            backgroundColor: currentTheme.background2,
+          },
+        ]}
         onChangeText={(text) => setText(text)}
         value={text}
         placeholder={language?.language?.Main.filter.search}
@@ -79,11 +84,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   searchInput: {
-    borderColor: "#ccc",
-    borderWidth: 1,
-    borderRadius: 5,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
+    borderRadius: 50,
+    backgroundColor: "rgba(255,255,255,0.05)",
+    paddingHorizontal: 15,
+    paddingVertical: 10,
     marginBottom: 5,
     color: "#fff",
   },
@@ -93,7 +97,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     padding: 10,
     borderBottomWidth: 1,
-    borderBottomColor: "#ccc",
+    borderBottomColor: "rgba(255,255,255,0.05)",
   },
   itemText: {
     fontSize: 14,

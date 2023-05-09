@@ -13,6 +13,7 @@ import Collapsible from "react-native-collapsible";
 import { AudienceList } from "../../screens/user/audienceList";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import { CacheableImage } from "../../components/cacheableImage";
+import { lightTheme, darkTheme } from "../../context/theme";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -22,6 +23,9 @@ export const Audience = ({
   renderCheck,
   setRenderCheck,
 }) => {
+  const theme = useSelector((state) => state.storeApp.theme);
+  const currentTheme = theme ? darkTheme : lightTheme;
+
   const [loading, setLoading] = React.useState(true);
 
   const [followers, setFollowers] = useState([]);
@@ -40,8 +44,8 @@ export const Audience = ({
         .then((response) => response.json())
         .then((data) => {
           setFollowings({
-            length: data.data?.followings?.length,
-            list: data.data?.followings,
+            length: data.result,
+            list: data.data.followings,
           });
         })
         .catch((error) => {
@@ -60,8 +64,8 @@ export const Audience = ({
         .then((response) => response.json())
         .then((data) => {
           setFollowers({
-            length: data?.data?.followers?.length,
-            list: data.data?.followers,
+            length: data.result,
+            list: data.data.followers,
           });
         })
         .catch((error) => {
@@ -100,34 +104,48 @@ export const Audience = ({
               width: "80%",
               borderRadius: 5,
               borderWidth: 1,
-              borderColor: "rgba(255,255,255,0.1)",
+              borderColor: currentTheme.background2,
               alignItems: "center",
               flexDirection: "row",
               gap: 20,
             }}
             onPress={() => setOpenFollowers(!openFollowers)}
           >
-            <Text style={{ color: "#e5e5e5" }}>
+            <Text style={{ color: currentTheme.font }}>
               Followers ({followers?.length})
             </Text>
-            <View>
+            <View style={{ flexDirection: "row", gap: -10 }}>
               {followers.list?.map((item, index) => {
                 if (index < 3) {
                   return (
-                    <CacheableImage
+                    <Pressable
                       key={index}
-                      source={{ uri: item?.followerCover }}
-                      style={{ width: 40, height: 40, borderRadius: 50 }}
-                      manipulationOptions={[
-                        { resize: { width: 40, height: 40 } },
-                        { rotate: 90 },
-                      ]}
-                    />
+                      onPress={() =>
+                        navigation.navigate("UserVisit", {
+                          user: item,
+                        })
+                      }
+                    >
+                      <CacheableImage
+                        source={{ uri: item?.cover }}
+                        style={{
+                          width: 40,
+                          height: 40,
+                          borderRadius: 50,
+                          borderWidth: 1,
+                          borderColor: "#ddd",
+                        }}
+                        manipulationOptions={[
+                          { resize: { width: 40, height: 40 } },
+                          { rotate: 90 },
+                        ]}
+                      />
+                    </Pressable>
                   );
                 }
               })}
             </View>
-            <Text style={{ color: "#e5e5e5" }}>
+            <Text style={{ color: currentTheme.font }}>
               {"+" + followers.length > 3 && followers.length - 3}
             </Text>
             <MaterialIcons
@@ -156,34 +174,49 @@ export const Audience = ({
               width: "80%",
               borderRadius: 5,
               borderWidth: 1,
-              borderColor: "rgba(255,255,255,0.1)",
+              borderColor: currentTheme.background2,
               alignItems: "center",
               flexDirection: "row",
               gap: 20,
             }}
             onPress={() => setOpenFollowings(!openFollowings)}
           >
-            <Text style={{ color: "#e5e5e5" }}>
+            <Text style={{ color: currentTheme.font }}>
               Followings ({followings?.length})
             </Text>
-            <View>
+            <View style={{ flexDirection: "row", gap: -10 }}>
               {followings.list?.map((item, index) => {
                 if (index < 4) {
                   return (
-                    <CacheableImage
+                    <Pressable
                       key={index}
-                      source={{ uri: item?.followingCover }}
-                      style={{ width: 40, height: 40, borderRadius: 50 }}
-                      manipulationOptions={[
-                        { resize: { width: 40, height: 40 } },
-                        { rotate: 90 },
-                      ]}
-                    />
+                      onPress={() =>
+                        navigation.navigate("UserVisit", {
+                          user: item,
+                        })
+                      }
+                    >
+                      <CacheableImage
+                        key={index}
+                        source={{ uri: item?.cover }}
+                        style={{
+                          width: 40,
+                          height: 40,
+                          borderRadius: 50,
+                          borderWidth: 1,
+                          borderColor: "#ddd",
+                        }}
+                        manipulationOptions={[
+                          { resize: { width: 40, height: 40 } },
+                          { rotate: 90 },
+                        ]}
+                      />
+                    </Pressable>
                   );
                 }
               })}
             </View>
-            <Text style={{ color: "#e5e5e5" }}>
+            <Text style={{ color: currentTheme.font }}>
               {"+" + followings.length > 3 && followings.length - 3}
             </Text>
             <MaterialIcons

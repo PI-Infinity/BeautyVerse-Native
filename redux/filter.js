@@ -2,6 +2,7 @@ import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
   search: "",
+  searchInput: "",
   filter: "",
   specialists: true,
   salons: true,
@@ -18,6 +19,9 @@ export const Filter = createSlice({
   reducers: {
     setSearch: (state, action) => {
       state.search = action.payload;
+    },
+    setSearchInput: (state, action) => {
+      state.searchInput = action.payload;
     },
     setFilter: (state, action) => {
       state.filter = action.payload;
@@ -42,6 +46,7 @@ export const Filter = createSlice({
 
 export const {
   setSearch,
+  setSearchInput,
   setFilter,
   setSpecialists,
   setSalons,

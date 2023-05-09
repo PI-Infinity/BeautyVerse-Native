@@ -6,6 +6,7 @@ import {
   Dimensions,
   Vibration,
   TouchableOpacity,
+  Pressable,
 } from "react-native";
 import React from "react";
 import axios from "axios";
@@ -14,6 +15,7 @@ import { setRerenderMessages, setRerederRooms } from "../../redux/chat";
 import GetTimesAgo from "../../functions/getTimesAgo";
 import { Language } from "../../context/language";
 import { CacheableImage } from "../../components/cacheableImage";
+import Icon from "react-native-vector-icons/FontAwesome";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -117,6 +119,8 @@ export const Message = (props) => {
       currentPostTime?.slice(0, -1) + language?.language.Main.feedCard.y;
   }
 
+  const chatUser = useSelector((state) => state.storeChat.chatUser);
+
   return (
     <TouchableOpacity
       activeOpacity={0.3}
@@ -129,7 +133,6 @@ export const Message = (props) => {
         marginTop: props.senderId !== props.prevMessage?.senderId ? 10 : 2,
         width: SCREEN_WIDTH,
         paddingHorizontal: 15,
-        justifyContent: "start",
 
         // flexDirection: "row",
         alignItems: currentUserSender ? "flex-end" : "start",
@@ -149,19 +152,47 @@ export const Message = (props) => {
       >
         {!currentUserSender &&
           props.senderId !== props.prevMessage?.senderId && (
-            <CacheableImage
-              source={{ uri: targetChatMember.cover }}
-              style={{
-                height: 40,
-                width: 40,
-                borderRadius: 50,
-                resizeMode: "cover",
-              }}
-              manipulationOptions={[
-                { resize: { width: 40, height: 40 } },
-                { rotate: 90 },
-              ]}
-            />
+            <Pressable
+              onPress={() =>
+                props.navigation.navigate("User", {
+                  user: chatUser,
+                })
+              }
+            >
+              {targetChatMember.cover.length > 0 ? (
+                <CacheableImage
+                  source={{ uri: targetChatMember.cover }}
+                  style={{
+                    height: 40,
+                    width: 40,
+                    borderRadius: 50,
+                    resizeMode: "cover",
+                  }}
+                  onPress={() =>
+                    props.navigation.navigate("User", {
+                      user: props.chatUser,
+                    })
+                  }
+                  manipulationOptions={[
+                    { resize: { width: 40, height: 40 } },
+                    { rotate: 90 },
+                  ]}
+                />
+              ) : (
+                <View
+                  style={{
+                    borderRadius: 100,
+                    width: 40,
+                    aspectRatio: 1,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    backgroundColor: "rgba(255,255,255,0.1)",
+                  }}
+                >
+                  <Icon name="user" size={20} color="#e5e5e5" />
+                </View>
+              )}
+            </Pressable>
           )}
         <Text style={{ color: "#e5e5e5" }} multiline>
           {props.text}

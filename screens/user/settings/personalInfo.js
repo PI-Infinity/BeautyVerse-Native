@@ -17,12 +17,16 @@ import { setCurrentUser } from "../../../redux/user";
 import axios from "axios";
 import CountryCodePicker from "../../../components/countryCodes";
 import { Language } from "../../../context/language";
+import { lightTheme, darkTheme } from "../../../context/theme";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
 export const PersonalInfo = ({ user, onSave }) => {
   const language = Language();
   const dispatch = useDispatch();
+
+  const theme = useSelector((state) => state.storeApp.theme);
+  const currentTheme = theme ? darkTheme : lightTheme;
 
   const currentUser = useSelector((state) => state.storeUser.currentUser);
   const [isEditing, setIsEditing] = useState(false);
@@ -94,20 +98,24 @@ export const PersonalInfo = ({ user, onSave }) => {
     >
       <ScrollView style={styles.container} contentContainerStyle={{ gap: 7.5 }}>
         <View style={styles.itemContainer}>
-          <Text style={styles.label}>
+          <Text style={[styles.label, { color: currentTheme.font }]}>
             {language?.language?.User.userPage.userType}:
           </Text>
-          <Text style={styles.value}>{type}</Text>
+          <Text style={[styles.value, { color: currentTheme.font }]}>
+            {type}
+          </Text>
         </View>
         <View style={styles.itemContainer}>
-          <Text style={styles.label}>
+          <Text style={[styles.label, { color: currentTheme.font }]}>
             {language?.language?.Auth.auth.email}:
           </Text>
-          <Text style={styles.value}>{currentUser?.email}</Text>
+          <Text style={[styles.value, { color: currentTheme.font }]}>
+            {currentUser?.email}
+          </Text>
         </View>
 
         <View style={styles.itemContainer}>
-          <Text style={styles.label}>
+          <Text style={[styles.label, { color: currentTheme.font }]}>
             {language?.language?.Auth.auth.name}:
           </Text>
           {isEditing ? (
@@ -120,11 +128,13 @@ export const PersonalInfo = ({ user, onSave }) => {
               }
             />
           ) : (
-            <Text style={styles.value}>{currentUser?.name}</Text>
+            <Text style={[styles.value, { color: currentTheme.font }]}>
+              {currentUser?.name}
+            </Text>
           )}
         </View>
         <View style={styles.itemContainer}>
-          <Text style={styles.label}>
+          <Text style={[styles.label, { color: currentTheme.font }]}>
             {language?.language?.User.userPage.username}:
           </Text>
           {isEditing ? (
@@ -137,11 +147,13 @@ export const PersonalInfo = ({ user, onSave }) => {
               }
             />
           ) : (
-            <Text style={styles.value}>{currentUser?.username}</Text>
+            <Text style={[styles.value, { color: currentTheme.font }]}>
+              {currentUser?.username}
+            </Text>
           )}
         </View>
         <View style={[styles.itemContainer, { height: "auto" }]}>
-          <Text style={styles.label}>
+          <Text style={[styles.label, { color: currentTheme.font }]}>
             {language?.language?.User.userPage.about}:
           </Text>
           {isEditing ? (
@@ -156,11 +168,13 @@ export const PersonalInfo = ({ user, onSave }) => {
               }
             />
           ) : (
-            <Text style={styles.value}>{currentUser?.about}</Text>
+            <Text style={[styles.value, { color: currentTheme.font }]}>
+              {currentUser?.about}
+            </Text>
           )}
         </View>
         <View style={styles.itemContainer}>
-          <Text style={styles.label}>
+          <Text style={[styles.label, { color: currentTheme.font }]}>
             {language?.language?.Auth.auth.phone}:
           </Text>
           {isEditing ? (
@@ -177,11 +191,13 @@ export const PersonalInfo = ({ user, onSave }) => {
               }
             />
           ) : (
-            <Text style={styles.value}>{currentUser.phone}</Text>
+            <Text style={[styles.value, { color: currentTheme.font }]}>
+              {currentUser.phone}
+            </Text>
           )}
         </View>
         <View style={styles.itemContainer}>
-          <Text style={styles.label}>Web:</Text>
+          <Text style={[styles.label, { color: currentTheme.font }]}>Web:</Text>
           {isEditing ? (
             <TextInput
               placeholderTextColor="#888"
@@ -199,11 +215,15 @@ export const PersonalInfo = ({ user, onSave }) => {
               }
             />
           ) : (
-            <Text style={styles.value}>{currentUser.media?.web}</Text>
+            <Text style={[styles.value, { color: currentTheme.font }]}>
+              {currentUser.media?.web}
+            </Text>
           )}
         </View>
         <View style={styles.itemContainer}>
-          <Text style={styles.label}>Facebook:</Text>
+          <Text style={[styles.label, { color: currentTheme.font }]}>
+            Facebook:
+          </Text>
           {isEditing ? (
             <TextInput
               placeholderTextColor="#888"
@@ -221,11 +241,15 @@ export const PersonalInfo = ({ user, onSave }) => {
               }
             />
           ) : (
-            <Text style={styles.value}>{currentUser.media?.facebook}</Text>
+            <Text style={[styles.value, { color: currentTheme.font }]}>
+              {currentUser.media?.facebook}
+            </Text>
           )}
         </View>
         <View style={styles.itemContainer}>
-          <Text style={styles.label}>Instagram:</Text>
+          <Text style={[styles.label, { color: currentTheme.font }]}>
+            Instagram:
+          </Text>
           {isEditing ? (
             <TextInput
               placeholderTextColor="#888"
@@ -243,11 +267,15 @@ export const PersonalInfo = ({ user, onSave }) => {
               }
             />
           ) : (
-            <Text style={styles.value}>{currentUser.media?.instagram}</Text>
+            <Text style={[styles.value, { color: currentTheme.font }]}>
+              {currentUser.media?.instagram}
+            </Text>
           )}
         </View>
         <View style={styles.itemContainer}>
-          <Text style={styles.label}>Youtube:</Text>
+          <Text style={[styles.label, { color: currentTheme.font }]}>
+            Youtube:
+          </Text>
           {isEditing ? (
             <TextInput
               placeholderTextColor="#888"
@@ -265,11 +293,15 @@ export const PersonalInfo = ({ user, onSave }) => {
               }
             />
           ) : (
-            <Text style={styles.value}>{currentUser.media?.youtube}</Text>
+            <Text style={[styles.value, { color: currentTheme.font }]}>
+              {currentUser.media?.youtube}
+            </Text>
           )}
         </View>
         <View style={styles.itemContainer}>
-          <Text style={styles.label}>Tiktok:</Text>
+          <Text style={[styles.label, { color: currentTheme.font }]}>
+            Tiktok:
+          </Text>
           {isEditing ? (
             <TextInput
               placeholderTextColor="#888"
@@ -287,13 +319,19 @@ export const PersonalInfo = ({ user, onSave }) => {
               }
             />
           ) : (
-            <Text style={styles.value}>{currentUser.media?.tiktok}</Text>
+            <Text style={[styles.value, { color: currentTheme.font }]}>
+              {currentUser.media?.tiktok}
+            </Text>
           )}
         </View>
         <View style={styles.itemContainer}>
-          <Text style={styles.label}>whatsapp:</Text>
+          <Text style={[styles.label, { color: currentTheme.font }]}>
+            whatsapp:
+          </Text>
           {isEditing ? (
             <Switch
+              trackColor={{ false: "#e5e5e5", true: "#F866B1" }}
+              thumbColor={editableUser?.media?.whatsapp ? "#e5e5e5" : "#F866B1"}
               value={editableUser?.media?.whatsapp}
               onValueChange={() =>
                 setEditableUser({
@@ -307,15 +345,19 @@ export const PersonalInfo = ({ user, onSave }) => {
               style={styles.switch}
             />
           ) : (
-            <Text style={styles.value}>
+            <Text style={[styles.value, { color: currentTheme.font }]}>
               {currentUser?.media?.whatsapp ? "Active" : "Disabled"}
             </Text>
           )}
         </View>
         <View style={styles.itemContainer}>
-          <Text style={styles.label}>Telegram:</Text>
+          <Text style={[styles.label, { color: currentTheme.font }]}>
+            Telegram:
+          </Text>
           {isEditing ? (
             <Switch
+              trackColor={{ false: "#e5e5e5", true: "#F866B1" }}
+              thumbColor={editableUser?.media?.telegram ? "#e5e5e5" : "#F866B1"}
               value={editableUser?.media?.telegram}
               onValueChange={() =>
                 setEditableUser({
@@ -329,27 +371,29 @@ export const PersonalInfo = ({ user, onSave }) => {
               style={styles.switch}
             />
           ) : (
-            <Text style={styles.value}>
+            <Text style={[styles.value, { color: currentTheme.font }]}>
               {currentUser?.media?.telegram ? "Active" : "Disabled"}
             </Text>
           )}
         </View>
-        {isEditing ? (
-          <TouchableOpacity onPress={handleSave} style={styles.saveButton}>
-            <Text style={styles.buttonText}>
-              {language?.language?.Main.filter.save}
-            </Text>
-          </TouchableOpacity>
-        ) : (
-          <TouchableOpacity
-            onPress={() => setIsEditing(true)}
-            style={styles.editButton}
-          >
-            <Text style={styles.buttonText}>
-              {language?.language?.Main.filter.edit}
-            </Text>
-          </TouchableOpacity>
-        )}
+        <View style={{ flex: 1, alignItems: "center" }}>
+          {isEditing ? (
+            <TouchableOpacity onPress={handleSave} style={styles.saveButton}>
+              <Text style={styles.buttonText}>
+                {language?.language?.Main.filter.save}
+              </Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              onPress={() => setIsEditing(true)}
+              style={styles.editButton}
+            >
+              <Text style={styles.buttonText}>
+                {language?.language?.Main.filter.edit}
+              </Text>
+            </TouchableOpacity>
+          )}
+        </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -383,23 +427,27 @@ const styles = StyleSheet.create({
   input: {
     borderColor: "#333",
     borderWidth: 1,
-    borderRadius: 5,
+    borderRadius: 50,
     padding: 5,
+    paddingLeft: 15,
     fontSize: 14,
     color: "#e5e5e5",
     flex: 1,
+    height: 30,
   },
   editButton: {
-    backgroundColor: "#1e88e5",
-    borderRadius: 5,
+    backgroundColor: "#F866B1",
+    borderRadius: 50,
     padding: 10,
-    marginTop: 10,
+    marginTop: 15,
+    width: "45%",
   },
   saveButton: {
-    backgroundColor: "#4caf50",
-    borderRadius: 5,
+    backgroundColor: "#F866B1",
+    borderRadius: 50,
     padding: 10,
-    marginTop: 10,
+    marginTop: 15,
+    width: "45%",
   },
   buttonText: {
     color: "white",

@@ -85,17 +85,24 @@ const styles = StyleSheet.create({
   },
   cancelButton: {
     backgroundColor: "#ccc",
-    borderRadius: 5,
     padding: 10,
+    width: "45%",
+    marginTop: 10,
+    justifyContent: "center",
+    borderRadius: 50,
   },
   sendButton: {
-    backgroundColor: "#4285f4",
-    borderRadius: 5,
+    width: "45%",
     padding: 10,
+    backgroundColor: "#F866B1",
+    marginTop: 10,
+    justifyContent: "center",
+    borderRadius: 50,
   },
   buttonText: {
     color: "white",
     fontWeight: "bold",
+    textAlign: "center",
   },
 });
 

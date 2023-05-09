@@ -13,6 +13,8 @@ const initialState = {
 
   rerenderUserFeeds: false,
   rerenderUserFeed: false,
+
+  rerenderNotifications: false,
 };
 
 export const Rerenders = createSlice({
@@ -54,6 +56,9 @@ export const Rerenders = createSlice({
       state.removeReviewQntRerenderFromScrollGallery =
         !state.removeReviewQntRerenderFromScrollGallery;
     },
+    setRerenderNotifcations: (state, action) => {
+      state.rerenderNotifications = !state.rerenderNotifications;
+    },
   },
 });
 
@@ -68,5 +73,6 @@ export const {
   setRemoveStarRerenderFromScrollGallery,
   setAddReviewQntRerenderFromScrollGallery,
   setRemoveReviewQntRerenderFromScrollGallery,
+  setRerenderNotifcations,
 } = Rerenders.actions;
 export default Rerenders.reducer;

@@ -25,17 +25,22 @@ import {
 } from "../../../redux/user";
 import SearchableSelect from "../../../components/searchableSelect";
 import Collapsible from "react-native-collapsible";
+import { lightTheme, darkTheme } from "../../../context/theme";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
 export const Procedures = () => {
   const dispatch = useDispatch();
   const proceduresOptions = ProceduresOptions();
+
+  const theme = useSelector((state) => state.storeApp.theme);
+  const currentTheme = theme ? darkTheme : lightTheme;
+
   const splited = proceduresOptions
     ?.map((item, index) => {
       let spltd = item?.value?.split(" - ");
       // Check if ' -' appears exactly 2 times
-      if (spltd.length === 3) {
+      if (spltd.length > 1) {
         return item;
       }
     })
@@ -135,16 +140,22 @@ export const Procedures = () => {
             height: SCREEN_HEIGHT / 3,
           }}
         >
-          <SearchableSelect data={splited} onItemSelected={AddProcedure} />
+          <SearchableSelect
+            data={splited}
+            onItemSelected={AddProcedure}
+            currentTheme={currentTheme}
+          />
         </View>
         {/* </Collapsible> */}
-        <ScrollView style={{ height: SCREEN_HEIGHT / 2.5 }}>
+        <ScrollView style={{ height: SCREEN_HEIGHT / 2.5, marginTop: 15 }}>
           {currentUser.procedures.map((item, index) => {
             const label = splited.find((c) => item.value === c.value);
             return (
               <View style={styles.item} key={index}>
                 <View style={{ flex: 6 }}>
-                  <Text style={{ color: "#e5e5e5" }}>{label?.label}</Text>
+                  <Text style={{ color: currentTheme.font }}>
+                    {label?.label}
+                  </Text>
                 </View>
                 {editPrice.index === index ? (
                   <TextInput
@@ -155,7 +166,7 @@ export const Procedures = () => {
                     onChangeText={(text) => setPriceInput(text)}
                   />
                 ) : (
-                  <Text style={{ color: "#e5e5e5", padding: 5 }}>
+                  <Text style={{ color: currentTheme.font, padding: 5 }}>
                     {item.price}
                   </Text>
                 )}
@@ -164,7 +175,7 @@ export const Procedures = () => {
                     <Icon
                       name="done"
                       type="MaterialIcons"
-                      color="green"
+                      color="#F866B1"
                       size={20}
                     />
                   </Pressable>
@@ -220,14 +231,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: "rgba(255,255,255,0.05)",
-    borderColor: "rgba(255,255,255,0.1)",
-    borderWidth: 1,
-    borderRadius: 5,
+    backgroundColor: "rgba(255,255,255,0.03)",
+    borderRadius: 50,
     paddingHorizontal: 15,
     paddingVertical: 5,
     marginHorizontal: 0,
-    marginTop: 10,
+    marginTop: 5,
     height: 40,
   },
   input: {
@@ -236,7 +245,6 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     padding: 5,
     fontSize: 14,
-    color: "#e5e5e5",
     flex: 1,
   },
   text: {

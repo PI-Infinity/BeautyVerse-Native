@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { ListItem, Icon, Button } from "react-native-elements";
 import Collapsible from "react-native-collapsible";
+import Entypo from "react-native-vector-icons/Entypo";
 
 const Autocomplete = ({ data, setState }) => {
   const [search, setSearch] = useState("");
@@ -69,34 +70,48 @@ const Autocomplete = ({ data, setState }) => {
 
       <Collapsible collapsed={hide}>
         <View style={styles.scrollView}>
-          <TouchableOpacity onPress={() => setHide(true)}>
-            <Icon name="remove" type="AntDesign" color="red" size={20} />
+          <TouchableOpacity
+            onPress={() => setHide(true)}
+            style={{
+              flex: 1,
+              alignItems: "center",
+              backgroundColor: "rgba(255,255,255,0.03)",
+              borderRadius: 50,
+              padding: 2.5,
+            }}
+          >
+            <Entypo name="select-arrows" color="#F866B1" size={20} />
           </TouchableOpacity>
-          {filteredData.map((item, index) => {
-            const include = selectedItems.find((i) => i === item);
-            // if (index < 7) {
-            return (
-              <TouchableOpacity
-                key={item.value}
-                onPress={
-                  !include
-                    ? () => handleSelect(item)
-                    : () => Alert.alert("Procedure already defined")
-                }
-                style={styles.listItem}
-              >
-                <Text style={{ color: "#e5e5e5" }}>{item.label}</Text>
-                {include && (
-                  <Icon
-                    name="done"
-                    type="MaterialIcons"
-                    color="green"
-                    size={20}
-                  />
-                )}
-              </TouchableOpacity>
-            );
-          })}
+          {filteredData
+            .filter((item) => {
+              const hyphenCount = (item.value.match(/-/g) || []).length;
+              return item.value && hyphenCount > 0;
+            })
+            .map((item, index) => {
+              const include = selectedItems.find((i) => i === item);
+              // if (index < 7) {
+              return (
+                <TouchableOpacity
+                  key={item.value}
+                  onPress={
+                    !include
+                      ? () => handleSelect(item)
+                      : () => Alert.alert("Procedure already defined")
+                  }
+                  style={styles.listItem}
+                >
+                  <Text style={{ color: "#e5e5e5" }}>{item.label}</Text>
+                  {include && (
+                    <Icon
+                      name="done"
+                      type="MaterialIcons"
+                      color="#F866B1"
+                      size={20}
+                    />
+                  )}
+                </TouchableOpacity>
+              );
+            })}
         </View>
       </Collapsible>
     </View>
@@ -114,7 +129,7 @@ const styles = StyleSheet.create({
     paddingLeft: 10,
     paddingRight: 10,
     height: 35,
-    borderRadius: 5,
+    borderRadius: 50,
     color: "#e5e5e5",
     marginTop: 15,
   },
@@ -122,7 +137,6 @@ const styles = StyleSheet.create({
     // height: 300,
     marginTop: 10,
     marginBottom: 10,
-    alignItems: "start",
     width: "100%",
   },
   listItem: {
