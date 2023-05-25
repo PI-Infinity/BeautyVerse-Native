@@ -11,28 +11,29 @@ import { Cards } from "../screens/cards";
 import { Orders } from "../screens/orders/orders";
 import { AddOrder } from "../screens/orders/addOrder";
 import { Statistics } from "../screens/orders/statistics";
-import Entypo from "react-native-vector-icons/Entypo";
-import MaterialIcons from "react-native-vector-icons/MaterialIcons";
+import { Entypo } from "@expo/vector-icons";
+import { MaterialIcons } from "@expo/vector-icons";
 import { lightTheme, darkTheme } from "../context/theme";
+import { useNavigation } from "@react-navigation/native";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 const Stack = createStackNavigator();
 
 // specific component for user page, passed some props into component
-const withVariant = (Component, variant) => {
+const withVariant = (Component, variant, navigation) => {
   return (props) => {
-    return <User {...props} variant={variant} />;
+    return <User {...props} variant={variant} navigation={navigation} />;
   };
 };
 // specific component for orders page, passed some props into component
-const withVariantOrders = (orders) => {
-  console.log(orders);
+const withVariantOrders = (navigation, refresh) => {
   return (props) => {
-    return <Orders orders={orders} {...props} />;
+    return <Orders {...props} navigation={navigation} refresh={refresh} />;
   };
 };
 
-export function OrdersStack({ route, navigation, orders }) {
+export function OrdersStack({ route, refresh }) {
+  const navigation = useNavigation();
   // theme state
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
@@ -46,7 +47,7 @@ export function OrdersStack({ route, navigation, orders }) {
       {/** main order list screen  */}
       <Stack.Screen
         name="Main"
-        children={withVariantOrders(orders)}
+        component={withVariantOrders(navigation, refresh)}
         options={({ navigation }) => ({
           title: "Orders",
           headerStyle: {
@@ -59,6 +60,7 @@ export function OrdersStack({ route, navigation, orders }) {
           headerTitleStyle: {
             fontWeight: "bold",
             fontSize: 18,
+            letterSpacing: 0.5,
           },
           cardStyle: {
             backgroundColor: currentTheme.background,
@@ -95,7 +97,7 @@ export function OrdersStack({ route, navigation, orders }) {
       />
       {/** user screen in cards, visit page, that component gettings props "visitPage", so from this component only can to visit page, current user can't modify any data from there  */}
       <Stack.Screen
-        name="User"
+        name="OrderUserVisit"
         component={withVariant(User, "visitPage")}
         options={({ route }) => ({
           headerBackTitleVisible: false,
@@ -111,6 +113,7 @@ export function OrdersStack({ route, navigation, orders }) {
           headerTitleStyle: {
             fontWeight: "bold",
             fontSize: 18,
+            letterSpacing: 0.5,
           },
           cardStyle: {
             backgroundColor: currentTheme.background,
@@ -153,6 +156,7 @@ export function OrdersStack({ route, navigation, orders }) {
           headerTitleStyle: {
             fontWeight: "bold",
             fontSize: 18,
+            letterSpacing: 0.5,
           },
           cardStyle: {
             backgroundColor: currentTheme.background,
@@ -176,6 +180,7 @@ export function OrdersStack({ route, navigation, orders }) {
           headerTitleStyle: {
             fontWeight: "bold",
             fontSize: 18,
+            letterSpacing: 0.5,
           },
           cardStyle: {
             backgroundColor: currentTheme.background,
@@ -199,6 +204,7 @@ export function OrdersStack({ route, navigation, orders }) {
           headerTitleStyle: {
             fontWeight: "bold",
             fontSize: 18,
+            letterSpacing: 0.5,
           },
           cardStyle: {
             backgroundColor: currentTheme.background,

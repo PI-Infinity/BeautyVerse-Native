@@ -1,39 +1,54 @@
 import React, { useState } from "react";
-import { View, Text } from "react-native";
+import { View, Text, TextInput, Pressable } from "react-native";
 import { SearchBar } from "@rneui/themed";
+import { FontAwesome } from "@expo/vector-icons";
+import { lightTheme, darkTheme } from "../../context/theme";
+import { useSelector } from "react-redux";
+import { Language } from "../../context/language";
 
 export const Search = ({ search, setSearch }) => {
+  const theme = useSelector((state) => state.storeApp.theme);
+  const language = Language();
+  const currentTheme = theme ? darkTheme : lightTheme;
   const updateSearch = (search) => {
     setSearch(search);
   };
   return (
-    <View style={{ width: "90%" }}>
-      <SearchBar
-        round={true}
-        showCancel={true}
-        // showLoading={true}
-        // lightTheme={true}
-        containerStyle={{
-          height: 40,
-          elevation: 0,
-          flexDirection: "row",
-          justifyContent: "center",
-          alignItems: "center",
-          paddingLeft: 15,
-          paddingRight: 0,
-          paddingTop: 0,
-          backgroundColor: "rgba(0,0,0,0)",
-          borderWidth: 0, //no effect
-          shadowColor: "white", //no effect
-          borderBottomColor: "transparent",
-          borderTopColor: "transparent",
-          width: "100%",
+    <View
+      style={{
+        width: "90%",
+        backgroundColor: currentTheme.background2,
+        borderWidth: 1,
+        borderColor: currentTheme.font,
+        borderRadius: 50,
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 5,
+        paddingHorizontal: 10,
+      }}
+    >
+      <FontAwesome name="search" size={20} color={currentTheme.font} />
+      <TextInput
+        placeholder={language?.language?.Main?.filter?.typeHere}
+        placeholderTextColor={currentTheme.disabled}
+        style={{
+          width: "88%",
+          padding: 7.5,
+          color: currentTheme.font,
+          borderRadius: 50,
         }}
-        inputContainerStyle={{ height: 30, width: "100%" }}
-        placeholder="Type Here..."
         onChangeText={setSearch}
         value={search}
       />
+      {search?.length > 0 && (
+        <Pressable
+          onPress={() => {
+            setSearch("");
+          }}
+        >
+          <FontAwesome name="close" size={20} color="red" />
+        </Pressable>
+      )}
     </View>
   );
 };

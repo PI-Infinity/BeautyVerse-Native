@@ -1,8 +1,8 @@
 import { StyleSheet, Text, View, Pressable, Dimensions } from "react-native";
 import React from "react";
 import { CacheableImage } from "../../components/cacheableImage";
-import MaterialIcons from "react-native-vector-icons/MaterialIcons";
-import Icon from "react-native-vector-icons/FontAwesome";
+import { MaterialIcons } from "@expo/vector-icons";
+import { FontAwesome } from "@expo/vector-icons";
 import GetTimesAgo from "../../functions/getTimesAgo";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSelector, useDispatch } from "react-redux";
@@ -90,7 +90,7 @@ export const BottomSection = (props) => {
                   : () => props.SetStar()
               }
             >
-              <Icon
+              <FontAwesome
                 name="star-o"
                 size={22}
                 color={props?.checkIfStared ? "yellow" : "#ddd"}
@@ -134,7 +134,7 @@ export const BottomSection = (props) => {
               marginBottom: 2,
             }}
           >
-            <Icon
+            <FontAwesome
               name="comment"
               size={18}
               // color={props.currentTheme.font}
@@ -162,7 +162,7 @@ export const BottomSection = (props) => {
             </Text>
           </Pressable>
         </View>
-        {props.user?.feed?.fileFormat === "video" && (
+        {props.feed?.fileFormat === "video" && (
           <View
             style={{
               alignItems: "center",
@@ -181,6 +181,7 @@ export const BottomSection = (props) => {
               <Pressable
                 activeOpacity={0.3}
                 onPress={() => dispatch(props.setVideoVolume(!props.volume))}
+                style={{ padding: 5, paddingRight: 0 }}
               >
                 <MaterialIcons
                   name={props.volume ? "volume-off" : "volume-up"}

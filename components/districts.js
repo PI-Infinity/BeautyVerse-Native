@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { useSelector, useDispatch } from "react-redux";
 import { setDistrict } from "../redux/filter"; // Import the setCity action from your actions file
-import { ListItem, Icon, Button } from "react-native-elements";
+import { MaterialIcons } from "@expo/vector-icons";
 import { setCleanUp } from "../redux/rerenders";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -39,12 +39,12 @@ export const Districts = ({ districts, currentTheme }) => {
     <TouchableOpacity
       style={styles.cityItem}
       activeOpacity={0.5}
-      onPress={() => handlePress(item)}
+      onPress={() => handlePress(selectedDistrict === item ? "" : item)}
     >
       <Text style={{ color: currentTheme.font }}>{item}</Text>
 
       {selectedDistrict === item && (
-        <Icon name="done" type="MaterialIcons" color="#F866b1" size={16} />
+        <MaterialIcons name="done" color="#F866b1" size={16} />
       )}
     </TouchableOpacity>
   );

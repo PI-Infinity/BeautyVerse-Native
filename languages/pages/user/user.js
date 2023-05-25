@@ -93,6 +93,7 @@ const User = {
     verification: "Verification",
     userType: "User type",
     currency: "Currency",
+    prices: "Prices",
   },
   ka: {
     specialist: "სპეციალისტი",
@@ -188,6 +189,7 @@ const User = {
     verification: "ვერიფიკაცია",
     userType: "მომხმარბელის ტიპი",
     currency: "ვალუტა",
+    prices: "ფასები",
   },
   ru: {
     specialist: "Специалист",
@@ -283,6 +285,7 @@ const User = {
     verification: "Проверка",
     userType: "Тип пользователя",
     currency: "Валюта",
+    prices: "Цены",
   },
 };
 

@@ -8,6 +8,7 @@ import { User } from "../screens/user/user";
 import { AddFeed } from "../screens/user/addFeed";
 import { Settings } from "../screens/user/settings/settings";
 import { Addresses } from "../screens/user/settings/addresses";
+import { Prices } from "../screens/prices";
 import { PersonalInfo } from "../screens/user/settings/personalInfo";
 import { WorkingInfo } from "../screens/user/settings/workingInfo";
 import { Procedures } from "../screens/user/settings/procedures";
@@ -19,9 +20,9 @@ import { Usage } from "../screens/user/usage";
 import { Notifications } from "../screens/user/notifications";
 import { UserFeed } from "../screens/user/userFeed";
 import Charts from "../screens/user/statistics/chart";
-import MaterialIcons from "react-native-vector-icons/MaterialIcons";
-import Octicons from "react-native-vector-icons/Octicons";
-import Ionicons from "react-native-vector-icons/Ionicons";
+import { MaterialIcons } from "@expo/vector-icons";
+import { Octicons } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 import { Text } from "react-native";
 import { useSelector } from "react-redux";
 import { Language } from "../context/language";
@@ -81,6 +82,7 @@ export function ProfileStack({
           headerTitleStyle: {
             fontWeight: "bold",
             fontSize: 18,
+            letterSpacing: 0.5,
           },
           cardStyle: {
             backgroundColor: currentTheme.background,
@@ -104,7 +106,9 @@ export function ProfileStack({
               >
                 {currentUser.name} {/* current user name un screen header */}
               </Text>
-              <MaterialIcons name="verified" size={16} color="#F866B1" />
+              {currentUser.subscription.status === "active" && (
+                <MaterialIcons name="verified" size={14} color="#F866B1" />
+              )}
             </View>
           ),
           headerRight: () => (
@@ -115,7 +119,11 @@ export function ProfileStack({
                   onPress={() => navigation.navigate("AddFeed")}
                   style={{ marginRight: 12.5, padding: 5, paddingRight: 0 }}
                 >
-                  <Octicons name="diff-added" size={20} color="#ccc" />
+                  <MaterialIcons
+                    name="add-box"
+                    size={22}
+                    color={currentTheme.pink}
+                  />
                 </Pressable>
               )}
               <View>
@@ -125,7 +133,7 @@ export function ProfileStack({
                       width: "auto",
                       minWidth: 13,
                       height: 13,
-                      backgroundColor: "red",
+                      backgroundColor: currentTheme.pink,
                       borderRadius: 50,
                       alignItems: "center",
                       justifyContent: "center",
@@ -145,7 +153,11 @@ export function ProfileStack({
                   style={{ marginRight: 5, padding: 5 }}
                 >
                   {/* settings button*/}
-                  <Ionicons name="notifications" size={20} color="#ccc" />
+                  <Ionicons
+                    name="notifications"
+                    size={20.5}
+                    color={currentTheme.disabled}
+                  />
                 </Pressable>
               </View>
               <Pressable
@@ -156,7 +168,7 @@ export function ProfileStack({
                 <Ionicons
                   name="settings"
                   size={20}
-                  color="#ccc"
+                  color={currentTheme.disabled}
                   style={{ marginBottom: 1 }}
                 />
               </Pressable>
@@ -188,6 +200,7 @@ export function ProfileStack({
           headerTitleStyle: {
             fontWeight: "bold",
             fontSize: 18,
+            letterSpacing: 0.5,
           },
           cardStyle: {
             backgroundColor: currentTheme.background,
@@ -213,7 +226,9 @@ export function ProfileStack({
               >
                 {route.params.user.name}
               </Text>
-              <MaterialIcons name="verified" size={20} color="#F866B1" />
+              {route.params.user.subscription.status === "active" && (
+                <MaterialIcons name="verified" size={14} color="#F866B1" />
+              )}
             </View>
           ),
 
@@ -228,6 +243,7 @@ export function ProfileStack({
           headerTitleStyle: {
             fontWeight: "bold",
             fontSize: 18,
+            letterSpacing: 0.5,
           },
           cardStyle: {
             backgroundColor: currentTheme.background,
@@ -252,6 +268,7 @@ export function ProfileStack({
           headerTitleStyle: {
             fontWeight: "bold",
             fontSize: 18,
+            letterSpacing: 0.5,
           },
           cardStyle: {
             backgroundColor: currentTheme.background,
@@ -275,6 +292,7 @@ export function ProfileStack({
           headerTitleStyle: {
             fontWeight: "bold",
             fontSize: 18,
+            letterSpacing: 0.5,
           },
           cardStyle: {
             backgroundColor: currentTheme.background,
@@ -299,6 +317,7 @@ export function ProfileStack({
           headerTitleStyle: {
             fontWeight: "bold",
             fontSize: 18,
+            letterSpacing: 0.5,
           },
           cardStyle: {
             backgroundColor: currentTheme.background,
@@ -323,6 +342,7 @@ export function ProfileStack({
           headerTitleStyle: {
             fontWeight: "bold",
             fontSize: 18,
+            letterSpacing: 0.5,
           },
           cardStyle: {
             backgroundColor: currentTheme.background,
@@ -347,6 +367,7 @@ export function ProfileStack({
           headerTitleStyle: {
             fontWeight: "bold",
             fontSize: 18,
+            letterSpacing: 0.5,
           },
           cardStyle: {
             backgroundColor: currentTheme.background,
@@ -371,6 +392,7 @@ export function ProfileStack({
           headerTitleStyle: {
             fontWeight: "bold",
             fontSize: 18,
+            letterSpacing: 0.5,
           },
           cardStyle: {
             backgroundColor: currentTheme.background,
@@ -395,6 +417,7 @@ export function ProfileStack({
           headerTitleStyle: {
             fontWeight: "bold",
             fontSize: 18,
+            letterSpacing: 0.5,
           },
           cardStyle: {
             backgroundColor: currentTheme.background,
@@ -419,6 +442,32 @@ export function ProfileStack({
           headerTitleStyle: {
             fontWeight: "bold",
             fontSize: 18,
+            letterSpacing: 0.5,
+          },
+          cardStyle: {
+            backgroundColor: currentTheme.background,
+          },
+        })}
+      />
+      {/* prices screen */}
+      <Stack.Screen
+        name="Prices"
+        component={Prices}
+        options={({ route }) => ({
+          headerBackTitleVisible: false,
+          title: language?.language?.User?.userPage?.prices,
+          headerStyle: {
+            backgroundColor: currentTheme.background,
+
+            elevation: 0,
+            shadowOpacity: 0,
+            borderBottomWidth: 0,
+          },
+          headerTintColor: currentTheme.font,
+          headerTitleStyle: {
+            fontWeight: "bold",
+            fontSize: 18,
+            letterSpacing: 0.5,
           },
           cardStyle: {
             backgroundColor: currentTheme.background,
@@ -443,6 +492,7 @@ export function ProfileStack({
           headerTitleStyle: {
             fontWeight: "bold",
             fontSize: 18,
+            letterSpacing: 0.5,
           },
           cardStyle: {
             backgroundColor: currentTheme.background,
@@ -466,6 +516,7 @@ export function ProfileStack({
           headerTitleStyle: {
             fontWeight: "bold",
             fontSize: 18,
+            letterSpacing: 0.5,
           },
           cardStyle: {
             backgroundColor: currentTheme.background,
@@ -489,6 +540,7 @@ export function ProfileStack({
           headerTitleStyle: {
             fontWeight: "bold",
             fontSize: 18,
+            letterSpacing: 0.5,
           },
           cardStyle: {
             backgroundColor: currentTheme.background,
@@ -512,6 +564,7 @@ export function ProfileStack({
           headerTitleStyle: {
             fontWeight: "bold",
             fontSize: 18,
+            letterSpacing: 0.5,
           },
           cardStyle: {
             backgroundColor: currentTheme.background,
@@ -535,6 +588,7 @@ export function ProfileStack({
           headerTitleStyle: {
             fontWeight: "bold",
             fontSize: 18,
+            letterSpacing: 0.5,
           },
           cardStyle: {
             backgroundColor: currentTheme.background,

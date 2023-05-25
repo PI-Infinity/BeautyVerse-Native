@@ -7,7 +7,7 @@ import { Feeds } from "../screens/feeds";
 import { ScrollGallery } from "../screens/user/scrollGallery";
 import { User } from "../screens/user/user";
 import { Text } from "react-native";
-import MaterialIcons from "react-native-vector-icons/MaterialIcons";
+import { MaterialIcons } from "@expo/vector-icons";
 import { Language } from "../context/language";
 import { lightTheme, darkTheme } from "../context/theme";
 import { useSelector } from "react-redux";
@@ -18,6 +18,13 @@ const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
 // specific component for user page, passed some props into component
 const withVariant = (Component, variant) => {
+  return (props) => {
+    return <User {...props} variant={variant} />;
+  };
+};
+
+// specific component for user page, passed some props into component
+const withVariantVisit = (Component, variant) => {
   return (props) => {
     return <User {...props} variant={variant} />;
   };
@@ -44,14 +51,21 @@ export function FeedsStack({ route, navigation }) {
         options={{
           headerStyle: {
             backgroundColor: currentTheme.background,
-            elevation: 0,
-            shadowOpacity: 0,
+            shadowColor: "#000",
+            shadowOffset: {
+              width: 0,
+              height: !theme ? 1 : 0, // negative value places shadow on top
+            },
+            shadowOpacity: 0.1,
+            shadowRadius: 5,
+            elevation: 5, // required for android
             borderBottomWidth: 0,
           },
           headerTintColor: currentTheme.font,
           headerTitleStyle: {
             fontWeight: "bold",
             fontSize: 18,
+            letterSpacing: 0.5,
           },
           cardStyle: {
             backgroundColor: currentTheme.background,
@@ -71,7 +85,7 @@ export function FeedsStack({ route, navigation }) {
                 style={{
                   fontSize: 23,
                   fontWeight: "bold",
-                  color: "#F866B1",
+                  color: currentTheme.pink,
                   letterSpacing: 1,
                 }}
               >
@@ -111,7 +125,9 @@ export function FeedsStack({ route, navigation }) {
               >
                 {route.params.user.name}
               </Text>
-              <MaterialIcons name="verified" size={14} color="#F866B1" />
+              {route.params.user.subscription.status === "active" && (
+                <MaterialIcons name="verified" size={14} color="#F866B1" />
+              )}
             </View>
           ),
 
@@ -126,6 +142,53 @@ export function FeedsStack({ route, navigation }) {
           headerTitleStyle: {
             fontWeight: "bold",
             fontSize: 18,
+            letterSpacing: 0.5,
+          },
+          cardStyle: {
+            backgroundColor: currentTheme.background,
+          },
+        })}
+      />
+      <Stack.Screen
+        name="UserVisit"
+        component={withVariantVisit(User, "visitPage")}
+        options={({ route }) => ({
+          headerBackTitleVisible: false,
+          headerTitle: (props) => (
+            <View
+              style={{ flexDirection: "row", alignItems: "center", gap: 5 }}
+            >
+              <Text
+                style={{
+                  fontSize: 18,
+                  letterSpacing: 0.5,
+                  color: currentTheme.font,
+                  fontWeight: "bold",
+                }}
+              >
+                {route.params.user.name}
+              </Text>
+              <MaterialIcons
+                name="verified"
+                size={14}
+                color="#F866B1"
+                style={{ position: "relative", top: 1.5 }}
+              />
+            </View>
+          ),
+
+          headerStyle: {
+            backgroundColor: currentTheme.background,
+
+            elevation: 0,
+            shadowOpacity: 0,
+            borderBottomWidth: 0,
+          },
+          headerTintColor: currentTheme.font,
+          headerTitleStyle: {
+            fontWeight: "bold",
+            fontSize: 18,
+            letterSpacing: 0.5,
           },
           cardStyle: {
             backgroundColor: currentTheme.background,
@@ -149,6 +212,7 @@ export function FeedsStack({ route, navigation }) {
           headerTitleStyle: {
             fontWeight: "bold",
             fontSize: 18,
+            letterSpacing: 0.5,
           },
           cardStyle: {
             backgroundColor: currentTheme.background,

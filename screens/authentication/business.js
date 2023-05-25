@@ -7,6 +7,7 @@ import {
   KeyboardAvoidingView,
   Dimensions,
   Alert,
+  Platform,
 } from "react-native";
 import React, { useState } from "react";
 import SelectAutocomplete from "../../components/autocomplete";
@@ -17,11 +18,14 @@ import { setRerenderCurrentUser } from "../../redux/rerenders";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Language } from "../../context/language";
+import { lightTheme, darkTheme } from "../../context/theme";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
 const Business = ({ navigation }) => {
   const proceduresOptions = ProceduresOptions();
+  const theme = useSelector((state) => state.storeApp.theme);
+  const currentTheme = theme ? darkTheme : lightTheme;
 
   const language = Language();
   const dispatch = useDispatch();
@@ -31,9 +35,11 @@ const Business = ({ navigation }) => {
 
   const currentUser = useSelector((state) => state.storeAuth.currentUser);
 
+  console.log(wd);
+
   const FillUp = async (e) => {
     try {
-      if (procedures) {
+      if (procedures?.length > 0) {
         // Signup user
         const response = await axios.patch(
           "https://beautyverse.herokuapp.com/api/v1/users/" + currentUser?._id,
@@ -65,25 +71,44 @@ const Business = ({ navigation }) => {
       style={styles.keyboardAvoidingContainer}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <ScrollView contentContainerStyle={styles.container}>
+      <ScrollView
+        contentContainerStyle={styles.container}
+        bounces={Platform.OS === "ios" ? false : undefined}
+        overScrollMode={Platform.OS === "ios" ? "never" : "always"}
+      >
+        <Text
+          style={{
+            fontSize: 16,
+            fontWeight: "bold",
+            color: currentTheme.font,
+            letterSpacing: 0.3,
+            marginTop: 20,
+          }}
+        >
+          Select procedures:
+        </Text>
         <View style={styles.itemContainer}>
-          <Text style={styles.itemTitle}>
+          <Text style={[styles.itemTitle, { color: currentTheme.font }]}>
             {" "}
             {language?.language?.Auth?.auth?.procedures}
           </Text>
+
           <SelectAutocomplete
             data={proceduresOptions}
             state={procedures}
             setState={setProcedures}
+            currentTheme={currentTheme}
           />
         </View>
         <View style={styles.itemContainer}>
-          <Text style={styles.itemTitle}>
+          <Text style={[styles.itemTitle, { color: currentTheme.font }]}>
             {" "}
             {language?.language?.Auth?.auth?.workingDays} (
             {language?.language?.Auth?.auth?.optional})
           </Text>
-          <Select state={wd} setState={setWd} />
+          <View style={{ marginTop: 20, width: "100%", alignItems: "center" }}>
+            <Select state={wd} setState={setWd} currentTheme={currentTheme} />
+          </View>
         </View>
         <TouchableOpacity style={styles.button} onPress={FillUp}>
           <Text style={styles.buttonText}>
@@ -102,7 +127,7 @@ const styles = StyleSheet.create({
   container: {
     // height: SCREEN_HEIGHT,
     width: "100%",
-    gap: 20,
+    // gap: 20,
     alignItems: "center",
     paddingBottom: 60,
   },
@@ -117,17 +142,19 @@ const styles = StyleSheet.create({
   itemTitle: {
     fontSize: 14,
     color: "#fff",
+    fontWeight: "bold",
   },
   button: {
     width: "45%",
     padding: 10,
     backgroundColor: "#F866B1",
-    marginTop: 10,
+    marginTop: 50,
     justifyContent: "center",
     borderRadius: 50,
   },
   buttonText: {
     color: "#fff",
     textAlign: "center",
+    fontWeight: "bold",
   },
 });

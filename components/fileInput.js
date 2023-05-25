@@ -14,6 +14,7 @@ import { ResizeAndCompressImage } from "../functions/compressImg";
 import * as ImageManipulator from "expo-image-manipulator";
 import * as FileSystem from "expo-file-system";
 import { Language } from "../context/language";
+import { MaterialIcons } from "@expo/vector-icons";
 
 async function readImageData(uri) {
   try {
@@ -34,7 +35,7 @@ const InputFile = ({ setFile, Cover, currentTheme }) => {
 
   //resize image
   const ResizeAndCompressImage = async (uri, originalWidth, originalHeight) => {
-    const wdth = 1080;
+    const wdth = 640;
     const hght = (originalHeight / originalWidth) * wdth;
     try {
       const mobile = await ImageManipulator.manipulateAsync(
@@ -48,7 +49,7 @@ const InputFile = ({ setFile, Cover, currentTheme }) => {
           },
         ],
         {
-          compress: 0.9,
+          compress: 1,
           format: ImageManipulator.SaveFormat.JPEG,
         }
       );
@@ -68,7 +69,7 @@ const InputFile = ({ setFile, Cover, currentTheme }) => {
       allowsMultipleSelection: true, // Allow multiple selection
     });
     setFile([]);
-    if (result.assets.length > 0 && result.assets.length < 11) {
+    if (result.assets?.length > 0 && result.assets?.length < 11) {
       for (const asset of result.assets) {
         const resizedImage = await ResizeAndCompressImage(
           asset?.uri,
@@ -76,28 +77,32 @@ const InputFile = ({ setFile, Cover, currentTheme }) => {
           asset?.height
         );
       }
-    } else {
+    } else if (result.assets?.length > 10) {
       Alert.alert("You can upload only 10 images at once time");
     }
   };
 
   return (
-    <View style={styles.container}>
-      <TouchableOpacity onPress={selectImage} style={styles.button}>
-        <Text style={[styles.buttonText, { color: currentTheme.font }]}>
-          {language?.language?.User?.addFeed?.selectImage}
-        </Text>
-      </TouchableOpacity>
-    </View>
+    // <View style={styles.container}>
+    <TouchableOpacity onPress={selectImage} style={styles.button}>
+      <MaterialIcons name="image" size={20} color={currentTheme.font} />
+      <Text style={[styles.buttonText, { color: currentTheme.font }]}>
+        {language?.language?.User?.addFeed?.selectImage}
+      </Text>
+    </TouchableOpacity>
+    // </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  button: {
+    flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
+    gap: 10,
+    paddingHorizontal: 15,
+    paddingVertical: 7.5,
   },
-  button: {},
   buttonText: {
     color: "#fff",
     fontSize: 14,

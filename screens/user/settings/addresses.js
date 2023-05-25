@@ -8,12 +8,13 @@ import {
   Vibration,
   Alert,
   ScrollView,
+  Platform,
 } from "react-native";
 import React, { useState, useRef } from "react";
 import axios from "axios";
 import { useSelector, useDispatch } from "react-redux";
 import { setRerenderCurrentUser } from "../../../redux/rerenders";
-import { ListItem, Icon, Button } from "react-native-elements";
+import { MaterialIcons, FontAwesome5, Entypo } from "@expo/vector-icons";
 import GoogleAutocomplete from "../../../components/mapAutocomplete";
 import { BackDrop } from "../../../components/backDropLoader";
 import { Language } from "../../../context/language";
@@ -94,11 +95,11 @@ export const Addresses = () => {
     <View style={{ width: SCREEN_WIDTH, alignItems: "center", marginTop: 20 }}>
       {!add ? (
         <Pressable onPress={() => setAdd(true)} style={{ padding: 10 }}>
-          <Icon name="add" type="MaterialIcons" color="#F866B1" size={24} />
+          <MaterialIcons name="add" color="#F866B1" size={24} />
         </Pressable>
       ) : (
         <Pressable onPress={() => setAdd(false)} style={{ padding: 10 }}>
-          <Icon name="times" type="font-awesome-5" color="red" size={24} />
+          <FontAwesome5 name="times" color="red" size={24} />
         </Pressable>
       )}
 
@@ -127,6 +128,8 @@ export const Addresses = () => {
         </Pressable>
       )}
       <ScrollView
+        bounces={Platform.OS === "ios" ? false : undefined}
+        overScrollMode={Platform.OS === "ios" ? "never" : "always"}
         style={{ height: add ? SCREEN_HEIGHT / 1.7 : SCREEN_HEIGHT / 1.4 }}
       >
         {currentUser?.address.map((item, index) => {
@@ -144,19 +147,36 @@ export const Addresses = () => {
               delayLongPress={300}
               style={{
                 padding: 10,
-                backgroundColor: "rgba(255,255,255,0.05)",
-                borderRadius: 5,
+                backgroundColor: currentTheme.background2,
+                borderRadius: 10,
                 margin: 2.5,
                 flexDirection: "row",
                 width: SCREEN_WIDTH - 30,
                 gap: 30,
+                shadowColor: "#000",
+                shadowOffset: {
+                  width: 0,
+                  height: 3, // negative value places shadow on top
+                },
+                shadowOpacity: 0.05,
+                shadowRadius: 2,
+                elevation: 1,
               }}
             >
               <View style={{ gap: 10 }}>
-                <Text style={{ color: currentTheme.font, fontWeight: "bold" }}>
-                  {language?.language?.User.userPage.address}: N
-                  <Text style={{ fontWeight: "normal" }}>{index + 1}</Text>
-                </Text>
+                <View style={{ flexDirection: "row", alignItems: "center" }}>
+                  <Entypo
+                    name="location-pin"
+                    color={currentTheme.pink}
+                    size={20}
+                  />
+                  <Text
+                    style={{ color: currentTheme.font, fontWeight: "bold" }}
+                  >
+                    {language?.language?.User.userPage.address}: N
+                    <Text style={{ fontWeight: "normal" }}>{index + 1}</Text>
+                  </Text>
+                </View>
                 <Map
                   latitude={item?.latitude}
                   longitude={item.longitude}

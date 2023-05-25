@@ -99,11 +99,22 @@ export const AudienceList = ({
                 ]}
               />
 
-              <Text style={{ color: "#e5e5e5", fontWeight: "bold" }}>
+              <Text
+                style={{
+                  color: "#e5e5e5",
+                  fontWeight: "bold",
+                  letterSpacing: 0.2,
+                }}
+              >
                 {item.name}
               </Text>
               <Text
-                style={{ color: "#e5e5e5", fontWeight: "normal", fontSize: 12 }}
+                style={{
+                  color: "#e5e5e5",
+                  fontWeight: "normal",
+                  fontSize: 12,
+                  letterSpacing: 0.2,
+                }}
               >
                 {t}
               </Text>

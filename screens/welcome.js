@@ -7,6 +7,7 @@ import {
   ScrollView,
   Image,
   TouchableOpacity,
+  Platform,
 } from "react-native";
 import React from "react";
 import { useSelector, useDispatch } from "react-redux";
@@ -14,7 +15,9 @@ import { lightTheme, darkTheme } from "../context/theme";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { setLanguage, setTheme } from "../redux/app";
 import { Language } from "../context/language";
-import MaterialIcons from "react-native-vector-icons/MaterialIcons";
+import { MaterialIcons } from "@expo/vector-icons";
+import { CacheableImage } from "../components/cacheableImage";
+import AnimatedButton from "../components/animatedButton";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -30,6 +33,8 @@ const Welcome = ({ navigation }) => {
 
   return (
     <ScrollView
+      bounces={Platform.OS === "ios" ? false : undefined}
+      overScrollMode={Platform.OS === "ios" ? "never" : "always"}
       style={{
         backgroundColor: currentTheme.background,
       }}
@@ -51,7 +56,7 @@ const Welcome = ({ navigation }) => {
           style={{
             fontSize: 30,
             fontWeight: "bold",
-            color: "#F866B1",
+            color: currentTheme.pink,
             letterSpacing: 1,
           }}
         >
@@ -86,33 +91,15 @@ const Welcome = ({ navigation }) => {
       </View>
       <View style={{ position: "relative", bottom: 30 }}>
         <Image
-          source={require("../assets/beautyverse.png")}
           style={{
-            width: SCREEN_WIDTH / 1.1,
-            height: SCREEN_WIDTH / 1.1,
-            marginRight: 20,
+            width: SCREEN_WIDTH + 10,
+            height: SCREEN_WIDTH + 10,
           }}
+          source={require("../assets/logo.png")}
         />
       </View>
-      <TouchableOpacity
-        activeOpacity={0.3}
-        onPress={() => navigation.navigate("Login")}
-        style={{
-          width: "50%",
-          padding: 15,
-          alignItems: "center",
-          justifyContent: "center",
-          borderRadius: 20,
-          backgroundColor: "#F866B1",
-        }}
-      >
-        <Text
-          style={{ color: "#e5e5e5", fontWeight: "bold", letterSpacing: 0.5 }}
-        >
-          Login
-        </Text>
-      </TouchableOpacity>
-      <View style={{ width: "100%" }}>
+      <AnimatedButton navigation={navigation} currentTheme={currentTheme} />
+      <View style={{ width: "100%", position: "relative", bottom: 15 }}>
         <Text
           style={[
             styles.sectionTitle,
@@ -141,6 +128,9 @@ const Welcome = ({ navigation }) => {
             }}
             style={styles.themeModeButton1}
           >
+            {theme && (
+              <MaterialIcons name="done" color={currentTheme.pink} size={22} />
+            )}
             <Text style={{ color: "#fff" }}>Dark</Text>
           </Pressable>
           <Pressable
@@ -154,10 +144,13 @@ const Welcome = ({ navigation }) => {
             style={styles.themeModeButton2}
           >
             <Text>Light</Text>
+            {!theme && (
+              <MaterialIcons name="done" color={currentTheme.pink} size={22} />
+            )}
           </Pressable>
         </View>
       </View>
-      <View style={{ width: "100%", alignItems: "center", gap: 5 }}>
+      <View style={{ width: "100%", alignItems: "center", gap: 8 }}>
         <Text
           style={[
             styles.sectionTitle,
@@ -233,11 +226,25 @@ const Welcome = ({ navigation }) => {
       <View style={{ width: "90%" }}>
         <TouchableOpacity
           activeOpacity={0.5}
-          onPress={() => navigation.navigate("Terms")}
+          onPress={() => navigation.navigate("Prices", { from: "Welcome" })}
           style={[
             styles.item,
             { backgroundColor: currentTheme.background, marginTop: 30 },
           ]}
+        >
+          <Text style={[styles.BsectionTitle, { color: currentTheme.font }]}>
+            {language?.language?.User?.userPage?.prices}
+          </Text>
+          <MaterialIcons
+            name={"arrow-right"}
+            color={currentTheme.pink}
+            size={18}
+          />
+        </TouchableOpacity>
+        <TouchableOpacity
+          activeOpacity={0.5}
+          onPress={() => navigation.navigate("Terms")}
+          style={[styles.item, { backgroundColor: currentTheme.background }]}
         >
           <Text style={[styles.BsectionTitle, { color: currentTheme.font }]}>
             {language?.language?.Pages?.pages?.terms}
@@ -300,30 +307,33 @@ export default Welcome;
 const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 14,
-    letterSpacing: 0.5,
+    letterSpacing: 0.2,
     marginTop: 50,
     textAlign: "center",
     lineHeight: 24,
+    fontWeight: "bold",
   },
   themeModeButton1: {
     width: "40%",
-    borderWidth: 2,
-    borderColor: "#222",
     padding: 7.5,
     backgroundColor: "#111",
     borderTopLeftRadius: 50,
     borderBottomLeftRadius: 50,
     alignItems: "center",
+    justifyContent: "center",
+    flexDirection: "row",
+    gap: 10,
   },
   themeModeButton2: {
     width: "40%",
-    borderWidth: 2,
-    borderColor: "#fff",
     padding: 7.5,
     backgroundColor: "#fff",
     borderTopRightRadius: 50,
     borderBottomRightRadius: 50,
     alignItems: "center",
+    justifyContent: "center",
+    flexDirection: "row",
+    gap: 10,
   },
   languageBtn: {
     width: "70%",
@@ -331,6 +341,14 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     borderRadius: 50,
     alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1, // negative value places shadow on top
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 1,
+    elevation: 1,
   },
   item: {
     width: "100%",

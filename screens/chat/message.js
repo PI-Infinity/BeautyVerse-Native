@@ -15,7 +15,7 @@ import { setRerenderMessages, setRerederRooms } from "../../redux/chat";
 import GetTimesAgo from "../../functions/getTimesAgo";
 import { Language } from "../../context/language";
 import { CacheableImage } from "../../components/cacheableImage";
-import Icon from "react-native-vector-icons/FontAwesome";
+import { FontAwesome } from "@expo/vector-icons";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -189,7 +189,7 @@ export const Message = (props) => {
                     backgroundColor: "rgba(255,255,255,0.1)",
                   }}
                 >
-                  <Icon name="user" size={20} color="#e5e5e5" />
+                  <FontAwesome name="user" size={20} color="#e5e5e5" />
                 </View>
               )}
             </Pressable>

@@ -16,7 +16,7 @@ import { setRerenderCurrentUser } from "../../../redux/rerenders";
 import { setCurrentUser } from "../../../redux/user";
 import { ListItem, Icon, Button } from "react-native-elements";
 import { Language } from "../../../context/language";
-import FontAwesome from "react-native-vector-icons/FontAwesome";
+import { FontAwesome } from "@expo/vector-icons";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -74,6 +74,7 @@ export const Currency = ({ currentTheme }) => {
           marginBottom: 15,
           fontWeight: "bold",
           fontSize: 16,
+          letterSpacing: 0.3,
         }}
       >
         {language?.language?.User?.userPage?.currency}:
@@ -90,33 +91,33 @@ export const Currency = ({ currentTheme }) => {
         >
           <TouchableOpacity
             activeOpacity={0.3}
-            style={styles.dayOption}
+            style={styles.itemOption}
             onPress={() => AddCurrency("Dollar")}
           >
             <Text style={[styles.optionText, { color: currentTheme.font }]}>
               Dollar
             </Text>
-            <FontAwesome name="dollar" color="green" size={16} />
+            <FontAwesome name="dollar" color={currentTheme.pink} size={16} />
           </TouchableOpacity>
           <TouchableOpacity
             activeOpacity={0.3}
-            style={styles.dayOption}
+            style={styles.itemOption}
             onPress={() => AddCurrency("Euro")}
           >
             <Text style={[styles.optionText, { color: currentTheme.font }]}>
               Euro
             </Text>
-            <FontAwesome name="euro" color="green" size={16} />
+            <FontAwesome name="euro" color={currentTheme.pink} size={16} />
           </TouchableOpacity>
           <TouchableOpacity
             activeOpacity={0.3}
-            style={styles.dayOption}
+            style={styles.itemOption}
             onPress={() => AddCurrency("Lari")}
           >
             <Text style={[styles.optionText, { color: currentTheme.font }]}>
               Lari
             </Text>
-            {/* <FontAwesome name="gel" color="green" size={16} /> */}
+            {/* <FontAwesome name="gel" color={currentTheme.pink} size={16} /> */}
           </TouchableOpacity>
         </View>
       )}
@@ -124,23 +125,24 @@ export const Currency = ({ currentTheme }) => {
         <TouchableOpacity
           onPress={() => setAdd(!add)}
           style={[
-            styles.dayOption,
+            styles.itemOption,
             {
-              width: "90%",
+              width: "30%",
               justifyContent: "center",
-              backgroundColor: "rgba(255,255,255,0.1)",
+              backgroundColor: currentTheme.background,
+              borderRadius: 50,
             },
           ]}
         >
           <Text style={[styles.optionText, { color: currentTheme.font }]}>
             {currentUser?.currency}{" "}
             {currentUser.currency === "Dollar" ? (
-              <FontAwesome name="dollar" color="green" size={16} />
+              <FontAwesome name="dollar" color={currentTheme.pink} size={16} />
             ) : currentUser.currency === "Euro" ? (
-              <FontAwesome name="euro" color="green" size={16} />
+              <FontAwesome name="euro" color={currentTheme.pink} size={16} />
             ) : null}
           </Text>
-          {/* <FontAwesome name="gel" color="green" size={16} /> */}
+          {/* <FontAwesome name="gel" color={currentTheme.pink} size={16} /> */}
         </TouchableOpacity>
       )}
     </View>
@@ -154,7 +156,7 @@ const styles = StyleSheet.create({
     width: SCREEN_WIDTH - 25,
     gap: 10,
   },
-  dayOption: {
+  itemOption: {
     width: "100%",
     flexDirection: "row",
     alignItems: "center",
@@ -169,16 +171,18 @@ const styles = StyleSheet.create({
     marginTop: 5,
   },
   selected: {
-    backgroundColor: "rgba(255,255,255,0.1)",
+    // backgroundColor: "rgba(255,255,255,0.1)",
   },
   optionText: {
     fontSize: 14,
     color: "#e5e5e5",
+    letterSpacing: 0.2,
   },
   input: {
     marginTop: 10,
     backgroundColor: "#fff",
     borderRadius: 5,
     padding: 10,
+    letterSpacing: 0.2,
   },
 });

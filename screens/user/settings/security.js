@@ -19,6 +19,10 @@ import { Language } from "../../../context/language";
 import DeleteUserPopup from "../../../components/confirmDialog";
 import { setRerenderCurrentUser } from "../../../redux/rerenders";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { MaterialIcons } from "@expo/vector-icons";
+import { ref, listAll, deleteObject } from "firebase/storage";
+import { storage } from "../../../firebase";
+import { lightTheme, darkTheme } from "../../../context/theme";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -36,6 +40,9 @@ export const Security = () => {
   const [openChangePassword, setOpenChangePassword] = useState(true);
 
   const currentUser = useSelector((state) => state.storeUser.currentUser);
+
+  const theme = useSelector((state) => state.storeApp.theme);
+  const currentTheme = theme ? darkTheme : lightTheme;
 
   const Changing = async () => {
     try {
@@ -70,6 +77,8 @@ export const Security = () => {
   const [openDelete, setOpenDelete] = useState(false);
 
   const Delete = async () => {
+    let videofileRef = ref(storage, `videos/${currentUser?._id}`);
+    let imagefileRef = ref(storage, `images/${currentUser?._id}`);
     try {
       await AsyncStorage.removeItem("Beautyverse:currentUser");
       await dispatch(setRerenderCurrentUser());
@@ -77,6 +86,12 @@ export const Security = () => {
         "https://beautyverse.herokuapp.com/api/v1/users/" + currentUser?._id
       );
       if (response.status === 204) {
+        deleteObject(videofileRef).then(() => {
+          console.log("object deleted");
+        });
+        deleteObject(imagefileRef).then(() => {
+          console.log("object deleted");
+        });
         console.log("User deleted successfully");
       } else {
         console.log("Something went wrong while deleting the user");
@@ -93,7 +108,7 @@ export const Security = () => {
         paddingHorizontal: 30,
         paddingVertical: 20,
         alignItems: "center",
-        gap: "10%",
+        gap: 20,
       }}
     >
       {!openChangePassword && (
@@ -104,20 +119,21 @@ export const Security = () => {
               alignItems: "center",
               gap: 5,
               width: "100%",
-              borderRadius: 5,
+              borderRadius: 50,
               borderColor: "#555",
               borderWidth: 1,
             }}
           >
             <TextInput
               secureTextEntry={!showOldPassword}
-              placeholderTextColor="#888"
+              placeholderTextColor={currentTheme.disabled}
               placeholder={language?.language?.User?.userPage?.oldPassword}
               onChangeText={setOldPassword}
               style={{
                 padding: 10,
-                color: "#e5e5e5",
+                color: currentTheme.font,
                 width: "90%",
+                borderWidth: 0,
               }}
             />
             <TouchableOpacity
@@ -125,16 +141,14 @@ export const Security = () => {
               onPress={() => setShowOldPassword(!showOldPassword)}
             >
               {showOldPassword ? (
-                <Icon
+                <MaterialIcons
                   name="remove-red-eye"
-                  type="MaterialIcons"
                   color="#e5e5e5"
                   size={16}
                 />
               ) : (
-                <Icon
+                <MaterialIcons
                   name="panorama-fisheye"
-                  type="MaterialIcons"
                   color="#e5e5e5"
                   size={16}
                 />
@@ -147,20 +161,21 @@ export const Security = () => {
               alignItems: "center",
               gap: 5,
               width: "100%",
-              borderRadius: 5,
+              borderRadius: 50,
               borderColor: "#555",
               borderWidth: 1,
             }}
           >
             <TextInput
               secureTextEntry={!showPassword}
-              placeholderTextColor="#888"
+              placeholderTextColor={currentTheme.disabled}
               placeholder={language?.language?.User?.userPage?.newPassword}
               onChangeText={setNewPassword}
               style={{
                 padding: 10,
-                color: "#e5e5e5",
+                color: currentTheme.font,
                 width: "90%",
+                borderWidth: 0,
               }}
             />
             <TouchableOpacity
@@ -168,16 +183,14 @@ export const Security = () => {
               onPress={() => setShowPassword(!showPassword)}
             >
               {showPassword ? (
-                <Icon
+                <MaterialIcons
                   name="remove-red-eye"
-                  type="MaterialIcons"
                   color="#e5e5e5"
                   size={16}
                 />
               ) : (
-                <Icon
+                <MaterialIcons
                   name="panorama-fisheye"
-                  type="MaterialIcons"
                   color="#e5e5e5"
                   size={16}
                 />
@@ -190,19 +203,19 @@ export const Security = () => {
               alignItems: "center",
               gap: 5,
               width: "100%",
-              borderRadius: 5,
+              borderRadius: 50,
               borderColor: "#555",
               borderWidth: 1,
             }}
           >
             <TextInput
               secureTextEntry={!showConfirmPassword}
-              placeholderTextColor="#888"
+              placeholderTextColor={currentTheme.disabled}
               placeholder={language?.language?.User?.userPage?.confirmPassword}
               style={{
                 padding: 10,
                 width: "90%",
-                color: "#e5e5e5",
+                color: currentTheme.font,
               }}
               onChangeText={setConfirmPassword}
             />
@@ -211,16 +224,14 @@ export const Security = () => {
               onPress={() => setShowConfirmPassword(!showConfirmPassword)}
             >
               {showConfirmPassword ? (
-                <Icon
+                <MaterialIcons
                   name="remove-red-eye"
-                  type="MaterialIcons"
                   color="#e5e5e5"
                   size={16}
                 />
               ) : (
-                <Icon
+                <MaterialIcons
                   name="panorama-fisheye"
-                  type="MaterialIcons"
                   color="#e5e5e5"
                   size={16}
                 />
@@ -234,9 +245,10 @@ export const Security = () => {
           style={{ padding: 5, paddingLeft: 0 }}
           activeOpacity={0.5}
           style={{
-            backgroundColor: "rgba(255,255,255,0.1)",
-            borderRadius: 5,
+            backgroundColor: currentTheme.background2,
+            borderRadius: 50,
             padding: 10,
+            paddingVertical: 12.5,
             width: "80%",
             alignItems: "center",
           }}
@@ -250,11 +262,11 @@ export const Security = () => {
         <TouchableOpacity
           activeOpacity={0.5}
           style={{
-            borderRadius: 5,
+            borderRadius: 50,
             padding: 10,
             width: "80%",
             alignItems: "center",
-            backgroundColor: "green",
+            backgroundColor: currentTheme.pink,
           }}
           onPress={() => {
             Changing();
@@ -280,14 +292,14 @@ export const Security = () => {
         style={{
           backgroundColor: "red",
           padding: 10,
-          borderRadius: 5,
-          marginTop: 20,
+          borderRadius: 50,
+          width: "45%",
+          alignItems: "center",
         }}
-        onLongPress={() => {
+        onPress={() => {
           Vibration.vibrate();
           setOpenDelete(true);
         }}
-        delayLongPress={150}
       >
         <Text style={{ color: "#e5e5e5" }}>Delete Account</Text>
       </TouchableOpacity>

@@ -7,25 +7,27 @@ import {
   Image,
   TouchableOpacity,
   Dimensions,
+  Platform,
 } from "react-native";
 import React, { useState, useCallback, useRef, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import DocumentPicker from "react-native-document-picker";
 import FileInput from "../../components/fileInput";
+import ImagePickerExample from "../../components/fileInputAndroid";
 import InputVideo from "../../components/videoInput";
-import MaterialIcons from "react-native-vector-icons/MaterialIcons";
+import { MaterialIcons } from "@expo/vector-icons";
 import uuid from "react-native-uuid";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { storage } from "../../firebase";
 import axios from "axios";
-import { BackDrop } from "../../components/backDropLoader";
+import { UploaderPercentage } from "../../components/uploaderPercentage";
 import { setCleanUp, setRerenderUserFeeds } from "../../redux/rerenders";
 import { Language } from "../../context/language";
 import { CacheableImage } from "../../components/cacheableImage";
 import { Video } from "expo-av";
 import * as FileSystem from "expo-file-system";
 import base64js from "base64-js";
-import Icon from "react-native-vector-icons/FontAwesome";
+import { FontAwesome } from "@expo/vector-icons";
 import { lightTheme, darkTheme } from "../../context/theme";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -61,31 +63,22 @@ export const AddFeed = ({ navigation }) => {
   }, []);
 
   // add file
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [file, setFile] = useState([]);
   const [blobFile, setBlobFile] = useState(null);
 
-  // console.log(file[0]?.height);
+  const uploadTaskRef = useRef(null);
+
+  const cancelUpload = () => {
+    if (uploadTaskRef.current) {
+      uploadTaskRef.current.cancel();
+    }
+  };
 
   async function uriToBlob(uri) {
     if (Platform.OS === "android" || Platform.OS === "ios") {
       const response = await fetch(uri);
       return await response.blob();
-    } else {
-      return new Promise((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        xhr.onload = function () {
-          resolve(xhr.response);
-        };
-        xhr.onerror = function () {
-          reject(new Error("uriToBlob failed"));
-        };
-        xhr.responseType = "blob";
-        xhr.open("GET", uri, true);
-        xhr.send(null);
-        setTimeout(() => {
-          setLoading(false);
-        }, 1000);
-      });
     }
   }
 
@@ -106,17 +99,18 @@ export const AddFeed = ({ navigation }) => {
     setLoading(true);
     //create id
 
-    const AddFileInCloud = async (index, folder) => {
+    const AddFileInCloud = async (index, folder, uri) => {
       let imgId = currentUser.name + uuid.v4();
       let fileRef = ref(
         storage,
         `images/${currentUser?._id}/feeds/${folder}/${imgId}/`
       );
-      const blb = await fetch(file[index]?.base64).then((res) => res.blob());
+      const blb = await uriToBlob(uri);
+      // const blb = await fetch(file[index]?.base64).then((res) => res.blob());
 
       if (fileRef) {
         // add desktop version
-        const snapshot = await uploadBytes(fileRef, blb);
+        const snapshot = await uploadBytesResumable(fileRef, blb);
         const url = await getDownloadURL(snapshot.ref);
         return { url: url };
       }
@@ -127,7 +121,7 @@ export const AddFeed = ({ navigation }) => {
       let folderId = currentUser.name + uuid.v4();
 
       const uploadPromises = file.map((_, index) =>
-        AddFileInCloud(index, folderId)
+        AddFileInCloud(index, folderId, file[index].uri)
       );
 
       Promise.all(uploadPromises).then(async (uploadedUrls) => {
@@ -178,8 +172,22 @@ export const AddFeed = ({ navigation }) => {
         `videos/${currentUser?._id}/feeds/${videoId}/`
       );
 
-      await uploadBytes(videosRef, blobFile).then((snapshot) => {
-        getDownloadURL(snapshot.ref).then(async (url) => {
+      const uploadTask = uploadBytesResumable(videosRef, blobFile);
+
+      uploadTask.on(
+        "state_changed",
+        (snapshot) => {
+          const progress =
+            (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          setUploadProgress(progress);
+        },
+        (error) => {
+          console.error(error);
+          setLoading(false);
+        },
+        async () => {
+          const url = await getDownloadURL(uploadTask.snapshot.ref);
+
           try {
             const newFeed = {
               video: url,
@@ -190,19 +198,23 @@ export const AddFeed = ({ navigation }) => {
               fileHeight: file.height,
               fileWidth: file.width,
             };
+
             const response = await axios.post(
               `https://beautyverse.herokuapp.com/api/v1/users/${currentUser?._id}/feeds`,
               newFeed
             );
+
             await axios.patch(
               `https://beautyverse.herokuapp.com/api/v1/users/${currentUser?._id}`,
               {
                 lastPostCreatedAt: new Date(),
               }
             );
+
             setTimeout(() => {
               dispatch(setRerenderUserFeeds());
             }, 1000);
+
             setTimeout(async () => {
               navigation.goBack();
               setFile([]);
@@ -215,8 +227,8 @@ export const AddFeed = ({ navigation }) => {
               setLoading(false);
             }, 3000);
           }
-        });
-      });
+        }
+      );
     }
   }
 
@@ -226,13 +238,12 @@ export const AddFeed = ({ navigation }) => {
   let hght;
   if (file?.type === "video") {
     let originalHeight =
-      file?.width >= file?.height ? file?.width : file?.height;
-    let originalWidth =
-      file?.width >= file?.height ? file?.height : file?.width;
+      file?.width > file?.height ? file?.width : file?.height;
+    let originalWidth = file?.width > file?.height ? file?.height : file?.width;
 
     let wdth = SCREEN_WIDTH;
 
-    let percented = originalWidth / SCREEN_WIDTH;
+    let percented = originalWidth / wdth;
 
     hght = originalHeight / percented;
   } else if (file[0]) {
@@ -247,15 +258,26 @@ export const AddFeed = ({ navigation }) => {
 
   return (
     <>
-      <BackDrop loading={loading} setLoading={setLoading} />
+      {loading && (
+        <UploaderPercentage
+          loading={loading}
+          setLoading={setLoading}
+          setFile={setFile}
+          to="cloud"
+          progress={uploadProgress}
+          setProgress={setUploadProgress}
+          cancelUpload={cancelUpload}
+        />
+      )}
       <ScrollView
         showsVerticalScrollIndicator={false}
         bounces={Platform.OS === "ios" ? false : undefined}
-        overScrollMode={Platform.OS === "ios" ? undefined : false}
+        overScrollMode={Platform.OS === "ios" ? "never" : "always"}
         contentContainerStyle={{
           alignItems: "center",
           padding: 15,
           width: SCREEN_WIDTH,
+          paddingBottom: 50,
         }}
         style={{}}
       >
@@ -297,7 +319,7 @@ export const AddFeed = ({ navigation }) => {
                   backgroundColor: "rgba(255,255,255,0.1)",
                 }}
               >
-                <Icon name="user" size={20} color="#e5e5e5" />
+                <FontAwesome name="user" size={20} color="#e5e5e5" />
               </View>
             )}
           </View>
@@ -339,7 +361,7 @@ export const AddFeed = ({ navigation }) => {
             alignItems: "center",
             flexDirection: "row",
             justifyContent: "space-evenly",
-            gap: "10%",
+            gap: SCREEN_WIDTH / 10,
             marginBottom: 20,
           }}
         >
@@ -353,18 +375,26 @@ export const AddFeed = ({ navigation }) => {
               flexDirection: "row",
               gap: 15,
               backgroundColor: currentTheme.background2,
-              paddingHorizontal: 15,
-              paddingVertical: 7,
+              // paddingHorizontal: 15,
+              // paddingVertical: 7,
               borderRadius: 50,
             }}
           >
-            <MaterialIcons name="image" size={20} color={currentTheme.font} />
             <View style={{ gap: 20 }}>
-              <FileInput
-                file={file}
-                setFile={setFile}
-                currentTheme={currentTheme}
-              />
+              {Platform.OS === "android" ? (
+                <ImagePickerExample
+                  setFile={setFile}
+                  file={file}
+                  currentTheme={currentTheme}
+                  language={language}
+                />
+              ) : (
+                <FileInput
+                  file={file}
+                  setFile={setFile}
+                  currentTheme={currentTheme}
+                />
+              )}
             </View>
           </View>
           <View
@@ -376,17 +406,24 @@ export const AddFeed = ({ navigation }) => {
               flexDirection: "row",
               gap: 15,
               backgroundColor: currentTheme.background2,
-              paddingHorizontal: 15,
-              paddingVertical: 7,
               borderRadius: 50,
             }}
           >
-            <MaterialIcons
-              name="video-library"
-              size={20}
-              color={currentTheme.font}
-            />
-            <View style={{ gap: 20 }}>
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "center",
+                alignItems: "center",
+                gap: 10,
+                paddingHorizontal: 15,
+                paddingVertical: 7.5,
+              }}
+            >
+              <MaterialIcons
+                name="video-library"
+                size={20}
+                color={currentTheme.font}
+              />
               <InputVideo
                 file={file}
                 setFile={setFile}
@@ -395,12 +432,25 @@ export const AddFeed = ({ navigation }) => {
             </View>
           </View>
         </View>
+
+        {file?.length > 0 && file?.type !== "video" && (
+          <Text
+            style={{
+              color: "#ccc",
+              marginBottom: 10,
+            }}
+          >
+            {file?.length} Images
+          </Text>
+        )}
         <View
           style={{
-            height: hght,
-            maxHeight: 700,
+            height: hght > 640 ? 640 : hght,
+            maxHeight: 640,
+            overflow: "hidden",
             width: SCREEN_WIDTH,
-            backgroundColor: currentTheme.background2,
+            // backgroundColor: currentTheme.background2,
+            justifyContent: "center",
           }}
         >
           {file[0] && file?.type !== "video" ? (
@@ -408,8 +458,8 @@ export const AddFeed = ({ navigation }) => {
               horizontal
               pagingEnabled
               contentContainerStyle={{
-                height: hght,
-                maxHeight: 700,
+                height: file?.height > file?.width ? hght : SCREEN_WIDTH,
+                maxHeight: 640,
                 justifyContent: "center",
                 alignItems: "center",
               }}
@@ -421,16 +471,17 @@ export const AddFeed = ({ navigation }) => {
                 let percented = ow / SCREEN_WIDTH;
                 h = oh / percented;
                 return (
-                  <Image
-                    key={x}
-                    style={{
-                      width: SCREEN_WIDTH,
-                      height: h,
-                      maxHeight: 700,
-                      resizeMode: h > 700 ? "cover" : "contain",
-                    }}
-                    source={{ uri: i.uri }}
-                  />
+                  <View key={x} style={{ alignItems: "center" }}>
+                    <Image
+                      style={{
+                        width: SCREEN_WIDTH,
+                        height: h,
+                        maxHeight: 640,
+                        resizeMode: h > 640 ? "cover" : "contain",
+                      }}
+                      source={{ uri: i.uri }}
+                    />
+                  </View>
                 );
               })}
             </ScrollView>
@@ -442,12 +493,12 @@ export const AddFeed = ({ navigation }) => {
                   source={{ uri: file?.uri }}
                   useNativeControls
                   isMuted={false}
-                  resizeMode={hght > 700 ? "cover" : "contain"}
+                  resizeMode="contain"
                   style={[
                     styles.preview2,
                     {
-                      height: hght,
-                      maxHeight: 700,
+                      height: file?.height > file?.width ? hght : file?.width,
+                      // maxHeight: 640,
                       width: SCREEN_WIDTH,
                     },
                   ]}
@@ -468,7 +519,11 @@ export const AddFeed = ({ navigation }) => {
             justifyContent: "center",
             borderRadius: 50,
           }}
-          onPress={file && postText.length < 1501 ? FileUpload : undefined}
+          onPress={
+            (file || file?.length > 0) && postText.length < 1501
+              ? FileUpload
+              : undefined
+          }
         >
           <Text style={{ textAlign: "center", color: "#eee" }}>
             {language?.language?.User?.addFeed?.upload}

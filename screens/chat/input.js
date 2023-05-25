@@ -9,7 +9,7 @@ import {
 import React, { useEffect, useState, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import axios from "axios";
-import Icon from "react-native-vector-icons/FontAwesome";
+import { FontAwesome } from "@expo/vector-icons";
 import {
   setRerenderMessages,
   setRerederRooms,
@@ -116,7 +116,7 @@ export const Input = ({ targetUser, setMessages, socket }) => {
     <View
       style={{
         width: SCREEN_WIDTH,
-        height: 50,
+        height: 60,
         paddingHorizontal: SCREEN_WIDTH / 8,
         backgroundColor: "#222",
         alignItems: "center",
@@ -128,15 +128,25 @@ export const Input = ({ targetUser, setMessages, socket }) => {
         placeholder="Type something.."
         placeholderTextColor="#555"
         onChangeText={setText}
+        autoFocus
         onFocus={ReadMessage}
         value={text}
+        multiline
+        onSubmitEditing={() => {
+          if (text?.length) {
+            SendMessage();
+          } else {
+            console.log("no message");
+          }
+        }}
+        // autoofcus
         style={{
           // height: "100%",
           width: "100%",
           color: "#e5e5e5",
         }}
       />
-      <Icon
+      <FontAwesome
         name="image"
         size={18}
         color="#e5e5e5"
@@ -146,7 +156,7 @@ export const Input = ({ targetUser, setMessages, socket }) => {
         onPress={text?.length > 0 ? SendMessage : undefined}
         activeOpacity={0.3}
       >
-        <Icon name="send" size={20} color="#e5e5e5" />
+        <FontAwesome name="send" size={20} color="#e5e5e5" />
       </TouchableOpacity>
     </View>
   );

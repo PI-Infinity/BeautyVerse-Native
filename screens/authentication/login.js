@@ -6,9 +6,10 @@ import {
   StyleSheet,
   Dimensions,
   Alert,
+  KeyboardAvoidingView,
 } from "react-native";
 import { useState } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { setCurrentUser } from "../../redux/auth";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -16,6 +17,7 @@ import EmailPopup from "../../components/inputPopup";
 import { setRerenderCurrentUser } from "../../redux/rerenders";
 import PasswordRessetPopup from "../../screens/authentication/resetPassword";
 import { Language } from "../../context/language";
+import { lightTheme, darkTheme } from "../../context/theme";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -26,6 +28,9 @@ export const Login = ({ navigation }) => {
   const language = Language();
 
   const dispatch = useDispatch();
+
+  const theme = useSelector((state) => state.storeApp.theme);
+  const currentTheme = theme ? darkTheme : lightTheme;
 
   // verify email
   const [verify, setVerify] = useState(false);
@@ -58,7 +63,7 @@ export const Login = ({ navigation }) => {
           }
         });
     } catch (err) {
-      console.log(err);
+      console.log(err.response.data.message);
       Alert.alert("Warrning", err.response.data.message);
     }
   };
@@ -80,6 +85,7 @@ export const Login = ({ navigation }) => {
         alert("navigate");
       } else {
         dispatch(setCurrentUser(newUser));
+        navigation.navigate("Business");
       }
       setEmail("");
       setPassword("");
@@ -113,65 +119,83 @@ export const Login = ({ navigation }) => {
   }
 
   return (
-    <View style={styles.container}>
-      <View style={{ position: "absolute" }}>
-        {verify && (
-          <EmailPopup
-            setFunction={Verify}
-            code={code}
-            setCode={setCode}
-            open={verify}
-            setOpen={setVerify}
-          />
-        )}
-      </View>
-      <View style={{ position: "absolute" }}>
-        {resetPopup && (
-          <PasswordRessetPopup
-            email={emailInput}
-            setEmail={setEmailInput}
-            isVisible={resetPopup}
-            onClose={() => setResetPopup(false)}
-            onSend={SendEmail}
-          />
-        )}
-      </View>
-      <TextInput
-        placeholder={language?.language?.Auth?.auth?.email}
-        onChangeText={(text) => setEmail(text)}
-        value={email}
-        style={styles.input}
-        placeholderTextColor="#888"
-      />
-      <TextInput
-        secureTextEntry
-        placeholder={language?.language?.Auth?.auth?.password}
-        onChangeText={(text) => setPassword(text)}
-        value={password}
-        style={styles.input}
-        placeholderTextColor="#888"
-      />
-      <TouchableOpacity style={styles.button} onPress={Login}>
-        <Text style={styles.buttonText}>
-          {language?.language?.Auth?.auth?.login}
-        </Text>
-      </TouchableOpacity>
-      <TouchableOpacity onPress={() => setResetPopup(true)}>
-        <Text style={styles.forgot}>
-          {language?.language?.Auth?.auth?.forgot}
-        </Text>
-      </TouchableOpacity>
-      <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
-        <Text style={styles.registerQuestion}>
-          {language?.language?.Auth?.auth?.dontHave}{" "}
-        </Text>
-        <TouchableOpacity onPress={() => navigation.navigate("Register")}>
-          <Text style={styles.register}>
-            {language?.language?.Auth?.auth?.register}
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={{ flex: 1 }}
+    >
+      <View style={styles.container}>
+        <View style={{ position: "absolute" }}>
+          {verify && (
+            <EmailPopup
+              setFunction={Verify}
+              code={code}
+              setCode={setCode}
+              open={verify}
+              setOpen={setVerify}
+            />
+          )}
+        </View>
+        <View style={{ position: "absolute" }}>
+          {resetPopup && (
+            <PasswordRessetPopup
+              email={emailInput}
+              setEmail={setEmailInput}
+              isVisible={resetPopup}
+              onClose={() => setResetPopup(false)}
+              onSend={SendEmail}
+            />
+          )}
+        </View>
+        <TextInput
+          placeholder={language?.language?.Auth?.auth?.email}
+          onChangeText={(text) => setEmail(text)}
+          value={email}
+          autoFocus
+          style={[
+            styles.input,
+            {
+              color: currentTheme.font,
+              backgroundColor: currentTheme.background2,
+            },
+          ]}
+          placeholderTextColor={currentTheme.disabled}
+        />
+        <TextInput
+          secureTextEntry
+          placeholder={language?.language?.Auth?.auth?.password}
+          onChangeText={(text) => setPassword(text)}
+          value={password}
+          style={[
+            styles.input,
+            {
+              color: currentTheme.font,
+              backgroundColor: currentTheme.background2,
+            },
+          ]}
+          placeholderTextColor={currentTheme.disabled}
+        />
+        <TouchableOpacity style={styles.button} onPress={Login}>
+          <Text style={styles.buttonText}>
+            {language?.language?.Auth?.auth?.login}
           </Text>
         </TouchableOpacity>
+        <TouchableOpacity onPress={() => setResetPopup(true)}>
+          <Text style={[styles.forgot, { color: currentTheme.font }]}>
+            {language?.language?.Auth?.auth?.forgot}
+          </Text>
+        </TouchableOpacity>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+          <Text style={[styles.registerQuestion, { color: currentTheme.font }]}>
+            {language?.language?.Auth?.auth?.dontHave}{" "}
+          </Text>
+          <TouchableOpacity onPress={() => navigation.navigate("Register")}>
+            <Text style={[styles.register, { color: currentTheme.pink }]}>
+              {language?.language?.Auth?.auth?.register}
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
-    </View>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -198,6 +222,15 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#e5e5e5",
     borderRadius: 50,
+    letterSpacing: 0.2,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 3, // negative value places shadow on top
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
   button: {
     width: "45%",
@@ -210,19 +243,25 @@ const styles = StyleSheet.create({
   buttonText: {
     color: "#e5e5e5",
     textAlign: "center",
+    letterSpacing: 0.2,
+    fontWeight: "bold",
   },
   forgot: {
     color: "#e5e5e5",
     textAlign: "center",
     marginTop: 10,
     marginBottom: 10,
+    letterSpacing: 0.2,
   },
   registerQuestion: {
     color: "#e5e5e5",
     textAlign: "center",
+    letterSpacing: 0.2,
   },
   register: {
     color: "#F866B1",
     textAlign: "center",
+    fontWeight: "bold",
+    letterSpacing: 0.2,
   },
 });

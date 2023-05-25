@@ -3,19 +3,11 @@ import React, { useState } from "react";
 import { View, Button, Platform, TouchableOpacity, Text } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 
-const DateTimePickerComponent = () => {
-  const [date, setDate] = useState(new Date());
-  const [show, setShow] = useState(false);
-
+const DateTimePickerComponent = ({ dateAndTime, setDateAndTime }) => {
   const onChange = (event, selectedDate) => {
-    setShow(Platform.OS === "ios");
     if (selectedDate) {
-      setDate(selectedDate);
+      setDateAndTime(selectedDate);
     }
-  };
-
-  const showDateTimePicker = () => {
-    setShow(true);
   };
 
   return (
@@ -25,7 +17,7 @@ const DateTimePickerComponent = () => {
         backgroundColor: "#ccc",
         borderRadius: 50,
         padding: 5,
-        paddingRight: 0,
+        paddingRight: 15,
         alignItems: "center",
         justifyContent: "center",
         gap: 10,
@@ -34,7 +26,7 @@ const DateTimePickerComponent = () => {
     >
       <Text style={{ fontSize: 16 }}>Choice time:</Text>
       <DateTimePicker
-        value={date}
+        value={dateAndTime}
         mode="datetime"
         is24Hour={true}
         display="default"

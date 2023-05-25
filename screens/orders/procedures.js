@@ -11,11 +11,18 @@ import {
 import ConfirmDialog from "../../components/confirmDialog";
 import { ProceduresOptions } from "../../datas/registerDatas";
 import { Language } from "../../context/language";
-import FontAwesome from "react-native-vector-icons/FontAwesome";
+import { FontAwesome } from "@expo/vector-icons";
 import { lightTheme, darkTheme } from "../../context/theme";
 import { useSelector, useDispatch } from "react-redux";
 
-export const ProceduresList = ({ targetUser, addOrder }) => {
+export const ProceduresList = ({
+  targetUser,
+  addOrder,
+  procedure,
+  setProcedure,
+  price,
+  setPrice,
+}) => {
   const language = Language();
   const [category, setCategory] = useState("");
   const [confirmDialogVisible, setConfirmDialogVisible] = useState(false);
@@ -49,37 +56,19 @@ export const ProceduresList = ({ targetUser, addOrder }) => {
 
   return (
     <View style={styles.container}>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.navigator}
-        contentContainerStyle={{
-          flexDirection: "row",
-        }}
-      >
-        <TouchableOpacity
-          onPress={() => setActive("all")}
-          style={
-            active === "all"
-              ? styles.categoryButtonActive
-              : styles.categoryButton
-          }
+      {categories?.length > 1 && (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.navigator}
+          contentContainerStyle={{
+            flexDirection: "row",
+          }}
         >
-          <Text
-            style={[
-              styles.buttonText,
-              { color: active === "all" ? "#e5e5e5" : "#ccc" },
-            ]}
-          >
-            {language?.language?.User?.userPage?.all}
-          </Text>
-        </TouchableOpacity>
-        {categories?.map((cat, index) => (
           <TouchableOpacity
-            key={index}
-            onPress={() => setActive(cat?.value)}
+            onPress={() => setActive("all")}
             style={
-              active.toLowerCase() === cat.value.toLowerCase()
+              active === "all"
                 ? styles.categoryButtonActive
                 : styles.categoryButton
             }
@@ -87,19 +76,40 @@ export const ProceduresList = ({ targetUser, addOrder }) => {
             <Text
               style={[
                 styles.buttonText,
-                {
-                  color:
-                    active.toLowerCase() === cat.value.toLowerCase()
-                      ? "#e5e5e5"
-                      : "#ccc",
-                },
+                { color: active === "all" ? "#e5e5e5" : "#ccc" },
               ]}
             >
-              {cat?.label}
+              {language?.language?.User?.userPage?.all}
             </Text>
           </TouchableOpacity>
-        ))}
-      </ScrollView>
+
+          {categories?.map((cat, index) => (
+            <TouchableOpacity
+              key={index}
+              onPress={() => setActive(cat?.value)}
+              style={
+                active.toLowerCase() === cat.value.toLowerCase()
+                  ? styles.categoryButtonActive
+                  : styles.categoryButton
+              }
+            >
+              <Text
+                style={[
+                  styles.buttonText,
+                  {
+                    color:
+                      active.toLowerCase() === cat.value.toLowerCase()
+                        ? "#e5e5e5"
+                        : "#ccc",
+                  },
+                ]}
+              >
+                {cat?.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      )}
       <View style={{ gap: 10, alignItems: "center" }}>
         {targetUser.procedures
           .filter((item) => {
@@ -116,10 +126,17 @@ export const ProceduresList = ({ targetUser, addOrder }) => {
             return (
               <TouchableOpacity
                 activeOpacity={addOrder ? 0.5 : 1}
+                onPress={() => {
+                  setProcedure(item);
+                  setPrice(item?.price ? item.price : "");
+                }}
                 key={index}
                 style={{
                   width: "90%",
-                  backgroundColor: currentTheme.background2,
+                  backgroundColor:
+                    procedure?.value === item?.value
+                      ? "green"
+                      : currentTheme.background2,
                   borderRadius: 50,
                   padding: 15,
                   justifyContent: "space-between",

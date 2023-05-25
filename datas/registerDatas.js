@@ -703,11 +703,11 @@ const proceduresOptionsEn = [
     label: "Lash flexing",
   },
   {
-    value: "Eyebrows and Eyelashes - lash extension",
+    value: "Eyebrows and Eyelashes - lash extension - lash extension",
     label: "Lash extension",
   },
   {
-    value: "Eyebrows and Eyelashes - brow extension",
+    value: "Eyebrows and Eyelashes - brow extension - brow extension",
     label: "Brow extension",
   },
   {
@@ -745,6 +745,10 @@ const proceduresOptionsEn = [
   {
     value: "Makeup",
     label: "Makeup",
+  },
+  {
+    value: "Makeup - Makeup - makeup",
+    label: "Makeup - Makeup - makeup",
   },
   {
     value: "Makeup - evening makeup - evening makeup",
@@ -1458,11 +1462,11 @@ const proceduresOptionsRu = [
     label: "Флексинг ресниц",
   },
   {
-    value: "Eyebrows and Eyelashes - lash extension",
+    value: "Eyebrows and Eyelashes - lash extension - lash extension",
     label: "Наращивание ресниц",
   },
   {
-    value: "Eyebrows and Eyelashes - brow extension",
+    value: "Eyebrows and Eyelashes - brow extension - brow extension",
     label: "Наращивание бровей",
   },
   {
@@ -1500,6 +1504,10 @@ const proceduresOptionsRu = [
   {
     value: "Makeup",
     label: "Макияж",
+  },
+  {
+    value: "Makeup - Makeup - makeup",
+    label: "Макияж - Макияж - Макияж",
   },
   {
     value: "Makeup - evening makeup - evening makeup",
@@ -2213,11 +2221,11 @@ const proceduresOptionsKa = [
     label: "წამწამების ფლექსინგი",
   },
   {
-    value: "Eyebrows and Eyelashes - lash extension",
+    value: "Eyebrows and Eyelashes - lash extension - lash extension",
     label: "წამწამების დაგრძელება",
   },
   {
-    value: "Eyebrows and Eyelashes - brow extension",
+    value: "Eyebrows and Eyelashes - brow extension - brow extension",
     label: "წარბების დაგრძელება",
   },
   {
@@ -2255,6 +2263,10 @@ const proceduresOptionsKa = [
   {
     value: "Makeup",
     label: "მაკიაჟი",
+  },
+  {
+    value: "Makeup - Makeup - makeup",
+    label: "მაკიაჟი - მაკიაჟი - მაკიაჟი",
   },
   {
     value: "Makeup - evening makeup - evening makeup",

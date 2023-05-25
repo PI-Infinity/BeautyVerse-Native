@@ -6,13 +6,19 @@ import {
   Button,
   StyleSheet,
   Modal,
+  KeyboardAvoidingView,
   TouchableOpacity,
 } from "react-native";
 import { Language } from "../context/language";
+import { lightTheme, darkTheme } from "../context/theme";
+import { useSelector, useDispatch } from "react-redux";
 
 const InputPopup = (props) => {
   const language = Language();
   const [email, setEmail] = useState("");
+
+  const theme = useSelector((state) => state.storeApp.theme);
+  const currentTheme = theme ? darkTheme : lightTheme;
 
   const handleSend = () => {
     // Your send logic here
@@ -27,37 +33,67 @@ const InputPopup = (props) => {
   return (
     <View style={styles.container}>
       <Modal animationType="slide" transparent visible={props.open}>
-        <View style={styles.centeredView}>
-          <View style={styles.modalView}>
-            <Text style={styles.modalText}>
-              {language?.language?.Auth?.auth?.verificationCode}
-            </Text>
-            <TextInput
-              style={styles.input}
-              onChangeText={(text) => props.setCode(text)}
-              value={props.code}
-              placeholder="Code"
-            />
-            <View style={styles.buttonsContainer}>
-              <TouchableOpacity
-                style={[styles.button, styles.cancelButton]}
-                onPress={handleCancel}
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={{ flex: 1 }}
+        >
+          <View style={styles.centeredView}>
+            <View
+              style={[
+                styles.modalView,
+                { backgroundColor: currentTheme.background2 },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.modalText,
+                  { fontSize: 16, color: currentTheme.font },
+                ]}
               >
-                <Text style={styles.buttonText}>
-                  {language?.language?.Auth?.auth?.cancel}
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.button, styles.sendButton]}
-                onPress={handleSend}
-              >
-                <Text style={styles.buttonText}>
-                  {language?.language?.Auth?.auth?.send}
-                </Text>
-              </TouchableOpacity>
+                Verification code has been sent to email!
+              </Text>
+              <TextInput
+                style={[
+                  styles.input,
+                  {
+                    backgroundColor: currentTheme.background,
+                    color: currentTheme.font,
+                  },
+                ]}
+                onChangeText={(text) => props.setCode(text)}
+                value={props.code}
+                placeholder={language?.language?.Auth?.auth?.verificationCode}
+                placeholderTextColor="#888"
+              />
+              <View style={styles.buttonsContainer}>
+                <TouchableOpacity
+                  style={[
+                    styles.button,
+                    styles.cancelButton,
+                    { backgroundColor: currentTheme.disabled },
+                  ]}
+                  onPress={handleCancel}
+                >
+                  <Text style={styles.buttonText}>
+                    {language?.language?.Auth?.auth?.cancel}
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.button,
+                    styles.sendButton,
+                    { backgroundColor: currentTheme.pink },
+                  ]}
+                  onPress={handleSend}
+                >
+                  <Text style={styles.buttonText}>
+                    {language?.language?.Auth?.auth?.send}
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
   );
@@ -88,11 +124,17 @@ const styles = StyleSheet.create({
     fontSize: 18,
   },
   input: {
-    borderWidth: 1,
-    borderColor: "gray",
     borderRadius: 50,
     padding: 10,
     width: "100%",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 3, // negative value places shadow on top
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
   buttonsContainer: {
     flexDirection: "row",
@@ -108,10 +150,8 @@ const styles = StyleSheet.create({
   },
   sendButton: {
     color: "#e5e5e5",
-    backgroundColor: "#F866B1",
   },
   cancelButton: {
-    backgroundColor: "gray",
     color: "#e5e5e5",
   },
   buttonText: {

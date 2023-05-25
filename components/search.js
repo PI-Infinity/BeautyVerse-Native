@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { View, Text, Pressable, TextInput } from "react-native";
 import { SearchBar } from "@rneui/themed";
 import { Language } from "../context/language";
-import Icon from "react-native-vector-icons/FontAwesome";
+import { FontAwesome } from "@expo/vector-icons";
 import { useSelector, useDispatch } from "react-redux";
 import { setSearchInput, setSearch } from "../redux/filter";
 
@@ -22,14 +22,14 @@ export const Search = ({ navigation, currentTheme }) => {
           backgroundColor: currentTheme.background2,
           borderWidth: 1.5,
           borderColor: currentTheme.pink,
-          borderRadius: 50,
+          borderRadius: 10,
           flexDirection: "row",
           alignItems: "center",
           gap: 5,
           paddingHorizontal: 10,
         }}
       >
-        <Icon name="search" size={20} color={currentTheme.font} />
+        <FontAwesome name="search" size={20} color={currentTheme.font} />
         <TextInput
           placeholder={language?.language?.Main?.filter?.typeHere}
           placeholderTextColor={currentTheme.disabled}
@@ -38,6 +38,7 @@ export const Search = ({ navigation, currentTheme }) => {
             padding: 7.5,
             color: currentTheme.font,
             borderRadius: 50,
+            letterSpacing: 0.5,
           }}
           onFocus={() => navigation.navigate("Search")}
           showSoftInputOnFocus={false}
@@ -51,7 +52,7 @@ export const Search = ({ navigation, currentTheme }) => {
               dispatch(setSearchInput(""));
             }}
           >
-            <Icon name="close" size={20} color="red" />
+            <FontAwesome name="close" size={20} color="red" />
           </Pressable>
         )}
       </View>

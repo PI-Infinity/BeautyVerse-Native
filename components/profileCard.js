@@ -11,17 +11,18 @@ import {
   TouchableOpacity,
   Platform,
 } from "react-native";
-import Icon from "react-native-vector-icons/FontAwesome";
-import Entypo from "react-native-vector-icons/Entypo";
+import { FontAwesome } from "@expo/vector-icons";
+import { Entypo } from "@expo/vector-icons";
 import { useSelector, useDispatch } from "react-redux";
 import axios from "axios";
 import { Skeleton } from "@rneui/themed";
 import GetTimesAgo from "../functions/getTimesAgo";
 import { useNavigation } from "@react-navigation/native";
-import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { Feather } from "@expo/vector-icons";
 import { Language } from "../context/language";
 import { CacheableImage } from "../components/cacheableImage";
-import MaterialIcons from "react-native-vector-icons/MaterialIcons";
+import { MaterialIcons } from "@expo/vector-icons";
 import { lightTheme, darkTheme } from "../context/theme";
 import { LinearGradient } from "expo-linear-gradient";
 
@@ -48,14 +49,20 @@ export const Card = (props) => {
   }
 
   const t = capitalizeFirstLetter(props?.user.type);
+
   let type;
-  if (lang === "en") {
-    type = t;
-  } else if (lang === "ka") {
-    type = "სპეციალისტი";
+  if (props.user.type === "specialist") {
+    if (lang === "en") {
+      type = t;
+    } else if (lang === "ka") {
+      type = "სპეციალისტი";
+    } else {
+      type = language?.language?.Main?.feedCard?.specialist;
+    }
   } else {
-    type = language?.language?.Main?.feedCard?.specialist;
+    type = language?.language?.Auth?.auth?.beautySalon;
   }
+
   /**
    * Define start total
    */
@@ -92,185 +99,167 @@ export const Card = (props) => {
 
   return (
     <>
-      {Platform.OS === "ios" && loading && props.x === 0 && (
+      {loading ? (
         <View
-          style={{
-            gap: 5,
-            width: SCREEN_WIDTH,
-            height: SCREEN_HEIGHT,
-            backgroundColor: currentTheme.background2,
-            flex: 1,
-            padding: 0,
-            zIndex: 10000,
-            gap: 10,
-          }}
-        >
-          {Array(4)
-            .fill(0)
-            .map((_, index) => (
-              <View key={index} style={{ gap: 10, opacity: 0.1 }}>
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: 10,
-                    paddingLeft: 10,
-                    height: 60,
-                  }}
-                >
-                  <Skeleton circle width={40} height={40} animation="pulse" />
-                  <View style={{ gap: 10 }}>
-                    <Skeleton width={120} height={10} animation="pulse" />
-                    <Skeleton width={90} height={7} animation="pulse" />
-                  </View>
-                </View>
-                <View>
-                  <Skeleton
-                    width={SCREEN_WIDTH}
-                    height={100}
-                    animation="pulse"
-                  />
-                </View>
-                <View style={{ width: SCREEN_WIDTH, alignItems: "center" }}>
-                  <Skeleton
-                    width={SCREEN_WIDTH - 40}
-                    height={10}
-                    animation="pulse"
-                  />
-                </View>
-              </View>
-            ))}
-        </View>
-      )}
-      <View style={styles.container}>
-        <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "center",
-            alignItems: "center",
-            width: "100%",
-          }}
-        >
-          <Text style={[styles.username, { color: currentTheme.font }]}>
-            {props.user.username ? props.user.username : type}
-          </Text>
-          {/* <Entypo name="dots-three-horizontal" style={styles.username} /> */}
-        </View>
-        <TouchableOpacity
-          activeOpacity={0.5}
-          onPress={() => navigation.navigate("User", { user: props.user })}
-        >
-          <Animated.View styles={{ opacity: fadeAnim }}>
-            {props.user.cover?.length > 0 ? (
-              <View style={{ width: "100%", aspectRatio: 1 }}>
-                <CacheableImage
-                  style={{
-                    width: "100%",
-                    aspectRatio: 0.99,
-                    resizeMode: "cover",
-                    // borderRadius: 10,
-                  }}
-                  source={{
-                    uri: props.user.cover,
-                  }}
-                  onError={() => console.log("Error loading image")}
-                />
-              </View>
-            ) : (
-              <View
-                style={{
-                  width: "100%",
-                  aspectRatio: 1,
-                  alignItems: "center",
-                  justifyContent: "center",
-                  borderRadius: 10,
-                  borderWidth: 1,
-                  borderColor: currentTheme.pink2,
-                }}
-              >
-                <Icon name="user" size={80} color="#e5e5e5" />
-              </View>
-            )}
-          </Animated.View>
-        </TouchableOpacity>
-        <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "center",
-            alignItems: "center",
-            width: "100%",
-            paddingLeft: 5,
-            backgroundColor: currentTheme.background,
-            gap: 0,
-          }}
-        >
-          <Text style={[styles.name, { color: currentTheme.font }]}>
-            {props.user.name}
-          </Text>
-          <MaterialIcons name="verified" size={14} color="#F866B1" />
-        </View>
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            width: "100%",
-            paddingLeft: 15,
-          }}
-        >
-          <MaterialCommunityIcons
-            name="map-marker-radius-outline"
-            color={currentTheme.font}
-            size={16}
-          />
-          <Text
-            style={[styles.address, { color: currentTheme.font }]}
-            numberOfLines={1}
-            ellipsizeMode={"tail"}
-          >
-            {props.user.address[0].city.replace("'", "")}
-            {props.user.address[0].distruct}
-            {props.user.address[0].district &&
-              " - " + props.user.address[0].street}
-          </Text>
-        </View>
-        <LinearGradient
-          colors={[
-            "rgba(248, 102, 177, 0.9)",
-            "rgba(248, 102, 177, 0.8)",
-            "rgba(248, 102, 177, 0.7)",
-            "rgba(248, 102, 177, 0.6)",
-            "rgba(248, 102, 177, 0.5)",
-            "rgba(248, 102, 177, 0.4)",
-            "rgba(248, 102, 177, 0.3)",
-            "rgba(248, 102, 177, 0.2)",
-            "rgba(248, 102, 177, 0.1)",
-            "rgba(248, 102, 177, 0.02)",
-            "rgba(248, 102, 177, 0)",
-          ]}
-          style={styles.starsContainer}
-          start={[0.0, 0.0]}
-          end={[1.0, 1.0]}
-        >
+          style={[styles.container, { borderColor: currentTheme.lin }]}
+        ></View>
+      ) : (
+        <View style={[styles.container, { borderColor: currentTheme.line }]}>
           <View
             style={{
-              gap: 5,
-              alignItems: "center",
               flexDirection: "row",
-              // backgroundColor: currentTheme.background2,
-              padding: 5,
-              borderRadius: 3,
+              justifyContent: "center",
+              alignItems: "center",
+              width: "100%",
+              paddingLeft: 5,
+              backgroundColor: currentTheme.background,
+              gap: 0,
             }}
           >
-            <Icon
-              style={[styles.stars, { color: "yellow", fontSize: 16 }]}
-              name="star-o"
+            <Text style={[styles.name, { color: currentTheme.font }]}>
+              {props.user.name}
+            </Text>
+            {props.user.subscription.status === "active" && (
+              <MaterialIcons name="verified" size={14} color="#F866B1" />
+            )}
+          </View>
+
+          <TouchableOpacity
+            activeOpacity={0.5}
+            onPress={() => navigation.navigate("User", { user: props.user })}
+          >
+            <Animated.View styles={{ opacity: fadeAnim }}>
+              {props.user.cover?.length > 0 ? (
+                <View style={{ width: "100%", aspectRatio: 1 }}>
+                  <CacheableImage
+                    style={{
+                      width: "100%",
+                      aspectRatio: 0.99,
+                      resizeMode: "cover",
+                      // borderRadius: 10,
+                    }}
+                    source={{
+                      uri: props.user.cover,
+                    }}
+                    onLoad={() => setLoading(false)}
+                    onError={() => console.log("Error loading image")}
+                  />
+                </View>
+              ) : (
+                <View
+                  style={{
+                    width: "100%",
+                    aspectRatio: 1,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    // borderWidth: 1,
+                    borderColor: currentTheme.pink2,
+                  }}
+                >
+                  <FontAwesome name="user" size={80} color="#e5e5e5" />
+                </View>
+              )}
+            </Animated.View>
+          </TouchableOpacity>
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "center",
+              alignItems: "center",
+              width: "100%",
+            }}
+          >
+            <Text style={[styles.username, { color: currentTheme.font }]}>
+              {props.user.username ? props.user.username : type}
+            </Text>
+            {/* <Entypo name="dots-three-horizontal" style={styles.username} /> */}
+          </View>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              width: "100%",
+              paddingLeft: 15,
+            }}
+          >
+            <MaterialCommunityIcons
+              name="map-marker-radius-outline"
+              color={currentTheme.pink}
+              size={16}
             />
-            <Text style={[styles.stars, { color: currentTheme.font }]}>
-              {stars}
+            <Text
+              style={[styles.address, { color: currentTheme.font }]}
+              numberOfLines={1}
+              ellipsizeMode={"tail"}
+            >
+              {props.user.address[0].city.replace("'", "")}
+              {props.user.address[0].distruct}
+              {props.user.address[0].district &&
+                " - " + props.user.address[0].street}
             </Text>
           </View>
-        </LinearGradient>
-      </View>
+          <View
+            style={[
+              styles.starsContainer,
+              {
+                justifyContent: "center",
+                shadowColor: "#000",
+                shadowOffset: {
+                  width: 0,
+                  height: 1, // negative value places shadow on top
+                },
+                shadowOpacity: 0.1,
+                shadowRadius: 1,
+                elevation: 1,
+                backgroundColor: currentTheme.background2,
+              },
+            ]}
+          >
+            <View
+              style={{
+                gap: 5,
+                alignItems: "center",
+                flexDirection: "row",
+                // backgroundColor: currentTheme.background2,
+                padding: 5,
+                borderRadius: 3,
+              }}
+            >
+              <FontAwesome
+                style={[
+                  styles.stars,
+                  { color: currentTheme.pink, fontSize: 15 },
+                ]}
+                name="star-o"
+              />
+              <Text style={[styles.stars, { color: currentTheme.font }]}>
+                {stars}
+              </Text>
+            </View>
+            <View
+              style={{
+                gap: 5,
+                alignItems: "center",
+                flexDirection: "row",
+                // backgroundColor: currentTheme.background2,
+                padding: 5,
+                borderRadius: 3,
+              }}
+            >
+              <Feather
+                style={[
+                  styles.stars,
+                  { color: currentTheme.font, fontSize: 14 },
+                ]}
+                name="users"
+              />
+              <Text style={[styles.stars, { color: currentTheme.font }]}>
+                {props?.user?.followersLength}
+              </Text>
+            </View>
+          </View>
+        </View>
+      )}
     </>
   );
 };
@@ -291,14 +280,16 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#e5e5e5",
     fontWeight: "bold",
-    margin: 12.5,
+    margin: 7.5,
+    letterSpacing: 0.2,
   },
   name: {
     fontSize: 14,
     color: "#e5e5e5",
     fontWeight: "bold",
-    margin: 10,
+    margin: 12.5,
     marginRight: 5,
+    letterSpacing: 0.2,
   },
   address: {
     fontSize: 12,
@@ -306,6 +297,7 @@ const styles = StyleSheet.create({
     paddingLeft: 5,
     overflow: "hidden",
     paddingRight: 20,
+    letterSpacing: 0.2,
   },
   starsContainer: {
     width: "90%",
@@ -313,8 +305,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     flexDirection: "row",
     justifyContent: "center",
-    gap: 5,
-
+    gap: 0,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 0.2, // negative value places shadow on top
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
     borderRadius: 50,
   },
   stars: {

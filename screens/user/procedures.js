@@ -11,7 +11,7 @@ import {
 import ConfirmDialog from "../../components/confirmDialog";
 import { ProceduresOptions } from "../../datas/registerDatas";
 import { Language } from "../../context/language";
-import FontAwesome from "react-native-vector-icons/FontAwesome";
+import { FontAwesome } from "@expo/vector-icons";
 import { lightTheme, darkTheme } from "../../context/theme";
 import { useSelector, useDispatch } from "react-redux";
 
@@ -49,37 +49,19 @@ export const ProceduresList = ({ targetUser, addOrder }) => {
 
   return (
     <View style={styles.container}>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.navigator}
-        contentContainerStyle={{
-          flexDirection: "row",
-        }}
-      >
-        <TouchableOpacity
-          onPress={() => setActive("all")}
-          style={
-            active === "all"
-              ? styles.categoryButtonActive
-              : styles.categoryButton
-          }
+      {categories?.length > 1 && (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.navigator}
+          contentContainerStyle={{
+            flexDirection: "row",
+          }}
         >
-          <Text
-            style={[
-              styles.buttonText,
-              { color: active === "all" ? "#e5e5e5" : "#ccc" },
-            ]}
-          >
-            {language?.language?.User?.userPage?.all}
-          </Text>
-        </TouchableOpacity>
-        {categories?.map((cat, index) => (
           <TouchableOpacity
-            key={index}
-            onPress={() => setActive(cat?.value)}
+            onPress={() => setActive("all")}
             style={
-              active.toLowerCase() === cat.value.toLowerCase()
+              active === "all"
                 ? styles.categoryButtonActive
                 : styles.categoryButton
             }
@@ -87,19 +69,39 @@ export const ProceduresList = ({ targetUser, addOrder }) => {
             <Text
               style={[
                 styles.buttonText,
-                {
-                  color:
-                    active.toLowerCase() === cat.value.toLowerCase()
-                      ? "#e5e5e5"
-                      : "#ccc",
-                },
+                { color: active === "all" ? "#e5e5e5" : "#ccc" },
               ]}
             >
-              {cat?.label}
+              {language?.language?.User?.userPage?.all}
             </Text>
           </TouchableOpacity>
-        ))}
-      </ScrollView>
+          {categories?.map((cat, index) => (
+            <TouchableOpacity
+              key={index}
+              onPress={() => setActive(cat?.value)}
+              style={
+                active.toLowerCase() === cat.value.toLowerCase()
+                  ? styles.categoryButtonActive
+                  : styles.categoryButton
+              }
+            >
+              <Text
+                style={[
+                  styles.buttonText,
+                  {
+                    color:
+                      active.toLowerCase() === cat.value.toLowerCase()
+                        ? "#e5e5e5"
+                        : "#ccc",
+                  },
+                ]}
+              >
+                {cat?.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      )}
       <View style={{ gap: 10, alignItems: "center" }}>
         {targetUser.procedures
           .filter((item) => {
@@ -122,11 +124,33 @@ export const ProceduresList = ({ targetUser, addOrder }) => {
                   backgroundColor: currentTheme.background2,
                   borderRadius: 50,
                   padding: 15,
+                  paddingVertical: 10,
                   justifyContent: "space-between",
+                  alignItems: "center",
                   flexDirection: "row",
                 }}
               >
-                <Text style={{ color: currentTheme.font }}>{label.label}</Text>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    gap: 10,
+                    alignItems: "center",
+                  }}
+                >
+                  <View
+                    style={{
+                      width: 10,
+                      height: 10,
+                      borderRadius: 10,
+                      backgroundColor: currentTheme.pink,
+                    }}
+                  ></View>
+                  <Text
+                    style={{ color: currentTheme.font, letterSpacing: 0.2 }}
+                  >
+                    {label.label}
+                  </Text>
+                </View>
                 <View
                   style={{ flexDirection: "row", gap: 5, alignItems: "center" }}
                 >
@@ -169,7 +193,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     gap: 15,
-    marginTop: 15,
+    marginTop: 25,
     paddingBottom: 15,
   },
   navigator: {

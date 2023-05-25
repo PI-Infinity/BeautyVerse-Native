@@ -11,7 +11,7 @@ import axios from "axios";
 import { useSelector, useDispatch } from "react-redux";
 import Collapsible from "react-native-collapsible";
 import { AudienceList } from "../../screens/user/audienceList";
-import MaterialIcons from "react-native-vector-icons/MaterialIcons";
+import { MaterialIcons, FontAwesome } from "@expo/vector-icons";
 import { CacheableImage } from "../../components/cacheableImage";
 import { lightTheme, darkTheme } from "../../context/theme";
 
@@ -67,6 +67,10 @@ export const Audience = ({
             length: data.result,
             list: data.data.followers,
           });
+
+          setTimeout(() => {
+            setLoading(false);
+          }, 400);
         })
         .catch((error) => {
           console.log("Error fetching data:", error);
@@ -76,10 +80,6 @@ export const Audience = ({
       GetAudience();
     }
   }, [targetUser?._id, render]);
-
-  setTimeout(() => {
-    setLoading(false);
-  }, 400);
 
   return (
     <View>
@@ -93,7 +93,7 @@ export const Audience = ({
             height: SCREEN_HEIGHT / 1.5,
           }}
         >
-          <ActivityIndicator size="large" />
+          <ActivityIndicator size="large" color={currentTheme.pink} />
         </View>
       ) : (
         <View style={{ flex: 1, alignItems: "center", gap: 5, marginTop: 30 }}>
@@ -111,7 +111,7 @@ export const Audience = ({
             }}
             onPress={() => setOpenFollowers(!openFollowers)}
           >
-            <Text style={{ color: currentTheme.font }}>
+            <Text style={{ color: currentTheme.font, letterSpacing: 0.2 }}>
               Followers ({followers?.length})
             </Text>
             <View style={{ flexDirection: "row", gap: -10 }}>
@@ -126,31 +126,46 @@ export const Audience = ({
                         })
                       }
                     >
-                      <CacheableImage
-                        source={{ uri: item?.cover }}
-                        style={{
-                          width: 40,
-                          height: 40,
-                          borderRadius: 50,
-                          borderWidth: 1,
-                          borderColor: "#ddd",
-                        }}
-                        manipulationOptions={[
-                          { resize: { width: 40, height: 40 } },
-                          { rotate: 90 },
-                        ]}
-                      />
+                      {item?.cover?.length > 0 ? (
+                        <CacheableImage
+                          source={{ uri: item?.cover }}
+                          style={{
+                            width: 40,
+                            height: 40,
+                            borderRadius: 50,
+                            borderWidth: 1,
+                            borderColor: "#ddd",
+                          }}
+                          manipulationOptions={[
+                            { resize: { width: 40, height: 40 } },
+                            { rotate: 90 },
+                          ]}
+                        />
+                      ) : (
+                        <View
+                          style={{
+                            borderRadius: 100,
+                            width: 40,
+                            aspectRatio: 1,
+                            alignItems: "center",
+                            justifyContent: "center",
+                            backgroundColor: "rgba(255,255,255,0.1)",
+                          }}
+                        >
+                          <FontAwesome name="user" size={20} color="#e5e5e5" />
+                        </View>
+                      )}
                     </Pressable>
                   );
                 }
               })}
             </View>
-            <Text style={{ color: currentTheme.font }}>
+            <Text style={{ color: currentTheme.font, letterSpacing: 0.2 }}>
               {"+" + followers.length > 3 && followers.length - 3}
             </Text>
             <MaterialIcons
               name={openFollowers ? "arrow-drop-up" : "arrow-drop-down"}
-              color="#fff"
+              color={currentTheme.pink}
               size={18}
               style={{ marginLeft: "auto" }}
             />
@@ -181,7 +196,7 @@ export const Audience = ({
             }}
             onPress={() => setOpenFollowings(!openFollowings)}
           >
-            <Text style={{ color: currentTheme.font }}>
+            <Text style={{ color: currentTheme.font, letterSpacing: 0.2 }}>
               Followings ({followings?.length})
             </Text>
             <View style={{ flexDirection: "row", gap: -10 }}>
@@ -196,32 +211,47 @@ export const Audience = ({
                         })
                       }
                     >
-                      <CacheableImage
-                        key={index}
-                        source={{ uri: item?.cover }}
-                        style={{
-                          width: 40,
-                          height: 40,
-                          borderRadius: 50,
-                          borderWidth: 1,
-                          borderColor: "#ddd",
-                        }}
-                        manipulationOptions={[
-                          { resize: { width: 40, height: 40 } },
-                          { rotate: 90 },
-                        ]}
-                      />
+                      {item.cover?.length > 0 ? (
+                        <CacheableImage
+                          key={index}
+                          source={{ uri: item?.cover }}
+                          style={{
+                            width: 40,
+                            height: 40,
+                            borderRadius: 50,
+                            borderWidth: 1,
+                            borderColor: "#ddd",
+                          }}
+                          manipulationOptions={[
+                            { resize: { width: 40, height: 40 } },
+                            { rotate: 90 },
+                          ]}
+                        />
+                      ) : (
+                        <View
+                          style={{
+                            borderRadius: 100,
+                            width: 40,
+                            aspectRatio: 1,
+                            alignItems: "center",
+                            justifyContent: "center",
+                            backgroundColor: "rgba(255,255,255,0.1)",
+                          }}
+                        >
+                          <FontAwesome name="user" size={20} color="#e5e5e5" />
+                        </View>
+                      )}
                     </Pressable>
                   );
                 }
               })}
             </View>
-            <Text style={{ color: currentTheme.font }}>
+            <Text style={{ color: currentTheme.font, letterSpacing: 0.2 }}>
               {"+" + followings.length > 3 && followings.length - 3}
             </Text>
             <MaterialIcons
               name={openFollowings ? "arrow-drop-up" : "arrow-drop-down"}
-              color="#fff"
+              color={currentTheme.pink}
               size={18}
               style={{ marginLeft: "auto" }}
             />

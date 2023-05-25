@@ -107,8 +107,6 @@ export function FilterStack({ route, navigation }) {
           title: language?.language?.Main?.filter?.filter,
           headerStyle: {
             backgroundColor: currentTheme.background,
-
-            elevation: 0,
             shadowOpacity: 0,
             borderBottomWidth: 0,
           },
@@ -116,6 +114,7 @@ export function FilterStack({ route, navigation }) {
           headerTitleStyle: {
             fontWeight: "bold",
             fontSize: 18,
+            letterSpacing: 0.5,
           },
           cardStyle: {
             backgroundColor: currentTheme.background,
@@ -142,7 +141,7 @@ export function FilterStack({ route, navigation }) {
                         width: "auto",
                         minWidth: 13,
                         height: 13,
-                        backgroundColor: "red",
+                        backgroundColor: currentTheme.pink,
                         borderRadius: 50,
                         alignItems: "center",
                         justifyContent: "center",
@@ -152,13 +151,23 @@ export function FilterStack({ route, navigation }) {
                         top: 0,
                       }}
                     >
-                      <Text style={{ color: "#e5e5e5", fontSize: 10 }}>
+                      <Text
+                        style={{
+                          color: "#e5e5e5",
+                          fontSize: 10,
+                          letterSpacing: 1.5,
+                        }}
+                      >
                         {sum}
                       </Text>
                     </View>
 
                     <Text
-                      style={{ color: currentTheme.font, fontWeight: "bold" }}
+                      style={{
+                        color: currentTheme.font,
+                        fontWeight: "bold",
+                        letterSpacing: 0.3,
+                      }}
                     >
                       {language?.language?.Main?.filter?.clear}
                     </Text>
@@ -187,6 +196,7 @@ export function FilterStack({ route, navigation }) {
           headerTitleStyle: {
             fontWeight: "bold",
             fontSize: 18,
+            letterSpacing: 0.5,
           },
           cardStyle: {
             backgroundColor: currentTheme.background,

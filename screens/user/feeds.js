@@ -226,7 +226,7 @@ export const Feeds = ({ targetUser, navigation, variant }) => {
             height: SCREEN_HEIGHT - SCREEN_HEIGHT / 3,
           }}
         >
-          <ActivityIndicator size="large" color={currentTheme.font} />
+          <ActivityIndicator size="large" color={currentTheme.pink} />
         </View>
       ) : (
         <>
@@ -256,6 +256,7 @@ export const Feeds = ({ targetUser, navigation, variant }) => {
                     feeds={feeds}
                     setFeeds={setFeeds}
                     variant={variant}
+                    currentTheme={currentTheme}
                   />
                 );
               })
@@ -439,7 +440,7 @@ const FeedItem = (props) => {
             justifyContent: "center",
           }}
         >
-          <ActivityIndicator />
+          <ActivityIndicator color={props.currentTheme.pink} />
         </View>
         <Animated.View style={{ opacity: fadeAnim }}>
           {props?.fileFormat === "video" ? (
@@ -451,7 +452,7 @@ const FeedItem = (props) => {
                 height: SCREEN_WIDTH / 2 - 2,
               }}
               source={{
-                uri: props.video && props.video,
+                uri: props.video,
               }}
               useNativeControls={false}
               rate={1.0}

@@ -1,9 +1,14 @@
-import { createStackNavigator } from "@react-navigation/stack";
+import {
+  createStackNavigator,
+  CardStyleInterpolators,
+} from "@react-navigation/stack";
+import { View, Text, Dimensions } from "react-native";
 import Welcome from "../screens/welcome";
 import { Login } from "../screens/authentication/login";
 import Register from "../screens/authentication/register";
 import Identify from "../screens/authentication/identify";
 import Business from "../screens/authentication/business";
+import { Prices } from "../screens/prices";
 import { useSelector } from "react-redux";
 import { Language } from "../context/language";
 import { lightTheme, darkTheme } from "../context/theme";
@@ -11,6 +16,8 @@ import { Terms } from "../screens/user/terms";
 import { QA } from "../screens/user/QA";
 import { Privacy } from "../screens/user/privacy";
 import { Usage } from "../screens/user/usage";
+
+const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
 const Stack = createStackNavigator();
 
@@ -25,7 +32,12 @@ export function AuthStack({ route }) {
   // define authentications screens
   //
   return (
-    <Stack.Navigator>
+    <Stack.Navigator
+      screenOptions={{
+        cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS, // Apply custom transition
+        cardStyle: { backgroundColor: "transparent" }, // Set card background to transparent
+      }}
+    >
       {/** Main welcome screen */}
       <Stack.Screen
         name="Welcome"
@@ -47,6 +59,29 @@ export function AuthStack({ route }) {
           cardStyle: {
             backgroundColor: currentTheme.background,
           },
+          headerTitle: () => (
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                marginBottom: Platform.OS !== "android" ? 5 : 0,
+                flex: 1,
+                width: SCREEN_WIDTH - 30,
+                justifyContent: "center",
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 18,
+                  fontWeight: "bold",
+                  color: currentTheme.font,
+                  letterSpacing: 0.5,
+                }}
+              >
+                Welcome
+              </Text>
+            </View>
+          ),
         }}
       />
       {/** login screen */}
@@ -117,6 +152,7 @@ export function AuthStack({ route }) {
           headerTitleStyle: {
             fontWeight: "bold",
             fontSize: 18,
+            letterSpacing: 0.5,
           },
           cardStyle: {
             backgroundColor: currentTheme.background,
@@ -141,11 +177,36 @@ export function AuthStack({ route }) {
           headerTitleStyle: {
             fontWeight: "bold",
             fontSize: 18,
+            letterSpacing: 0.5,
           },
           cardStyle: {
             backgroundColor: currentTheme.background,
           },
         }}
+      />
+      <Stack.Screen
+        name="Prices"
+        component={Prices}
+        options={({ route }) => ({
+          headerBackTitleVisible: false,
+          title: language?.language?.User?.userPage?.prices,
+          headerStyle: {
+            backgroundColor: currentTheme.background,
+
+            elevation: 0,
+            shadowOpacity: 0,
+            borderBottomWidth: 0,
+          },
+          headerTintColor: currentTheme.font,
+          headerTitleStyle: {
+            fontWeight: "bold",
+            fontSize: 18,
+            letterSpacing: 0.5,
+          },
+          cardStyle: {
+            backgroundColor: currentTheme.background,
+          },
+        })}
       />
       <Stack.Screen
         name="Terms"
@@ -164,6 +225,7 @@ export function AuthStack({ route }) {
           headerTitleStyle: {
             fontWeight: "bold",
             fontSize: 18,
+            letterSpacing: 0.5,
           },
           cardStyle: {
             backgroundColor: currentTheme.background,
@@ -187,6 +249,7 @@ export function AuthStack({ route }) {
           headerTitleStyle: {
             fontWeight: "bold",
             fontSize: 18,
+            letterSpacing: 0.5,
           },
           cardStyle: {
             backgroundColor: currentTheme.background,
@@ -210,6 +273,7 @@ export function AuthStack({ route }) {
           headerTitleStyle: {
             fontWeight: "bold",
             fontSize: 18,
+            letterSpacing: 0.5,
           },
           cardStyle: {
             backgroundColor: currentTheme.background,
@@ -233,6 +297,7 @@ export function AuthStack({ route }) {
           headerTitleStyle: {
             fontWeight: "bold",
             fontSize: 18,
+            letterSpacing: 0.5,
           },
           cardStyle: {
             backgroundColor: currentTheme.background,

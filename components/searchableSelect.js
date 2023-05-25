@@ -7,6 +7,7 @@ import {
   Text,
   StyleSheet,
   ScrollView,
+  Platform,
 } from "react-native";
 import { Icon } from "react-native-elements";
 import { useSelector, useDispatch } from "react-redux";
@@ -46,7 +47,13 @@ const SearchableSelect = ({ data, onItemSelected, currentTheme }) => {
   const Listed = () => {
     return (
       <ScrollView
-        style={{ height: 200, backgroundColor: currentTheme.background2 }}
+        bounces={Platform.OS === "ios" ? false : undefined}
+        overScrollMode={Platform.OS === "ios" ? "never" : "always"}
+        style={{
+          height: 200,
+          backgroundColor: currentTheme.background2,
+          borderRadius: 10,
+        }}
       >
         {data
           ?.filter((item) =>

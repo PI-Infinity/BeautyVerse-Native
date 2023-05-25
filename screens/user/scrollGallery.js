@@ -16,9 +16,9 @@ import {
   Keyboard,
   KeyboardEvent,
   Alert,
+  ActivityIndicator,
 } from "react-native";
-import Icon from "react-native-vector-icons/FontAwesome";
-import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
+import { FontAwesome, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useSelector, useDispatch } from "react-redux";
 import axios from "axios";
 import {
@@ -31,7 +31,7 @@ import { setActiveFeedFromScrollGallery } from "../../redux/actions";
 import uuid from "react-native-uuid";
 import GetTimesAgo from "../../functions/getTimesAgo";
 import { Language } from "../../context/language";
-import MaterialIcons from "react-native-vector-icons/MaterialIcons";
+import { MaterialIcons } from "@expo/vector-icons";
 import { CacheableImage } from "../../components/cacheableImage";
 import ZoomableImage from "../../components/zoomableImage";
 import { CacheableVideo } from "../../components/cacheableVideo";
@@ -43,7 +43,7 @@ import { TopSection } from "../../components/feedCard/topSection";
 import { BottomSection } from "../../components/feedCard/bottomSection";
 import { Post } from "../../components/feedCard/post";
 import { useIsFocused } from "@react-navigation/native";
-import Entypo from "react-native-vector-icons/Entypo";
+import { Entypo } from "@expo/vector-icons";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -103,7 +103,7 @@ export const ScrollGallery = ({ route, navigation }) => {
         contentContainerStyle={{ paddingBottom: 200 }}
         showsVerticalScrollIndicator={false}
         bounces={Platform.OS === "ios" ? false : undefined}
-        overScrollMode={Platform.OS === "ios" ? undefined : false}
+        overScrollMode={Platform.OS === "ios" ? "never" : "always"}
       />
       {props.feedsLengthCurrent > 7 && (
         <Pressable
@@ -152,6 +152,7 @@ const styles = StyleSheet.create({
   },
   addReview: {
     flexDirection: "row",
+    alignItems: "center",
     flex: 1,
     minHeight: 45,
     backgroundColor: "rgba(15,15,15,0.97)",
@@ -587,256 +588,325 @@ const FeedItem = (props) => {
 
   const [inputHeight, setInputHeight] = useState(35);
 
+  const [loadVideo, setLoadVideo] = useState(true);
+
   return (
-    <Animated.View
-      style={{
-        // maxHeight: props.screenHeight,
-        width: SCREEN_WIDTH,
-        backgroundColor: currentTheme.background,
-        opacity: fadeAnim,
-      }}
-    >
-      {feedOption && (
-        <SmoothModal
-          visible={feedOption}
-          onClose={() => setFeedOption(false)}
-          onSave={() => setFeedOption(false)}
-          post={props?.feed?.post}
-          feedId={props.feed._id}
-          setPost={setPost}
-        />
+    <>
+      {props.x !== 0 && (
+        <View style={{ height: 5, backgroundColor: currentTheme.divider }} />
       )}
-      {/* <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-      > */}
-      {props?.feed?.fileFormat === "img" && (
-        <View
-          style={{
-            height: 70,
-            paddingHorizontal: 15,
-            paddingVertical: 10,
-            zIndex: 120,
-            backgroundColor: currentTheme.background,
-          }}
-        >
-          <TopSection
-            user={props.user}
-            currentTheme={currentTheme}
-            navigation={props.navigation}
-            lang={lang}
-            language={props.language}
-            from="scrollGallery"
-            visible={feedOption}
-            onClose={() => setFeedOption(false)}
-            onSave={() => setFeedOption(false)}
-            post={props?.feed?.post}
-            feedId={props.feed._id}
-            setPost={setPost}
-            feedOption={feedOption}
-            createdAt={props.feed.createdAt}
-            DotsFunction={() => setFeedOption(!feedOption)}
-            fileFormat={props.feed.fileFormat}
-          />
-        </View>
-      )}
-      {props?.feed?.post && props?.feed?.fileFormat === "img" && (
-        <View style={{ paddingLeft: 10 }}>
-          <Post
-            currentTheme={currentTheme}
-            numLines={numLines}
-            setNumLines={setNumLines}
-            text={post}
-          />
-        </View>
-      )}
-      {props?.feed?.fileFormat === "video" && (
-        <View
-          style={{
-            paddingHorizontal: 10,
-            paddingVertical: 10,
-            position: "absolute",
-            top: 0,
-            zIndex: 120,
-          }}
-        >
-          <TopSection
-            user={props.user}
-            currentTheme={currentTheme}
-            navigation={props.navigation}
-            lang={lang}
-            language={props.language}
-            from="scrollGallery"
-            visible={feedOption}
-            onClose={() => setFeedOption(false)}
-            onSave={() => setFeedOption(false)}
-            post={props?.feed?.post}
-            feedId={props.feed._id}
-            setPost={setPost}
-            feedOption={feedOption}
-            createdAt={props.feed.createdAt}
-            DotsFunction={() => setFeedOption(!feedOption)}
-            fileFormat={props.feed.fileFormat}
-          />
-          {props?.feed?.post && (
-            <View style={{ marginTop: 10 }}>
-              <Post
-                currentTheme={currentTheme}
-                numLines={numLines}
-                setNumLines={setNumLines}
-                text={post}
-              />
-            </View>
-          )}
-        </View>
-      )}
-      <View
-        name="main-section"
+      <Animated.View
         style={{
-          height: hght > 640 ? 640 : hght,
-          maxHeight: 640,
-          overflow: "hidden",
-          justifyContent: "center",
-          // backgroundColor: currentTheme.background2,
+          // maxHeight: props.screenHeight,
+          width: SCREEN_WIDTH,
+          backgroundColor: currentTheme.background,
+          opacity: fadeAnim,
         }}
       >
-        {props?.feed?.images?.length > 1 && (
+        {feedOption && (
+          <SmoothModal
+            visible={feedOption}
+            onClose={() => setFeedOption(false)}
+            onSave={() => setFeedOption(false)}
+            post={post}
+            itemId={props?.feed._id}
+            fileFormat={props?.feed.fileFormat}
+            itemName={props?.feed.name}
+            setPost={setPost}
+            navigation={props.navigation}
+          />
+        )}
+        {/* <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      > */}
+        {props?.feed?.fileFormat === "img" && (
           <View
             style={{
-              position: "absolute",
+              height: 70,
+              paddingHorizontal: 15,
+              paddingVertical: 10,
               zIndex: 120,
-              bottom: 15,
-              right: 15,
-              // backgroundColor: "rgba(255,255,255,0.7)",
-              borderRadius: 50,
+              backgroundColor: currentTheme.background,
             }}
           >
-            <Entypo
-              name="images"
-              color="#fff"
-              size={18}
-              style={{
-                textShadowColor: "rgba(0,0,0,0.2)",
-
-                textShadowOffset: { width: -0.5, height: 0.5 },
-                textShadowRadius: 0.5,
-              }}
+            <TopSection
+              user={props.user}
+              currentTheme={currentTheme}
+              navigation={props.navigation}
+              lang={lang}
+              language={props.language}
+              from="scrollGallery"
+              visible={feedOption}
+              onClose={() => setFeedOption(false)}
+              onSave={() => setFeedOption(false)}
+              post={props?.feed?.post}
+              feedId={props.feed._id}
+              setPost={setPost}
+              feedOption={feedOption}
+              createdAt={props.feed.createdAt}
+              DotsFunction={() => setFeedOption(!feedOption)}
+              fileFormat={props.feed.fileFormat}
             />
           </View>
         )}
-        {props?.feed?.fileFormat === "video" ? (
-          <CacheableVideo
-            videoRef={videoRef}
-            onLongPress={() => props.navigation.goBack()}
-            delayLongPress={250}
-            style={{
-              height:
-                props.feed.fileHeight >= props.feed.fileWidth
-                  ? hght
-                  : props.feed.fileWidth,
-            }}
-            source={{
-              uri: props.feed.video,
-            }}
-            onPlaybackStatusUpdate={onPlaybackStatusUpdate}
-            rate={1.0}
-            volume={1.0}
-            isMuted={volume ? true : false}
-            shouldPlay={
-              props.currentIndex === props.x && props.isFocused ? true : false
-            }
-            isLooping
-            resizeMode="contain"
-          />
-        ) : (
-          <ScrollView
-            horizontal
-            pagingEnabled
-            showsHorizontalScrollIndicator={false}
-            bounces={Platform.OS === "ios" ? false : undefined}
-            overScrollMode={Platform.OS === "ios" ? undefined : false}
-          >
-            {props?.feed?.images.map((item, index) => {
-              return (
-                <Pressable
-                  key={index}
-                  onPress={() => props.navigation.goBack()}
-                >
-                  <ZoomableImage
-                    style={{
-                      height: hght > 640 ? 640 : hght,
-                      maxHeight: 640,
-                      width: SCREEN_WIDTH,
-                      zIndex: 100,
-                      resizeMode: hght > 640 ? "cover" : "contain",
-                    }}
-                    source={{
-                      uri: item.url,
-                    }}
-                  />
-                </Pressable>
-              );
-            })}
-          </ScrollView>
+        {props?.feed?.post && props?.feed?.fileFormat === "img" && (
+          <View style={{ paddingLeft: 10 }}>
+            <Post
+              currentTheme={currentTheme}
+              numLines={numLines}
+              setNumLines={setNumLines}
+              text={post}
+            />
+          </View>
         )}
         {props?.feed?.fileFormat === "video" && (
-          <Pressable
-            onPress={(event) => event.stopPropagation()}
-            name="bottom-section"
+          <View
             style={{
               paddingHorizontal: 10,
-              paddingTop: 30,
               paddingVertical: 10,
-              width: SCREEN_WIDTH,
-              justifyContent: "center",
               position: "absolute",
-              bottom: 0,
-              // backgroundColor: "red",
+              top: 0,
+              zIndex: 120,
             }}
           >
+            <TopSection
+              user={props.user}
+              currentTheme={currentTheme}
+              navigation={props.navigation}
+              lang={lang}
+              language={props.language}
+              from="scrollGallery"
+              visible={feedOption}
+              onClose={() => setFeedOption(false)}
+              onSave={() => setFeedOption(false)}
+              post={props?.feed?.post}
+              feedId={props.feed._id}
+              setPost={setPost}
+              feedOption={feedOption}
+              createdAt={props.feed.createdAt}
+              DotsFunction={() => setFeedOption(!feedOption)}
+              fileFormat={props.feed.fileFormat}
+            />
+            {props?.feed?.post && (
+              <View style={{ marginTop: 10 }}>
+                <Post
+                  currentTheme={currentTheme}
+                  numLines={numLines}
+                  setNumLines={setNumLines}
+                  text={post}
+                />
+              </View>
+            )}
+          </View>
+        )}
+        <View
+          name="main-section"
+          style={{
+            height: hght > 640 ? 640 : hght,
+            maxHeight: 640,
+            overflow: "hidden",
+            justifyContent: "center",
+            // backgroundColor: currentTheme.background2,
+          }}
+        >
+          {props?.feed?.images?.length > 1 && (
             <View
               style={{
-                alignItems: "center",
-                flexDirection: "row",
-                gap: 10,
+                position: "absolute",
+                zIndex: 120,
+                bottom: 15,
+                right: 15,
+                // backgroundColor: "rgba(255,255,255,0.7)",
+                borderRadius: 50,
+              }}
+            >
+              <Entypo
+                name="images"
+                color="#fff"
+                size={18}
+                style={{
+                  textShadowColor: "rgba(0,0,0,0.2)",
+
+                  textShadowOffset: { width: -0.5, height: 0.5 },
+                  textShadowRadius: 0.5,
+                }}
+              />
+            </View>
+          )}
+          {props?.feed?.fileFormat === "video" ? (
+            <>
+              {loadVideo && (
+                <View
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    backgroundColor: currentTheme.background2,
+                    position: "absolute",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <ActivityIndicator color={currentTheme.pink} size="large" />
+                </View>
+              )}
+              <CacheableVideo
+                videoRef={videoRef}
+                onLongPress={() => props.navigation.goBack()}
+                delayLongPress={250}
+                style={{
+                  height:
+                    props.feed.fileHeight >= props.feed.fileWidth
+                      ? hght
+                      : props.feed.fileWidth,
+                }}
+                source={{
+                  uri: props.feed.video,
+                }}
+                onPlaybackStatusUpdate={onPlaybackStatusUpdate}
+                rate={1.0}
+                volume={1.0}
+                isMuted={volume ? true : false}
+                shouldPlay={
+                  props.currentIndex === props.x && props.isFocused
+                    ? true
+                    : false
+                }
+                isLooping
+                resizeMode="contain"
+                onLoad={() => setLoadVideo(false)}
+              />
+            </>
+          ) : (
+            <ScrollView
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              bounces={Platform.OS === "ios" ? false : undefined}
+              overScrollMode={Platform.OS === "ios" ? "never" : "always"}
+            >
+              {props?.feed?.images.map((item, index) => {
+                return (
+                  <Pressable
+                    key={index}
+                    onLongPress={() => props.navigation.goBack()}
+                    delayLongPress={50}
+                  >
+                    <ZoomableImage
+                      style={{
+                        height: hght > 642 ? 642 : hght + 2,
+                        maxHeight: 642,
+                        width: SCREEN_WIDTH,
+                        zIndex: 100,
+                        resizeMode: hght > 642 ? "cover" : "contain",
+                      }}
+                      source={{
+                        uri: item.url,
+                      }}
+                    />
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+          )}
+          {props?.feed?.fileFormat === "video" && (
+            <Pressable
+              onPress={(event) => event.stopPropagation()}
+              name="bottom-section"
+              style={{
+                paddingHorizontal: 10,
+                paddingTop: 30,
+                paddingVertical: 10,
+                width: SCREEN_WIDTH,
+                justifyContent: "center",
+                position: "absolute",
+                bottom: 0,
+                // backgroundColor: "red",
               }}
             >
               <View
                 style={{
-                  flexDirection: "row",
                   alignItems: "center",
-                  gap: 2,
-                  minWidth: "20%",
+                  flexDirection: "row",
+                  gap: 10,
                 }}
               >
-                <Text style={[styles.duration, { flex: 1 }]}>
-                  {formatTime(currentPosition)}
-                </Text>
-                <Text style={[styles.duration, { flex: 0 }]}>-</Text>
-                <Text style={[styles.duration, { flex: 1 }]}>
-                  {formatTime(videoDuration)}
-                </Text>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 2,
+                    minWidth: "20%",
+                  }}
+                >
+                  <Text style={[styles.duration, { flex: 1 }]}>
+                    {formatTime(currentPosition)}
+                  </Text>
+                  <Text style={[styles.duration, { flex: 0 }]}>-</Text>
+                  <Text style={[styles.duration, { flex: 1 }]}>
+                    {formatTime(videoDuration)}
+                  </Text>
+                </View>
+
+                <Slider
+                  style={{
+                    flex: 1,
+                    height: 5,
+                    // backgroundColor: "black",
+                    padding: 15,
+                  }}
+                  minimumValue={0}
+                  maximumValue={videoDuration}
+                  value={currentPosition}
+                  onSlidingComplete={onSliderValueChange}
+                  thumbTintColor="rgba(0,0,0,0)"
+                  minimumTrackTintColor="#F866B1"
+                />
               </View>
 
-              <Slider
+              <View
                 style={{
-                  flex: 1,
-                  height: 5,
-                  // backgroundColor: "black",
-                  padding: 15,
+                  width: "100%",
+                  // backgroundColor: "rgba(255,255,255,0.1)",
+                  borderRadius: 50,
+                  // borderColor: "rgba(248, 102, 177, 0.3)",
+                  // borderWidth: 1,
                 }}
-                minimumValue={0}
-                maximumValue={videoDuration}
-                value={currentPosition}
-                onSlidingComplete={onSliderValueChange}
-                thumbTintColor="rgba(0,0,0,0)"
-                minimumTrackTintColor="#F866B1"
-              />
-            </View>
-
+              >
+                <BottomSection
+                  navigation={props.navigation}
+                  language={props.language}
+                  currentTheme={currentTheme}
+                  RemoveStar={RemoveStar}
+                  SetStar={SetStar}
+                  user={props.user}
+                  feed={props.feed}
+                  from="scrollGallery"
+                  setOpenReviews={setOpenReviews}
+                  openReviews={openReviews}
+                  volume={volume}
+                  setVideoVolume={setVideoVolume}
+                  checkIfStared={checkIfStared}
+                  starsLength={starsLength}
+                  reviewsLength={reviewLength}
+                />
+              </View>
+            </Pressable>
+          )}
+        </View>
+        {props?.feed?.fileFormat === "img" && (
+          <View
+            name="bottom-section"
+            style={{
+              paddingHorizontal: 10,
+              paddingVertical: 10,
+              width: SCREEN_WIDTH,
+              backgroundColor: currentTheme.background,
+              justifyContent: "center",
+            }}
+          >
             <View
               style={{
                 width: "100%",
-                // backgroundColor: "rgba(255,255,255,0.1)",
                 borderRadius: 50,
                 // borderColor: "rgba(248, 102, 177, 0.3)",
                 // borderWidth: 1,
@@ -860,146 +930,112 @@ const FeedItem = (props) => {
                 reviewsLength={reviewLength}
               />
             </View>
-          </Pressable>
+          </View>
         )}
-      </View>
-      {props?.feed?.fileFormat === "img" && (
-        <View
-          name="bottom-section"
+        <Text
           style={{
-            paddingHorizontal: 10,
-            paddingVertical: 10,
-            width: SCREEN_WIDTH,
-            backgroundColor: currentTheme.background,
-            justifyContent: "center",
+            fontSize: 12,
+            color: currentTheme.font,
+            marginLeft: 15,
+            position: "relative",
+            top: 10,
           }}
         >
+          {reviewInput.length > 0 && reviewInput.length}{" "}
+          {reviewInput.length > 0 && (
+            <Text style={{ color: currentTheme.disabled }}>(max 500)</Text>
+          )}
+        </Text>
+        {openReviews && (
           <View
-            style={{
-              width: "100%",
-              borderRadius: 50,
-              // borderColor: "rgba(248, 102, 177, 0.3)",
-              // borderWidth: 1,
-            }}
-          >
-            <BottomSection
-              navigation={props.navigation}
-              language={props.language}
-              currentTheme={currentTheme}
-              RemoveStar={RemoveStar}
-              SetStar={SetStar}
-              user={props.user}
-              feed={props.feed}
-              from="scrollGallery"
-              setOpenReviews={setOpenReviews}
-              openReviews={openReviews}
-              volume={volume}
-              setVideoVolume={setVideoVolume}
-              checkIfStared={checkIfStared}
-              starsLength={starsLength}
-              reviewsLength={reviewLength}
-            />
-          </View>
-        </View>
-      )}
-      <Text
-        style={{
-          fontSize: 12,
-          color: currentTheme.font,
-          marginLeft: 15,
-          position: "relative",
-          top: 10,
-        }}
-      >
-        {reviewInput.length > 0 && reviewInput.length}
-      </Text>
-      {openReviews && (
-        <View
-          style={[
-            styles.addReview,
-            {
-              backgroundColor: currentTheme.background,
-              // marginBottom: KeyboardHeight,
-            },
-          ]}
-        >
-          <TextInput
             style={[
-              styles.reviewInput,
+              styles.addReview,
               {
-                backgroundColor: currentTheme.background2,
-                color: currentTheme.font,
-                maxWidth: "100%",
-                height: inputHeight,
+                backgroundColor: currentTheme.background,
+                // marginBottom: KeyboardHeight,
               },
             ]}
-            placeholder="Write text.."
-            placeholderTextColor="#ccc"
-            onChangeText={(text) => setReviewInput(text)}
-            value={reviewInput}
-            returnKeyType="default"
-            multiline={true}
-            onContentSizeChange={(e) => {
-              setInputHeight(e.nativeEvent.contentSize.height);
-            }}
-          />
-          <Icon
-            name="send"
-            style={[styles.sendReviewIcon, { color: currentTheme.font }]}
-            onPress={handleOnPress}
-          />
-        </View>
-      )}
-      {openReviews && (
-        <Pressable
-          style={styles.reviewsList}
-          // onPress={() => setOpenReviews(false)}
-        >
-          {reviewsList?.length > 0 ? (
-            reviewsList?.map((item, index) => {
-              // const currentReviewTime = GetTimesAgo(
-              //   new Date(item?.createdAt).getTime()
-              // );
-              // const reviewTime = GetActionTime(currentReviewTime);
-              return (
-                <ReviewItem
-                  key={index}
-                  item={item}
-                  currentTheme={currentTheme}
-                  user={props.user}
-                  currentUser={props.currentUser}
-                  setRemoveReview={setRemoveReview}
-                  removeReview={removeReview}
-                  DeleteReview={DeleteReview}
-                  navigation={props.navigation}
-                  language={props.language}
-                />
-              );
-            })
-          ) : (
-            <View style={{ padding: 20, paddingVertical: 10 }}>
-              <Text style={{ color: "#888", fontSize: 12 }}>No comments</Text>
-            </View>
-          )}
-          {reviewLength > 10 && (
-            <Pressable
-              style={{ backgroundColor: currentTheme.background2 }}
-              onPress={
-                reviewsList?.length < reviewLength
-                  ? () => AddNewReviews(reviewsPage + 1)
-                  : () => ReduceReviews()
-              }
-              style={{ width: "100%", alignItems: "center" }}
-            >
-              <Text style={{ color: "orange" }}>
-                {reviewsList?.length < reviewLength ? "Load more" : "Show less"}
-              </Text>
-            </Pressable>
-          )}
-        </Pressable>
-      )}
-      {/* </KeyboardAvoidingView> */}
-    </Animated.View>
+          >
+            <TextInput
+              style={[
+                styles.reviewInput,
+                {
+                  backgroundColor: currentTheme.background2,
+                  color: currentTheme.font,
+                  maxWidth: "100%",
+                  height: inputHeight,
+                },
+              ]}
+              placeholder="Write text.."
+              placeholderTextColor="#ccc"
+              onChangeText={(text) => setReviewInput(text)}
+              value={reviewInput}
+              returnKeyType="default"
+              multiline={true}
+              onContentSizeChange={(e) => {
+                setInputHeight(e.nativeEvent.contentSize.height);
+              }}
+            />
+            <FontAwesome
+              name="send"
+              style={[styles.sendReviewIcon, { color: currentTheme.font }]}
+              onPress={handleOnPress}
+            />
+          </View>
+        )}
+        {openReviews && (
+          <Pressable
+            style={styles.reviewsList}
+            // onPress={() => setOpenReviews(false)}
+          >
+            {reviewsList?.length > 0 ? (
+              reviewsList?.map((item, index) => {
+                // const currentReviewTime = GetTimesAgo(
+                //   new Date(item?.createdAt).getTime()
+                // );
+                // const reviewTime = GetActionTime(currentReviewTime);
+                return (
+                  <ReviewItem
+                    key={index}
+                    item={item}
+                    currentTheme={currentTheme}
+                    user={props.user}
+                    currentUser={props.currentUser}
+                    setRemoveReview={setRemoveReview}
+                    removeReview={removeReview}
+                    DeleteReview={DeleteReview}
+                    navigation={props.navigation}
+                    language={props.language}
+                  />
+                );
+              })
+            ) : (
+              <View style={{ padding: 20, paddingVertical: 10 }}>
+                <Text style={{ color: "#888", fontSize: 12 }}>No comments</Text>
+              </View>
+            )}
+            {reviewLength > 10 && (
+              <Pressable
+                style={{ backgroundColor: currentTheme.background2 }}
+                onPress={
+                  reviewsList?.length < reviewLength
+                    ? () => AddNewReviews(reviewsPage + 1)
+                    : () => ReduceReviews()
+                }
+                style={{ width: "100%", alignItems: "center" }}
+              >
+                <Text style={{ color: "orange" }}>
+                  {reviewsList?.length < reviewLength
+                    ? "Load more"
+                    : "Show less"}
+                </Text>
+              </Pressable>
+            )}
+          </Pressable>
+        )}
+        {/* </KeyboardAvoidingView> */}
+      </Animated.View>
+    </>
   );
 };
 
@@ -1096,7 +1132,7 @@ const ReviewItem = ({
                   backgroundColor: "rgba(255,255,255,0.1)",
                 }}
               >
-                <Icon name="user" size={20} color="#e5e5e5" />
+                <FontAwesome name="user" size={20} color="#e5e5e5" />
               </View>
             )}
           </Pressable>
@@ -1141,7 +1177,7 @@ const ReviewItem = ({
           </Text>
         </Pressable>
         {removeReview === item.reviewId && (
-          <Icon
+          <FontAwesome
             name="remove"
             style={styles.reveiwDeleteIcon}
             onPress={() => DeleteReview(item.reviewId)}

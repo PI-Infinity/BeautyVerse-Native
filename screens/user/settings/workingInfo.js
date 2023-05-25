@@ -10,6 +10,7 @@ import {
   Pressable,
   Vibration,
   ScrollView,
+  Platform,
 } from "react-native";
 import { useSelector, useDispatch } from "react-redux";
 import axios from "axios";
@@ -19,6 +20,8 @@ import { ListItem, Icon, Button } from "react-native-elements";
 import { Language } from "../../../context/language";
 import { Currency } from "../../../screens/user/settings/currency";
 import { lightTheme, darkTheme } from "../../../context/theme";
+import { MaterialIcons, FontAwesome5 } from "@expo/vector-icons";
+import { workingDaysOptions } from "../../../datas/registerDatas";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -32,6 +35,7 @@ export const WorkingInfo = () => {
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
 
+  const lang = useSelector((state) => state.storeApp.language);
   const currentUser = useSelector((state) => state.storeUser.currentUser);
 
   const handleOptionPress = (option) => {
@@ -84,11 +88,11 @@ export const WorkingInfo = () => {
       } else {
         const newHours = {
           ...currentUser,
-          workingDays: currentUser.workingDays.map((workingDay) =>
-            workingDay._id === itemId
+          workingDays: currentUser.workingDays.map((workingDay) => {
+            return workingDay._id === itemId
               ? { ...workingDay, hours: workingHours }
-              : workingDay
-          ),
+              : workingDay;
+          }),
         };
         dispatch(setCurrentUser(newHours));
         setSelectedOptions([]);
@@ -136,32 +140,32 @@ export const WorkingInfo = () => {
   const [openExperience, setOpenExperience] = useState(false);
   const [experience, setExperience] = useState("");
 
-  const UpdateExperience = async () => {
+  const UpdateExperience = async (value) => {
     try {
-      if (experience?.length < 1) {
-        return setOpenExperience(false);
-      }
       dispatch(
         setCurrentUser({
           ...currentUser,
-          experience: experience,
+          experience: value,
         })
       );
       setOpenExperience(false);
       const response = await axios.patch(
         `https://beautyverse.herokuapp.com/api/v1/users/${currentUser?._id}`,
         {
-          experience,
+          experience: value,
         }
       );
-      console.log(response);
     } catch (error) {
       console.log(error.response.data.message);
     }
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <ScrollView
+      contentContainerStyle={styles.container}
+      bounces={Platform.OS === "ios" ? false : undefined}
+      overScrollMode={Platform.OS === "ios" ? "never" : "always"}
+    >
       <View
         style={{
           backgroundColor: currentTheme.background2,
@@ -177,17 +181,18 @@ export const WorkingInfo = () => {
             marginVertical: 10,
             fontWeight: "bold",
             fontSize: 16,
+            letterSpacing: 0.3,
           }}
         >
           {language?.language?.User?.userPage?.workingDays}:
         </Text>
         {!add ? (
           <Pressable onPress={() => setAdd(true)} style={{ padding: 10 }}>
-            <Icon name="add" type="MaterialIcons" color="green" size={24} />
+            <MaterialIcons name="add" color={currentTheme.pink} size={24} />
           </Pressable>
         ) : (
           <Pressable onPress={() => setAdd(false)} style={{ padding: 10 }}>
-            <Icon name="times" type="font-awesome-5" color="red" size={24} />
+            <FontAwesome5 name="times" color="red" size={24} />
           </Pressable>
         )}
         {add && (
@@ -195,8 +200,8 @@ export const WorkingInfo = () => {
             style={{
               width: SCREEN_WIDTH - 60,
               gap: 5,
-              marginBottom: 15,
               marginHorizontal: 20,
+              marginBottom: 20,
             }}
           >
             <Text
@@ -257,75 +262,87 @@ export const WorkingInfo = () => {
         )}
 
         <View style={{ width: "100%" }}>
-          {currentUser.workingDays?.map((option, index) => (
-            <View
-              key={option.value}
-              style={{ width: "100%", alignItems: "center" }}
-            >
-              <TouchableOpacity
-                key={option._id}
-                style={
-                  [
-                    styles.option,
-                    selectedOptions.includes(option.value)
-                      ? styles.selected
-                      : null,
-                  ]
-                  // { backgroundColor: currentTheme.background2 })
-                }
-                onPress={() => handleOptionPress(option)}
-                onLongPress={() => {
-                  Vibration.vibrate();
-                  Deleting(option._id, option.value);
-                }}
-                delayLongPress={300}
-              >
-                <View
-                  style={{
-                    alignItems: "center",
-                    flexDirection: "row",
-                    justifyContent: "space-between",
-                    width: "100%",
-                  }}
-                >
-                  <Text
-                    style={[styles.optionText, { color: currentTheme.font }]}
-                  >
-                    {option.value}
-                  </Text>
-                  <Text
-                    style={[styles.optionText, { color: currentTheme.font }]}
-                  >
-                    {option?.hours}
-                  </Text>
-                </View>
-                {selectedOptions.includes(option.value) && (
-                  <TextInput
-                    style={styles.input}
-                    onChangeText={(value) => setWorkingHours(value)}
-                    value={workingHours}
-                    placeholder="example: 10:00 - 20:00"
-                  />
-                )}
-              </TouchableOpacity>
-              {selectedOptions.includes(option.value) && (
+          {currentUser.workingDays?.map((option, index) => {
+            let lab = workingDaysOptions.find(
+              (item) => item.value === option.value
+            );
+            return (
+              <View key={index} style={{ width: "100%", alignItems: "center" }}>
                 <TouchableOpacity
-                  style={{
-                    padding: 10,
-                    borderRadius: 5,
-                    backgroundColor: "green",
-                    width: "50%",
-                    alignItems: "center",
-                  }}
-                  onPress={() =>
-                    AddWorkingDayHours(option._id, option.value, index)
+                  key={index}
+                  style={
+                    [
+                      styles.option,
+                      selectedOptions.includes(option.value)
+                        ? styles.selected
+                        : null,
+                      {
+                        backgroundColor: currentTheme.background,
+                        borderRadius: 50,
+                        paddingLeft: 20,
+                      },
+                    ]
+                    // { backgroundColor: currentTheme.background2 })
                   }
+                  onPress={() => handleOptionPress(option)}
+                  onLongPress={() => {
+                    Vibration.vibrate();
+                    Deleting(option._id, option.value);
+                  }}
+                  delayLongPress={300}
                 >
-                  <Text style={{ color: "#e5e5e5" }}>Save</Text>
+                  <View
+                    style={{
+                      alignItems: "center",
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                      width: "100%",
+                    }}
+                  >
+                    <Text
+                      style={[styles.optionText, { color: currentTheme.font }]}
+                    >
+                      {lang === "en"
+                        ? lab?.en
+                        : lang === "ka"
+                        ? lab?.ka
+                        : lab?.ru}
+                    </Text>
+                    <Text
+                      style={[styles.optionText, { color: currentTheme.font }]}
+                    >
+                      {option?.hours}
+                    </Text>
+                  </View>
+                  {selectedOptions.includes(option.value) && (
+                    <TextInput
+                      style={styles.input}
+                      onChangeText={(value) => setWorkingHours(value)}
+                      value={workingHours}
+                      placeholder="example: 10:00 - 20:00"
+                    />
+                  )}
                 </TouchableOpacity>
-              )}
-            </View>
-          ))}
+                {selectedOptions.includes(option.value) && (
+                  <TouchableOpacity
+                    style={{
+                      padding: 10,
+                      borderRadius: 50,
+                      backgroundColor: currentTheme.pink,
+                      width: "45%",
+                      alignItems: "center",
+                      marginTop: 10,
+                    }}
+                    onPress={() =>
+                      AddWorkingDayHours(option._id, option.value, index)
+                    }
+                  >
+                    <Text style={{ color: "#fff" }}>Save</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            );
+          })}
         </View>
       </View>
       <View
@@ -342,6 +359,7 @@ export const WorkingInfo = () => {
             fontWeight: "bold",
             fontSize: 16,
             color: currentTheme.font,
+            letterSpacing: 0.3,
           }}
         >
           Experience:
@@ -354,6 +372,7 @@ export const WorkingInfo = () => {
                 color: currentTheme.disabled,
                 marginVertical: 12.5,
                 height: 16,
+                letterSpacing: 0.2,
               }}
             >
               {experience.length} (max 500 symbols)
@@ -368,29 +387,40 @@ export const WorkingInfo = () => {
               style={{
                 paddingHorizontal: 10,
                 paddingVertical: 5,
-                borderRadius: 10,
-                borderWidth: 1,
-                borderColor: currentTheme.disabled,
+                borderRadius: 50,
                 width: "100%",
                 color: currentTheme.font,
                 fontSize: 14,
                 minHeight: 40,
                 lineHeight: 22,
+                backgroundColor: currentTheme.background,
+                shadowColor: "#000",
+                shadowOffset: {
+                  width: 0,
+                  height: 3, // negative value places shadow on top
+                },
+                shadowOpacity: 0.05,
+                shadowRadius: 2,
+                elevation: 1,
               }}
             />
             <TouchableOpacity
               activeOpacity={0.3}
               style={{
                 padding: 10,
-                borderRadius: 10,
+                borderRadius: 50,
                 backgroundColor: currentTheme.pink,
                 width: "45%",
                 marginTop: 15,
                 alignItems: "center",
               }}
-              onPress={experience.length < 501 ? UpdateExperience : undefined}
+              onPress={
+                experience.length < 501
+                  ? () => UpdateExperience(experience)
+                  : undefined
+              }
             >
-              <Text style={{ color: currentTheme.font }}>Save</Text>
+              <Text style={{ color: "#fff", letterSpacing: 0.2 }}>Save</Text>
             </TouchableOpacity>
           </>
         ) : (
@@ -399,24 +429,42 @@ export const WorkingInfo = () => {
             style={{
               width: "100%",
               borderRadius: 10,
-              backgroundColor: "rgba(255,255,255,0.1)",
+              // backgroundColor: "rgba(255,255,255,0.1)",
               marginTop: 20,
               marginBottom: 5,
-              padding: 10,
+              // padding: 10,
+              alignItems: "center",
             }}
+            onLongPress={() => {
+              UpdateExperience("");
+              Vibration.vibrate();
+            }}
+            delayLongPress={200}
             onPress={() => {
               setExperience(currentUser.experience);
               setOpenExperience(true);
             }}
           >
-            <Text
-              style={{
-                color: currentTheme.font,
-                lineHeight: 22,
-              }}
-            >
-              {currentUser?.experience}
-            </Text>
+            {currentUser.experience?.length > 0 ? (
+              <Text
+                style={{
+                  color: currentTheme.font,
+                  lineHeight: 22,
+                }}
+              >
+                {currentUser?.experience}
+              </Text>
+            ) : (
+              <Pressable
+                onPress={() => {
+                  setExperience(currentUser.experience);
+                  setOpenExperience(true);
+                }}
+                style={{ padding: 10 }}
+              >
+                <MaterialIcons name="add" color={currentTheme.pink} size={24} />
+              </Pressable>
+            )}
           </TouchableOpacity>
         )}
       </View>
@@ -449,25 +497,26 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 5,
     backgroundColor: "rgba(255,255,255,0.05)",
+    letterSpacing: 0.2,
   },
   option: {
     width: (Dimensions.get("window").width * 85) / 100,
-    backgroundColor: "rgba(255,255,255,0.1)",
+
     borderRadius: 5,
     padding: 10,
     marginTop: 5,
   },
-  selected: {
-    backgroundColor: "rgba(255,255,255,0.1)",
-  },
+  selected: {},
   optionText: {
     fontSize: 14,
     color: "#e5e5e5",
+    letterSpacing: 0.2,
   },
   input: {
     marginTop: 10,
     backgroundColor: "#fff",
     borderRadius: 5,
     padding: 10,
+    letterSpacing: 0.2,
   },
 });

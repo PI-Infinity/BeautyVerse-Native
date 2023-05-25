@@ -11,10 +11,10 @@ import {
   Platform,
 } from "react-native";
 import Collapsible from "react-native-collapsible";
-import MaterialIcons from "react-native-vector-icons/MaterialIcons";
+import { MaterialIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { setRerenderCurrentUser } from "../../../redux/rerenders";
-import { setLanguage, setTheme } from "../../../redux/app";
+import { setLanguage, setTheme, setLoading } from "../../../redux/app";
 import { useDispatch, useSelector } from "react-redux";
 import { Security } from "../../../screens/user/settings/security";
 import axios from "axios";
@@ -41,7 +41,9 @@ export const Settings = ({ navigation }) => {
   const currentTheme = theme ? darkTheme : lightTheme;
 
   const Logout = async () => {
+    dispatch(setLoading(true));
     await AsyncStorage.removeItem("Beautyverse:currentUser");
+    dispatch(setCurrentUser(null));
     dispatch(setRerenderCurrentUser());
   };
 
@@ -61,9 +63,9 @@ export const Settings = ({ navigation }) => {
 
   return (
     <ScrollView
-      contentContainerStyle={{ alignItems: "center" }}
+      contentContainerStyle={{ alignItems: "center", paddingBottom: 30 }}
       bounces={Platform.OS === "ios" ? false : undefined}
-      overScrollMode={Platform.OS === "ios" ? undefined : false}
+      overScrollMode={Platform.OS === "ios" ? "never" : "always"}
       style={{
         width: "100%",
         paddingTop: 20,
@@ -75,7 +77,12 @@ export const Settings = ({ navigation }) => {
         onPress={() => navigation.navigate("Personal info")}
         style={[styles.item, { backgroundColor: currentTheme.background2 }]}
       >
-        <Text style={[styles.sectionTitle, { color: currentTheme.font }]}>
+        <Text
+          style={[
+            styles.sectionTitle,
+            { color: currentTheme.font, letterSpacing: 0.2 },
+          ]}
+        >
           {language?.language?.User?.userPage?.personalInfo}
         </Text>
         <MaterialIcons
@@ -89,7 +96,12 @@ export const Settings = ({ navigation }) => {
         onPress={() => navigation.navigate("Addresses")}
         style={[styles.item, { backgroundColor: currentTheme.background2 }]}
       >
-        <Text style={[styles.sectionTitle, { color: currentTheme.font }]}>
+        <Text
+          style={[
+            styles.sectionTitle,
+            { color: currentTheme.font, letterSpacing: 0.2 },
+          ]}
+        >
           {language?.language?.User?.userPage?.addresses}
         </Text>
         <MaterialIcons
@@ -104,7 +116,12 @@ export const Settings = ({ navigation }) => {
           onPress={() => navigation.navigate("Procedures")}
           style={[styles.item, { backgroundColor: currentTheme.background2 }]}
         >
-          <Text style={[styles.sectionTitle, { color: currentTheme.font }]}>
+          <Text
+            style={[
+              styles.sectionTitle,
+              { color: currentTheme.font, letterSpacing: 0.2 },
+            ]}
+          >
             {language?.language?.User?.userPage?.procedures}
           </Text>
           <MaterialIcons
@@ -120,7 +137,12 @@ export const Settings = ({ navigation }) => {
           onPress={() => navigation.navigate("Working info")}
           style={[styles.item, { backgroundColor: currentTheme.background2 }]}
         >
-          <Text style={[styles.sectionTitle, { color: currentTheme.font }]}>
+          <Text
+            style={[
+              styles.sectionTitle,
+              { color: currentTheme.font, letterSpacing: 0.2 },
+            ]}
+          >
             {language?.language?.User?.userPage?.workingInfo}
           </Text>
           <MaterialIcons
@@ -135,7 +157,12 @@ export const Settings = ({ navigation }) => {
         onPress={() => setOpenSecurity(!openSecurity)}
         style={[styles.item, { backgroundColor: currentTheme.background2 }]}
       >
-        <Text style={[styles.sectionTitle, { color: currentTheme.font }]}>
+        <Text
+          style={[
+            styles.sectionTitle,
+            { color: currentTheme.font, letterSpacing: 0.2 },
+          ]}
+        >
           {language?.language?.User?.userPage?.security}
         </Text>
         <MaterialIcons
@@ -155,7 +182,12 @@ export const Settings = ({ navigation }) => {
         ]}
         onPress={() => setOpenLanguages(!openLanguages)}
       >
-        <Text style={[styles.sectionTitle, { color: currentTheme.font }]}>
+        <Text
+          style={[
+            styles.sectionTitle,
+            { color: currentTheme.font, letterSpacing: 0.2 },
+          ]}
+        >
           {language?.language?.User?.userPage?.languages}
         </Text>
         <MaterialIcons
@@ -261,12 +293,27 @@ export const Settings = ({ navigation }) => {
           ]}
         >
           <View style={{ alignItems: "center", gap: 7, flexDirection: "row" }}>
-            <MaterialIcons name="verified" size={16} color="#F866B1" />
-            <Text style={[styles.sectionTitle, { color: currentTheme.font }]}>
+            <MaterialIcons
+              name="verified"
+              size={16}
+              color={
+                currentUser?.subscription.status === "active"
+                  ? "#F866B1"
+                  : currentTheme.disabled
+              }
+            />
+            <Text
+              style={[
+                styles.sectionTitle,
+                { color: currentTheme.font, letterSpacing: 0.2 },
+              ]}
+            >
               {language?.language?.User?.userPage?.verification}
             </Text>
           </View>
-          <View
+
+          <Pressable
+            onPress={() => navigation.navigate("Prices", { from: "Settings" })}
             style={{
               alignItems: "center",
               gap: 0,
@@ -277,15 +324,27 @@ export const Settings = ({ navigation }) => {
               paddingVertical: 5,
             }}
           >
-            <Text style={[styles.sectionTitle, { color: currentTheme.font }]}>
-              {language?.language?.Auth?.auth?.cancel}
+            <Text
+              style={[
+                styles.sectionTitle,
+                { color: currentTheme.font, letterSpacing: 0.2 },
+              ]}
+            >
+              {currentUser?.subscription.status === "active"
+                ? "Cancel"
+                : "Activation"}
             </Text>
             {/* <MaterialIcons name="attach-money" size={18} color={currentTheme.pink} /> */}
-          </View>
+          </Pressable>
         </View>
       )}
       <View style={[styles.item, { backgroundColor: "rgba(0,0,0,0)" }]}>
-        <Text style={[styles.sectionTitle, { color: currentTheme.font }]}>
+        <Text
+          style={[
+            styles.sectionTitle,
+            { color: currentTheme.font, letterSpacing: 0.2 },
+          ]}
+        >
           {language?.language?.User?.userPage?.notifications}
         </Text>
         <Switch
@@ -297,7 +356,12 @@ export const Settings = ({ navigation }) => {
         />
       </View>
       <View style={[styles.item, { backgroundColor: "rgba(0,0,0,0)" }]}>
-        <Text style={[styles.sectionTitle, { color: currentTheme.font }]}>
+        <Text
+          style={[
+            styles.sectionTitle,
+            { color: currentTheme.font, letterSpacing: 0.2 },
+          ]}
+        >
           {language?.language?.User?.userPage?.darkMode}
         </Text>
         <Switch
@@ -315,7 +379,12 @@ export const Settings = ({ navigation }) => {
         />
       </View>
       <View style={[styles.item, { backgroundColor: "rgba(0,0,0,0)" }]}>
-        <Text style={[styles.sectionTitle, { color: currentTheme.font }]}>
+        <Text
+          style={[
+            styles.sectionTitle,
+            { color: currentTheme.font, letterSpacing: 0.2 },
+          ]}
+        >
           {language?.language?.User?.userPage?.activation}
         </Text>
         <Switch
@@ -328,13 +397,37 @@ export const Settings = ({ navigation }) => {
       </View>
       <TouchableOpacity
         activeOpacity={0.5}
-        onPress={() => navigation.navigate("Terms")}
+        onPress={() => navigation.navigate("Prices", { from: "Settings" })}
         style={[
           styles.item,
           { backgroundColor: currentTheme.background2, marginTop: 30 },
         ]}
       >
-        <Text style={[styles.sectionTitle, { color: currentTheme.font }]}>
+        <Text
+          style={[
+            styles.sectionTitle,
+            { color: currentTheme.font, letterSpacing: 0.2 },
+          ]}
+        >
+          {language?.language?.User?.userPage?.prices}
+        </Text>
+        <MaterialIcons
+          name={"arrow-right"}
+          color={currentTheme.pink}
+          size={18}
+        />
+      </TouchableOpacity>
+      <TouchableOpacity
+        activeOpacity={0.5}
+        onPress={() => navigation.navigate("Terms")}
+        style={[styles.item, { backgroundColor: currentTheme.background2 }]}
+      >
+        <Text
+          style={[
+            styles.sectionTitle,
+            { color: currentTheme.font, letterSpacing: 0.2 },
+          ]}
+        >
           {language?.language?.Pages?.pages?.terms}
         </Text>
         <MaterialIcons
@@ -348,7 +441,12 @@ export const Settings = ({ navigation }) => {
         onPress={() => navigation.navigate("QA")}
         style={[styles.item, { backgroundColor: currentTheme.background2 }]}
       >
-        <Text style={[styles.sectionTitle, { color: currentTheme.font }]}>
+        <Text
+          style={[
+            styles.sectionTitle,
+            { color: currentTheme.font, letterSpacing: 0.2 },
+          ]}
+        >
           {language?.language?.Pages?.pages?.qa}
         </Text>
         <MaterialIcons
@@ -362,7 +460,12 @@ export const Settings = ({ navigation }) => {
         onPress={() => navigation.navigate("Privacy")}
         style={[styles.item, { backgroundColor: currentTheme.background2 }]}
       >
-        <Text style={[styles.sectionTitle, { color: currentTheme.font }]}>
+        <Text
+          style={[
+            styles.sectionTitle,
+            { color: currentTheme.font, letterSpacing: 0.2 },
+          ]}
+        >
           {language?.language?.Pages?.pages?.privacy}
         </Text>
         <MaterialIcons
@@ -376,7 +479,12 @@ export const Settings = ({ navigation }) => {
         onPress={() => navigation.navigate("Usage")}
         style={[styles.item, { backgroundColor: currentTheme.background2 }]}
       >
-        <Text style={[styles.sectionTitle, { color: currentTheme.font }]}>
+        <Text
+          style={[
+            styles.sectionTitle,
+            { color: currentTheme.font, letterSpacing: 0.2 },
+          ]}
+        >
           {language?.language?.Pages?.pages?.usage}
         </Text>
         <MaterialIcons
@@ -400,7 +508,12 @@ export const Settings = ({ navigation }) => {
           },
         ]}
       >
-        <Text style={[styles.sectionTitle, { color: currentTheme.font }]}>
+        <Text
+          style={[
+            styles.sectionTitle,
+            { color: currentTheme.font, letterSpacing: 0.2 },
+          ]}
+        >
           {language?.language?.User?.userPage?.logout}
         </Text>
       </TouchableOpacity>

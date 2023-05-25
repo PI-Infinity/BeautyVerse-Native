@@ -18,6 +18,49 @@ const GoogleAutocomplete = ({ setAddress, currentTheme }) => {
     }
   };
 
+  const styles = StyleSheet.create({
+    container: {
+      width: SCREEN_WIDTH * 0.8,
+      // height: 100,
+    },
+    listView: {
+      borderRadius: 5,
+      backgroundColor: currentTheme.background2, // Add this line
+    },
+    // textInputContainer: {
+    //   borderTopWidth: 0,
+    //   borderBottomWidth: 0,
+    //   // backgroundColor: currentTheme.background2, // Add this line
+    //   color: currentTheme.font,
+    //   borderRadius: 50,
+    // },
+    textInput: {
+      marginLeft: 0,
+      marginRight: 0,
+      height: 40,
+      color: currentTheme.font, // Update this line
+      fontSize: 14,
+      borderRadius: 50,
+      backgroundColor: currentTheme.background2, // Add this line
+      shadowColor: "#000",
+      shadowOffset: {
+        width: 0,
+        height: 3, // negative value places shadow on top
+      },
+      shadowOpacity: 0.05,
+      shadowRadius: 2,
+      elevation: 1,
+    },
+    description: {
+      // Add this block
+      color: "#111",
+      fontWeight: "bold",
+    },
+    textInputClearButton: {
+      tintColor: "red",
+    },
+  });
+
   return (
     <View style={{ zIndex: 20000, height: h }}>
       <GooglePlacesAutocomplete
@@ -66,7 +109,7 @@ const GoogleAutocomplete = ({ setAddress, currentTheme }) => {
         }}
         textInputProps={{
           onChangeText: handleChangeText,
-          placeholderTextColor: "#555", // Add this line
+          placeholderTextColor: currentTheme.disabled, // Add this line
           fontSize: 14,
         }}
         styles={styles}
@@ -80,35 +123,5 @@ const GoogleAutocomplete = ({ setAddress, currentTheme }) => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    width: SCREEN_WIDTH * 0.8,
-    height: 100,
-  },
-  listView: {
-    borderRadius: 5,
-    backgroundColor: "#111", // Add this line
-  },
-  textInputContainer: {
-    borderTopWidth: 0,
-    borderBottomWidth: 0,
-    backgroundColor: "#111", // Add this line
-    color: "#e5e5e5",
-  },
-  textInput: {
-    marginLeft: 0,
-    marginRight: 0,
-    height: 38,
-    color: "#e5e5e5", // Update this line
-    fontSize: 14,
-    borderRadius: 50,
-    backgroundColor: "rgba(255,255,255,0.05)", // Add this line
-  },
-  description: {
-    // Add this block
-    color: "#111",
-  },
-});
 
 export default GoogleAutocomplete;

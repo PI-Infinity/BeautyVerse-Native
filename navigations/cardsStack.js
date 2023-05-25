@@ -8,7 +8,7 @@ import { ScrollGallery } from "../screens/user/scrollGallery";
 import { User } from "../screens/user/user";
 import { Text } from "react-native";
 import { Cards } from "../screens/cards";
-import MaterialIcons from "react-native-vector-icons/MaterialIcons";
+import { MaterialIcons } from "@expo/vector-icons";
 import { lightTheme, darkTheme } from "../context/theme";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -16,6 +16,13 @@ const Stack = createStackNavigator();
 
 // specific component for user page, passed some props into component
 const withVariant = (Component, variant) => {
+  return (props) => {
+    return <User {...props} variant={variant} />;
+  };
+};
+
+// specific component for user page, passed some props into component
+const withVariantVisit = (Component, variant) => {
   return (props) => {
     return <User {...props} variant={variant} />;
   };
@@ -39,14 +46,21 @@ export function CardsStack({ route }) {
         options={{
           headerStyle: {
             backgroundColor: currentTheme.background,
-            elevation: 0,
-            shadowOpacity: 0,
+            shadowColor: "#000",
+            shadowOffset: {
+              width: 0,
+              height: !theme ? 0.5 : 0, // negative value places shadow on top
+            },
+            shadowOpacity: 0.2,
+            shadowRadius: 2,
+            elevation: 5, // required for android
             borderBottomWidth: 0,
           },
           headerTintColor: currentTheme.font,
           headerTitleStyle: {
             fontWeight: "bold",
             fontSize: 24,
+            letterSpacing: 0.5,
           },
           cardStyle: {
             backgroundColor: currentTheme.background,
@@ -67,7 +81,7 @@ export function CardsStack({ route }) {
                 style={{
                   fontSize: 23,
                   fontWeight: "bold",
-                  color: "#F866B1",
+                  color: currentTheme.pink,
                   letterSpacing: 1,
                 }}
               >
@@ -105,6 +119,7 @@ export function CardsStack({ route }) {
           headerTitleStyle: {
             fontWeight: "bold",
             fontSize: 18,
+            letterSpacing: 0.5,
           },
           cardStyle: {
             backgroundColor: currentTheme.background,
@@ -117,16 +132,59 @@ export function CardsStack({ route }) {
                 style={{
                   fontSize: 18,
                   letterSpacing: 0.5,
-                  color: "#e5e5e5",
+                  color: currentTheme.font,
                   fontWeight: "bold",
                   marginBottom: Platform.OS !== "android" ? 5 : 0,
                 }}
               >
                 {route.params.user.name}
               </Text>
-              <MaterialIcons name="verified" size={14} color="#F866B1" />
+              {route.params.user.subscription.status === "active" && (
+                <MaterialIcons name="verified" size={14} color="#F866B1" />
+              )}
             </View>
           ),
+        })}
+      />
+      <Stack.Screen
+        name="UserVisit"
+        component={withVariantVisit(User, "visitPage")}
+        options={({ route }) => ({
+          headerBackTitleVisible: false,
+          headerTitle: (props) => (
+            <View
+              style={{ flexDirection: "row", alignItems: "center", gap: 5 }}
+            >
+              <Text
+                style={{
+                  fontSize: 18,
+                  letterSpacing: 0.5,
+                  color: currentTheme.font,
+                  fontWeight: "bold",
+                }}
+              >
+                {route.params.user.name}
+              </Text>
+              <MaterialIcons name="verified" size={20} color="#F866B1" />
+            </View>
+          ),
+
+          headerStyle: {
+            backgroundColor: currentTheme.background,
+
+            elevation: 0,
+            shadowOpacity: 0,
+            borderBottomWidth: 0,
+          },
+          headerTintColor: currentTheme.font,
+          headerTitleStyle: {
+            fontWeight: "bold",
+            fontSize: 18,
+            letterSpacing: 0.5,
+          },
+          cardStyle: {
+            backgroundColor: currentTheme.background,
+          },
         })}
       />
       {/** user feed list screen, after press to feed from user page, user can visit to target user's feeds  */}
@@ -147,6 +205,7 @@ export function CardsStack({ route }) {
           headerTitleStyle: {
             fontWeight: "bold",
             fontSize: 18,
+            letterSpacing: 0.5,
           },
           cardStyle: {
             backgroundColor: currentTheme.background,

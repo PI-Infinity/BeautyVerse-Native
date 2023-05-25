@@ -10,6 +10,7 @@ import {
   Switch,
   ScrollView,
   KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { useSelector, useDispatch } from "react-redux";
 import { setRerenderCurrentUser } from "../../../redux/rerenders";
@@ -90,76 +91,165 @@ export const PersonalInfo = ({ user, onSave }) => {
         width: "100%",
         justifyContent: "center",
         alignItems: "center",
-        gap: 15,
+        gap: 10,
         zIndex: 100,
-        paddingBottom: 30,
+        paddingBottom: 50,
       }}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <ScrollView style={styles.container} contentContainerStyle={{ gap: 7.5 }}>
-        <View style={styles.itemContainer}>
-          <Text style={[styles.label, { color: currentTheme.font }]}>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={{ gap: 10, paddingBottom: 70 }}
+        bounces={Platform.OS === "ios" ? false : undefined}
+        overScrollMode={Platform.OS === "ios" ? "never" : "always"}
+      >
+        <View
+          style={[
+            styles.itemContainer,
+            { borderBottomColor: currentTheme.line },
+          ]}
+        >
+          <Text
+            style={[
+              styles.label,
+              { color: currentTheme.font, letterSpacing: 0.2 },
+            ]}
+          >
             {language?.language?.User.userPage.userType}:
           </Text>
-          <Text style={[styles.value, { color: currentTheme.font }]}>
-            {type}
+          <Text
+            style={[
+              styles.value,
+              { color: currentTheme.font, letterSpacing: 0.2 },
+            ]}
+          >
+            {type === "Beautycenter" ? "Beauty Salon" : type}
           </Text>
         </View>
-        <View style={styles.itemContainer}>
-          <Text style={[styles.label, { color: currentTheme.font }]}>
+        <View
+          style={[
+            styles.itemContainer,
+            { borderBottomColor: currentTheme.line },
+          ]}
+        >
+          <Text
+            style={[
+              styles.label,
+              { color: currentTheme.font, letterSpacing: 0.2 },
+            ]}
+          >
             {language?.language?.Auth.auth.email}:
           </Text>
-          <Text style={[styles.value, { color: currentTheme.font }]}>
+          <Text
+            style={[
+              styles.value,
+              { color: currentTheme.font, letterSpacing: 0.2 },
+            ]}
+          >
             {currentUser?.email}
           </Text>
         </View>
 
-        <View style={styles.itemContainer}>
-          <Text style={[styles.label, { color: currentTheme.font }]}>
+        <View
+          style={[
+            styles.itemContainer,
+            { borderBottomColor: currentTheme.line },
+          ]}
+        >
+          <Text
+            style={[
+              styles.label,
+              { color: currentTheme.font, letterSpacing: 0.2 },
+            ]}
+          >
             {language?.language?.Auth.auth.name}:
           </Text>
           {isEditing ? (
             <TextInput
-              placeholderTextColor="#888"
-              style={styles.input}
+              placeholderTextColor={currentTheme.disabled}
+              style={[
+                styles.input,
+                { color: currentTheme.font, borderColor: currentTheme.line },
+              ]}
               value={editableUser.name}
               onChangeText={(text) =>
                 setEditableUser({ ...editableUser, name: text })
               }
             />
           ) : (
-            <Text style={[styles.value, { color: currentTheme.font }]}>
+            <Text
+              style={[
+                styles.value,
+                { color: currentTheme.font, letterSpacing: 0.2 },
+              ]}
+            >
               {currentUser?.name}
             </Text>
           )}
         </View>
-        <View style={styles.itemContainer}>
-          <Text style={[styles.label, { color: currentTheme.font }]}>
+        <View
+          style={[
+            styles.itemContainer,
+            { borderBottomColor: currentTheme.line },
+          ]}
+        >
+          <Text
+            style={[
+              styles.label,
+              { color: currentTheme.font, letterSpacing: 0.2 },
+            ]}
+          >
             {language?.language?.User.userPage.username}:
           </Text>
           {isEditing ? (
             <TextInput
-              placeholderTextColor="#888"
-              style={styles.input}
+              placeholderTextColor={currentTheme.disabled}
+              style={[
+                styles.input,
+                { color: currentTheme.font, borderColor: currentTheme.line },
+              ]}
               value={editableUser.username}
               onChangeText={(text) =>
                 setEditableUser({ ...editableUser, username: text })
               }
             />
           ) : (
-            <Text style={[styles.value, { color: currentTheme.font }]}>
+            <Text
+              style={[
+                styles.value,
+                { color: currentTheme.font, letterSpacing: 0.2 },
+              ]}
+            >
               {currentUser?.username}
             </Text>
           )}
         </View>
-        <View style={[styles.itemContainer, { height: "auto" }]}>
-          <Text style={[styles.label, { color: currentTheme.font }]}>
+        <View
+          style={[
+            [styles.itemContainer, { borderBottomColor: currentTheme.line }],
+            // { height: "auto" },
+          ]}
+        >
+          <Text
+            style={[
+              styles.label,
+              { color: currentTheme.font, letterSpacing: 0.2 },
+            ]}
+          >
             {language?.language?.User.userPage.about}:
           </Text>
           {isEditing ? (
             <TextInput
-              placeholderTextColor="#888"
-              style={styles.input}
+              placeholderTextColor={currentTheme.disabled}
+              style={[
+                styles.input,
+                {
+                  height: 100,
+                  borderRadius: 10,
+                  color: currentTheme.font,
+                  borderColor: currentTheme.line,
+                },
+              ]}
               value={editableUser.about}
               multiline
               numberOfLines={15}
@@ -168,20 +258,38 @@ export const PersonalInfo = ({ user, onSave }) => {
               }
             />
           ) : (
-            <Text style={[styles.value, { color: currentTheme.font }]}>
+            <Text
+              style={[
+                styles.value,
+                { color: currentTheme.font, letterSpacing: 0.2 },
+              ]}
+            >
               {currentUser?.about}
             </Text>
           )}
         </View>
-        <View style={styles.itemContainer}>
-          <Text style={[styles.label, { color: currentTheme.font }]}>
+        <View
+          style={[
+            styles.itemContainer,
+            { borderBottomColor: currentTheme.line },
+          ]}
+        >
+          <Text
+            style={[
+              styles.label,
+              { color: currentTheme.font, letterSpacing: 0.2 },
+            ]}
+          >
             {language?.language?.Auth.auth.phone}:
           </Text>
           {isEditing ? (
             <TextInput
-              placeholderTextColor="#888"
+              placeholderTextColor={currentTheme.disabled}
               placeholder="ex: +00000000000"
-              style={styles.input}
+              style={[
+                styles.input,
+                { color: currentTheme.font, borderColor: currentTheme.line },
+              ]}
               value={editableUser.phone}
               onChangeText={(text) =>
                 setEditableUser({
@@ -191,18 +299,38 @@ export const PersonalInfo = ({ user, onSave }) => {
               }
             />
           ) : (
-            <Text style={[styles.value, { color: currentTheme.font }]}>
+            <Text
+              style={[
+                styles.value,
+                { color: currentTheme.font, letterSpacing: 0.2 },
+              ]}
+            >
               {currentUser.phone}
             </Text>
           )}
         </View>
-        <View style={styles.itemContainer}>
-          <Text style={[styles.label, { color: currentTheme.font }]}>Web:</Text>
+        <View
+          style={[
+            styles.itemContainer,
+            { borderBottomColor: currentTheme.line },
+          ]}
+        >
+          <Text
+            style={[
+              styles.label,
+              { color: currentTheme.font, letterSpacing: 0.2 },
+            ]}
+          >
+            Web:
+          </Text>
           {isEditing ? (
             <TextInput
-              placeholderTextColor="#888"
+              placeholderTextColor={currentTheme.disabled}
               placeholder="ex: web.com"
-              style={styles.input}
+              style={[
+                styles.input,
+                { color: currentTheme.font, borderColor: currentTheme.line },
+              ]}
               value={editableUser?.media?.web}
               onChangeText={(text) =>
                 setEditableUser({
@@ -215,20 +343,38 @@ export const PersonalInfo = ({ user, onSave }) => {
               }
             />
           ) : (
-            <Text style={[styles.value, { color: currentTheme.font }]}>
+            <Text
+              style={[
+                styles.value,
+                { color: currentTheme.font, letterSpacing: 0.2 },
+              ]}
+            >
               {currentUser.media?.web}
             </Text>
           )}
         </View>
-        <View style={styles.itemContainer}>
-          <Text style={[styles.label, { color: currentTheme.font }]}>
+        <View
+          style={[
+            styles.itemContainer,
+            { borderBottomColor: currentTheme.line },
+          ]}
+        >
+          <Text
+            style={[
+              styles.label,
+              { color: currentTheme.font, letterSpacing: 0.2 },
+            ]}
+          >
             Facebook:
           </Text>
           {isEditing ? (
             <TextInput
-              placeholderTextColor="#888"
+              placeholderTextColor={currentTheme.disabled}
               placeholder="ex: 917823612"
-              style={styles.input}
+              style={[
+                styles.input,
+                { color: currentTheme.font, borderColor: currentTheme.line },
+              ]}
               value={editableUser?.media?.facebook}
               onChangeText={(text) =>
                 setEditableUser({
@@ -241,20 +387,35 @@ export const PersonalInfo = ({ user, onSave }) => {
               }
             />
           ) : (
-            <Text style={[styles.value, { color: currentTheme.font }]}>
+            <Text
+              style={[
+                styles.value,
+                { color: currentTheme.font, letterSpacing: 0.2 },
+              ]}
+            >
               {currentUser.media?.facebook}
             </Text>
           )}
         </View>
-        <View style={styles.itemContainer}>
-          <Text style={[styles.label, { color: currentTheme.font }]}>
+        <View
+          style={[
+            styles.itemContainer,
+            { borderBottomColor: currentTheme.line },
+          ]}
+        >
+          <Text
+            style={[
+              styles.label,
+              { color: currentTheme.font, letterSpacing: 0.2 },
+            ]}
+          >
             Instagram:
           </Text>
           {isEditing ? (
             <TextInput
-              placeholderTextColor="#888"
+              placeholderTextColor={currentTheme.disabled}
               placeholder="ex: @username"
-              style={styles.input}
+              style={[styles.input, { borderColor: currentTheme.line }]}
               value={editableUser?.media?.instagram}
               onChangeText={(text) =>
                 setEditableUser({
@@ -267,20 +428,35 @@ export const PersonalInfo = ({ user, onSave }) => {
               }
             />
           ) : (
-            <Text style={[styles.value, { color: currentTheme.font }]}>
+            <Text
+              style={[
+                styles.value,
+                { color: currentTheme.font, letterSpacing: 0.2 },
+              ]}
+            >
               {currentUser.media?.instagram}
             </Text>
           )}
         </View>
-        <View style={styles.itemContainer}>
-          <Text style={[styles.label, { color: currentTheme.font }]}>
+        <View
+          style={[
+            styles.itemContainer,
+            { borderBottomColor: currentTheme.line },
+          ]}
+        >
+          <Text
+            style={[
+              styles.label,
+              { color: currentTheme.font, letterSpacing: 0.2 },
+            ]}
+          >
             Youtube:
           </Text>
           {isEditing ? (
             <TextInput
-              placeholderTextColor="#888"
+              placeholderTextColor={currentTheme.disabled}
               placeholder="ex: @username"
-              style={styles.input}
+              style={[styles.input, { borderColor: currentTheme.line }]}
               value={editableUser?.media?.youtube}
               onChangeText={(text) =>
                 setEditableUser({
@@ -293,20 +469,35 @@ export const PersonalInfo = ({ user, onSave }) => {
               }
             />
           ) : (
-            <Text style={[styles.value, { color: currentTheme.font }]}>
+            <Text
+              style={[
+                styles.value,
+                { color: currentTheme.font, letterSpacing: 0.2 },
+              ]}
+            >
               {currentUser.media?.youtube}
             </Text>
           )}
         </View>
-        <View style={styles.itemContainer}>
-          <Text style={[styles.label, { color: currentTheme.font }]}>
+        <View
+          style={[
+            styles.itemContainer,
+            { borderBottomColor: currentTheme.line },
+          ]}
+        >
+          <Text
+            style={[
+              styles.label,
+              { color: currentTheme.font, letterSpacing: 0.2 },
+            ]}
+          >
             Tiktok:
           </Text>
           {isEditing ? (
             <TextInput
-              placeholderTextColor="#888"
+              placeholderTextColor={currentTheme.disabled}
               placeholder="ex: @username"
-              style={styles.input}
+              style={[styles.input, { borderColor: currentTheme.line }]}
               value={editableUser?.media?.tiktok}
               onChangeText={(text) =>
                 setEditableUser({
@@ -319,13 +510,28 @@ export const PersonalInfo = ({ user, onSave }) => {
               }
             />
           ) : (
-            <Text style={[styles.value, { color: currentTheme.font }]}>
+            <Text
+              style={[
+                styles.value,
+                { color: currentTheme.font, letterSpacing: 0.2 },
+              ]}
+            >
               {currentUser.media?.tiktok}
             </Text>
           )}
         </View>
-        <View style={styles.itemContainer}>
-          <Text style={[styles.label, { color: currentTheme.font }]}>
+        <View
+          style={[
+            styles.itemContainer,
+            { borderBottomColor: currentTheme.line },
+          ]}
+        >
+          <Text
+            style={[
+              styles.label,
+              { color: currentTheme.font, letterSpacing: 0.2 },
+            ]}
+          >
             whatsapp:
           </Text>
           {isEditing ? (
@@ -345,13 +551,28 @@ export const PersonalInfo = ({ user, onSave }) => {
               style={styles.switch}
             />
           ) : (
-            <Text style={[styles.value, { color: currentTheme.font }]}>
+            <Text
+              style={[
+                styles.value,
+                { color: currentTheme.font, letterSpacing: 0.2 },
+              ]}
+            >
               {currentUser?.media?.whatsapp ? "Active" : "Disabled"}
             </Text>
           )}
         </View>
-        <View style={styles.itemContainer}>
-          <Text style={[styles.label, { color: currentTheme.font }]}>
+        <View
+          style={[
+            styles.itemContainer,
+            { borderBottomColor: currentTheme.line },
+          ]}
+        >
+          <Text
+            style={[
+              styles.label,
+              { color: currentTheme.font, letterSpacing: 0.2 },
+            ]}
+          >
             Telegram:
           </Text>
           {isEditing ? (
@@ -371,7 +592,12 @@ export const PersonalInfo = ({ user, onSave }) => {
               style={styles.switch}
             />
           ) : (
-            <Text style={[styles.value, { color: currentTheme.font }]}>
+            <Text
+              style={[
+                styles.value,
+                { color: currentTheme.font, letterSpacing: 0.2 },
+              ]}
+            >
               {currentUser?.media?.telegram ? "Active" : "Disabled"}
             </Text>
           )}
@@ -403,15 +629,17 @@ const styles = StyleSheet.create({
   container: {
     padding: 30,
     paddingTop: 20,
+    paddingBottom: 30,
     width: SCREEN_WIDTH,
   },
   itemContainer: {
     flexDirection: "row",
     gap: 10,
     alignItems: "center",
-    marginTop: 8,
-    height: 30,
+    minHeight: 40,
     width: "100%",
+    borderBottomWidth: 1,
+    paddingBottom: 10,
   },
   label: {
     fontWeight: "bold",

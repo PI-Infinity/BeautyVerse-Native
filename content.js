@@ -96,7 +96,7 @@ const Content = () => {
         dispatch(setCurrentUser(null));
         setTimeout(() => {
           dispatch(setLoading(false));
-        }, 300);
+        }, 1000);
       }
     };
     GetUser();
@@ -115,12 +115,12 @@ const Content = () => {
         dispatch(setRerenderNotifcations());
         setTimeout(() => {
           dispatch(setLoading(false));
-        }, 300);
+        }, 1000);
       } catch (error) {
         console.log(error.response.data.message);
         setTimeout(() => {
           dispatch(setLoading(false));
-        }, 300);
+        }, 1000);
       }
     };
     if (currUser) {
@@ -144,7 +144,7 @@ const Content = () => {
     try {
       GetMachineId();
     } catch (error) {
-      console.log(error);
+      console.log(error.response.data.message);
     }
   }, []);
 
@@ -159,7 +159,7 @@ const Content = () => {
           }
         );
       } catch (error) {
-        console.log(error);
+        console.log(error.response.data.message);
       }
     };
     if (currentUser) {

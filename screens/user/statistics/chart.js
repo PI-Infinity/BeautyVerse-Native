@@ -217,10 +217,10 @@ const Chart = ({ data, title, x, initial }) => {
           >
             {data?.map((item, index) => {
               return (
-                <View key={index + 1} style={{ gap: 5 }}>
+                <View key={index + 1} style={{ gap: 5, alignItems: "center" }}>
                   <View
                     style={{
-                      width: 20,
+                      minWidth: 20,
                       height: 15 + item[x] * 5,
                       borderRadius: 5,
                       backgroundColor: currentTheme.pink,

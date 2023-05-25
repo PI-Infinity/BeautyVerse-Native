@@ -15,6 +15,8 @@ const initialState = {
   rerenderUserFeed: false,
 
   rerenderNotifications: false,
+
+  rerenderOrders: false,
 };
 
 export const Rerenders = createSlice({
@@ -59,6 +61,9 @@ export const Rerenders = createSlice({
     setRerenderNotifcations: (state, action) => {
       state.rerenderNotifications = !state.rerenderNotifications;
     },
+    setRerenderOrders: (state, action) => {
+      state.rerenderOrders = !state.rerenderOrders;
+    },
   },
 });
 
@@ -74,5 +79,6 @@ export const {
   setAddReviewQntRerenderFromScrollGallery,
   setRemoveReviewQntRerenderFromScrollGallery,
   setRerenderNotifcations,
+  setRerenderOrders,
 } = Rerenders.actions;
 export default Rerenders.reducer;

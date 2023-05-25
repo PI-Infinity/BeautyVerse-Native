@@ -17,6 +17,8 @@
       "bundleIdentifier": "com.beautyverse.beautyverseapp"
     },
     "android": {
+      "package": "com.beautyverse.beautyverseapp",
+      "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"

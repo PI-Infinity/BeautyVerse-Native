@@ -15,8 +15,8 @@ import { setSearchInput, setSearch } from "../redux/filter";
 import { ListItem, Icon, Button } from "react-native-elements";
 import { Language } from "../context/language";
 import { lightTheme, darkTheme } from "../context/theme";
-import FontAwesome from "react-native-vector-icons/FontAwesome";
-import { setCleanUp } from "../redux/rerenders";
+import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
+import { setCleanUp, setRerenderUserList } from "../redux/rerenders";
 
 export const Search = ({ navigation }) => {
   // const [Search, setSearchInput] = useState("");
@@ -39,13 +39,15 @@ export const Search = ({ navigation }) => {
 
   const handleItemPress = useCallback(
     (value) => {
-      let opt = proceduresOptions.find((it) => it.value === value);
+      let opt = proceduresOptions.find((it) => it.value === value?.value);
       let lab = opt.label.split("-");
       // console.log(value.splite("/"));
       dispatch(setSearchInput(lab[lab?.length - 1]));
-      dispatch(setSearch(value));
+      dispatch(setSearch(value?.value?.toLowerCase()));
       dispatch(setCleanUp());
-      navigation.navigate("Feeds");
+      // setTimeout(() => {
+      //   navigation.navigate("Feeds");
+      // }, 50);
     },
     [dispatch]
   );
@@ -58,7 +60,7 @@ export const Search = ({ navigation }) => {
           backgroundColor: currentTheme.background2,
           borderWidth: 1.5,
           borderColor: currentTheme.pink,
-          borderRadius: 50,
+          borderRadius: 10,
           flexDirection: "row",
           alignItems: "center",
           gap: 5,
@@ -73,6 +75,7 @@ export const Search = ({ navigation }) => {
             padding: 7.5,
             color: currentTheme.font,
             borderRadius: 50,
+            letterSpacing: 0.5,
           }}
           autoFocus
           placeholder={language?.language?.Main?.filter?.typeHere}
@@ -83,6 +86,7 @@ export const Search = ({ navigation }) => {
           onPress={() => {
             dispatch(setSearchInput(""));
             dispatch(setSearch(""));
+            dispatch(setRerenderUserList());
           }}
         >
           {search?.length > 0 && (
@@ -125,7 +129,7 @@ export const Search = ({ navigation }) => {
         contentContainerStyle={{ gap: 5, marginTop: 10 }}
         style={{ width: "90%" }}
         bounces={Platform.OS === "ios" ? false : undefined}
-        overScrollMode={Platform.OS === "ios" ? undefined : false}
+        overScrollMode={Platform.OS === "ios" ? "never" : "always"}
       >
         {filteredProcedures.map((item, index) => {
           if (index < qnt) {
@@ -148,18 +152,13 @@ export const Search = ({ navigation }) => {
                 onPress={
                   search === item.value
                     ? () => handleItemPress("")
-                    : () => handleItemPress(item.value)
+                    : () => handleItemPress(item)
                   //   navigation.navigate("Feeds");
                 }
               >
                 <Text style={{ color: currentTheme.font }}>{item.label}</Text>
                 {search === item.value && (
-                  <Icon
-                    name="done"
-                    type="MaterialIcons"
-                    color="#F866B1"
-                    size={16}
-                  />
+                  <MaterialIcons name="done" color="#F866B1" size={16} />
                 )}
               </TouchableOpacity>
             );

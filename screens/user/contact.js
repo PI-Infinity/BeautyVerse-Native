@@ -4,15 +4,18 @@ import {
   View,
   Linking,
   TouchableOpacity,
+  Dimensions,
 } from "react-native";
 import React, { useState, useRef } from "react";
-import FontAwesome from "react-native-vector-icons/FontAwesome";
-import Entypo from "react-native-vector-icons/Entypo";
+import { FontAwesome } from "@expo/vector-icons";
+import { Entypo } from "@expo/vector-icons";
 import Map from "../../components/map";
-import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
-import MaterialIcons from "react-native-vector-icons/MaterialIcons";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { MaterialIcons } from "@expo/vector-icons";
 import { lightTheme, darkTheme } from "../../context/theme";
 import { useSelector, useDispatch } from "react-redux";
+
+const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 export const Contact = ({ targetUser }) => {
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
@@ -127,7 +130,7 @@ export const Contact = ({ targetUser }) => {
           >
             <MaterialCommunityIcons
               name="web"
-              size={16}
+              size={18}
               color={currentTheme.font}
             />
           </View>
@@ -231,18 +234,34 @@ export const Contact = ({ targetUser }) => {
           gap: 5,
         }}
       >
-        <Text
+        <View
           style={{
-            color: currentTheme.font,
-            fontSize: 14,
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 5,
             marginBottom: 10,
-            fontWeight: "bold",
           }}
         >
-          Address:
-        </Text>
+          <Entypo name="location-pin" color={currentTheme.pink} size={20} />
+          <Text
+            style={{
+              color: currentTheme.font,
+              fontSize: 16,
+
+              fontWeight: "bold",
+            }}
+          >
+            Address:
+          </Text>
+        </View>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-          <Text style={{ color: currentTheme.font, fontWeight: "bold" }}>
+          <Text
+            style={{
+              color: currentTheme.font,
+              fontWeight: "bold",
+              letterSpacing: 0.2,
+            }}
+          >
             Country:{" "}
           </Text>
           <Text style={{ color: currentTheme.font }}>
@@ -250,7 +269,13 @@ export const Contact = ({ targetUser }) => {
           </Text>
         </View>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-          <Text style={{ color: currentTheme.font, fontWeight: "bold" }}>
+          <Text
+            style={{
+              color: currentTheme.font,
+              fontWeight: "bold",
+              letterSpacing: 0.2,
+            }}
+          >
             Region:{" "}
           </Text>
           <Text style={{ color: currentTheme.font }}>
@@ -258,7 +283,13 @@ export const Contact = ({ targetUser }) => {
           </Text>
         </View>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-          <Text style={{ color: currentTheme.font, fontWeight: "bold" }}>
+          <Text
+            style={{
+              color: currentTheme.font,
+              fontWeight: "bold",
+              letterSpacing: 0.2,
+            }}
+          >
             City:{" "}
           </Text>
           <Text style={{ color: currentTheme.font }}>
@@ -267,7 +298,13 @@ export const Contact = ({ targetUser }) => {
         </View>
         {targetUser.address[activeAddress]?.district?.length > 0 && (
           <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-            <Text style={{ color: currentTheme.font, fontWeight: "bold" }}>
+            <Text
+              style={{
+                color: currentTheme.font,
+                fontWeight: "bold",
+                letterSpacing: 0.2,
+              }}
+            >
               District:{" "}
             </Text>
             <Text style={{ color: currentTheme.font }}>
@@ -277,7 +314,13 @@ export const Contact = ({ targetUser }) => {
         )}
         {targetUser.address[activeAddress]?.street?.length > 0 && (
           <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-            <Text style={{ color: currentTheme.font, fontWeight: "bold" }}>
+            <Text
+              style={{
+                color: currentTheme.font,
+                fontWeight: "bold",
+                letterSpacing: 0.2,
+              }}
+            >
               Street:{" "}
             </Text>
             <Text style={{ color: currentTheme.font }}>
@@ -287,7 +330,13 @@ export const Contact = ({ targetUser }) => {
         )}
         {targetUser.address[activeAddress]?.number?.length > 0 && (
           <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-            <Text style={{ color: currentTheme.font, fontWeight: "bold" }}>
+            <Text
+              style={{
+                color: currentTheme.font,
+                fontWeight: "bold",
+                letterSpacing: 0.2,
+              }}
+            >
               Number:{" "}
             </Text>
             <Text style={{ color: currentTheme.font }}>
@@ -319,12 +368,20 @@ export const Contact = ({ targetUser }) => {
               />
             </TouchableOpacity>
           )}
-          <Map
-            mapViewRef={mapViewRef}
-            latitude={targetUser.address[activeAddress]?.latitude}
-            longitude={targetUser.address[activeAddress].longitude}
-            height={300}
-          />
+          <View
+            style={{
+              width: SCREEN_WIDTH - 14,
+              position: "absolute",
+              left: -20,
+            }}
+          >
+            <Map
+              mapViewRef={mapViewRef}
+              latitude={targetUser.address[activeAddress]?.latitude}
+              longitude={targetUser.address[activeAddress].longitude}
+              height={300}
+            />
+          </View>
           {activeAddress < targetUser.address?.length - 1 && (
             <TouchableOpacity
               style={{

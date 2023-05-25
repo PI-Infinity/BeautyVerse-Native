@@ -11,8 +11,9 @@ import {
   Pressable,
   Alert,
   ScrollView,
+  Platform,
 } from "react-native";
-import { ListItem, Icon, Button } from "react-native-elements";
+import { MaterialIcons, FontAwesome5, FontAwesome } from "@expo/vector-icons";
 import { useSelector, useDispatch } from "react-redux";
 import { ProceduresOptions } from "../../../datas/registerDatas";
 import axios from "axios";
@@ -131,13 +132,25 @@ export const Procedures = () => {
         paddingHorizontal: 20,
       }}
     >
-      <View style={{ width: "100%", marginTop: 30 }}>
+      <Text
+        style={{
+          fontSize: 16,
+          fontWeight: "bold",
+          marginTop: 20,
+          color: currentTheme.font,
+          letterSpacing: 0.3,
+        }}
+      >
+        Add new procedure:
+      </Text>
+      <View style={{ width: "100%", marginTop: 10, alignItems: "center" }}>
         <View
           style={{
             flexDirection: "row",
             alignItems: "center",
             gap: 10,
             height: SCREEN_HEIGHT / 3,
+            letterSpacing: 0.2,
           }}
         >
           <SearchableSelect
@@ -146,14 +159,36 @@ export const Procedures = () => {
             currentTheme={currentTheme}
           />
         </View>
-        {/* </Collapsible> */}
-        <ScrollView style={{ height: SCREEN_HEIGHT / 2.5, marginTop: 15 }}>
+        <Text
+          style={{
+            fontSize: 16,
+            fontWeight: "bold",
+            marginTop: 50,
+            color: currentTheme.font,
+            letterSpacing: 0.3,
+          }}
+        >
+          Current procedures:
+        </Text>
+        <ScrollView
+          style={{
+            height: SCREEN_HEIGHT / 2.5,
+            marginTop: 10,
+            width: "100%",
+          }}
+          bounces={Platform.OS === "ios" ? false : undefined}
+          overScrollMode={Platform.OS === "ios" ? "never" : "always"}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: 50 }}
+        >
           {currentUser.procedures.map((item, index) => {
             const label = splited.find((c) => item.value === c.value);
             return (
               <View style={styles.item} key={index}>
                 <View style={{ flex: 6 }}>
-                  <Text style={{ color: currentTheme.font }}>
+                  <Text
+                    style={{ color: currentTheme.font, letterSpacing: 0.2 }}
+                  >
                     {label?.label}
                   </Text>
                 </View>
@@ -161,21 +196,30 @@ export const Procedures = () => {
                   <TextInput
                     type="Number"
                     placeholder="Add price..."
-                    style={styles.input}
+                    placeholderTextColor={currentTheme.disabled}
+                    style={[styles.input, { color: currentTheme.font }]}
                     value={priceInput}
                     onChangeText={(text) => setPriceInput(text)}
                   />
                 ) : (
-                  <Text style={{ color: currentTheme.font, padding: 5 }}>
+                  <Text
+                    style={{
+                      color: currentTheme.font,
+                      padding: 5,
+                      letterSpacing: 0.2,
+                    }}
+                  >
                     {item.price}
                   </Text>
                 )}
                 {editPrice.index === index ? (
-                  <Pressable style={{ flex: 1 }} onPress={EditProcedure}>
-                    <Icon
+                  <Pressable
+                    style={{ flex: 1, marginLeft: 8 }}
+                    onPress={EditProcedure}
+                  >
+                    <MaterialIcons
                       name="done"
-                      type="MaterialIcons"
-                      color="#F866B1"
+                      color={currentTheme.pink}
                       size={20}
                     />
                   </Pressable>
@@ -197,26 +241,25 @@ export const Procedures = () => {
                       });
                     }}
                   >
-                    <Icon
+                    <MaterialIcons
                       name="attach-money"
-                      type="MaterialIcons"
-                      color="green"
+                      color={currentTheme.pink}
                       size={20}
                     />
 
-                    <Icon name="edit" type="Enypto" color="orange" size={16} />
+                    <MaterialIcons
+                      name="edit"
+                      type="Enypto"
+                      color={currentTheme.pink}
+                      size={16}
+                    />
                   </Pressable>
                 )}
                 <TouchableOpacity
                   onPress={() => Deleting(item._id)}
                   style={{ flex: 1, alignItems: "flex-end" }}
                 >
-                  <Icon
-                    name="times"
-                    type="font-awesome-5"
-                    color="red"
-                    size={20}
-                  />
+                  <FontAwesome5 name="times" color="red" size={20} />
                 </TouchableOpacity>
               </View>
             );
@@ -245,10 +288,12 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     padding: 5,
     fontSize: 14,
-    flex: 1,
+    letterSpacing: 0.2,
+    // flex: 1,
   },
   text: {
     color: "white",
     fontSize: 14,
+    letterSpacing: 0.2,
   },
 });

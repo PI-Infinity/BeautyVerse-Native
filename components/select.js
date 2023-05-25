@@ -1,19 +1,8 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { workingDaysOptions } from "../datas/registerDatas";
 
-const options = [
-  "Everyday",
-  "Monday-Friday",
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-  "Sunday",
-];
-
-const Select = ({ state, setState }) => {
+const Select = ({ state, setState, currentTheme }) => {
   const [selectedOptions, setSelectedOptions] = useState([]);
 
   const handleSelect = (option) => {
@@ -21,33 +10,46 @@ const Select = ({ state, setState }) => {
       // If the option is already selected, remove it from the array
       const newSelectedOptions = selectedOptions.filter((o) => o !== option);
       setSelectedOptions(newSelectedOptions);
-      setState(newSelectedOptions);
+      setState((prev) => prev.filter((item) => item !== option.value));
     } else {
       // If the option is not selected, add it to the array
       const newSelectedOptions = [...selectedOptions, option];
       setSelectedOptions(newSelectedOptions);
-      setState(newSelectedOptions);
+      setState((prev) => {
+        if (!prev.includes(option.value)) {
+          return [...prev, option.value];
+        } else {
+          // return the existing state without changes because the item is already in the array
+          return prev;
+        }
+      });
     }
   };
 
   return (
     <View style={styles.container}>
-      {options.map((option, index) => (
+      {workingDaysOptions.map((option, index) => (
         <TouchableOpacity
           key={index}
           style={[
             styles.option,
-            selectedOptions.includes(option) && styles.selectedOption,
+            selectedOptions.includes(option)
+              ? {
+                  backgroundColor: currentTheme.pink,
+                }
+              : { backgroundColor: currentTheme.background2 },
           ]}
           onPress={() => handleSelect(option)}
         >
           <Text
             style={[
               styles.optionText,
-              selectedOptions.includes(option) && styles.selectedOptionText,
+              selectedOptions.includes(option)
+                ? { color: "#fff" }
+                : { color: currentTheme.font },
             ]}
           >
-            {option}
+            {option.en}
           </Text>
         </TouchableOpacity>
       ))}
@@ -64,8 +66,7 @@ const styles = StyleSheet.create({
   },
   option: {
     padding: 10,
-    backgroundColor: "#f0f0f0",
-    borderRadius: 5,
+    borderRadius: 50,
   },
   optionText: {
     fontSize: 16,

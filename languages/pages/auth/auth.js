@@ -28,7 +28,7 @@ const Auth = {
     emailUsed: "Email already used!",
     back: "Back",
     next: "Next",
-    name: "Firstname & Lastname",
+    name: "Name",
     nameWarning: "Name should be contains min. 3 letters",
     title: "Title",
     address: "Address",

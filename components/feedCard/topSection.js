@@ -8,9 +8,10 @@ import {
 } from "react-native";
 import React from "react";
 import { CacheableImage } from "../../components/cacheableImage";
-import MaterialIcons from "react-native-vector-icons/MaterialIcons";
-import Entypo from "react-native-vector-icons/Entypo";
-import Fontisto from "react-native-vector-icons/Fontisto";
+import { FontAwesome } from "@expo/vector-icons";
+import { MaterialIcons } from "@expo/vector-icons";
+import { Entypo } from "@expo/vector-icons";
+import { Fontisto } from "@expo/vector-icons";
 import GetTimesAgo from "../../functions/getTimesAgo";
 import { useSelector, useDispatch } from "react-redux";
 import { useRoute } from "@react-navigation/native";
@@ -26,15 +27,19 @@ export const TopSection = (props) => {
 
   const currentUser = useSelector((state) => state.storeUser.currentUser);
 
-  const t = capitalizeFirstLetter(props.user.type);
+  const t = capitalizeFirstLetter(props?.user.type);
 
   let type;
-  if (props.lang === "en") {
-    type = t;
-  } else if (props.lang === "ka") {
-    type = "სპეციალისტი";
+  if (props.user.type === "specialist") {
+    if (props?.lang === "en") {
+      type = t;
+    } else if (props?.lang === "ka") {
+      type = "სპეციალისტი";
+    } else {
+      type = props.language?.language?.Main?.feedCard?.specialist;
+    }
   } else {
-    type = props.language?.language?.Main?.feedCard?.specialist;
+    type = props.language?.language?.Auth?.auth?.beautySalon;
   }
 
   const currentPostTime = GetTimesAgo(new Date(props.createdAt).getTime());
@@ -80,9 +85,9 @@ export const TopSection = (props) => {
           <TouchableOpacity
             activeOpacity={0.3}
             onPress={
-              props.from !== "scrollGallery" && !props.notifications
+              !props.notifications
                 ? () =>
-                    props.navigation.navigate("User", {
+                    props.navigation.navigate("UserVisit", {
                       user: props.user,
                     })
                 : undefined
@@ -129,13 +134,13 @@ export const TopSection = (props) => {
             onPress={
               props.from !== "scrollGallery"
                 ? () =>
-                    props.navigation.navigate("User", {
+                    props.navigation.navigate("UserVisit", {
                       user: props.user,
                     })
                 : undefined
             }
           >
-            <Icon name="user" size={24} color="#e5e5e5" />
+            <FontAwesome name="user" size={24} color="#e5e5e5" />
           </Pressable>
         )}
       </View>
@@ -145,13 +150,22 @@ export const TopSection = (props) => {
           width: SCREEN_WIDTH - 90,
         }}
       >
-        <Pressable
+        <TouchableOpacity
+          activeOpacity={0.5}
           style={{
             flexDirection: "row",
             gap: 7.5,
             alignItems: "center",
             // marginBottom: 2,
           }}
+          onPress={
+            !props.notifications
+              ? () =>
+                  props.navigation.navigate("UserVisit", {
+                    user: props.user,
+                  })
+              : undefined
+          }
         >
           <Text
             style={[
@@ -250,7 +264,12 @@ export const TopSection = (props) => {
 
           {route.name === "UserScrollGallery" && (
             <Pressable
-              style={{ marginLeft: "auto", paddingHorizontal: 5 }}
+              style={{
+                position: "absolute",
+                right: 0,
+                padding: 10,
+                zIndex: 1000,
+              }}
               onPress={props?.DotsFunction}
             >
               <Entypo
@@ -260,7 +279,7 @@ export const TopSection = (props) => {
               />
             </Pressable>
           )}
-        </Pressable>
+        </TouchableOpacity>
 
         <View style={{ flexDirection: "row", gap: 5, alignItems: "center" }}>
           <Text
@@ -307,6 +326,6 @@ const styles = StyleSheet.create({
   },
   type: {
     fontSize: 14,
-    letterSpacing: 0.3,
+    letterSpacing: 0.2,
   },
 });

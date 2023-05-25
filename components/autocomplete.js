@@ -10,9 +10,9 @@ import {
 } from "react-native";
 import { ListItem, Icon, Button } from "react-native-elements";
 import Collapsible from "react-native-collapsible";
-import Entypo from "react-native-vector-icons/Entypo";
+import { Entypo, MaterialIcons } from "@expo/vector-icons";
 
-const Autocomplete = ({ data, setState }) => {
+const Autocomplete = ({ data, setState, currentTheme }) => {
   const [search, setSearch] = useState("");
   const [filteredData, setFilteredData] = useState([]);
   const [selectedItems, setSelectedItems] = useState([]);
@@ -50,21 +50,33 @@ const Autocomplete = ({ data, setState }) => {
   return (
     <View style={styles.container}>
       <View style={styles.selectedItems}>
-        {selectedItems.map((item) => (
-          <View key={item.value} style={styles.tag}>
-            <Text>{item.label}</Text>
-            <TouchableOpacity onPress={() => handleRemove(item)}>
+        {selectedItems.map((item, index) => (
+          <View
+            key={index}
+            style={[styles.tag, { backgroundColor: currentTheme.pink }]}
+          >
+            <Text style={{ color: "#fff" }}>{item.label}</Text>
+            <TouchableOpacity
+              onPress={() => handleRemove(item)}
+              style={{ padding: 2.5, paddingVertical: 1.5 }}
+            >
               <Text style={styles.removeIcon}>×</Text>
             </TouchableOpacity>
           </View>
         ))}
       </View>
       <TextInput
-        style={styles.searchInput}
+        style={[
+          styles.searchInput,
+          {
+            backgroundColor: currentTheme.background2,
+            color: currentTheme.font,
+          },
+        ]}
         value={search}
         onChangeText={handleSearch}
         placeholder="Search procedure..."
-        placeholderTextColor="#888"
+        placeholderTextColor={currentTheme.disabled}
         onFocus={() => setHide(false)}
       />
 
@@ -85,14 +97,14 @@ const Autocomplete = ({ data, setState }) => {
           {filteredData
             .filter((item) => {
               const hyphenCount = (item.value.match(/-/g) || []).length;
-              return item.value && hyphenCount > 0;
+              return item.value && hyphenCount > 1;
             })
             .map((item, index) => {
               const include = selectedItems.find((i) => i === item);
               // if (index < 7) {
               return (
                 <TouchableOpacity
-                  key={item.value}
+                  key={index}
                   onPress={
                     !include
                       ? () => handleSelect(item)
@@ -100,14 +112,9 @@ const Autocomplete = ({ data, setState }) => {
                   }
                   style={styles.listItem}
                 >
-                  <Text style={{ color: "#e5e5e5" }}>{item.label}</Text>
+                  <Text style={{ color: currentTheme.font }}>{item.label}</Text>
                   {include && (
-                    <Icon
-                      name="done"
-                      type="MaterialIcons"
-                      color="#F866B1"
-                      size={20}
-                    />
+                    <MaterialIcons name="done" color="#F866B1" size={20} />
                   )}
                 </TouchableOpacity>
               );
@@ -124,14 +131,19 @@ const styles = StyleSheet.create({
     width: "90%",
   },
   searchInput: {
-    borderColor: "#555",
-    borderWidth: 1,
     paddingLeft: 10,
     paddingRight: 10,
     height: 35,
     borderRadius: 50,
-    color: "#e5e5e5",
     marginTop: 15,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 3, // negative value places shadow on top
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
   scrollView: {
     // height: 300,
@@ -168,6 +180,7 @@ const styles = StyleSheet.create({
   removeIcon: {
     marginLeft: 5,
     fontWeight: "bold",
+    color: "#fff",
   },
 });
 

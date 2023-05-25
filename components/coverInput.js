@@ -32,15 +32,15 @@ const InputFile = ({ targetUser, onCoverUpdate }) => {
   const dispatch = useDispatch();
   //resize image
   const ResizeAndCompressImage = async (uri, originalWidth, originalHeight) => {
-    const mobWidth = 300;
-    const newMobHeight = (originalHeight / originalWidth) * mobWidth;
+    const wdth = 300;
+    const newMobHeight = (originalHeight / originalWidth) * wdth;
     try {
       const cover = await ImageManipulator.manipulateAsync(
         uri,
         [
           {
             resize: {
-              width: mobWidth,
+              width: wdth,
               height: newMobHeight,
             },
           },
@@ -76,6 +76,14 @@ const InputFile = ({ targetUser, onCoverUpdate }) => {
   };
 
   const [loading, setLoading] = useState(false);
+
+  async function uriToBlob(uri) {
+    if (Platform.OS === "android" || Platform.OS === "ios") {
+      const response = await fetch(uri);
+      return await response.blob();
+    }
+  }
+
   async function FileUpload() {
     /* aadd cover
      */
@@ -84,9 +92,8 @@ const InputFile = ({ targetUser, onCoverUpdate }) => {
       setLoading(true);
       // add in storage
       const imageRef = ref(storage, `images/${targetUser?._id}/cover`);
-      const coverBlob = await fetch(file?.cover.base64).then((res) =>
-        res.blob()
-      );
+
+      const coverBlob = await uriToBlob(file?.cover.base64);
       await uploadBytes(imageRef, coverBlob).then((snapshot) => {
         getDownloadURL(snapshot.ref)
           .then((url) => {

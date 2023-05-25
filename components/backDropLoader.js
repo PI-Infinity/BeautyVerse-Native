@@ -7,18 +7,23 @@ import {
   StyleSheet,
   Modal,
 } from "react-native";
+import { lightTheme, darkTheme } from "../context/theme";
+import { useSelector, useDispatch } from "react-redux";
 
 export const BackDrop = ({ loading, setLoading }) => {
   const toggleLoader = () => {
     setLoading(!loading);
   };
+  // theme state
+  const theme = useSelector((state) => state.storeApp.theme);
+  const currentTheme = theme ? darkTheme : lightTheme;
 
   return (
     <View style={styles.container}>
       <Modal transparent visible={loading} onRequestClose={toggleLoader}>
         <View style={styles.backdrop}>
           <View style={styles.loaderContainer}>
-            <ActivityIndicator size="large" color="#fff" />
+            <ActivityIndicator size="large" color={currentTheme.pink} />
           </View>
         </View>
       </Modal>

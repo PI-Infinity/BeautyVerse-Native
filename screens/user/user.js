@@ -13,6 +13,7 @@ import {
   ScrollView,
   Animated,
   ActivityIndicator,
+  RefreshControl,
 } from "react-native";
 import { useSelector } from "react-redux";
 import { Feeds } from "../../screens/user/feeds";
@@ -23,54 +24,102 @@ import { Audience } from "../../screens/user/audience";
 import { Statistics } from "../../screens/user/statistics/main";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import InputFile from "../../components/coverInput";
+import InputCoverAndroid from "../../components/coverInputAndroid";
 import { Language } from "../../context/language";
-import { ListItem, Icon, Button } from "react-native-elements";
 import axios from "axios";
 import { CacheableImage } from "../../components/cacheableImage";
-import FontAwesomeIcon from "react-native-vector-icons/FontAwesome";
+import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import { lightTheme, darkTheme } from "../../context/theme";
+import { Circle } from "../../components/skeltons";
 
 export const User = ({ navigation, user, variant }) => {
+  // Initialize language for multi-language support
   const language = Language();
+
+  // Get current route for navigation
   const route = useRoute();
+
+  // Select theme from global Redux state (dark or light theme)
   const theme = useSelector((state) => state.storeApp.theme);
+
+  // Set currentTheme based on the theme
   const currentTheme = theme ? darkTheme : lightTheme;
+
+  // Get currentUser from global Redux state
   const currentUser = useSelector((state) => state.storeUser.currentUser);
+
+  // Get rerenderCurrentUser from global Redux state
   const rerenderCurrentUser = useSelector(
     (state) => state.storeRerenders.rerenderCurrentUser
   );
+
+  // State for loading indication
   const [loading, setLoading] = useState(true);
-  // Access the passed route.params
+
+  // State for refresh control
+  const [refresh, setRefresh] = useState(false);
+
+  // Get userParams from route parameters
   const userParams = route.params;
+
+  // Determine target user either from route parameters or currentUser
   const targetUser = route.params?.user || currentUser;
 
+  // State for cover image
   const [cover, setCover] = useState("");
 
+  // A reference used to skip the first run of useEffect
+  const profileCleanRef = useRef(true);
+
+  // useEffect for rerenderCurrentUser
+  useEffect(() => {
+    if (profileCleanRef.current) {
+      profileCleanRef.current = false;
+      return;
+    }
+    setRefresh(true);
+    const timer = setTimeout(() => {
+      setRefresh(false);
+    }, 700);
+    return () => clearTimeout(timer); // clear the timer if the component is unmounted
+  }, [rerenderCurrentUser]);
+
+  // useEffect for setting cover image
   useEffect(() => {
     setCover(targetUser.cover + `?rand=${Math.random()}`);
   }, [currentUser, rerenderCurrentUser]);
 
+  // Function to handle cover updates
   const handleCoverUpdate = (newCover) => {
     setCover(newCover);
   };
 
+  // Function to capitalize first letter
   function capitalizeFirstLetter(string) {
     return string?.charAt(0).toUpperCase() + string?.slice(1);
   }
 
+  // Initialize name and userType
   const name = capitalizeFirstLetter(targetUser.name);
-  const userType = capitalizeFirstLetter(targetUser.type);
 
-  // creteate scroll ref
+  const tp = capitalizeFirstLetter(targetUser.type);
+  let userType;
+  if (tp === "Beautycenter") {
+    userType = language?.language?.Auth?.auth?.beautySalon;
+  } else {
+    userType = tp;
+  }
+
+  // Scroll ref for scrollable content
   const scrollViewRef = useRef();
 
-  // active navigator
+  // State for active navigator
+  const [active, setActive] = useState(targetUser.type === "user" ? 1 : 0);
 
-  const [active, setActive] = useState(0);
-
-  // open about
+  // State for number of visible lines in about
   const [numOfLines, setNumOfLines] = useState(3);
 
+  // Function to change height (number of visible lines)
   function changeHeight() {
     if (numOfLines > 3) {
       setNumOfLines(3);
@@ -79,15 +128,15 @@ export const User = ({ navigation, user, variant }) => {
     }
   }
 
+  // Navigator items configuration
   const navigatorItems = [
     {
       id: 0,
       name: language?.language?.User?.userPage?.feeds,
       icon: (
-        <Icon
+        <MaterialIcons
           name="dynamic-feed"
-          type="MaterialIcons"
-          color={followerDefined ? "#F866B1" : "#ccc"}
+          color={active === 0 ? currentTheme.background : currentTheme.disabled}
           size={18}
         />
       ),
@@ -96,10 +145,9 @@ export const User = ({ navigation, user, variant }) => {
       id: 1,
       name: language?.language?.User?.userPage?.contact,
       icon: (
-        <Icon
+        <MaterialIcons
           name="contacts"
-          type="MaterialIcons"
-          color={followerDefined ? "#F866B1" : "#ccc"}
+          color={active === 1 ? currentTheme.background : currentTheme.disabled}
           size={16}
         />
       ),
@@ -108,10 +156,9 @@ export const User = ({ navigation, user, variant }) => {
       id: 2,
       name: language?.language?.User?.userPage?.service,
       icon: (
-        <Icon
+        <MaterialIcons
           name="format-list-bulleted"
-          type="MaterialIcons"
-          color={followerDefined ? "#F866B1" : "#ccc"}
+          color={active === 2 ? currentTheme.background : currentTheme.disabled}
           size={16}
         />
       ),
@@ -120,10 +167,9 @@ export const User = ({ navigation, user, variant }) => {
       id: 3,
       name: language?.language?.User?.userPage?.workingInfo,
       icon: (
-        <Icon
+        <MaterialIcons
           name="info-outline"
-          type="MaterialIcons"
-          color={followerDefined ? "#F866B1" : "#ccc"}
+          color={active === 3 ? currentTheme.background : currentTheme.disabled}
           size={16}
         />
       ),
@@ -132,10 +178,9 @@ export const User = ({ navigation, user, variant }) => {
       id: 4,
       name: language?.language?.User?.userPage?.statistics,
       icon: (
-        <Icon
+        <MaterialIcons
           name="bar-chart"
-          type="MaterialIcons"
-          color={followerDefined ? "#F866B1" : "#ccc"}
+          color={active === 4 ? currentTheme.background : currentTheme.disabled}
           size={16}
         />
       ),
@@ -144,10 +189,9 @@ export const User = ({ navigation, user, variant }) => {
       id: 5,
       name: language?.language?.User?.userPage?.audience,
       icon: (
-        <Icon
+        <MaterialIcons
           name="supervised-user-circle"
-          type="MaterialIcons"
-          color={followerDefined ? "#F866B1" : "#ccc"}
+          color={active === 5 ? currentTheme.background : currentTheme.disabled}
           size={16}
         />
       ),
@@ -158,10 +202,11 @@ export const User = ({ navigation, user, variant }) => {
    * //
    */
 
-  // import followings
+  // State for followerDefined
   const [followerDefined, setFollowerDefined] = useState("");
   const [render, setRender] = useState(false);
 
+  // useEffect to check follower
   useEffect(() => {
     async function checkFollower() {
       const response = await fetch(
@@ -172,7 +217,7 @@ export const User = ({ navigation, user, variant }) => {
           setFollowerDefined(data.data?.follower);
         })
         .catch((error) => {
-          console.log("Error fetching data:", error);
+          console.log(error.response.data.message);
         });
     }
     if (targetUser?._id) {
@@ -223,7 +268,7 @@ export const User = ({ navigation, user, variant }) => {
 
       // const data = await response.data;
     } catch (error) {
-      console.error(error);
+      console.error(error.response.data.message);
     }
     setRender(!render);
   };
@@ -248,11 +293,12 @@ export const User = ({ navigation, user, variant }) => {
 
       // const data = await response.data;
     } catch (error) {
-      console.error(error);
+      console.error(error.response.data.message);
     }
     setRender(!render);
   };
 
+  // Define activeContent based on active state
   let activeContent;
   if (active == 0) {
     activeContent = (
@@ -268,7 +314,9 @@ export const User = ({ navigation, user, variant }) => {
   } else if (active == 2) {
     activeContent = <ProceduresList targetUser={targetUser} />;
   } else if (active == 3) {
-    activeContent = <WorkingInfo targetUser={targetUser} />;
+    activeContent = (
+      <WorkingInfo targetUser={targetUser} navigation={navigation} />
+    );
   } else if (active == 4) {
     activeContent = (
       <Statistics targetUser={targetUser} navigation={navigation} />
@@ -284,9 +332,10 @@ export const User = ({ navigation, user, variant }) => {
     );
   }
 
-  // send user visit
+  // Get visitor from global Redux state
   const visitor = useSelector((state) => state.storeApp.machineId);
 
+  // useEffect to send user visit
   useEffect(() => {
     const SendUserVisit = async () => {
       await axios.post(
@@ -301,10 +350,11 @@ export const User = ({ navigation, user, variant }) => {
         SendUserVisit();
       }
     } catch (error) {
-      console.log(error);
+      console.log(error.response.data.message);
     }
   }, [visitor, targetUser]);
 
+  // Animate component appearance
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -322,7 +372,8 @@ export const User = ({ navigation, user, variant }) => {
       style={{ width: "100%" }}
       nestedScrollEnabled={true}
       bounces={Platform.OS === "ios" ? false : undefined}
-      overScrollMode={Platform.OS === "ios" ? undefined : false}
+      overScrollMode={Platform.OS === "ios" ? "never" : "always"}
+      refreshControl={<RefreshControl tintColor="#ccc" refreshing={refresh} />}
     >
       <View style={styles.header}>
         <View
@@ -336,16 +387,22 @@ export const User = ({ navigation, user, variant }) => {
               <View
                 style={{
                   position: "absolute",
-                  backgroundColor: "rgba(1,1,1,0.2)",
                   zIndex: 10000,
                   height: 100,
                   width: 100,
                 }}
               >
-                <InputFile
-                  targetUser={targetUser}
-                  onCoverUpdate={handleCoverUpdate}
-                />
+                {Platform.OS === "ios" ? (
+                  <InputFile
+                    targetUser={targetUser}
+                    onCoverUpdate={handleCoverUpdate}
+                  />
+                ) : (
+                  <InputCoverAndroid
+                    targetUser={targetUser}
+                    onCoverUpdate={handleCoverUpdate}
+                  />
+                )}
               </View>
             )}
             {cover?.length > 30 ? (
@@ -371,7 +428,7 @@ export const User = ({ navigation, user, variant }) => {
                       opacity: 0.5,
                     }}
                   >
-                    <ActivityIndicator />
+                    <ActivityIndicator color={currentTheme.pink} />
                   </View>
                 )}
                 <Animated.View
@@ -408,7 +465,6 @@ export const User = ({ navigation, user, variant }) => {
             ) : (
               <View
                 style={{
-                  backgroundColor: "rgba(255,255,255,0.1)",
                   alignItems: "center",
                   justifyContent: "center",
                   width: 110,
@@ -416,7 +472,7 @@ export const User = ({ navigation, user, variant }) => {
                   borderWidth: 2,
                 }}
               >
-                <FontAwesomeIcon name="user" size={40} color="#e5e5e5" />
+                <FontAwesome name="user" size={40} color="#e5e5e5" />
               </View>
             )}
           </View>
@@ -437,6 +493,7 @@ export const User = ({ navigation, user, variant }) => {
                 fontSize: 14,
                 fontWeight: "bold",
                 color: currentTheme.font,
+                letterSpacing: 0.2,
               }}
             >
               {targetUser.username ? targetUser.username : userType}
@@ -446,11 +503,10 @@ export const User = ({ navigation, user, variant }) => {
                 onPress={followerDefined ? () => Unfollow() : () => Follow()}
                 style={{ padding: 5 }}
               >
-                <Icon
-                  name="done-outline"
-                  type="MaterialIcons"
-                  color={followerDefined ? "#F866B1" : "#ccc"}
-                  size={16}
+                <MaterialIcons
+                  name="favorite"
+                  color={followerDefined ? "#F866B1" : currentTheme.disabled}
+                  size={22}
                 />
               </Pressable>
             )}
@@ -458,7 +514,7 @@ export const User = ({ navigation, user, variant }) => {
 
           <Pressable
             style={{
-              marginTop: 10,
+              marginTop: 5,
             }}
             onPress={changeHeight}
           >
@@ -470,6 +526,7 @@ export const User = ({ navigation, user, variant }) => {
                   fontSize: 14,
                   color: currentTheme.font,
                   lineHeight: 20,
+                  letterSpacing: 0.2,
                 }}
               >
                 {targetUser?.about}
@@ -478,25 +535,60 @@ export const User = ({ navigation, user, variant }) => {
           </Pressable>
         </View>
       </View>
-      {targetUser.type !== "user" && (
-        <>
-          <View
-            name="navigator"
-            style={[
-              styles.navigator,
-              {
-                borderBottomColor: currentTheme.background2,
-                borderTopColor: currentTheme.background2,
-              },
-            ]}
-          >
-            <FlatList
-              data={navigatorItems}
-              horizontal={true}
-              showsHorizontalScrollIndicator={false}
-              bounces={Platform.OS === "ios" ? false : undefined}
-              overScrollMode={Platform.OS === "ios" ? undefined : false}
-              renderItem={({ item }) => {
+      {/* {targetUser.type !== "user" && ( */}
+      <>
+        <View
+          name="navigator"
+          style={[
+            styles.navigator,
+            {
+              borderBottomColor: currentTheme.background2,
+              borderTopColor: currentTheme.background2,
+            },
+          ]}
+        >
+          <FlatList
+            data={navigatorItems}
+            horizontal={true}
+            showsHorizontalScrollIndicator={false}
+            bounces={Platform.OS === "ios" ? false : undefined}
+            overScrollMode={Platform.OS === "ios" ? "never" : "always"}
+            renderItem={({ item }) => {
+              if (
+                targetUser.type === "user" &&
+                (item.id === 1 || item.id === 5)
+              ) {
+                return (
+                  <TouchableOpacity
+                    onPress={() => setActive(item?.id)}
+                    style={{
+                      height: 25,
+                      alignItems: "center",
+                      flexDirection: "row",
+                      gap: 5,
+                      margin: 5,
+                      paddingLeft: 15,
+                      paddingRight: 15,
+                      borderRadius: 50,
+                      backgroundColor:
+                        active === item.id ? "#F866B1" : "rgba(0,0,0,0)",
+                    }}
+                  >
+                    {item.icon}
+                    <Text
+                      style={{
+                        letterSpacing: 0.2,
+                        color:
+                          active === item.id
+                            ? currentTheme.background
+                            : currentTheme.disabled,
+                      }}
+                    >
+                      {item?.name}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              } else if (targetUser.type !== "user") {
                 if (item.id === 4 && variant === "visitPage") {
                   return null;
                 } else {
@@ -511,11 +603,6 @@ export const User = ({ navigation, user, variant }) => {
                         margin: 5,
                         paddingLeft: 15,
                         paddingRight: 15,
-                        // borderWidth: 1,
-                        // borderColor:
-                        //   active === item?.id
-                        //     ? "rgba(255,255,255,0.2)"
-                        //     : "rgba(15,15,15,1)",
                         borderRadius: 50,
                         backgroundColor:
                           active === item.id ? "#F866B1" : "rgba(0,0,0,0)",
@@ -524,7 +611,10 @@ export const User = ({ navigation, user, variant }) => {
                       {item.icon}
                       <Text
                         style={{
-                          color: active === item.id ? "#e5e5e5" : "#ccc",
+                          color:
+                            active === item.id
+                              ? currentTheme.background
+                              : currentTheme.disabled,
                         }}
                       >
                         {item?.name}
@@ -532,13 +622,14 @@ export const User = ({ navigation, user, variant }) => {
                     </TouchableOpacity>
                   );
                 }
-              }}
-              keyExtractor={(item) => item?.id}
-            />
-          </View>
-          <View name="content">{activeContent}</View>
-        </>
-      )}
+              }
+            }}
+            keyExtractor={(item) => item?.id}
+          />
+        </View>
+        <View name="content">{activeContent}</View>
+      </>
+      {/* )} */}
     </ScrollView>
   );
 };

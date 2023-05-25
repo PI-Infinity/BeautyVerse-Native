@@ -9,6 +9,8 @@ import {
 import * as ImagePicker from "expo-image-picker";
 import { Video } from "expo-av";
 import { Language } from "../context/language";
+import { BackDrop } from "../components/backDropLoader";
+import { UploaderPercentage } from "../components/uploaderPercentage";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -25,6 +27,9 @@ const InputVideo = ({ file, setFile, currentTheme }) => {
 
     if (!result.canceled && result.assets && result.assets.length > 0) {
       setFile(result.assets[0]); // Wrap the asset object in an object with an "assets" property
+      // setTimeout(() => {
+      //   setLoading(false);
+      // }, 7000);
     }
   };
 

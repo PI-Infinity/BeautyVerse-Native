@@ -70,12 +70,10 @@ By using Beautyverse, you acknowledge that you have read, understood, and agreed
 
 export const terms = `BeautyVerse Website Terms of Use
 
-Welcome to the BeautyVerse website - an online resource that helps you get acquainted with the beauty industry in your city and country, find the right services, and new clients for specialists and salons
+Welcome to the BeautyVerse website - an online resource that helps you get acquainted with the beauty industry in your city and country, find the right services, and new clients for specialists and salons.
 The BeautyVerse website is a networking project that brings together people working in the beauty industry and those who use all possible services and products of the beauty industry.
 
 The Site Administration grants you access to the use of the BeautyVerse Site and its functionality on the terms and conditions that are the subject of these Terms of Use of the BeautyVerse Site. In this regard, you need to carefully read the terms of these Rules, which are considered by the Site Administration as a public offer
-
-
 
 1. Terms used in these Rules
 • 1.1 The BeautyVerse Website (or the Website) is a social network known as "BeautyVerse", hosted on a website on the Internet at: LINK (including all levels of the specified domain, both functioning on the date of acceptance by the User of these Rules, and launched and introduced for operation during the entire period of its validity) and available to the User through the website, mobile version of the website, applications and other resources, which is the result of intellectual activity in the form of a computer program. The social network is represented in an objective form by a set of data and commands, and generated audiovisual displays (including its constituent graphic images and user interface), (hereinafter referred to as data and commands) intended for the operation of computers and mobile devices in order to obtain a certain result in the form organizing the functionality of a social network. The set of data and commands consists of activated and non-activated data and commands.
@@ -90,11 +88,9 @@ The Site Administration grants you access to the use of the BeautyVerse Site and
 • 2.4. These Rules can be changed and / or supplemented by the Site Administration unilaterally with notification within 3 (three) business days from the date of the amendments and / or additions. These Rules are an open and public document. The current version of the Rules is located on the Internet at: LINK
 • The Site Administration recommends that Users regularly check the terms of these Rules for changes and / or additions. Continued use of the Site by the User after the introduction of changes and/or additions to these Rules means the acceptance and consent of the User with such changes and/or additions.
 
-
 3. BeautyVerse Site Status
 • 3.1. The rights to the Site as a whole and to use the LINK network address (domain name) belong to the Site Administration. The latter provides access to the Site to all interested parties in accordance with these Rules and the current legislation of the COUNTRY.
 • 3.2. These Rules establish the conditions under which the rights to use information and the results of intellectual activity (including, but not limited to, literary, musical, audiovisual works and phonograms, works of graphics and design, photographic works, computer programs) as part of certain sections of the Site, may belong to Users of the Site and other persons who independently created and / or placed these objects on the Site without the direct participation of the Site Administration.
-
 
 4. Site Administration
 • 4.1. The Administration of the BeautyVerse Site (hereinafter referred to as the Site Administration or the Administration) in these Rules and other special documents posted on the Site means a LEGAL PERSON, REGISTRATION DATA AND ADDRESS OF A LEGAL PERSON
@@ -102,7 +98,6 @@ The Site Administration grants you access to the use of the BeautyVerse Site and
 • 4.2. Appeals, proposals and claims of individuals and legal entities to the Site Administration in connection with these Rules and all questions regarding the operation of the Site, violations of the rights and interests of third parties when using it, as well as for requests from persons authorized by the law of the COUNTRY may be sent to the postal address of the legal entity, specified in clause 4.1. of these Rules. The Site Administration will make efforts to consider appeals, claims addressed to it within 30 calendar days, unless another period is provided by the COUNTRY legislation.
 • 4.3. With regard to the functioning and development of the Site, the Administration is guided by the laws of the COUNTRY, these Rules and other special documents that are developed or may be developed and adopted by the Site Administration in order to regulate the provision of access to certain functionality of the Site to Users.
 • 4.4. None of the provisions of these Rules grant the User the right to use the trade name, trademarks, domain names and other distinguishing marks of the Site Administration. The right to use the trade name, trademarks, domain names and other distinguishing marks of the Site Administration can be granted solely by written agreement with the Site Administration.
-
 
 5. Registration on the BeautyVerse Website and User status
 • 5.1. The BeautyVerse Site is a BeautyVerse Ecosystem Service. Registration of the User on the Site is free, voluntary and is carried out using the BeautyVerse ID tool. Registration and / or authorization on the Site using the BeautyVerse ID means acceptance of the BeautyVerse Ecosystem User Agreement, which is publicly available on the Internet at LINK, and the Privacy Policy of the BeautyVerse Ecosystem, which is publicly available on the Internet at LINK

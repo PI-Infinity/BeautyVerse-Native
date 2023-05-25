@@ -22,7 +22,8 @@ import {
 import GetTimesAgo from "../../functions/getTimesAgo";
 import { Language } from "../../context/language";
 import { CacheableImage } from "../../components/cacheableImage";
-import Icon from "react-native-vector-icons/FontAwesome";
+import { FontAwesome } from "@expo/vector-icons";
+import { lightTheme, darkTheme } from "../../context/theme";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -32,6 +33,9 @@ export const Rooms = ({ navigation, search, socket }) => {
   const rerenderRooms = useSelector((state) => state.storeChat.rerenderRooms);
   const currentUser = useSelector((state) => state.storeUser.currentUser);
   const [loading, setLoading] = useState(false);
+  // theme state
+  const theme = useSelector((state) => state.storeApp.theme);
+  const currentTheme = theme ? darkTheme : lightTheme;
 
   const [rooms, setRooms] = useState([]);
   useEffect(() => {
@@ -115,7 +119,7 @@ export const Rooms = ({ navigation, search, socket }) => {
             justifyContent: "center",
           }}
         >
-          <ActivityIndicator size="large" color="#ccc" />
+          <ActivityIndicator size="large" color={currentTheme.pink} />
         </View>
       ) : (
         <ScrollView>
@@ -357,7 +361,7 @@ const RoomItem = ({
               backgroundColor: "rgba(255,255,255,0.1)",
             }}
           >
-            <Icon name="user" size={25} color="#e5e5e5" />
+            <FontAwesome name="user" size={25} color="#e5e5e5" />
           </View>
         )}
       </View>

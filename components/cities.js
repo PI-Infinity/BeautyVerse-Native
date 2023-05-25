@@ -9,8 +9,8 @@ import {
   Dimensions,
 } from "react-native";
 import { useSelector, useDispatch } from "react-redux";
-import { setCity } from "../redux/filter"; // Import the setCity action from your actions file
-import { ListItem, Icon, Button } from "react-native-elements";
+import { setCity, setDistrict } from "../redux/filter"; // Import the setCity action from your actions file
+import { MaterialIcons } from "@expo/vector-icons";
 import { setCleanUp } from "../redux/rerenders";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -32,17 +32,20 @@ export const Cities = ({ cities, currentTheme }) => {
   const handlePress = (city) => {
     dispatch(setCity(city));
     dispatch(setCleanUp());
+    if (city === "") {
+      dispatch(setDistrict(""));
+    }
   };
 
   const RenderedItem = ({ item }) => (
     <TouchableOpacity
       style={[styles.cityItem, { color: currentTheme.font }]}
       activeOpacity={0.5}
-      onPress={() => handlePress(item)}
+      onPress={() => handlePress(selectedCity === item ? "" : item)}
     >
       <Text style={{ color: currentTheme.font }}>{item}</Text>
       {selectedCity === item && (
-        <Icon name="done" type="MaterialIcons" color="#F866b1" size={16} />
+        <MaterialIcons name="done" color="#F866b1" size={16} />
       )}
     </TouchableOpacity>
   );

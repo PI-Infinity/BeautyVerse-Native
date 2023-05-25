@@ -28,7 +28,11 @@ const Map = ({ latitude, longitude, mapViewRef, height }) => {
     }, 0);
   }, [latitude, selectedCoordinate]);
   return (
-    <View style={[styles.mapContainer, { height: height }]}>
+    <View
+      style={{
+        height: height,
+      }}
+    >
       <MapView
         ref={mapViewRef}
         provider={PROVIDER_GOOGLE}
@@ -50,13 +54,6 @@ const Map = ({ latitude, longitude, mapViewRef, height }) => {
           description="This is the description of the marker"
         />
       </MapView>
-      {selectedCoordinate && (
-        <Text style={styles.coordinates}>
-          Latitude: {selectedCoordinate.latitude.toFixed(6)}
-          {"\n"}
-          Longitude: {selectedCoordinate.longitude.toFixed(6)}
-        </Text>
-      )}
     </View>
   );
 };
@@ -71,13 +68,6 @@ const styles = StyleSheet.create({
   map: {
     borderRadius: 5,
     ...StyleSheet.absoluteFillObject,
-  },
-  coordinates: {
-    backgroundColor: "rgba(255, 255, 255, 0.7)",
-    paddingHorizontal: 15,
-    paddingVertical: 10,
-    borderRadius: 5,
-    marginBottom: 20,
   },
 });
 

@@ -8,6 +8,10 @@ import {
   Alert,
   Platform,
   KeyboardAvoidingView,
+  TouchableWithoutFeedback,
+  Keyboard,
+  ScrollView,
+  Dimensions,
 } from "react-native";
 import { setRerenderCurrentUser } from "../../redux/rerenders";
 import { useSelector, useDispatch } from "react-redux";
@@ -16,15 +20,23 @@ import VerifyCodePopup from "../../components/inputPopup";
 import GoogleAutocomplete from "../../components/mapAutocomplete";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Icon } from "react-native-elements";
+import { MaterialIcons } from "@expo/vector-icons";
 import { Language } from "../../context/language";
+import { lightTheme, darkTheme } from "../../context/theme";
+import CountryCodePicker from "../../components/countryCodePicker";
+
+const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
+
 const Identify = ({ navigation }) => {
   const dispatch = useDispatch();
   const language = Language();
   const [name, setName] = useState("");
   const type = useSelector((state) => state.storeAuth.userType);
   const [email, setEmail] = useState("");
-  const [address, setAddress] = useState();
+  const [address, setAddress] = useState({});
+
+  const theme = useSelector((state) => state.storeApp.theme);
+  const currentTheme = theme ? darkTheme : lightTheme;
 
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
@@ -72,6 +84,7 @@ const Identify = ({ navigation }) => {
       }
     } catch (err) {
       Alert.alert(err.response.data.message);
+      console.log(err.response.data.message.toString());
     }
   }
 
@@ -112,6 +125,7 @@ const Identify = ({ navigation }) => {
           },
           experience: "",
           orders: [],
+          subscription: { status: "inactive" },
           notifications: [
             {
               senderId: "Beautyverse",
@@ -128,6 +142,8 @@ const Identify = ({ navigation }) => {
       Alert.alert(language?.language?.Auth?.auth?.successRegister);
       await setVerify(true);
     } catch (err) {
+      console.log("error");
+      console.log(err);
       Alert.alert(err.response.data.message);
     }
   };
@@ -149,107 +165,139 @@ const Identify = ({ navigation }) => {
           )}
         </View>
         <View style={styles.itemContainer}>
-          <Text style={styles.itemTitle}>
+          <Text style={[styles.itemTitle, { color: currentTheme.font }]}>
             {language?.language?.Auth?.auth?.name}
           </Text>
           <TextInput
             placeholder={language?.language?.Auth?.auth?.name}
-            placeholderTextColor="#555"
-            style={styles.input}
+            placeholderTextColor={currentTheme.disabled}
+            style={[
+              styles.input,
+              {
+                backgroundColor: currentTheme.background2,
+                color: currentTheme.font,
+              },
+            ]}
             onChangeText={(text) => setName(text)}
           />
         </View>
         <View style={styles.itemContainer}>
-          <Text style={styles.itemTitle}>
+          <Text style={[styles.itemTitle, { color: currentTheme.font }]}>
             {language?.language?.Auth?.auth?.address}
           </Text>
-          <GoogleAutocomplete setAddress={setAddress} />
+          <GoogleAutocomplete
+            setAddress={setAddress}
+            currentTheme={currentTheme}
+          />
         </View>
         <View style={styles.itemContainer}>
-          <Text style={styles.itemTitle}>
+          <Text style={[styles.itemTitle, { color: currentTheme.font }]}>
             {language?.language?.Auth?.auth?.email}
           </Text>
           <TextInput
             placeholder={language?.language?.Auth?.auth?.email}
-            placeholderTextColor="#555"
-            style={styles.input}
+            placeholderTextColor={currentTheme.disabled}
+            style={[
+              styles.input,
+              {
+                backgroundColor: currentTheme.background2,
+                color: currentTheme.font,
+              },
+            ]}
             onChangeText={(text) => setEmail(text)}
           />
         </View>
+        {/* <CountryCodePicker /> */}
         <View style={[styles.itemContainer, { marginTop: 0 }]}>
-          <Text style={styles.itemTitle}>
+          <Text style={[styles.itemTitle, { color: currentTheme.font }]}>
             {language?.language?.Auth?.auth?.phone}
           </Text>
           <TextInput
             placeholder="ex: +000000000"
-            placeholderTextColor="#555"
-            style={styles.input}
-            onChangeText={(text) => setPhone(text)}
-          />
-          {/* </View> */}
-          <View style={styles.itemContainer}>
-            <Text style={styles.itemTitle}>
-              {language?.language?.Auth?.auth?.password}
-            </Text>
-            <View
-              style={[
-                styles.input,
-                {
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: 10,
-                  padding: 5,
-                },
-              ]}
-            >
-              <TextInput
-                placeholder="min 8 symbols"
-                placeholderTextColor="#555"
-                style={[styles.input, { width: "90%" }]}
-                secureTextEntry={!showPassword}
-                onChangeText={(text) => setPassword(text)}
-              />
-              <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                <Text style={styles.showPasswordText}>
-                  {showPassword ? (
-                    <Icon
-                      name="remove-red-eye"
-                      type="MaterialIcons"
-                      color="#e5e5e5"
-                      size={16}
-                    />
-                  ) : (
-                    <Icon
-                      name="panorama-fisheye"
-                      type="MaterialIcons"
-                      color="#e5e5e5"
-                      size={16}
-                    />
-                  )}
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-        <View style={styles.itemContainer}>
-          <Text style={styles.itemTitle}>
-            {language?.language?.Auth?.auth?.confirmPassword}
-          </Text>
-          <View
+            placeholderTextColor={currentTheme.disabled}
             style={[
               styles.input,
               {
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 10,
-                padding: 5,
+                backgroundColor: currentTheme.background2,
+                color: currentTheme.font,
               },
             ]}
+            onChangeText={(text) => setPhone(text)}
+          />
+        </View>
+        <View style={styles.itemContainer}>
+          <Text style={[styles.itemTitle, { color: currentTheme.font }]}>
+            {language?.language?.Auth?.auth?.password}
+          </Text>
+          <View
+            style={{
+              width: "100%",
+              alignItems: "center",
+              flexDirection: "row",
+              gap: 10,
+            }}
+          >
+            <TextInput
+              placeholder="min 8 symbols"
+              placeholderTextColor={currentTheme.disabled}
+              style={[
+                [
+                  styles.input,
+                  {
+                    backgroundColor: currentTheme.background2,
+                    color: currentTheme.font,
+                  },
+                ],
+                { width: "100%" },
+              ]}
+              secureTextEntry={!showPassword}
+              onChangeText={(text) => setPassword(text)}
+            />
+            <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+              <Text style={styles.showPasswordText}>
+                {showPassword ? (
+                  <MaterialIcons
+                    name="remove-red-eye"
+                    color="#e5e5e5"
+                    size={16}
+                  />
+                ) : (
+                  <MaterialIcons
+                    name="panorama-fisheye"
+                    color="#e5e5e5"
+                    size={16}
+                  />
+                )}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        <View style={styles.itemContainer}>
+          <Text style={[styles.itemTitle, { color: currentTheme.font }]}>
+            {language?.language?.Auth?.auth?.confirmPassword}
+          </Text>
+          <View
+            style={{
+              width: "100%",
+              alignItems: "center",
+              flexDirection: "row",
+              gap: 10,
+            }}
           >
             <TextInput
               placeholder={language?.language?.Auth?.auth?.confirmPassword}
-              placeholderTextColor="#555"
-              style={[styles.input, { width: "90%" }]}
+              placeholderTextColor={currentTheme.disabled}
+              style={[
+                [
+                  styles.input,
+                  {
+                    backgroundColor: currentTheme.background2,
+                    color: currentTheme.font,
+                  },
+                ],
+                { width: "100%" },
+              ]}
               secureTextEntry={!showConfirmPassword}
               onChangeText={(text) => setConfirmPassword(text)}
             />
@@ -258,16 +306,14 @@ const Identify = ({ navigation }) => {
             >
               <Text style={styles.showPasswordText}>
                 {showConfirmPassword ? (
-                  <Icon
+                  <MaterialIcons
                     name="remove-red-eye"
-                    type="MaterialIcons"
                     color="#e5e5e5"
                     size={16}
                   />
                 ) : (
-                  <Icon
+                  <MaterialIcons
                     name="panorama-fisheye"
-                    type="MaterialIcons"
                     color="#e5e5e5"
                     size={16}
                   />
@@ -290,13 +336,10 @@ const Identify = ({ navigation }) => {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     width: "100%",
-    justifyContent: "center",
     alignItems: "center",
     gap: 15,
     zIndex: 100,
-    marginBottom: 20,
   },
   keyboardAvoidingContainer: {
     flex: 1,
@@ -307,23 +350,28 @@ const styles = StyleSheet.create({
     zIndex: 100,
     paddingBottom: 30,
   },
-  itemContainer: { gap: 10, width: "100%", alignItems: "center", zIndex: 100 },
+  itemContainer: { gap: 15, width: "80%", alignItems: "center", zIndex: 100 },
   itemTitle: {
     fontSize: 14,
-    color: "#e5e5e5",
     zIndex: 100,
   },
   input: {
-    width: "80%",
-    backgroundColor: "rgba(255,255,255,0.05)",
+    width: "100%",
+    height: 40,
     padding: 10,
     fontSize: 14,
-    color: "#fff",
     borderRadius: 50,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 3, // negative value places shadow on top
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
   showPasswordText: {
     fontSize: 12,
-    color: "#e5e5e5",
     textAlign: "right",
     textDecorationLine: "underline",
     marginTop: 5,
@@ -339,14 +387,7 @@ const styles = StyleSheet.create({
   buttonText: {
     color: "#fff",
     textAlign: "center",
-  },
-  loginQuestion: {
-    color: "#fff",
-    textAlign: "center",
-  },
-  login: {
-    color: "yellow",
-    textAlign: "center",
+    fontWeight: "bold",
   },
 });
 

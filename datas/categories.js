@@ -10,7 +10,7 @@ export const VerseCategories = [
   },
   {
     id: 2,
-    value: "Make Up",
+    value: "MakeUp",
     eng: "Make Up",
     geo: "მაკიაჟი",
     rus: "Макияж",

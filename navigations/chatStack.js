@@ -13,7 +13,7 @@ import {
 } from "react-native";
 import { Chat } from "../screens/chat/chat";
 import { Room } from "../screens/chat/room";
-import Icon from "react-native-vector-icons/FontAwesome";
+import { FontAwesome } from "@expo/vector-icons";
 import React, { useState, useEffect } from "react";
 import {
   getFocusedRouteNameFromRoute,
@@ -22,7 +22,7 @@ import {
 import { useSelector, useDispatch } from "react-redux";
 import { setOpenAddChat } from "../redux/chat";
 import { CacheableImage } from "../components/cacheableImage";
-import MaterialIcons from "react-native-vector-icons/MaterialIcons";
+import { MaterialIcons } from "@expo/vector-icons";
 import { Language } from "../context/language";
 import { ScrollGallery } from "../screens/user/scrollGallery";
 import { User } from "../screens/user/user";
@@ -97,6 +97,7 @@ export function ChatStack({ route, socket }) {
           headerTintColor: currentTheme.font,
           headerTitleStyle: {
             fontWeight: "bold",
+            letterSpacing: 0.5,
             fontSize: 18,
           },
           cardStyle: {
@@ -108,12 +109,12 @@ export function ChatStack({ route, socket }) {
               style={{ marginLeft: 15 }}
               onPress={() => dispatch(setOpenAddChat(true))}
             >
-              <Icon name="plus" size={18} color={currentTheme.font} />
+              <FontAwesome name="plus" size={18} color={currentTheme.font} />
             </TouchableOpacity>
           ),
           // headerRight: () => (
           //   <View style={{ marginRight: 15 }}>
-          //     <Icon name="bars" size={18} color={currentTheme.font} />
+          //     <FontAwesome name="bars" size={18} color={currentTheme.font} />
           //   </View>
           // ),
         }}
@@ -177,6 +178,7 @@ export function ChatStack({ route, socket }) {
           headerTintColor: currentTheme.font,
           headerTitleStyle: {
             fontWeight: "bold",
+            letterSpacing: 0.5,
             fontSize: 18,
           },
           cardStyle: {
@@ -203,7 +205,9 @@ export function ChatStack({ route, socket }) {
               >
                 {route.params.user.name}
               </Text>
-              <MaterialIcons name="verified" size={14} color="#1DA1F2" />
+              {route.params.user.subscription.status === "active" && (
+                <MaterialIcons name="verified" size={14} color="#F866B1" />
+              )}
             </View>
           ),
 
@@ -217,6 +221,7 @@ export function ChatStack({ route, socket }) {
           headerTintColor: currentTheme.font,
           headerTitleStyle: {
             fontWeight: "bold",
+            letterSpacing: 0.5,
             fontSize: 18,
           },
           cardStyle: {
@@ -240,6 +245,7 @@ export function ChatStack({ route, socket }) {
           headerTintColor: currentTheme.font,
           headerTitleStyle: {
             fontWeight: "bold",
+            letterSpacing: 0.5,
             fontSize: 18,
           },
           cardStyle: {

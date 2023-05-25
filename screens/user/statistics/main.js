@@ -1,9 +1,17 @@
-import { StyleSheet, Text, View, TouchableOpacity } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  View,
+  TouchableOpacity,
+  Dimensions,
+} from "react-native";
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useSelector } from "react-redux";
 import { lightTheme, darkTheme } from "../../../context/theme";
-import { ListItem, Icon, Button } from "react-native-elements";
+import { MaterialIcons } from "@expo/vector-icons";
+
+const { height: hght, width: SCREEN_WIDTH } = Dimensions.get("window");
 
 export const Statistics = ({ navigation }) => {
   const [statistics, setStatistics] = useState([]);
@@ -53,18 +61,21 @@ export const Statistics = ({ navigation }) => {
             alignItems: "center",
           }}
         >
-          <Icon
-            name="bar-chart"
-            type="MaterialIcons"
-            color="#F866B1"
-            size={18}
-          />
-          <Text style={[styles.itemTitle, { color: currentTheme.font }]}>
+          <MaterialIcons name="bar-chart" color="#F866B1" size={18} />
+          <Text
+            style={[
+              styles.itemTitle,
+              {
+                color: currentTheme.font,
+                fontWeight: "bold",
+                letterSpacing: 0.2,
+              },
+            ]}
+          >
             Charts
           </Text>
-          <Icon
+          <MaterialIcons
             name="arrow-right"
-            type="MaterialIcons"
             color={currentTheme.font}
             size={18}
           />
@@ -73,11 +84,12 @@ export const Statistics = ({ navigation }) => {
       <View
         style={{
           flex: 1,
-          gap: "10%",
+          gap: SCREEN_WIDTH / 20,
           flexDirection: "row",
           flexWrap: "wrap",
           justifyContent: "center",
           marginVertical: 15,
+          padding: 10,
         }}
       >
         <View
@@ -86,19 +98,44 @@ export const Statistics = ({ navigation }) => {
             { backgroundColor: currentTheme.background2 },
           ]}
         >
-          <Text style={[styles.sectionTitle, { color: currentTheme.font }]}>
-            24 hours:
+          <Text
+            style={[
+              styles.sectionTitle,
+              { color: currentTheme.font, letterSpacing: 0.2 },
+            ]}
+          >
+            Today:
           </Text>
-          <Text style={[styles.itemTitle, { color: currentTheme.font }]}>
+          <Text
+            style={[
+              styles.itemTitle,
+              { color: currentTheme.font, letterSpacing: 0.2 },
+            ]}
+          >
             Visitors: {statistics?.visitors?.daily}
           </Text>
-          <Text style={[styles.itemTitle, { color: currentTheme.font }]}>
+          <Text
+            style={[
+              styles.itemTitle,
+              { color: currentTheme.font, letterSpacing: 0.2 },
+            ]}
+          >
             Feeds: {statistics?.feeds?.daily}
           </Text>
-          <Text style={[styles.itemTitle, { color: currentTheme.font }]}>
+          <Text
+            style={[
+              styles.itemTitle,
+              { color: currentTheme.font, letterSpacing: 0.2 },
+            ]}
+          >
             Stars: {statistics?.stars?.daily}
           </Text>
-          <Text style={[styles.itemTitle, { color: currentTheme.font }]}>
+          <Text
+            style={[
+              styles.itemTitle,
+              { color: currentTheme.font, letterSpacing: 0.2 },
+            ]}
+          >
             Followers: {statistics?.followers?.daily}
           </Text>
         </View>
@@ -108,19 +145,44 @@ export const Statistics = ({ navigation }) => {
             { backgroundColor: currentTheme.background2 },
           ]}
         >
-          <Text style={[styles.sectionTitle, { color: currentTheme.font }]}>
+          <Text
+            style={[
+              styles.sectionTitle,
+              { color: currentTheme.font, letterSpacing: 0.2 },
+            ]}
+          >
             Last month:
           </Text>
-          <Text style={[styles.itemTitle, { color: currentTheme.font }]}>
+          <Text
+            style={[
+              styles.itemTitle,
+              { color: currentTheme.font, letterSpacing: 0.2 },
+            ]}
+          >
             Visitors: {statistics?.visitors?.monthly}
           </Text>
-          <Text style={[styles.itemTitle, { color: currentTheme.font }]}>
+          <Text
+            style={[
+              styles.itemTitle,
+              { color: currentTheme.font, letterSpacing: 0.2 },
+            ]}
+          >
             Feeds: {statistics?.feeds?.monthly}
           </Text>
-          <Text style={[styles.itemTitle, { color: currentTheme.font }]}>
+          <Text
+            style={[
+              styles.itemTitle,
+              { color: currentTheme.font, letterSpacing: 0.2 },
+            ]}
+          >
             Stars: {statistics?.stars?.monthly}
           </Text>
-          <Text style={[styles.itemTitle, { color: currentTheme.font }]}>
+          <Text
+            style={[
+              styles.itemTitle,
+              { color: currentTheme.font, letterSpacing: 0.2 },
+            ]}
+          >
             Followers: {statistics?.followers?.monthly}
           </Text>
         </View>
@@ -130,19 +192,44 @@ export const Statistics = ({ navigation }) => {
             { backgroundColor: currentTheme.background2 },
           ]}
         >
-          <Text style={[styles.sectionTitle, { color: currentTheme.font }]}>
+          <Text
+            style={[
+              styles.sectionTitle,
+              { color: currentTheme.font, letterSpacing: 0.2 },
+            ]}
+          >
             Last year:
           </Text>
-          <Text style={[styles.itemTitle, { color: currentTheme.font }]}>
+          <Text
+            style={[
+              styles.itemTitle,
+              { color: currentTheme.font, letterSpacing: 0.2 },
+            ]}
+          >
             Visitors: {statistics?.visitors?.yearly}
           </Text>
-          <Text style={[styles.itemTitle, { color: currentTheme.font }]}>
+          <Text
+            style={[
+              styles.itemTitle,
+              { color: currentTheme.font, letterSpacing: 0.2 },
+            ]}
+          >
             Feeds: {statistics?.feeds?.yearly}
           </Text>
-          <Text style={[styles.itemTitle, { color: currentTheme.font }]}>
+          <Text
+            style={[
+              styles.itemTitle,
+              { color: currentTheme.font, letterSpacing: 0.2 },
+            ]}
+          >
             Stars: {statistics?.stars?.yearly}
           </Text>
-          <Text style={[styles.itemTitle, { color: currentTheme.font }]}>
+          <Text
+            style={[
+              styles.itemTitle,
+              { color: currentTheme.font, letterSpacing: 0.2 },
+            ]}
+          >
             Followers: {statistics?.followers?.yearly}
           </Text>
         </View>
@@ -152,19 +239,44 @@ export const Statistics = ({ navigation }) => {
             { backgroundColor: currentTheme.background2 },
           ]}
         >
-          <Text style={[styles.sectionTitle, { color: currentTheme.font }]}>
+          <Text
+            style={[
+              styles.sectionTitle,
+              { color: currentTheme.font, letterSpacing: 0.2 },
+            ]}
+          >
             All time:
           </Text>
-          <Text style={[styles.itemTitle, { color: currentTheme.font }]}>
+          <Text
+            style={[
+              styles.itemTitle,
+              { color: currentTheme.font, letterSpacing: 0.2 },
+            ]}
+          >
             Feeds: {statistics?.feeds?.all}
           </Text>
-          <Text style={[styles.itemTitle, { color: currentTheme.font }]}>
+          <Text
+            style={[
+              styles.itemTitle,
+              { color: currentTheme.font, letterSpacing: 0.2 },
+            ]}
+          >
             Stars: {statistics?.stars?.all}
           </Text>
-          <Text style={[styles.itemTitle, { color: currentTheme.font }]}>
+          <Text
+            style={[
+              styles.itemTitle,
+              { color: currentTheme.font, letterSpacing: 0.2 },
+            ]}
+          >
             Followers: {statistics?.followers?.all}
           </Text>
-          <Text style={[styles.itemTitle, { color: currentTheme.font }]}>
+          <Text
+            style={[
+              styles.itemTitle,
+              { color: currentTheme.font, letterSpacing: 0.2 },
+            ]}
+          >
             Followings: {statistics?.followings?.all}
           </Text>
         </View>

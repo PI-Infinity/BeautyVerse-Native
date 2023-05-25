@@ -1,18 +1,24 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { useSelector, useDispatch } from "react-redux";
+import { setStatusFilter } from "../../redux/orders";
 
-export const SortPopup = ({ currentTheme, selectedItem, setSelectedItem }) => {
+export const SortPopup = ({ currentTheme, setOpenSortPopup }) => {
+  const dispatch = useDispatch();
+  const filter = useSelector((state) => state.storeOrders.statusFilter);
+
   const items = [
-    { label: "Time", value: "time" },
+    { label: "All", value: "" },
     { label: "New", value: "new" },
-    { label: "Confirmed", value: "confirmed" },
+    { label: "Active", value: "active" },
     { label: "Completed", value: "completed" },
     { label: "Canceled", value: "canceled" },
     { label: "Rejected", value: "rejected" },
   ];
 
   const handleSelect = (value) => {
-    setSelectedItem(value);
+    dispatch(setStatusFilter(value));
+    setOpenSortPopup(false);
   };
 
   return (
@@ -26,10 +32,10 @@ export const SortPopup = ({ currentTheme, selectedItem, setSelectedItem }) => {
             styles.item,
             {
               backgroundColor:
-                selectedItem === item.value
+                filter === item.value
                   ? currentTheme.pink
                   : currentTheme.background,
-              color: selectedItem === item.value ? "#ccc" : currentTheme.font,
+              color: filter === item.value ? "#ccc" : currentTheme.font,
               alignItems: "center",
             },
           ]}

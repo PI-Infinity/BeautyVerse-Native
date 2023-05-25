@@ -18,8 +18,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { lightTheme, darkTheme } from "../../context/theme";
 import axios from "axios";
 import { setRerenderCurrentUser } from "../../redux/rerenders";
-import MaterialIcons from "react-native-vector-icons/MaterialIcons";
-import Icon from "react-native-vector-icons/FontAwesome";
+import { MaterialIcons, FontAwesome } from "@expo/vector-icons";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -45,7 +44,7 @@ export const Notifications = ({
       setNotifications((prev) => {
         return prev.map((item) => {
           // Check if the current item's _id matches the given id
-          if (item._id === id) {
+          if (item?._id === id) {
             // Update the status of the matched notification to "read"
             return {
               ...item,
@@ -62,17 +61,23 @@ export const Notifications = ({
           status: "read",
         }
       );
-      dispatch(setRerenderCurrentUser());
+      // dispatch(setRerenderCurrentUser());
     } catch (error) {
       console.log(error.response.data.message);
     }
   };
 
+  useEffect(() => {
+    setTimeout(() => {
+      setLoading(false);
+    }, 500);
+  }, []);
+
   return (
     <ScrollView
       style={{ flex: 1, backgroundColor: currentTheme.background }}
       bounces={Platform.OS === "ios" ? false : undefined}
-      overScrollMode={Platform.OS === "ios" ? undefined : false}
+      overScrollMode={Platform.OS === "ios" ? "never" : "always"}
       contentContainerStyle={{
         paddingHorizontal: 10,
         gap: 5,
@@ -92,24 +97,26 @@ export const Notifications = ({
             zIndex: 100,
           }}
         >
-          <ActivityIndicator size="large" />
+          <ActivityIndicator size="large" color={currentTheme.pink} />
         </View>
       )}
       {notifications?.length > 0 ? (
         notifications?.map((item, index) => {
-          return (
-            <NotificationItem
-              key={index}
-              item={item}
-              currentTheme={currentTheme}
-              navigation={navigation}
-              ReadNotification={ReadNotification}
-              setLoading={setLoading}
-              currentUser={currentUser}
-              setNotifications={setNotifications}
-              notifications={notifications}
-            />
-          );
+          if (item) {
+            return (
+              <NotificationItem
+                key={index}
+                item={item}
+                currentTheme={currentTheme}
+                navigation={navigation}
+                ReadNotification={ReadNotification}
+                setLoading={setLoading}
+                currentUser={currentUser}
+                setNotifications={setNotifications}
+                notifications={notifications}
+              />
+            );
+          }
         })
       ) : (
         <View
@@ -119,7 +126,6 @@ export const Notifications = ({
             justifyContent: "center",
             height: 500,
           }}
-          onLoad={() => setLoading(false)}
         >
           <Text style={{ color: currentTheme.disabled }}>
             No Notifications found
@@ -142,14 +148,14 @@ const NotificationItem = ({
   setNotifications,
   notifications,
 }) => {
-  let feed = item.feed.split("/");
+  let feed = item?.feed?.split("/");
 
   const [feedObj, setFeedObj] = useState(null);
   const [user, setUser] = useState(null);
 
   async function GetFeedObj(currentPage) {
     try {
-      if (item.type !== "welcome") {
+      if (item?.type !== "welcome") {
         let response = await axios.get(
           `https://beautyverse.herokuapp.com/api/v1/users/${
             currentUser?._id
@@ -157,7 +163,7 @@ const NotificationItem = ({
         );
         setFeedObj(response.data);
         let res = await axios.get(
-          `https://beautyverse.herokuapp.com/api/v1/users/${item.senderId}`
+          `https://beautyverse.herokuapp.com/api/v1/users/${item?.senderId}`
         );
         setUser(res.data.data.user);
       }
@@ -187,11 +193,11 @@ const NotificationItem = ({
     try {
       Vibration.vibrate();
       const updatedNotifications = notifications.filter(
-        (notification) => notification._id !== item._id
+        (notification) => notification._id !== item?._id
       );
       setNotifications(updatedNotifications);
       await axios.delete(
-        `https://beautyverse.herokuapp.com/api/v1/users/${currentUser?._id}/notifications/${item._id}`
+        `https://beautyverse.herokuapp.com/api/v1/users/${currentUser?._id}/notifications/${item?._id}`
       );
       console.log("deleted");
     } catch (error) {
@@ -201,7 +207,7 @@ const NotificationItem = ({
 
   return (
     <>
-      {item.type !== "welcome" ? (
+      {item?.type !== "welcome" ? (
         <Pressable
           style={{
             width: "100%",
@@ -210,12 +216,12 @@ const NotificationItem = ({
             gap: 10,
             padding: 10,
             backgroundColor:
-              item.status === "unread" ? "green" : currentTheme.background,
+              item?.status === "unread" ? "green" : currentTheme.background,
             borderRadius: 50,
             borderWidth: 1,
-            borderColor: "rgba(255,255,255,0.2)",
+            borderColor: currentTheme.line,
           }}
-          onPress={() => ReadNotification(item._id)}
+          onPress={() => ReadNotification(item?._id)}
           onLongPress={DeleteNotification}
           delayLongPress={250}
         >
@@ -227,15 +233,22 @@ const NotificationItem = ({
               })
             }
           >
-            <Image
-              source={{ uri: item.senderCover }}
-              style={{ height: 40, width: 40, borderRadius: 50 }}
-              onLoad={() =>
-                setTimeout(() => {
-                  setLoading(false);
-                }, 200)
-              }
-            />
+            {item?.senderCover?.length > 10 ? (
+              <Image
+                source={{ uri: item?.senderCover }}
+                style={{ height: 40, width: 40, borderRadius: 50 }}
+              />
+            ) : (
+              <View style={{ padding: 5 }}>
+                <FontAwesome
+                  name="user"
+                  size={24}
+                  color={
+                    item?.status === "unread" ? "#f1f1f1" : currentTheme.pink
+                  }
+                />
+              </View>
+            )}
           </TouchableOpacity>
           <View
             style={{
@@ -245,48 +258,54 @@ const NotificationItem = ({
           >
             <Text
               style={{
-                color: currentTheme.font,
+                color:
+                  item?.status === "unread" ? "#f1f1f1" : currentTheme.font,
                 fontWeight: "bold",
                 fontSize: 14,
               }}
             >
-              {item.senderName}
+              {item?.senderName}
             </Text>
             <Text
               style={{
-                color: currentTheme.font,
+                color:
+                  item?.status === "unread" ? "#f1f1f1" : currentTheme.font,
                 fontSize: 12,
               }}
             >
-              {item.text}
+              {item?.text}
             </Text>
           </View>
           <View style={{ flexDirection: "row", gap: 20, marginLeft: "auto" }}>
-            {(item.type === "star" || item.type === "review") && (
+            {(item?.type === "star" || item?.type === "review") && (
               <TouchableOpacity
                 activeOpacity={0.3}
                 style={{ alignItems: "flex-end" }}
                 onPress={handlePress}
               >
-                <Icon
+                <FontAwesome
                   style={{ marginLeft: "auto" }}
                   name="image"
                   size={18}
-                  color={currentTheme.font}
+                  color={
+                    item?.status === "unread"
+                      ? "#f1f1f1"
+                      : currentTheme.disabled
+                  }
                 />
               </TouchableOpacity>
             )}
-            <Icon
-              style={{ marginLeft: "auto", opacity: 0.6 }}
+            <FontAwesome
+              style={{ marginLeft: "auto" }}
               name={
-                item.type === "star"
+                item?.type === "star"
                   ? "star-o"
-                  : item.type === "follow"
+                  : item?.type === "follow"
                   ? "check" // Replace 'user-plus' with the desired icon for 'follow'
                   : "comment" // Replace 'default-icon' with the desired default icon
               }
               size={16}
-              color={currentTheme.font}
+              color={item?.status === "unread" ? "#f1f1f1" : currentTheme.pink}
             />
           </View>
         </Pressable>
@@ -300,28 +319,29 @@ const NotificationItem = ({
             gap: 10,
             padding: 10,
             backgroundColor:
-              item.status === "unread" ? "green" : currentTheme.background,
+              item?.status === "unread" ? "green" : currentTheme.background,
             borderRadius: 50,
             borderWidth: 1,
-            borderColor: "rgba(255,255,255,0.2)",
+            borderColor: currentTheme.line,
           }}
           onPress={
-            item.status === "unread"
-              ? () => ReadNotification(item._id)
+            item?.status === "unread"
+              ? () => ReadNotification(item?._id)
               : undefined
           }
           onLongPress={DeleteNotification}
           delayLongPress={250}
         >
-          <Image
-            source={{ uri: currentUser.cover }}
-            style={{ height: 40, width: 40, borderRadius: 50 }}
-            onLoad={() =>
-              setTimeout(() => {
-                setLoading(false);
-              }, 200)
-            }
-          />
+          {item?.senderCover?.length > 0 ? (
+            <Image
+              source={{ uri: item?.cover }}
+              style={{ height: 40, width: 40, borderRadius: 50 }}
+            />
+          ) : (
+            <View style={{ padding: 5 }}>
+              <FontAwesome name="user" size={24} color={currentTheme.pink} />
+            </View>
+          )}
           <View
             style={{
               gap: 2.5,
@@ -343,14 +363,14 @@ const NotificationItem = ({
                 fontSize: 12,
               }}
             >
-              {item.text}
+              {item?.text}
             </Text>
           </View>
           <MaterialIcons
-            style={{ marginLeft: "auto", opacity: 0.6 }}
+            style={{ marginLeft: "auto" }}
             name="notifications"
-            size={16}
-            color={currentTheme.font}
+            size={20}
+            color={currentTheme.pink}
           />
         </Pressable>
       )}
