@@ -1,0 +1,40 @@
+const Chat = {
+  en: {
+    title: "Chat",
+    recently: "Recently",
+    followings: "Followings",
+    findUser: "Find user...",
+    typeText: "Type text...",
+    deleteChatText: "Are you sure you want to delete the chat?",
+    confirm: "Confirm",
+    confirmText: "Are you sure you want to delete the text?",
+    cancel: "Cancel",
+    remove: "Remove",
+  },
+  ka: {
+    title: "სასაუბრო",
+    recently: "უახლესი",
+    followings: "ფავორიტები",
+    findUser: "მოძებნეთ მომხმარებელი...",
+    typeText: "შეიყვანეთ ტექსტი",
+    deletChatText: "ნამდვილად გსურთ ჩათის წაშლა?",
+    confirm: "დადასტურება",
+    confirmText: "ნამდვილად გსურთ ტექსტის წაშლა?",
+    cancel: "გაუქმება",
+    remove: "წაშლა",
+  },
+  ru: {
+    title: "Чат",
+    recently: "Недавно",
+    followings: "Избранное",
+    findUser: "Найти пользователя...",
+    typeText: "Введите текст...",
+    deleteChatText: "Вы уверены, что хотите удалить чат?",
+    confirm: "Подтвердить",
+    confirmText: "Вы уверены, что хотите удалить текст?",
+    cancel: "Отмена",
+    remove: "Удалить",
+  },
+};
+
+export default Chat;

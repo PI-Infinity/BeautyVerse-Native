@@ -1,0 +1,275 @@
+import {
+  View,
+  Text,
+  ActivityIndicator,
+  Dimensions,
+  Image,
+  Pressable,
+} from "react-native";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { useSelector, useDispatch } from "react-redux";
+import Collapsible from "react-native-collapsible";
+import { AudienceList } from "../../screens/user/audienceList";
+import { MaterialIcons, FontAwesome } from "@expo/vector-icons";
+import { CacheableImage } from "../../components/cacheableImage";
+import { lightTheme, darkTheme } from "../../context/theme";
+
+const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
+
+export const Audience = ({
+  targetUser,
+  navigation,
+  renderCheck,
+  setRenderCheck,
+}) => {
+  const theme = useSelector((state) => state.storeApp.theme);
+  const currentTheme = theme ? darkTheme : lightTheme;
+
+  const [loading, setLoading] = React.useState(true);
+
+  const [followers, setFollowers] = useState([]);
+  const [followings, setFollowings] = useState([]);
+
+  const [openFollowers, setOpenFollowers] = useState(true);
+  const [openFollowings, setOpenFollowings] = useState(true);
+
+  const [render, setRender] = useState(false);
+
+  useEffect(() => {
+    async function GetAudience(userId) {
+      const response = await fetch(
+        `https://beautyverse.herokuapp.com/api/v1/users/${targetUser?._id}/followings`
+      )
+        .then((response) => response.json())
+        .then((data) => {
+          setFollowings({
+            length: data.result,
+            list: data.data.followings,
+          });
+        })
+        .catch((error) => {
+          console.log("Error fetching data:", error);
+        });
+    }
+    if (targetUser?._id) {
+      GetAudience();
+    }
+  }, [targetUser?._id, render]);
+  useEffect(() => {
+    async function GetAudience(userId) {
+      const response = await fetch(
+        `https://beautyverse.herokuapp.com/api/v1/users/${targetUser?._id}/followers`
+      )
+        .then((response) => response.json())
+        .then((data) => {
+          setFollowers({
+            length: data.result,
+            list: data.data.followers,
+          });
+
+          setTimeout(() => {
+            setLoading(false);
+          }, 400);
+        })
+        .catch((error) => {
+          console.log("Error fetching data:", error);
+        });
+    }
+    if (targetUser?._id) {
+      GetAudience();
+    }
+  }, [targetUser?._id, render]);
+
+  return (
+    <View>
+      {loading ? (
+        <View
+          style={{
+            flex: 1,
+            height: "100%",
+            alignItems: "center",
+            justifyContent: "center",
+            height: SCREEN_HEIGHT / 1.5,
+          }}
+        >
+          <ActivityIndicator size="large" color={currentTheme.pink} />
+        </View>
+      ) : (
+        <View style={{ flex: 1, alignItems: "center", gap: 5, marginTop: 30 }}>
+          <Pressable
+            style={{
+              padding: 10,
+              paddingVertical: 10,
+              width: "80%",
+              borderRadius: 5,
+              borderWidth: 1,
+              borderColor: currentTheme.background2,
+              alignItems: "center",
+              flexDirection: "row",
+              gap: 20,
+            }}
+            onPress={() => setOpenFollowers(!openFollowers)}
+          >
+            <Text style={{ color: currentTheme.font, letterSpacing: 0.2 }}>
+              Followers ({followers?.length})
+            </Text>
+            <View style={{ flexDirection: "row", gap: -10 }}>
+              {followers.list?.map((item, index) => {
+                if (index < 3) {
+                  return (
+                    <Pressable
+                      key={index}
+                      onPress={() =>
+                        navigation.navigate("UserVisit", {
+                          user: item,
+                        })
+                      }
+                    >
+                      {item?.cover?.length > 0 ? (
+                        <CacheableImage
+                          source={{ uri: item?.cover }}
+                          style={{
+                            width: 40,
+                            height: 40,
+                            borderRadius: 50,
+                            borderWidth: 1,
+                            borderColor: "#ddd",
+                          }}
+                          manipulationOptions={[
+                            { resize: { width: 40, height: 40 } },
+                            { rotate: 90 },
+                          ]}
+                        />
+                      ) : (
+                        <View
+                          style={{
+                            borderRadius: 100,
+                            width: 40,
+                            aspectRatio: 1,
+                            alignItems: "center",
+                            justifyContent: "center",
+                            backgroundColor: "rgba(255,255,255,0.1)",
+                          }}
+                        >
+                          <FontAwesome name="user" size={20} color="#e5e5e5" />
+                        </View>
+                      )}
+                    </Pressable>
+                  );
+                }
+              })}
+            </View>
+            <Text style={{ color: currentTheme.font, letterSpacing: 0.2 }}>
+              {"+" + followers.length > 3 && followers.length - 3}
+            </Text>
+            <MaterialIcons
+              name={openFollowers ? "arrow-drop-up" : "arrow-drop-down"}
+              color={currentTheme.pink}
+              size={18}
+              style={{ marginLeft: "auto" }}
+            />
+          </Pressable>
+          <Collapsible collapsed={openFollowers}>
+            <AudienceList
+              list={followers?.list}
+              targetUser={targetUser}
+              navigation={navigation}
+              type="followers"
+              render={render}
+              setRender={setRender}
+              renderCheck={renderCheck}
+              setRenderCheck={setRenderCheck}
+            />
+          </Collapsible>
+          <Pressable
+            style={{
+              padding: 10,
+              paddingVertical: 10,
+              width: "80%",
+              borderRadius: 5,
+              borderWidth: 1,
+              borderColor: currentTheme.background2,
+              alignItems: "center",
+              flexDirection: "row",
+              gap: 20,
+            }}
+            onPress={() => setOpenFollowings(!openFollowings)}
+          >
+            <Text style={{ color: currentTheme.font, letterSpacing: 0.2 }}>
+              Followings ({followings?.length})
+            </Text>
+            <View style={{ flexDirection: "row", gap: -10 }}>
+              {followings.list?.map((item, index) => {
+                if (index < 4) {
+                  return (
+                    <Pressable
+                      key={index}
+                      onPress={() =>
+                        navigation.navigate("UserVisit", {
+                          user: item,
+                        })
+                      }
+                    >
+                      {item.cover?.length > 0 ? (
+                        <CacheableImage
+                          key={index}
+                          source={{ uri: item?.cover }}
+                          style={{
+                            width: 40,
+                            height: 40,
+                            borderRadius: 50,
+                            borderWidth: 1,
+                            borderColor: "#ddd",
+                          }}
+                          manipulationOptions={[
+                            { resize: { width: 40, height: 40 } },
+                            { rotate: 90 },
+                          ]}
+                        />
+                      ) : (
+                        <View
+                          style={{
+                            borderRadius: 100,
+                            width: 40,
+                            aspectRatio: 1,
+                            alignItems: "center",
+                            justifyContent: "center",
+                            backgroundColor: "rgba(255,255,255,0.1)",
+                          }}
+                        >
+                          <FontAwesome name="user" size={20} color="#e5e5e5" />
+                        </View>
+                      )}
+                    </Pressable>
+                  );
+                }
+              })}
+            </View>
+            <Text style={{ color: currentTheme.font, letterSpacing: 0.2 }}>
+              {"+" + followings.length > 3 && followings.length - 3}
+            </Text>
+            <MaterialIcons
+              name={openFollowings ? "arrow-drop-up" : "arrow-drop-down"}
+              color={currentTheme.pink}
+              size={18}
+              style={{ marginLeft: "auto" }}
+            />
+          </Pressable>
+          <Collapsible collapsed={openFollowings}>
+            <AudienceList
+              list={followings?.list}
+              targetUser={targetUser}
+              navigation={navigation}
+              type="followings"
+              render={render}
+              setRender={setRender}
+              renderCheck={renderCheck}
+              setRenderCheck={setRenderCheck}
+            />
+          </Collapsible>
+        </View>
+      )}
+    </View>
+  );
+};

@@ -1,0 +1,297 @@
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  Dimensions,
+  Alert,
+  KeyboardAvoidingView,
+} from "react-native";
+import { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { setCurrentUser } from "../../redux/auth";
+import axios from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import EmailPopup from "../../components/inputPopup";
+import { setRerenderCurrentUser } from "../../redux/rerenders";
+import PasswordRessetPopup from "../../screens/authentication/resetPassword";
+import { Language } from "../../context/language";
+import { lightTheme, darkTheme } from "../../context/theme";
+import AlertMessage from "../../components/alertMessage";
+
+const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
+
+export const Login = ({ navigation }) => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const language = Language();
+
+  const dispatch = useDispatch();
+
+  const theme = useSelector((state) => state.storeApp.theme);
+  const currentTheme = theme ? darkTheme : lightTheme;
+
+  // verify email
+  const [verify, setVerify] = useState(false);
+  const [code, setCode] = useState("");
+
+  // alert message
+  const [alert, setAlert] = useState({ active: false, text: "", type: "" });
+
+  const Login = async () => {
+    try {
+      await axios
+        .post("https://beautyverse.herokuapp.com/api/v1/login", {
+          email: email,
+          password: password,
+        })
+        .then(async (data) => {
+          if (data.data.filteredUser.verifiedEmail) {
+            if (
+              data.data.filteredUser.type !== "user" &&
+              data.data.filteredUser.procedures?.length < 1
+            ) {
+              dispatch(setCurrentUser(data.data.filteredUser));
+              navigation.navigate("Business");
+            } else {
+              await AsyncStorage.setItem(
+                "Beautyverse:currentUser",
+                JSON.stringify(data.data.filteredUser)
+              );
+              dispatch(setRerenderCurrentUser());
+            }
+          } else {
+            setVerify(true);
+          }
+        });
+    } catch (err) {
+      console.log(err.response.data.message);
+      setAlert({
+        active: true,
+        text: err.response.data.message,
+        type: "error",
+      });
+    }
+  };
+
+  async function Verify() {
+    try {
+      const response = await axios.post(
+        "https://beautyverse.herokuapp.com/api/v1/verifyEmail",
+        {
+          email: email,
+          code: code,
+        }
+      );
+
+      const newUser = response.data.data.newUser;
+
+      if (newUser?.type === "user") {
+        await AsyncStorage.setItem(
+          "Beautyverse:currentUser",
+          JSON.stringify(newUser)
+        );
+        dispatch(setRerenderCurrentUser());
+      } else {
+        dispatch(setCurrentUser(newUser));
+        navigation.navigate("Business");
+      }
+    } catch (err) {
+      setAlert({
+        active: true,
+        text: err.response.data.message,
+        type: "error",
+      });
+      console.log(err.response.data.message);
+    }
+  }
+
+  const [emailInput, setEmailInput] = useState("");
+  const [resetPopup, setResetPopup] = useState(false);
+
+  /**
+   * send email to reset password
+   */
+
+  async function SendEmail() {
+    try {
+      const response = await axios.post(
+        "https://beautyverse.herokuapp.com/api/v1/forgotPassword",
+        {
+          email: emailInput,
+        }
+      );
+      // If the email is sent successfully, handle the response here
+      setAlert({
+        active: true,
+        text: language?.language?.Auth?.auth?.requestSent,
+        type: "success",
+      });
+    } catch (error) {
+      setAlert({
+        active: true,
+        text: language?.language?.Auth?.auth?.wrongEmail,
+        type: "error",
+      });
+    }
+    setResetPopup(false);
+  }
+
+  return (
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={{ flex: 1 }}
+    >
+      <AlertMessage
+        isVisible={alert.active}
+        type={alert.type}
+        text={alert.text}
+        onClose={() => setAlert({ active: false, text: "" })}
+        Press={() => setAlert({ active: false, text: "" })}
+      />
+      <View style={styles.container}>
+        <View style={{ position: "absolute" }}>
+          {verify && (
+            <EmailPopup
+              setFunction={Verify}
+              code={code}
+              setCode={setCode}
+              open={verify}
+              setOpen={setVerify}
+            />
+          )}
+        </View>
+        <View style={{ position: "absolute" }}>
+          {resetPopup && (
+            <PasswordRessetPopup
+              email={emailInput}
+              setEmail={setEmailInput}
+              isVisible={resetPopup}
+              onClose={() => setResetPopup(false)}
+              onSend={SendEmail}
+            />
+          )}
+        </View>
+        <TextInput
+          placeholder={language?.language?.Auth?.auth?.email}
+          onChangeText={(text) => setEmail(text)}
+          value={email}
+          autoFocus
+          style={[
+            styles.input,
+            {
+              color: currentTheme.font,
+              // backgroundColor: currentTheme.background2,
+              borderColor: currentTheme.line,
+            },
+          ]}
+          placeholderTextColor={currentTheme.disabled}
+        />
+        <TextInput
+          secureTextEntry
+          placeholder={language?.language?.Auth?.auth?.password}
+          onChangeText={(text) => setPassword(text)}
+          value={password}
+          style={[
+            styles.input,
+            {
+              color: currentTheme.font,
+              // backgroundColor: currentTheme.background2,
+              borderColor: currentTheme.line,
+            },
+          ]}
+          placeholderTextColor={currentTheme.disabled}
+        />
+        <TouchableOpacity style={styles.button} onPress={Login}>
+          <Text style={styles.buttonText}>
+            {language?.language?.Auth?.auth?.login}
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => setResetPopup(true)}>
+          <Text style={[styles.forgot, { color: currentTheme.font }]}>
+            {language?.language?.Auth?.auth?.forgot}
+          </Text>
+        </TouchableOpacity>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+          <Text style={[styles.registerQuestion, { color: currentTheme.font }]}>
+            {language?.language?.Auth?.auth?.dontHave}{" "}
+          </Text>
+          <TouchableOpacity onPress={() => navigation.navigate("Register")}>
+            <Text style={[styles.register, { color: currentTheme.pink }]}>
+              {language?.language?.Auth?.auth?.register}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </KeyboardAvoidingView>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    height: "100%",
+    boxSizing: "border-box",
+    paddingBottom: 30,
+    gap: 10,
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#e5e5e5",
+    marginBottom: 20,
+  },
+  input: {
+    width: "80%",
+    padding: 12.5,
+    fontSize: 14,
+    color: "#e5e5e5",
+    borderBottomWidth: 1,
+    letterSpacing: 0.2,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 3, // negative value places shadow on top
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  button: {
+    width: "45%",
+    padding: 10,
+    backgroundColor: "#F866B1",
+    marginTop: 10,
+    justifyContent: "center",
+    borderRadius: 50,
+  },
+  buttonText: {
+    color: "#e5e5e5",
+    textAlign: "center",
+    letterSpacing: 0.2,
+    fontWeight: "bold",
+  },
+  forgot: {
+    color: "#e5e5e5",
+    textAlign: "center",
+    marginTop: 10,
+    marginBottom: 10,
+    letterSpacing: 0.2,
+    textDecorationLine: "underline",
+  },
+  registerQuestion: {
+    color: "#e5e5e5",
+    textAlign: "center",
+    letterSpacing: 0.2,
+  },
+  register: {
+    color: "#F866B1",
+    textAlign: "center",
+    fontWeight: "bold",
+    letterSpacing: 0.2,
+  },
+});
