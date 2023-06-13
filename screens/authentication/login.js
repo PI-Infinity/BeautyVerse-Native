@@ -18,6 +18,7 @@ import { setRerenderCurrentUser } from "../../redux/rerenders";
 import PasswordRessetPopup from "../../screens/authentication/resetPassword";
 import { Language } from "../../context/language";
 import { lightTheme, darkTheme } from "../../context/theme";
+import AlertMessage from "../../components/alertMessage";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -35,6 +36,9 @@ export const Login = ({ navigation }) => {
   // verify email
   const [verify, setVerify] = useState(false);
   const [code, setCode] = useState("");
+
+  // alert message
+  const [alert, setAlert] = useState({ active: false, text: "", type: "" });
 
   const Login = async () => {
     try {
@@ -64,7 +68,11 @@ export const Login = ({ navigation }) => {
         });
     } catch (err) {
       console.log(err.response.data.message);
-      Alert.alert("Warrning", err.response.data.message);
+      setAlert({
+        active: true,
+        text: err.response.data.message,
+        type: "error",
+      });
     }
   };
 
@@ -81,17 +89,22 @@ export const Login = ({ navigation }) => {
       const newUser = response.data.data.newUser;
 
       if (newUser?.type === "user") {
-        await AsyncStorage.setItem("Beautyverse:currentUser", newUser);
-        alert("navigate");
+        await AsyncStorage.setItem(
+          "Beautyverse:currentUser",
+          JSON.stringify(newUser)
+        );
+        dispatch(setRerenderCurrentUser());
       } else {
         dispatch(setCurrentUser(newUser));
         navigation.navigate("Business");
       }
-      setEmail("");
-      setPassword("");
     } catch (err) {
-      Alert.alert(err.resopnse.data.message);
-      console.log(err);
+      setAlert({
+        active: true,
+        text: err.response.data.message,
+        type: "error",
+      });
+      console.log(err.response.data.message);
     }
   }
 
@@ -111,9 +124,17 @@ export const Login = ({ navigation }) => {
         }
       );
       // If the email is sent successfully, handle the response here
-      Alert.alert(language?.language?.Auth?.auth?.requestSent);
+      setAlert({
+        active: true,
+        text: language?.language?.Auth?.auth?.requestSent,
+        type: "success",
+      });
     } catch (error) {
-      Alert.alert(language?.language?.Auth?.auth?.wrongEmail);
+      setAlert({
+        active: true,
+        text: language?.language?.Auth?.auth?.wrongEmail,
+        type: "error",
+      });
     }
     setResetPopup(false);
   }
@@ -123,6 +144,13 @@ export const Login = ({ navigation }) => {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={{ flex: 1 }}
     >
+      <AlertMessage
+        isVisible={alert.active}
+        type={alert.type}
+        text={alert.text}
+        onClose={() => setAlert({ active: false, text: "" })}
+        Press={() => setAlert({ active: false, text: "" })}
+      />
       <View style={styles.container}>
         <View style={{ position: "absolute" }}>
           {verify && (
@@ -155,7 +183,8 @@ export const Login = ({ navigation }) => {
             styles.input,
             {
               color: currentTheme.font,
-              backgroundColor: currentTheme.background2,
+              // backgroundColor: currentTheme.background2,
+              borderColor: currentTheme.line,
             },
           ]}
           placeholderTextColor={currentTheme.disabled}
@@ -169,7 +198,8 @@ export const Login = ({ navigation }) => {
             styles.input,
             {
               color: currentTheme.font,
-              backgroundColor: currentTheme.background2,
+              // backgroundColor: currentTheme.background2,
+              borderColor: currentTheme.line,
             },
           ]}
           placeholderTextColor={currentTheme.disabled}
@@ -217,11 +247,10 @@ const styles = StyleSheet.create({
   },
   input: {
     width: "80%",
-    backgroundColor: "rgba(255,255,255,0.05)",
     padding: 12.5,
     fontSize: 14,
     color: "#e5e5e5",
-    borderRadius: 50,
+    borderBottomWidth: 1,
     letterSpacing: 0.2,
     shadowColor: "#000",
     shadowOffset: {
@@ -252,6 +281,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
     marginBottom: 10,
     letterSpacing: 0.2,
+    textDecorationLine: "underline",
   },
   registerQuestion: {
     color: "#e5e5e5",

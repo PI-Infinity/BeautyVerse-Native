@@ -35,8 +35,6 @@ const Autocomplete = ({ data, setState, currentTheme }) => {
   const handleSelect = (item) => {
     setSelectedItems([...selectedItems, item]);
     setState([...selectedItems, item]);
-    setSearch("");
-    // setFilteredData([]);
   };
 
   const handleRemove = (item) => {
@@ -60,25 +58,48 @@ const Autocomplete = ({ data, setState, currentTheme }) => {
               onPress={() => handleRemove(item)}
               style={{ padding: 2.5, paddingVertical: 1.5 }}
             >
-              <Text style={styles.removeIcon}>×</Text>
+              <Text style={[styles.removeIcon, { color: "red" }]}>×</Text>
             </TouchableOpacity>
           </View>
         ))}
       </View>
-      <TextInput
+      <View
         style={[
           styles.searchInput,
           {
             backgroundColor: currentTheme.background2,
             color: currentTheme.font,
+            flexDirection: "row",
+            gap: 10,
+            alignItems: "center",
+            borderWidth: 1,
+            borderColor: currentTheme.line,
           },
         ]}
-        value={search}
-        onChangeText={handleSearch}
-        placeholder="Search procedure..."
-        placeholderTextColor={currentTheme.disabled}
-        onFocus={() => setHide(false)}
-      />
+      >
+        <MaterialIcons color={currentTheme.pink} size={18} name="search" />
+        <TextInput
+          style={{
+            backgroundColor: currentTheme.background2,
+            color: currentTheme.font,
+            height: "100%",
+          }}
+          value={search}
+          onChangeText={handleSearch}
+          placeholder="Search procedure..."
+          placeholderTextColor={currentTheme.disabled}
+          onFocus={() => setHide(false)}
+        />
+        {search?.length > 0 && (
+          <MaterialIcons
+            name="close"
+            size={18}
+            color="red"
+            onPress={() => setSearch("")}
+            style={{ marginLeft: "auto" }}
+          />
+        )}
+      </View>
 
       <Collapsible collapsed={hide}>
         <View style={styles.scrollView}>

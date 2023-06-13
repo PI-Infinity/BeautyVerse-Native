@@ -9,7 +9,7 @@ import {
   ScrollView,
   Platform,
 } from "react-native";
-import { Icon } from "react-native-elements";
+import { MaterialIcons } from "@expo/vector-icons";
 import { useSelector, useDispatch } from "react-redux";
 import { Language } from "../context/language";
 
@@ -68,19 +68,41 @@ const SearchableSelect = ({ data, onItemSelected, currentTheme }) => {
 
   return (
     <View style={styles.container}>
-      <TextInput
-        style={[
-          styles.searchInput,
-          {
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 8,
+          borderRadius: 50,
+          backgroundColor: currentTheme.background2,
+          paddingHorizontal: 15,
+          paddingVertical: 5,
+          marginBottom: 5,
+          borderWidth: 1,
+          borderColor: currentTheme.line,
+        }}
+      >
+        <MaterialIcons name="search" color={currentTheme.pink} size={22} />
+        <TextInput
+          style={{
             color: currentTheme.font,
             backgroundColor: currentTheme.background2,
-          },
-        ]}
-        onChangeText={(text) => setText(text)}
-        value={text}
-        placeholder={language?.language?.Main.filter.search}
-        placeholderTextColor="#e5e5e5"
-      />
+          }}
+          onChangeText={(text) => setText(text)}
+          value={text}
+          placeholder={language?.language?.Main.filter.search}
+          placeholderTextColor={currentTheme.disabled}
+        />
+        {text?.length > 0 && (
+          <MaterialIcons
+            onPress={() => setText("")}
+            color="red"
+            name="close"
+            size={18}
+            style={{ marginLeft: "auto" }}
+          />
+        )}
+      </View>
       {Listed()}
     </View>
   );
@@ -89,14 +111,6 @@ const SearchableSelect = ({ data, onItemSelected, currentTheme }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  searchInput: {
-    borderRadius: 50,
-    backgroundColor: "rgba(255,255,255,0.05)",
-    paddingHorizontal: 15,
-    paddingVertical: 10,
-    marginBottom: 5,
-    color: "#fff",
   },
   item: {
     flexDirection: "row",

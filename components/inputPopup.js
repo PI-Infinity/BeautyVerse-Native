@@ -23,7 +23,7 @@ const InputPopup = (props) => {
   const handleSend = () => {
     // Your send logic here
     props.setFunction();
-    props.setOpen(false);
+    // props.setOpen(false);
   };
 
   const handleCancel = () => {
@@ -44,10 +44,29 @@ const InputPopup = (props) => {
                 { backgroundColor: currentTheme.background2 },
               ]}
             >
+              {props.registerMessages && (
+                <Text
+                  style={[
+                    styles.modalText,
+                    {
+                      fontSize: 16,
+                      color: currentTheme.font,
+                      fontWeight: "bold",
+                      letterSpacing: 0.3,
+                    },
+                  ]}
+                >
+                  {language?.language?.Auth?.auth?.successRegister}
+                </Text>
+              )}
               <Text
                 style={[
                   styles.modalText,
-                  { fontSize: 16, color: currentTheme.font },
+                  {
+                    fontSize: 16,
+                    color: currentTheme.font,
+                    letterSpacing: 0.3,
+                  },
                 ]}
               >
                 Verification code has been sent to email!

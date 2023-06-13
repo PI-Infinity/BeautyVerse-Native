@@ -35,8 +35,6 @@ const Business = ({ navigation }) => {
 
   const currentUser = useSelector((state) => state.storeAuth.currentUser);
 
-  console.log(wd);
-
   const FillUp = async (e) => {
     try {
       if (procedures?.length > 0) {
@@ -87,7 +85,7 @@ const Business = ({ navigation }) => {
         >
           Select procedures:
         </Text>
-        <View style={styles.itemContainer}>
+        {/* <View style={styles.itemContainer}>
           <Text style={[styles.itemTitle, { color: currentTheme.font }]}>
             {" "}
             {language?.language?.Auth?.auth?.procedures}
@@ -99,7 +97,7 @@ const Business = ({ navigation }) => {
             setState={setProcedures}
             currentTheme={currentTheme}
           />
-        </View>
+        </View> */}
         <View style={styles.itemContainer}>
           <Text style={[styles.itemTitle, { color: currentTheme.font }]}>
             {" "}

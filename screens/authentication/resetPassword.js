@@ -88,12 +88,8 @@ const EmailPopup = ({ isVisible, onClose, onSend, setEmail, email }) => {
 };
 
 const styles = StyleSheet.create({
-  modal: {
-    // justifyContent: "center",
-    // alignItems: "center",
-  },
+  modal: {},
   container: {
-    backgroundColor: "white",
     borderRadius: 10,
     padding: 20,
     width: "100%",
@@ -103,6 +99,7 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     fontWeight: "bold",
     marginBottom: 15,
+    letterSpacing: 0.3,
   },
   input: {
     // borderWidth: 1,
@@ -119,6 +116,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 1,
     elevation: 1,
+    letterSpacing: 0.2,
   },
   buttonContainer: {
     flexDirection: "row",

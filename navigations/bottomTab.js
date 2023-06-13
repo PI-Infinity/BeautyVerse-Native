@@ -1,11 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { FeedsStack } from "../navigations/feedsStack";
 import { CardsStack } from "../navigations/cardsStack";
 import { ProfileStack } from "../navigations/profileStack";
 import { FilterStack } from "../navigations/filterStack";
 import { ChatStack } from "../navigations/chatStack";
-import { OrdersStack } from "../navigations/ordersStack";
 import { FontAwesome } from "@expo/vector-icons";
 import {
   MaterialCommunityIcons,
@@ -27,9 +26,25 @@ import { Language } from "../context/language";
 import { CacheableImage } from "../components/cacheableImage";
 import { lightTheme, darkTheme } from "../context/theme";
 import axios from "axios";
-import { setOrders } from "../redux/orders";
+import {
+  setOrders,
+  addOrders,
+  setLoader,
+  setTotalResult,
+  setFilterResult,
+  setActiveOrders,
+  setNewOrders,
+} from "../redux/orders";
+import {
+  setLoaderSentOrders,
+  setSentOrders,
+  setSentOrdersTotalResult,
+  setSentOrdersFilterResult,
+  setNewSentOrders,
+  setActiveSentOrders,
+} from "../redux/sentOrders";
 import { setSearch } from "../redux/filter";
-import { setRerenderUserList } from "../redux/rerenders";
+import { setRerenderUserList, setRerenderOrders } from "../redux/rerenders";
 import { ProceduresOptions } from "../datas/registerDatas";
 import { LinearGradient } from "expo-linear-gradient";
 
@@ -111,36 +126,7 @@ const CustomTabBarCardsIcon = ({ color, size, sum, currentTheme }) => {
     </TouchableOpacity>
   );
 };
-const CustomTabBarOrdersIcon = ({
-  color,
-  size,
-  setRenderOrders,
-  renderOrders,
-}) => {
-  const navigation = useNavigation();
-  const isFocused = useIsFocused();
-  const dispatch = useDispatch();
 
-  return (
-    <TouchableOpacity
-      activeOpacity={0.8}
-      onPress={() => {
-        if (isFocused) {
-          setRenderOrders(!renderOrders);
-        } else {
-          navigation.navigate("Orders");
-        }
-      }}
-    >
-      <FontAwesome
-        name="list-alt"
-        size={26}
-        color={color}
-        style={{ marginTop: 7.5 }}
-      />
-    </TouchableOpacity>
-  );
-};
 const CustomTabBarFilterIcon = (props) => {
   const navigation = useNavigation();
   const isFocused = useIsFocused();
@@ -180,6 +166,7 @@ const CustomTabBarFilterIcon = (props) => {
         justifyContent: "center",
         borderWidth: 1.5,
         borderColor: props.currentTheme.line,
+        overflow: "hidden",
       }}
     >
       <TouchableOpacity
@@ -213,6 +200,7 @@ const CustomTabBarFilterIcon = (props) => {
           borderRadius: 50,
           alignItems: "center",
           justifyContent: "center",
+          overflow: "hidden",
 
           // borderWidth: 1.5,
           // borderColor: props.focused
@@ -282,18 +270,6 @@ const CustomTabBarFilterIcon = (props) => {
             style={{ marginLeft: 6, marginTop: 6 }}
           />
         )}
-        {/* {!props.focused && (
-          <Text
-            style={{
-              fontSize: 10,
-              color: props.currentTheme.background,
-              fontWeight: "bold",
-              marginLeft: 2,
-            }}
-          >
-            Filter
-          </Text>
-        )} */}
       </TouchableOpacity>
     </LinearGradient>
   );
@@ -305,6 +281,9 @@ const CustomTabBarProfileIcon = (props) => {
   const route = useRoute();
   const routeName = getFocusedRouteNameFromRoute(route);
 
+  const newOrders = useSelector((state) => state.storeOrders.new);
+  const newSentOrders = useSelector((state) => state.storeSentOrders.new);
+
   return (
     <TouchableOpacity
       activeOpacity={0.9}
@@ -314,13 +293,16 @@ const CustomTabBarProfileIcon = (props) => {
             navigation.navigate("UserProfile");
           } else {
             dispatch(setRerenderCurrentUser());
+            dispatch(setRerenderOrders());
           }
         } else {
           navigation.navigate("Profile");
         }
       }}
     >
-      {props.unreadNotifications.length > 0 && (
+      {(props.unreadNotifications.length > 0 ||
+        newOrders > 0 ||
+        newSentOrders > 0) && (
         <View
           style={{
             width: "auto",
@@ -344,7 +326,7 @@ const CustomTabBarProfileIcon = (props) => {
               letterSpacing: 0.15,
             }}
           >
-            {props.unreadNotifications?.length}
+            {props.unreadNotifications?.length + newOrders + newSentOrders}
           </Text>
         </View>
       )}
@@ -370,7 +352,7 @@ const CustomTabBarProfileIcon = (props) => {
         <FontAwesome
           name="user-circle-o"
           size={25}
-          style={{ marginTop: 2 }}
+          style={{ marginTop: 5 }}
           color={
             isFocused ? props.currentTheme.pink : props.currentTheme.disabled
           }
@@ -426,28 +408,98 @@ export const BottomTabNavigator = ({ socket, onTabBarLayout }) => {
    * refresh orders
    */
   const [refresh, setRefresh] = useState(true);
-  const status = useSelector((state) => state.storeOrders.statusFilter);
+
+  const statusFilter = useSelector((state) => state.storeOrders.statusFilter);
+  const date = useSelector((state) => state.storeOrders.date);
+
+  const createdAt = useSelector((state) => state.storeOrders.createdAt);
+  const procedure = useSelector((state) => state.storeOrders.procedure);
+
+  // get recieved orders
   useEffect(() => {
     const GetOrders = async () => {
-      setRefresh(true);
-      const response = await axios.get(
-        "https://beautyverse.herokuapp.com/api/v1/users/" +
-          currentUser._id +
-          `/orders/?status=${status || "active"}&page=1`
-      );
-      dispatch(setOrders(response.data.data.orders));
-      setTimeout(() => {
-        setRefresh(false);
-      }, 500);
-    };
-    try {
-      if (currentUser) {
-        GetOrders();
+      try {
+        dispatch(setLoader(true));
+        const response = await axios.get(
+          "https://beautyverse.herokuapp.com/api/v1/users/" +
+            currentUser._id +
+            `/orders?page=${1}&status=${
+              statusFilter === "All" ? "" : statusFilter?.toLowerCase()
+            }&date=${
+              date.active ? date.date : ""
+            }&createdAt=${createdAt}&procedure=${procedure}`
+        );
+
+        dispatch(setOrders(response.data.data.orders));
+        dispatch(setTotalResult(response.data.totalResult));
+        dispatch(setFilterResult(response.data.filterResult));
+        dispatch(setNewOrders(response.data.new));
+        dispatch(setActiveOrders(response.data.active));
+        setTimeout(() => {
+          dispatch(setLoader(false));
+        }, 500);
+      } catch (error) {
+        console.log(error.response.data.message);
       }
-    } catch (error) {
-      console.log(error.response.data.message);
+    };
+
+    if (currentUser) {
+      GetOrders();
     }
-  }, [renderOrders, rerenderOrders, status]);
+  }, [renderOrders, rerenderOrders, statusFilter, date, procedure, createdAt]);
+
+  // get sent orders
+  const statusFilterSentOrders = useSelector(
+    (state) => state.storeSentOrders.statusFilter
+  );
+  const dateSentOrders = useSelector((state) => state.storeSentOrders.date);
+
+  const createdAtSentOrders = useSelector(
+    (state) => state.storeSentOrders.createdAt
+  );
+  const procedureSentOrders = useSelector(
+    (state) => state.storeSentOrders.procedure
+  );
+  useEffect(() => {
+    const GetOrders = async () => {
+      try {
+        dispatch(setLoaderSentOrders(true));
+        const response = await axios.get(
+          "https://beautyverse.herokuapp.com/api/v1/users/" +
+            currentUser._id +
+            `/sentorders?page=${1}&status=${
+              statusFilterSentOrders === "All"
+                ? ""
+                : statusFilterSentOrders?.toLowerCase()
+            }&date=${
+              dateSentOrders.active ? dateSentOrders.date : ""
+            }&createdAt=${createdAtSentOrders}&procedure=${procedureSentOrders}`
+        );
+
+        dispatch(setSentOrders(response.data.data.sentOrders));
+        dispatch(setSentOrdersTotalResult(response.data.totalResult));
+        dispatch(setSentOrdersFilterResult(response.data.filterResult));
+        dispatch(setNewSentOrders(response.data.new));
+        dispatch(setActiveSentOrders(response.data.active));
+        setTimeout(() => {
+          dispatch(setLoaderSentOrders(false));
+        }, 500);
+      } catch (error) {
+        console.log(error.response.data.message);
+      }
+    };
+
+    if (currentUser) {
+      GetOrders();
+    }
+  }, [
+    renderOrders,
+    rerenderOrders,
+    statusFilterSentOrders,
+    dateSentOrders,
+    procedureSentOrders,
+    createdAtSentOrders,
+  ]);
 
   return (
     <Tab.Navigator
@@ -470,7 +522,7 @@ export const BottomTabNavigator = ({ socket, onTabBarLayout }) => {
       {/** Main screen, feed stack screens inside tab */}
       <Tab.Screen
         name="Main"
-        children={() => <FeedsStack render={render} />}
+        children={() => <FeedsStack render={render} navigation={navigation} />}
         options={({ navigation, route }) => ({
           tabBarLabel: "",
           tabBarInactiveTintColor: currentTheme.disabled,
@@ -567,39 +619,7 @@ export const BottomTabNavigator = ({ socket, onTabBarLayout }) => {
           },
         }}
       />
-      {/* * Orders screen, orders stack screens inside tab
-      {currentUser.type !== "user" && (
-        <Tab.Screen
-          name="Orders"
-          children={() => <OrdersStack socket={socket} refresh={refresh} />}
-          options={({ route }) => ({
-            tabBarLabel: "",
-            tabBarInactiveTintColor: currentTheme.disabled,
-            tabBarActiveTintColor: currentTheme.pink,
-            tabBarStyle: {
-              backgroundColor: currentTheme.background,
-              borderTopWidth: 1,
-              borderTopColor: currentTheme.background2,
-              shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: -2, // negative value places shadow on top
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5, // required for android
-              elevation: 0,
-            },
-            tabBarIcon: (props) => (
-              <CustomTabBarOrdersIcon
-                {...props}
-                setRenderOrders={setRenderOrders}
-                renderOrders={renderOrders}
-              />
-            ),
-          })}
-        />
-      )} */}
+
       {/** Chat screen, chat stack screens inside tab */}
       <Tab.Screen
         name="Chat"
@@ -644,6 +664,7 @@ export const BottomTabNavigator = ({ socket, onTabBarLayout }) => {
             unreadNotifications={unreadNotifications}
             navigation={navigation}
             setNotifications={setNotifications}
+            refresh={refresh}
           />
         )}
         options={{

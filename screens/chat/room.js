@@ -8,6 +8,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
+  ActivityIndicator,
 } from "react-native";
 import axios from "axios";
 import { useSelector, useDispatch } from "react-redux";
@@ -18,14 +19,21 @@ import {
   setRerenderScroll,
   setChatUser,
 } from "../../redux/chat";
-import { LogBox } from "react-native";
+// import { LogBox } from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import { lightTheme, darkTheme } from "../../context/theme";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 
-LogBox.ignoreLogs([
-  "Sending 'onAnimatedValueUpdate' with no listeners registered",
-]);
+// LogBox.ignoreLogs([
+//   "Sending 'onAnimatedValueUpdate' with no listeners registered",
+// ]);
 
-export const Room = ({ route, navigation, socket }) => {
+export const Room = ({ route, socket }) => {
   const dispatch = useDispatch();
+  const [loading, setLoading] = useState(true);
+  const navigation = useNavigation();
+  const theme = useSelector((state) => state.storeApp.theme);
+  const currentTheme = theme ? darkTheme : lightTheme;
 
   const currentChat = useSelector((state) => state.storeChat.currentChat);
   const rerenderMessages = useSelector(
@@ -98,36 +106,55 @@ export const Room = ({ route, navigation, socket }) => {
         (await setMessages((prev) => [...prev, arrivalMessage]));
       setTimeout(() => {
         dispatch(setRerenderScroll());
-      }, 0);
+        setLoading(false);
+      }, 500);
     };
     Adding();
   }, [arrivalMessage, currentChat]);
 
   return (
-    <KeyboardAvoidingView
-      style={{
-        flex: 1,
-        width: "100%",
-        justifyContent: "center",
-        alignItems: "center",
-        zIndex: 100,
-        // paddingBottom: 30,
-      }}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0} // Add keyboardVerticalOffset
-    >
-      <Messages
-        messages={messages}
-        messagesLength={messagesLength}
-        setMessages={setMessages}
-        setPage={setPage}
-        navigation={navigation}
-      />
-      <Input
-        targetUser={targetChatMember}
-        setMessages={setMessages}
-        socket={socket}
-      />
-    </KeyboardAvoidingView>
+    <>
+      {loading ? (
+        <View
+          style={{
+            flex: 1,
+            height: 500,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <ActivityIndicator color={currentTheme.pink} size="large" />
+        </View>
+      ) : (
+        <KeyboardAwareScrollView
+          contentContainerStyle={{
+            flex: 1,
+            width: "100%",
+            justifyContent: "space-between",
+            alignItems: "center",
+            zIndex: 100,
+            // paddingBottom: Platform.OS === "ios" ? 70 : 0, //Conditional paddingBottom
+          }}
+          extraScrollHeight={40}
+          // behavior={Platform.OS === "ios" ? "padding" : "height"} //Conditional behavior
+          // keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0} //Conditional keyboardVerticalOffset
+        >
+          <Messages
+            messages={messages}
+            messagesLength={messagesLength}
+            setMessages={setMessages}
+            setPage={setPage}
+            navigation={navigation}
+          />
+          <View style={{ position: "absolute", bottom: 0 }}>
+            <Input
+              targetUser={targetChatMember}
+              setMessages={setMessages}
+              socket={socket}
+            />
+          </View>
+        </KeyboardAwareScrollView>
+      )}
+    </>
   );
 };

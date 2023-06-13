@@ -6,7 +6,7 @@ import { Language } from "../context/language";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
-const GoogleAutocomplete = ({ setAddress, currentTheme }) => {
+const GoogleAutocomplete = ({ address, setAddress, currentTheme }) => {
   const language = Language();
   const [h, setH] = useState(45);
 
@@ -40,8 +40,10 @@ const GoogleAutocomplete = ({ setAddress, currentTheme }) => {
       height: 40,
       color: currentTheme.font, // Update this line
       fontSize: 14,
-      borderRadius: 50,
-      backgroundColor: currentTheme.background2, // Add this line
+      // borderRadius: 50,
+      borderBottomWidth: 1,
+      borderColor: currentTheme.line,
+      backgroundColor: currentTheme.background, // Add this line
       shadowColor: "#000",
       shadowOffset: {
         width: 0,
@@ -64,12 +66,13 @@ const GoogleAutocomplete = ({ setAddress, currentTheme }) => {
   return (
     <View style={{ zIndex: 20000, height: h }}>
       <GooglePlacesAutocomplete
-        placeholder={language?.language?.Auth?.auth?.address}
+        placeholder="Your location"
         minLength={2}
         autoFocus={false}
         returnKeyType="search"
         listViewDisplayed="auto"
         fetchDetails={true}
+        value={address}
         onPress={(data, details = null) => {
           const country = details.address_components.find((component) =>
             component.types.includes("country")

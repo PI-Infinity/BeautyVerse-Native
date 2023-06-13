@@ -23,6 +23,8 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { ref, listAll, deleteObject } from "firebase/storage";
 import { storage } from "../../../firebase";
 import { lightTheme, darkTheme } from "../../../context/theme";
+import { setCurrentUser } from "../../../redux/user";
+import { setLoading } from "../../../redux/app";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -77,21 +79,45 @@ export const Security = () => {
   const [openDelete, setOpenDelete] = useState(false);
 
   const Delete = async () => {
-    let videofileRef = ref(storage, `videos/${currentUser?._id}`);
-    let imagefileRef = ref(storage, `images/${currentUser?._id}`);
+    let videofileRef = ref(storage, `videos/${currentUser?._id}/`);
+    let imagefileRef = ref(storage, `images/${currentUser?._id}/`);
     try {
+      dispatch(setLoading(true));
       await AsyncStorage.removeItem("Beautyverse:currentUser");
-      await dispatch(setRerenderCurrentUser());
+      await dispatch(setCurrentUser(null));
       const response = await axios.delete(
         "https://beautyverse.herokuapp.com/api/v1/users/" + currentUser?._id
       );
+
       if (response.status === 204) {
-        deleteObject(videofileRef).then(() => {
-          console.log("object deleted");
-        });
-        deleteObject(imagefileRef).then(() => {
-          console.log("object deleted");
-        });
+        // Get the list of all files in video directory and delete them if they exist
+        let videoFiles = await listAll(videofileRef);
+        if (videoFiles.items.length > 0) {
+          videoFiles.items.forEach((videoFile) => {
+            deleteObject(videoFile)
+              .then(() => {
+                console.log("Video object deleted");
+              })
+              .catch((error) => {
+                console.log("Error deleting video object: ", error);
+              });
+          });
+        }
+
+        // Get the list of all files in image directory and delete them if they exist
+        let imageFiles = await listAll(imagefileRef);
+        if (imageFiles.items.length > 0) {
+          imageFiles.items.forEach((imageFile) => {
+            deleteObject(imageFile)
+              .then(() => {
+                console.log("Image object deleted");
+              })
+              .catch((error) => {
+                console.log("Error deleting image object: ", error);
+              });
+          });
+        }
+
         console.log("User deleted successfully");
       } else {
         console.log("Something went wrong while deleting the user");

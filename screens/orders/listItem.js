@@ -224,7 +224,7 @@ export const ListItem = ({ item, currentUser, currentTheme, navigation }) => {
             }}
           >
             <Text style={{ color: font, letterSpacing: 0.3 }}>
-              Procedure: {item.orderedProcedure}
+              Procedure: {item.orderedProcedure.value}
             </Text>
           </View>
           <View

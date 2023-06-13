@@ -3,32 +3,21 @@ import {
   CardStyleInterpolators,
 } from "@react-navigation/stack";
 import { useSelector } from "react-redux";
-import { View, Dimensions, Platform } from "react-native";
+import { View, Dimensions, Platform, TouchableOpacity } from "react-native";
 import { ScrollGallery } from "../screens/user/scrollGallery";
 import { User } from "../screens/user/user";
 import { Text } from "react-native";
 import { Cards } from "../screens/cards";
-import { MaterialIcons } from "@expo/vector-icons";
+import { MaterialIcons, FontAwesome } from "@expo/vector-icons";
 import { lightTheme, darkTheme } from "../context/theme";
+import { SendOrder } from "../screens/orders/sendOrder";
+import { SentOrders } from "../screens/sentOrders/sentOrders";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 const Stack = createStackNavigator();
 
-// specific component for user page, passed some props into component
-const withVariant = (Component, variant) => {
-  return (props) => {
-    return <User {...props} variant={variant} />;
-  };
-};
-
-// specific component for user page, passed some props into component
-const withVariantVisit = (Component, variant) => {
-  return (props) => {
-    return <User {...props} variant={variant} />;
-  };
-};
-
 export function CardsStack({ route }) {
+  const currentUser = useSelector((state) => state.storeUser.currentUser);
   // theme state
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
@@ -65,21 +54,21 @@ export function CardsStack({ route }) {
           cardStyle: {
             backgroundColor: currentTheme.background,
           },
+          headerTitleAlign: "center", // Center align the header title
           headerTitle: () => (
             <View
               style={{
                 flexDirection: "row",
                 alignItems: "center",
-                // marginBottom: 10,
-                flex: 1,
-                width: SCREEN_WIDTH - 30,
-                justifyContent: "center",
                 marginBottom: Platform.OS !== "android" ? 5 : 0,
+                flex: 1,
+                width: SCREEN_WIDTH - 80,
+                justifyContent: "center",
               }}
             >
               <Text
                 style={{
-                  fontSize: 23,
+                  fontSize: 24,
                   fontWeight: "bold",
                   color: currentTheme.pink,
                   letterSpacing: 1,
@@ -89,7 +78,7 @@ export function CardsStack({ route }) {
               </Text>
               <Text
                 style={{
-                  fontSize: 23,
+                  fontSize: 24,
                   fontWeight: "bold",
                   color: currentTheme.font,
                   letterSpacing: 1,
@@ -104,10 +93,135 @@ export function CardsStack({ route }) {
       {/** user screen in cards, visit page, that component gettings props "visitPage", so from this component only can to visit page, current user can't modify any data from there  */}
       <Stack.Screen
         name="User"
-        component={withVariant(User, "visitPage")}
-        options={({ route }) => ({
+        component={User}
+        options={({ route, navigation }) => ({
           headerBackTitleVisible: false,
           title: route.params.user.name,
+          headerStyle: {
+            backgroundColor: currentTheme.background,
+            elevation: 0,
+            shadowOpacity: 0,
+            borderBottomWidth: 0,
+          },
+          headerTintColor: currentTheme.font,
+          headerTitleStyle: {
+            fontWeight: "bold",
+            fontSize: 18,
+            letterSpacing: 0.5,
+          },
+          cardStyle: {
+            backgroundColor: currentTheme.background,
+          },
+          headerTitleAlign: "center", // Center align the header title
+          headerTitle: (props) => (
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+                flex: 1,
+                width: "100%",
+                gap: 5,
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 18,
+                  letterSpacing: 0.5,
+                  color: currentTheme.font,
+                  fontWeight: "bold",
+                }}
+              >
+                {route.params.user.name}
+              </Text>
+              {route.params.user.subscription.status === "active" && (
+                <MaterialIcons name="verified" size={14} color="#F866B1" />
+              )}
+            </View>
+          ),
+          headerRight: (props) => {
+            if (currentUser?.type.toLowerCase() !== "beautycenter") {
+              return (
+                <View style={{ marginRight: 20 }}>
+                  {route.params.user._id !== currentUser._id && (
+                    <TouchableOpacity
+                      acitveOpacity={0.3}
+                      onPress={() =>
+                        navigation.navigate("Send Order", {
+                          user: route.params.user,
+                        })
+                      }
+                    >
+                      <FontAwesome
+                        name="calendar"
+                        size={18}
+                        color={currentTheme.font}
+                      />
+                    </TouchableOpacity>
+                  )}
+                </View>
+              );
+            }
+          },
+        })}
+      />
+      <Stack.Screen
+        name="UserVisit"
+        component={User}
+        options={({ route }) => ({
+          headerBackTitleVisible: false,
+          headerTitleAlign: "center",
+          headerTitle: (props) => (
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+                flex: 1,
+                width: "100%",
+                gap: 5,
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 18,
+                  letterSpacing: 0.5,
+                  color: currentTheme.font,
+                  fontWeight: "bold",
+                }}
+              >
+                {route.params.user.name}
+              </Text>
+              {route.params.user.subscription.status === "active" && (
+                <MaterialIcons name="verified" size={14} color="#F866B1" />
+              )}
+            </View>
+          ),
+          headerRight: (props) => {
+            if (currentUser?.type.toLowerCase() !== "beautycenter") {
+              return (
+                <View style={{ marginRight: 20 }}>
+                  {route.params.user._id !== currentUser._id && (
+                    <TouchableOpacity
+                      acitveOpacity={0.3}
+                      onPress={() =>
+                        navigation.navigate("Send Order", {
+                          user: route.params.user,
+                        })
+                      }
+                    >
+                      <FontAwesome
+                        name="calendar"
+                        size={18}
+                        color={currentTheme.font}
+                      />
+                    </TouchableOpacity>
+                  )}
+                </View>
+              );
+            }
+          },
+
           headerStyle: {
             backgroundColor: currentTheme.background,
 
@@ -124,54 +238,39 @@ export function CardsStack({ route }) {
           cardStyle: {
             backgroundColor: currentTheme.background,
           },
-          headerTitle: (props) => (
-            <View
-              style={{ flexDirection: "row", alignItems: "center", gap: 5 }}
-            >
-              <Text
-                style={{
-                  fontSize: 18,
-                  letterSpacing: 0.5,
-                  color: currentTheme.font,
-                  fontWeight: "bold",
-                  marginBottom: Platform.OS !== "android" ? 5 : 0,
-                }}
-              >
-                {route.params.user.name}
-              </Text>
-              {route.params.user.subscription.status === "active" && (
-                <MaterialIcons name="verified" size={14} color="#F866B1" />
-              )}
-            </View>
-          ),
         })}
       />
       <Stack.Screen
-        name="UserVisit"
-        component={withVariantVisit(User, "visitPage")}
+        name="Send Order"
+        component={SendOrder}
         options={({ route }) => ({
           headerBackTitleVisible: false,
-          headerTitle: (props) => (
-            <View
-              style={{ flexDirection: "row", alignItems: "center", gap: 5 }}
-            >
-              <Text
-                style={{
-                  fontSize: 18,
-                  letterSpacing: 0.5,
-                  color: currentTheme.font,
-                  fontWeight: "bold",
-                }}
-              >
-                {route.params.user.name}
-              </Text>
-              <MaterialIcons name="verified" size={20} color="#F866B1" />
-            </View>
-          ),
-
+          title: "Booking",
           headerStyle: {
             backgroundColor: currentTheme.background,
-
+            elevation: 0,
+            shadowOpacity: 0,
+            borderBottomWidth: 0,
+          },
+          headerTintColor: currentTheme.font,
+          headerTitleStyle: {
+            fontWeight: "bold",
+            fontSize: 18,
+            letterSpacing: 0.5,
+          },
+          cardStyle: {
+            backgroundColor: currentTheme.background,
+          },
+        })}
+      />
+      <Stack.Screen
+        name="Sent Orders"
+        component={SentOrders}
+        options={({ route }) => ({
+          headerBackTitleVisible: false,
+          title: "My Bookings",
+          headerStyle: {
+            backgroundColor: currentTheme.background,
             elevation: 0,
             shadowOpacity: 0,
             borderBottomWidth: 0,

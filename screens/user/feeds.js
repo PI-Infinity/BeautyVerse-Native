@@ -415,19 +415,14 @@ const FeedItem = (props) => {
         }
         delayLongPress={300}
         onPress={() => {
-          props.navigation.navigate(
-            props.variant === "visitPage"
-              ? "ScrollGallery"
-              : "UserScrollGallery",
-            {
-              user: props.targetUser,
-              scrolableFeeds: feeds,
-              feeds: props.feeds,
-              feedsLength: props.feedsLength,
-              feedsLengthCurrent: props.feedsLengthCurrent,
-              page: props.page,
-            }
-          );
+          props.navigation.navigate("ScrollGallery", {
+            user: props.targetUser,
+            scrolableFeeds: feeds,
+            feeds: props.feeds,
+            feedsLength: props.feedsLength,
+            feedsLengthCurrent: props.feedsLengthCurrent,
+            page: props.page,
+          });
         }}
       >
         <View

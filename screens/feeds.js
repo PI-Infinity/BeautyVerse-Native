@@ -16,6 +16,8 @@ import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { lightTheme, darkTheme } from "../context/theme";
 import SkeletonComponent from "../components/skelton";
+import AlertMessage from "../components/alertMessage";
+import { setSendReport } from "../redux/alerts";
 
 const { height: hght, width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -59,7 +61,7 @@ export const Feeds = ({ navigation }) => {
           `https://beautyverse.herokuapp.com/api/v1/feeds?search=${search}&filter=${filter}&type=${
             specialists ? "specialist" : ""
           }${
-            salons ? "beautyCenter" : ""
+            salons ? "beautycenter" : ""
           }&city=${city}&district=${district}&page=${currentPage}`
         );
         await setUsers(response.data.data.feedList);
@@ -101,7 +103,7 @@ export const Feeds = ({ navigation }) => {
         `https://beautyverse.herokuapp.com/api/v1/feeds?search=${search}&filter=${filter}&type=${
           specialists ? "specialist" : ""
         }${
-          salons ? "beautyCenter" : ""
+          salons ? "beautycenter" : ""
         }&city=${city}&district=${district}&check=${
           currentUser !== null ? currentUser._id : ""
         }}&page=${currentPage}`
@@ -192,6 +194,12 @@ export const Feeds = ({ navigation }) => {
     []
   );
 
+  /**
+   * alert messages
+   */
+  // send report
+  const sendReport = useSelector((state) => state.storeAlerts.sendReport);
+
   return (
     <>
       {loading && (
@@ -208,6 +216,12 @@ export const Feeds = ({ navigation }) => {
           <SkeletonComponent />
         </View>
       )}
+      <AlertMessage
+        isVisible={sendReport}
+        onClose={() => dispatch(setSendReport(false))}
+        type="success"
+        text="The Report sent succesfully!"
+      />
       {users?.length > 0 ? (
         <FlatList
           contentContainerStyle={{}}
@@ -240,6 +254,26 @@ export const Feeds = ({ navigation }) => {
                   setLoading={setLoading}
                 />
               );
+            } else {
+              setTimeout(() => {
+                setLoading(false);
+              }, 2000);
+              if (index === 0) {
+                return (
+                  <View
+                    style={{
+                      flex: 1,
+                      alignItems: "center",
+                      justifyContent: "center",
+                      height: SCREEN_HEIGHT,
+                    }}
+                  >
+                    <Text style={{ color: currentTheme.disabled }}>
+                      No Feeds Found!
+                    </Text>
+                  </View>
+                );
+              }
             }
           }}
           onEndReached={() => {

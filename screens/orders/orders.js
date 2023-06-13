@@ -8,6 +8,8 @@ import {
   Platform,
   ActivityIndicator,
   RefreshControl,
+  Dimensions,
+  FlatList,
 } from "react-native";
 import React, { useState, useEffect } from "react";
 import { CacheableImage } from "../../components/cacheableImage";
@@ -20,25 +22,78 @@ import { Card } from "../../screens/orders/cardItem";
 import { ListItem } from "../../screens/orders/listItem";
 import { SortPopup } from "../../screens/orders/sortPopup";
 import { BackDrop } from "../../components/backDropLoader";
-import DateTimePicker from "@react-native-community/datetimepicker";
 import { setDate } from "../../redux/orders";
-// import Date from "../../screens/orders/date";
+import {
+  setOrders,
+  addOrders,
+  setLoader,
+  setTotalResult,
+  setFilterResult,
+  setNewOrders,
+  setActiveOrders,
+  setPage,
+  reduceOrders,
+} from "../../redux/orders";
+import axios from "axios";
+import DatePicker from "../../screens/orders/datePicker";
 
-export const Orders = ({ navigation, refresh }) => {
+const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
+
+export const Orders = ({ navigation }) => {
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
-
+  const [isLoaded, setIsLoaded] = useState(true); // new state variable
   const dispatch = useDispatch();
   const currentUser = useSelector((state) => state.storeUser.currentUser);
 
   const orders = useSelector((state) => state.storeOrders.orders);
 
-  const [loader, setLoader] = useState(false);
+  const totalResult = useSelector((state) => state.storeOrders.totalResult);
+  const filterResult = useSelector((state) => state.storeOrders.filterResult);
 
-  const filter = useSelector((state) => state.storeOrders.statusFilter);
-  const D = useSelector((state) => state.storeOrders.date);
+  const statusFilter = useSelector((state) => state.storeOrders.statusFilter);
+  const date = useSelector((state) => state.storeOrders.date);
+  const createdAt = useSelector((state) => state.storeOrders.createdAt);
+  const procedure = useSelector((state) => state.storeOrders.procedure);
 
-  const date = new Date(D);
+  // const page = useSelector((state) => state.storeOrders.page);
+  const [page, setPage] = useState(1);
+
+  const loader = useSelector((state) => state.storeOrders.loader);
+  const rerenderOrders = useSelector(
+    (state) => state.storeRerenders.rerenderOrders
+  );
+
+  const [bottomLoader, setBottomLoader] = useState(false);
+
+  const loadMoreOrders = async () => {
+    // Increment the page number in the state
+    setPage(page + 1);
+
+    // Fetch new orders
+    try {
+      setBottomLoader(true);
+      const response = await axios.get(
+        "https://beautyverse.herokuapp.com/api/v1/users/" +
+          currentUser._id +
+          `/orders?page=${page + 1}&status=${
+            statusFilter === "All" ? "" : statusFilter?.toLowerCase()
+          }&date=${
+            date.active ? date.date : ""
+          }&createdAt=${createdAt}&procedure=${procedure}`
+      );
+      dispatch(addOrders(response.data.data.orders));
+      dispatch(setTotalResult(response.data.totalResult));
+      dispatch(setFilterResult(response.data.filterResult));
+      dispatch(setNewOrders(response.data.new));
+      dispatch(setActiveOrders(response.data.active));
+      setTimeout(() => {
+        setBottomLoader(false);
+      }, 100);
+    } catch (error) {
+      console.log(error.response.data.message);
+    }
+  };
 
   /**
    * sort
@@ -50,219 +105,225 @@ export const Orders = ({ navigation, refresh }) => {
    *  */
   const [view, setView] = useState(true);
 
+  // order item
+  const OrderCard = ({ item }) => {
+    return view ? (
+      <Card
+        item={item}
+        currentUser={currentUser}
+        currentTheme={currentTheme}
+        navigation={navigation}
+        setLoader={setLoader}
+      />
+    ) : (
+      <ListItem
+        item={item}
+        currentUser={currentUser}
+        currentTheme={currentTheme}
+        navigation={navigation}
+        setLoader={setLoader}
+      />
+    );
+  };
+
+  // load more/less btn
+  const renderLoadMoreButton = () => {
+    if (bottomLoader) {
+      return (
+        <ActivityIndicator color={currentTheme.pink} style={{ padding: 8 }} />
+      );
+    } else {
+      return (
+        <Pressable
+          style={{
+            width: "100%",
+            alignItems: "center",
+            padding: filterResult > 5 ? 7.5 : 0,
+            backgroundColor: currentTheme.background2,
+            marginTop: filterResult > 5 ? 10 : 0,
+            borderRadius: 50,
+            borderWidth: 1,
+            borderColor: currentTheme.line,
+            opacity: filterResult > 5 ? 1 : 0,
+          }}
+          onPress={
+            filterResult > orders?.length && filterResult > 5
+              ? () => loadMoreOrders()
+              : filterResult <= orders?.length && filterResult > 5
+              ? () => {
+                  setBottomLoader(true);
+                  dispatch(reduceOrders());
+                  setPage(1);
+                  setTimeout(() => {
+                    setBottomLoader(false);
+                  }, 200);
+                }
+              : () => console.log("less")
+          }
+        >
+          {filterResult > orders?.length && filterResult > 5 ? (
+            <Text style={{ color: currentTheme.pink, fontWeight: "bold" }}>
+              Load More
+            </Text>
+          ) : filterResult <= orders?.length && filterResult > 5 ? (
+            <Text style={{ color: currentTheme.disabled, fontWeight: "bold" }}>
+              Load Less
+            </Text>
+          ) : null}
+        </Pressable>
+      );
+    }
+  };
+
+  useEffect(() => {
+    setTimeout(() => {
+      setIsLoaded(false);
+    }, 200);
+  }, []);
   return (
     <>
-      {loader && (
+      {isLoaded ? (
         <View
           style={{
-            position: "absolute",
-            zIndex: 10000,
-            backgroundColor: "rgba(0,0,0,0.2)",
             alignItems: "center",
             justifyContent: "center",
             flex: 1,
-            width: "100%",
-            height: "100%",
+            height: 500,
           }}
         >
-          <ActivityIndicator size="large" color="#fff" />
+          <ActivityIndicator size="large" color={currentTheme.pink} />
         </View>
-      )}
-      <View style={{ paddingBottom: 20 }}>
-        {openSortPopup && (
-          <Pressable
-            onPress={() => setOpenSortPopup(false)}
-            style={{
-              position: "absolute",
-              zIndex: 180,
-              top: 50,
-              width: "100%",
-              alignItems: "center",
-              flex: 1,
-              backgroundColor: "rgba(1,1,1,0.5)",
-              height: "100%",
-            }}
-          >
-            <SortPopup
-              currentTheme={currentTheme}
-              setOpenSortPopup={setOpenSortPopup}
-            />
-          </Pressable>
-        )}
-        {/* <View style={{ marginVertical: 10, marginTop: 5 }}>
-        <Date />
-      </View> */}
-        <View
-          style={{
-            marginHorizontal: 0,
-            paddingHorizontal: 15,
-            paddingVertical: 10,
-            backgroundColor: currentTheme.background2,
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: 5,
-          }}
-        >
+      ) : (
+        <View style={{ paddingBottom: 20 }}>
           <View
             style={{
-              position: "absolute",
-              zIndex: 1000,
-              backgroundColor: "red",
-            }}
-          ></View>
-          <View style={{ flex: 1 }}>
-            <Text
-              style={{
-                color: currentTheme.font,
-                letterSpacing: 0.3,
-                fontSize: 14,
-              }}
-            >
-              Active: 4
-            </Text>
-          </View>
-          <TouchableOpacity
-            activeOpacity={0.3}
-            style={{ flex: 1, alignItems: "center" }}
-            onPress={() => setOpenSortPopup(!openSortPopup)}
-          >
-            <Text
-              style={{
-                color: currentTheme.font,
-                letterSpacing: 0.3,
-              }}
-            >
-              {filter ? filter : "All"}{" "}
-              <FontAwesome name="unsorted" size={18} color="#ccc" />
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={() => setView(!view)}
-            activeOpacity={0.3}
-            style={{
-              flex: 1,
-              justifyContent: "flex-end",
+              marginHorizontal: 0,
+              paddingHorizontal: 15,
+              paddingVertical: 10,
+              backgroundColor: currentTheme.background2,
               flexDirection: "row",
-              gap: 5,
+              justifyContent: "space-between",
               alignItems: "center",
+              marginBottom: 5,
             }}
           >
-            <Text
-              style={{
-                color: currentTheme.font,
-                letterSpacing: 0.3,
-              }}
-            >
-              View:{" "}
-            </Text>
             <View
               style={{
-                width: 20,
-                height: 20,
+                position: "absolute",
+                zIndex: 1000,
+                backgroundColor: "red",
+              }}
+            ></View>
+            <View style={{ flex: 1 }}>
+              <Text
+                style={{
+                  color: currentTheme.font,
+                  letterSpacing: 0.3,
+                  fontSize: 14,
+                }}
+              >
+                Result: {filterResult}
+              </Text>
+            </View>
+            <View style={{ flex: 1, alignItems: "center" }}>
+              <SortPopup currentTheme={currentTheme} from="orders" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <TouchableOpacity
+                onPress={() => setView(!view)}
+                activeOpacity={0.3}
+                style={{
+                  flex: 1,
+                  justifyContent: "flex-end",
+                  flexDirection: "row",
+                  gap: 5,
+                  alignItems: "center",
+                }}
+              >
+                <Text
+                  style={{
+                    color: currentTheme.font,
+                    letterSpacing: 0.3,
+                  }}
+                >
+                  View:{" "}
+                </Text>
+                <View
+                  style={{
+                    width: 20,
+                    height: 20,
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  {view ? (
+                    <FontAwesome name="list-ol" size={14} color="#ccc" />
+                  ) : (
+                    <MaterialCommunityIcons
+                      name="card-text-outline"
+                      size={18}
+                      color="#ccc"
+                    />
+                  )}
+                </View>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          <DatePicker from="orders" />
+
+          <View
+            style={{
+              width: "100%",
+              paddingHorizontal: 20,
+              padding: 5,
+              paddingBottom: 10,
+              alignItems: "center",
+              justifyContent: "space-between",
+              flexDirection: "row",
+            }}
+          ></View>
+          {loader ? (
+            <View
+              style={{
+                // flex: 1,
+                height: 500,
                 alignItems: "center",
                 justifyContent: "center",
               }}
             >
-              {view ? (
-                <FontAwesome name="list-ol" size={14} color="#ccc" />
-              ) : (
-                <MaterialCommunityIcons
-                  name="card-text-outline"
-                  size={18}
-                  color="#ccc"
-                />
-              )}
+              <ActivityIndicator color={currentTheme.pink} size="large" />
             </View>
-          </TouchableOpacity>
-        </View>
-        <View
-          style={{
-            width: "100%",
-            paddingHorizontal: 20,
-            padding: 5,
-            paddingBottom: 10,
-            alignItems: "center",
-            justifyContent: "space-between",
-            flexDirection: "row",
-          }}
-        >
-          <View style={{ gap: 2 }}>
-            <Text
-              style={{
-                color: currentTheme.font,
-                letterSpacing: 0.3,
-                fontSize: 12,
-              }}
-            >
-              Today income: {orders?.length} {currentUser.currency}
-            </Text>
-
-            <Text
-              style={{
-                color: currentTheme.font,
-                letterSpacing: 0.3,
-                fontSize: 12,
-              }}
-            >
-              Monthly income: {orders?.length} {currentUser.currency}
-            </Text>
-          </View>
-
-          <View
-            style={{ backgroundColor: "pink", width: 80, borderRadius: 50 }}
-          >
-            <DateTimePicker
-              value={date}
-              mode="date"
-              // is24Hour={true}
-              display="default"
-              onChange={(event, selectedDate) => {
-                if (selectedDate) {
-                  dispatch(setDate(selectedDate.toISOString()));
-                }
-              }}
-            />
-          </View>
-        </View>
-
-        <ScrollView
-          contentContainerStyle={styles.container}
-          bounces={Platform.OS === "ios" ? false : undefined}
-          overScrollMode={Platform.OS === "ios" ? "never" : "always"}
-          refreshControl={
-            <RefreshControl tintColor="#ccc" refreshing={refresh} />
-          }
-        >
-          {orders?.map((item, index) => {
-            if (view) {
-              return (
-                <Card
-                  key={index}
-                  item={item}
-                  currentUser={currentUser}
-                  currentTheme={currentTheme}
-                  navigation={navigation}
-                  setLoader={setLoader}
+          ) : (
+            <>
+              {orders?.length > 0 ? (
+                <FlatList
+                  contentContainerStyle={styles.container}
+                  bounces={Platform.OS === "ios" ? false : undefined}
+                  overScrollMode={Platform.OS === "ios" ? "never" : "always"}
+                  data={orders}
+                  keyExtractor={(item) => item._id.toString()}
+                  renderItem={({ item }) => <OrderCard item={item} />}
+                  ListFooterComponent={renderLoadMoreButton}
                 />
-              );
-            } else {
-              return (
-                <ListItem
-                  key={index}
-                  item={item}
-                  currentUser={currentUser}
-                  currentTheme={currentTheme}
-                  navigation={navigation}
-                  setLoader={setLoader}
-                />
-              );
-            }
-          })}
-          <Text>Orders</Text>
-        </ScrollView>
-      </View>
+              ) : (
+                <View
+                  style={{
+                    width: SCREEN_WIDTH,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    height: 500,
+                  }}
+                >
+                  <Text style={{ color: currentTheme.disabled }}>
+                    No orders found!
+                  </Text>
+                </View>
+              )}
+            </>
+          )}
+        </View>
+      )}
     </>
   );
 };

@@ -11,6 +11,7 @@ import {
   Vibration,
   ScrollView,
   Platform,
+  Picker,
 } from "react-native";
 import { useSelector, useDispatch } from "react-redux";
 import axios from "axios";
@@ -22,13 +23,15 @@ import { Currency } from "../../../screens/user/settings/currency";
 import { lightTheme, darkTheme } from "../../../context/theme";
 import { MaterialIcons, FontAwesome5 } from "@expo/vector-icons";
 import { workingDaysOptions } from "../../../datas/registerDatas";
+import TimePickerComponent from "../../../components/startEndTimePicker";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
 export const WorkingInfo = () => {
   const language = Language();
   const [selectedOptions, setSelectedOptions] = useState([]);
-  const [workingHours, setWorkingHours] = useState("");
+  const [startHour, setStartHour] = useState("10:00");
+  const [endHour, setEndHour] = useState("20:00");
   const [add, setAdd] = useState(false);
   const dispatch = useDispatch();
 
@@ -39,12 +42,25 @@ export const WorkingInfo = () => {
   const currentUser = useSelector((state) => state.storeUser.currentUser);
 
   const handleOptionPress = (option) => {
-    if (selectedOptions.includes(option.value)) {
-      setSelectedOptions(
-        selectedOptions.filter((selected) => selected !== option.value)
-      );
+    if (option?.hours) {
+      let definedHours = option?.hours?.split(" - ");
+      setStartHour(definedHours[0]);
+      setEndHour(definedHours[1]);
+      if (selectedOptions.includes(option.value)) {
+        setSelectedOptions(
+          selectedOptions.filter((selected) => selected !== option.value)
+        );
+      } else {
+        setSelectedOptions([...selectedOptions, option.value]);
+      }
     } else {
-      setSelectedOptions([...selectedOptions, option.value]);
+      if (selectedOptions.includes(option.value)) {
+        setSelectedOptions(
+          selectedOptions.filter((selected) => selected !== option.value)
+        );
+      } else {
+        setSelectedOptions([...selectedOptions, option.value]);
+      }
     }
   };
 
@@ -81,8 +97,9 @@ export const WorkingInfo = () => {
   };
 
   const AddWorkingDayHours = async (itemId, itemValue, indx) => {
+    let workingHours = startHour + " - " + endHour;
     try {
-      if (!workingHours || workingHours === "") {
+      if (!workingHours || startHour === "" || endHour === "") {
         setSelectedOptions([]);
         setWorkingHours("");
       } else {
@@ -100,11 +117,12 @@ export const WorkingInfo = () => {
           `https://beautyverse.herokuapp.com/api/v1/users/${currentUser?._id}/workingdays/${itemId}`,
           {
             value: itemValue,
-            hours: workingHours,
+            hours: workingHours?.toString(),
           }
         );
         dispatch(setRerenderCurrentUser());
-        setWorkingHours("");
+        setStartHour("");
+        setEndHour("");
       }
     } catch (error) {
       Alert.alert(error.response.data.message);
@@ -202,62 +220,251 @@ export const WorkingInfo = () => {
               gap: 5,
               marginHorizontal: 20,
               marginBottom: 20,
+              alignItems: "center",
             }}
           >
-            <Text
-              style={[styles.dayOption, { color: currentTheme.font }]}
-              onPress={() => AddWorkingDay("workingDays")}
+            <Pressable
+              style={[
+                styles.dayOption,
+                {
+                  backgroundColor: currentTheme.background,
+                  width: "100%",
+                  alignItems: "center",
+                  borderRadius: 50,
+                },
+              ]}
+              onPress={
+                currentUser.workingDays.length < 1
+                  ? () => AddWorkingDay("workingDays")
+                  : () =>
+                      Alert.alert(
+                        "You can only add the value 'Working Days' and cannot combine it with any other variants."
+                      )
+              }
             >
-              Working Days
-            </Text>
-            <Text
-              style={[styles.dayOption, { color: currentTheme.font }]}
-              onPress={() => AddWorkingDay("everyDay")}
+              <Text style={{ color: currentTheme.pink, letterSpacing: 0.2 }}>
+                Working Days
+              </Text>
+            </Pressable>
+            <Pressable
+              style={[
+                styles.dayOption,
+                {
+                  backgroundColor: currentTheme.background,
+                  width: "100%",
+                  alignItems: "center",
+                  borderRadius: 50,
+                },
+              ]}
+              onPress={
+                currentUser.workingDays.length < 1
+                  ? () => AddWorkingDay("everyDay")
+                  : () =>
+                      Alert.alert(
+                        "You can only add the value 'Every Days' and cannot combine it with any other variants."
+                      )
+              }
             >
-              Everyday
-            </Text>
-            <Text
-              style={[styles.dayOption, { color: currentTheme.font }]}
-              onPress={() => AddWorkingDay("monday")}
+              <Text style={{ color: currentTheme.pink, letterSpacing: 0.2 }}>
+                Everyday
+              </Text>
+            </Pressable>
+            <Pressable
+              style={[
+                styles.dayOption,
+                {
+                  backgroundColor: currentTheme.background,
+                  width: "100%",
+                  alignItems: "center",
+                  borderRadius: 50,
+                },
+              ]}
+              onPress={
+                currentUser.workingDays.some(
+                  (item) =>
+                    item.value === "everyDay" ||
+                    item.value === "workingDays" ||
+                    item.value === "monday"
+                )
+                  ? () =>
+                      Alert.alert(
+                        "You can only add the value 'Every Day', 'Working Day' or 'Monday' separately. You cannot combine them with any other variants."
+                      )
+                  : () => AddWorkingDay("monday")
+              }
             >
-              Monday
-            </Text>
-            <Text
-              style={[styles.dayOption, { color: currentTheme.font }]}
-              onPress={() => AddWorkingDay("tuesday")}
+              <Text style={{ color: currentTheme.pink, letterSpacing: 0.2 }}>
+                Monday
+              </Text>
+            </Pressable>
+            <Pressable
+              style={[
+                styles.dayOption,
+                {
+                  backgroundColor: currentTheme.background,
+                  width: "100%",
+                  alignItems: "center",
+                  borderRadius: 50,
+                },
+              ]}
+              onPress={
+                currentUser.workingDays.some(
+                  (item) =>
+                    item.value === "everyDay" ||
+                    item.value === "workingDays" ||
+                    item.value === "tuesday"
+                )
+                  ? () =>
+                      Alert.alert(
+                        "You can only add the value 'Every Day', 'Working Day' or 'Tuesday' separately. You cannot combine them with any other variants."
+                      )
+                  : () => AddWorkingDay("tuesday")
+              }
             >
-              Tuesday
-            </Text>
-            <Text
-              style={[styles.dayOption, { color: currentTheme.font }]}
-              onPress={() => AddWorkingDay("wednesday")}
+              <Text style={{ color: currentTheme.pink, letterSpacing: 0.2 }}>
+                Tuesday
+              </Text>
+            </Pressable>
+            <Pressable
+              style={[
+                styles.dayOption,
+                {
+                  backgroundColor: currentTheme.background,
+                  width: "100%",
+                  alignItems: "center",
+                  borderRadius: 50,
+                },
+              ]}
+              onPress={
+                currentUser.workingDays.some(
+                  (item) =>
+                    item.value === "everyDay" ||
+                    item.value === "workingDays" ||
+                    item.value === "wednesday"
+                )
+                  ? () =>
+                      Alert.alert(
+                        "You can only add the value 'Every Day', 'Working Day' or 'Wednesday' separately. You cannot combine them with any other variants."
+                      )
+                  : () => AddWorkingDay("wednesday")
+              }
             >
-              Wednesday
-            </Text>
-            <Text
-              style={[styles.dayOption, { color: currentTheme.font }]}
-              onPress={() => AddWorkingDay("thursday")}
+              <Text style={{ color: currentTheme.pink, letterSpacing: 0.2 }}>
+                Wednesday
+              </Text>
+            </Pressable>
+            <Pressable
+              style={[
+                styles.dayOption,
+                {
+                  backgroundColor: currentTheme.background,
+                  width: "100%",
+                  alignItems: "center",
+                  borderRadius: 50,
+                },
+              ]}
+              onPress={
+                currentUser.workingDays.some(
+                  (item) =>
+                    item.value === "everyDay" ||
+                    item.value === "workingDays" ||
+                    item.value === "thursday"
+                )
+                  ? () =>
+                      Alert.alert(
+                        "You can only add the value 'Every Day', 'Working Day' or 'Thursday' separately. You cannot combine them with any other variants."
+                      )
+                  : () => AddWorkingDay("thursday")
+              }
             >
-              Thursday
-            </Text>
-            <Text
-              style={[styles.dayOption, { color: currentTheme.font }]}
-              onPress={() => AddWorkingDay("friday")}
+              <Text style={{ color: currentTheme.pink, letterSpacing: 0.2 }}>
+                Thursday
+              </Text>
+            </Pressable>
+            <Pressable
+              style={[
+                styles.dayOption,
+                {
+                  backgroundColor: currentTheme.background,
+                  width: "100%",
+                  alignItems: "center",
+                  borderRadius: 50,
+                },
+              ]}
+              onPress={
+                currentUser.workingDays.some(
+                  (item) =>
+                    item.value === "everyDay" ||
+                    item.value === "workingDays" ||
+                    item.value === "friday"
+                )
+                  ? () =>
+                      Alert.alert(
+                        "You can only add the value 'Every Day', 'Working Day' or 'Friday' separately. You cannot combine them with any other variants."
+                      )
+                  : () => AddWorkingDay("friday")
+              }
             >
-              Friday
-            </Text>
-            <Text
-              style={[styles.dayOption, { color: currentTheme.font }]}
-              onPress={() => AddWorkingDay("saturday")}
+              <Text style={{ color: currentTheme.pink, letterSpacing: 0.2 }}>
+                Friday
+              </Text>
+            </Pressable>
+            <Pressable
+              style={[
+                styles.dayOption,
+                {
+                  backgroundColor: currentTheme.background,
+                  width: "100%",
+                  alignItems: "center",
+                  borderRadius: 50,
+                },
+              ]}
+              onPress={
+                currentUser.workingDays.some(
+                  (item) =>
+                    item.value === "everyDay" ||
+                    item.value === "workingDays" ||
+                    item.value === "saturday"
+                )
+                  ? () =>
+                      Alert.alert(
+                        "You can only add the value 'Every Day', 'Working Day' or 'Saturday' separately. You cannot combine them with any other variants."
+                      )
+                  : () => AddWorkingDay("saturday")
+              }
             >
-              Saturday
-            </Text>
-            <Text
-              style={[styles.dayOption, { color: currentTheme.font }]}
-              onPress={() => AddWorkingDay("sunday")}
+              <Text style={{ color: currentTheme.pink, letterSpacing: 0.2 }}>
+                Saturday
+              </Text>
+            </Pressable>
+            <Pressable
+              style={[
+                styles.dayOption,
+                {
+                  backgroundColor: currentTheme.background,
+                  width: "100%",
+                  alignItems: "center",
+                  borderRadius: 50,
+                },
+              ]}
+              onPress={
+                currentUser.workingDays.some(
+                  (item) =>
+                    item.value === "everyDay" ||
+                    item.value === "workingDays" ||
+                    item.value === "sunday"
+                )
+                  ? () =>
+                      Alert.alert(
+                        "You can only add the value 'Every Day', 'Working Day' or 'Sunday' separately. You cannot combine them with any other variants."
+                      )
+                  : () => AddWorkingDay("sunday")
+              }
             >
-              Sunday
-            </Text>
+              <Text style={{ color: currentTheme.pink, letterSpacing: 0.2 }}>
+                Sunday
+              </Text>
+            </Pressable>
           </View>
         )}
 
@@ -266,9 +473,14 @@ export const WorkingInfo = () => {
             let lab = workingDaysOptions.find(
               (item) => item.value === option.value
             );
+
             return (
-              <View key={index} style={{ width: "100%", alignItems: "center" }}>
+              <View
+                key={option.value}
+                style={{ width: "100%", alignItems: "center" }}
+              >
                 <TouchableOpacity
+                  activeOpacity={0.8}
                   key={index}
                   style={
                     [
@@ -278,7 +490,9 @@ export const WorkingInfo = () => {
                         : null,
                       {
                         backgroundColor: currentTheme.background,
-                        borderRadius: 50,
+                        borderRadius: selectedOptions.includes(option.value)
+                          ? 10
+                          : 50,
                         paddingLeft: 20,
                       },
                     ]
@@ -315,11 +529,12 @@ export const WorkingInfo = () => {
                     </Text>
                   </View>
                   {selectedOptions.includes(option.value) && (
-                    <TextInput
-                      style={styles.input}
-                      onChangeText={(value) => setWorkingHours(value)}
-                      value={workingHours}
-                      placeholder="example: 10:00 - 20:00"
+                    <TimePickerComponent
+                      currentTheme={currentTheme}
+                      setStartHour={setStartHour}
+                      setEndHour={setEndHour}
+                      startHour={startHour}
+                      endHour={endHour}
                     />
                   )}
                 </TouchableOpacity>
@@ -387,11 +602,11 @@ export const WorkingInfo = () => {
               style={{
                 paddingHorizontal: 10,
                 paddingVertical: 5,
-                borderRadius: 50,
+                borderRadius: 10,
                 width: "100%",
                 color: currentTheme.font,
                 fontSize: 14,
-                minHeight: 40,
+                minHeight: 150,
                 lineHeight: 22,
                 backgroundColor: currentTheme.background,
                 shadowColor: "#000",
@@ -496,7 +711,6 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     padding: 10,
     borderRadius: 5,
-    backgroundColor: "rgba(255,255,255,0.05)",
     letterSpacing: 0.2,
   },
   option: {

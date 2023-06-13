@@ -15,12 +15,19 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { FontAwesome } from "@expo/vector-icons";
 import axios from "axios";
 import DeleteConfirm from "../../components/confirmDialog";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { StatusPopup } from "../../screens/orders/statusPopup";
 import { useSelector, useDispatch } from "react-redux";
 import { setOrders } from "../../redux/orders";
 import { setRerenderOrders } from "../../redux/rerenders";
 import { BackDrop } from "../../components/backDropLoader";
+import { lightTheme, darkTheme } from "../../context/theme";
+import { ProceduresOptions } from "../../datas/registerDatas";
+import moment from "moment";
+import "moment-timezone";
+import * as Localization from "expo-localization";
+import * as Clipboard from "expo-clipboard";
+import ItemDateAndTimePicker from "../../screens/orders/itemDateAndTimePicker";
 
 export const Card = ({
   item,
@@ -35,6 +42,50 @@ export const Card = ({
     Linking.openURL(url);
   };
 
+  const [copySuccess, setCopySuccess] = useState(null);
+  const copyToClipboard = () => {
+    Clipboard.setString(item?.orderNumber);
+    setCopySuccess("Id copied!");
+  };
+
+  useEffect(() => {
+    if (copySuccess) {
+      setTimeout(() => setCopySuccess(null), 2000); // Remove the message after 2 seconds
+    }
+  }, [copySuccess]);
+
+  // select day orders
+  const [onDayOrders, setOndayOrders] = useState([]);
+
+  const GetOrders = async () => {
+    try {
+      const response = await axios.get(
+        "https://beautyverse.herokuapp.com/api/v1/users/" +
+          currentUser._id +
+          `/orders?date=${item.date}`
+      );
+      setOndayOrders(response.data.data.orders);
+    } catch (error) {
+      console.log(error.response.data.message);
+    }
+  };
+
+  useEffect(() => {
+    GetOrders();
+  }, []);
+
+  // edit request
+  const [editRequest, setEditRequest] = useState(false);
+
+  // If you have a date object and want to convert it to a specific timezone:
+  let myDate = new Date();
+
+  // If you want to keep the format consistent with JavaScript's Date object, you can format it like so:
+
+  const [dateAndTime, setDateAndTime] = useState(item.date);
+
+  const proceduresOptions = ProceduresOptions();
+
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const DeleteOrder = async () => {
     try {
@@ -48,7 +99,7 @@ export const Card = ({
       dispatch(setRerenderOrders());
       setTimeout(() => {
         setLoader(false);
-      }, 1000);
+      }, 200);
     } catch (error) {
       console.log(error.response.data.message);
     }
@@ -56,10 +107,39 @@ export const Card = ({
   // change status
   const UpdateOrder = async (val) => {
     try {
+      await axios.patch(
+        "https://beautyverse.herokuapp.com/api/v1/users/" +
+          currentUser._id +
+          "/orders/" +
+          item.orderNumber,
+        {
+          status: val,
+        }
+      );
+      await axios.patch(
+        "https://beautyverse.herokuapp.com/api/v1/users/" +
+          item.user._id +
+          "/sentorders/" +
+          item.orderNumber,
+        {
+          status: val,
+        }
+      );
+      dispatch(setRerenderOrders());
+    } catch (error) {
+      console.log(error.response.data.message);
+    }
+  };
+
+  // return edited request
+  const ReturnRequest = async (val) => {
+    try {
       dispatch(
         setOrders(
           orders.map((order) =>
-            order._id === item._id ? { ...order, status: val } : order
+            order._id === item._id
+              ? { ...order, date: dateAndTime.date, status: "pending" }
+              : order
           )
         )
       );
@@ -67,12 +147,38 @@ export const Card = ({
         "https://beautyverse.herokuapp.com/api/v1/users/" +
           currentUser._id +
           "/orders/" +
-          item._id,
+          item.orderNumber +
+          "?return=true",
         {
-          status: val,
+          ...item,
+          user: {
+            id: item.user._id,
+            phone: item.user.phone,
+            name: item.user.name,
+          },
+          date: dateAndTime,
+          status: "pending",
         }
       );
-      // dispatch(setRerenderOrders());
+
+      await axios.patch(
+        "https://beautyverse.herokuapp.com/api/v1/users/" +
+          item.user._id +
+          "/sentorders/" +
+          item.orderNumber +
+          "?return=true",
+        {
+          ...item,
+          user: {
+            id: currentUser._id,
+            phone: currentUser.phone,
+            name: currentUser.name,
+          },
+          date: dateAndTime,
+          status: "new",
+        }
+      );
+      dispatch(setRerenderOrders());
     } catch (error) {
       console.log(error.response.data.message);
     }
@@ -88,11 +194,14 @@ export const Card = ({
   if (selectedItem === "new") {
     bg = "green";
     font = "#ccc";
+  } else if (selectedItem === "pending") {
+    bg = "orange";
+    font = "#111";
   } else if (selectedItem === "canceled" || selectedItem === "rejected") {
-    bg = "red";
+    bg = currentTheme.disabled;
     font = "#ccc";
   } else if (selectedItem === "active") {
-    bg = "orange";
+    bg = currentTheme.pink;
     font = "#111";
   } else {
     bg = currentTheme.background2;
@@ -122,24 +231,12 @@ export const Card = ({
         delayLongPress={200}
         style={{
           padding: 15,
+          paddingVertical: 10,
           borderRadius: 10,
           backgroundColor: bg,
           gap: 5,
         }}
       >
-        {openStatusOption && selectedItem !== "new" && (
-          <View
-            style={{ position: "absolute", top: 10, right: 10, zIndex: 10000 }}
-          >
-            <StatusPopup
-              currentTheme={currentTheme}
-              selectedItem={selectedItem}
-              setSelectedItem={setSelectedItem}
-              setOpenStatusOption={setOpenStatusOption}
-              UpdateOrder={UpdateOrder}
-            />
-          </View>
-        )}
         <View
           style={{
             flexDirection: "row",
@@ -147,35 +244,209 @@ export const Card = ({
             justifyContent: "space-between",
           }}
         >
-          <Text style={{ color: font, letterSpacing: 0.3, fontWeight: "bold" }}>
-            N{item.orderNumber}
-          </Text>
-          <TouchableOpacity
-            activeOpacity={0.8}
-            onPress={() => setOpenStatusOption(true)}
-          >
-            <Text style={{ color: font, letterSpacing: 0.3 }}>
-              {selectedItem}
+          <TouchableOpacity onPress={copyToClipboard}>
+            <Text
+              style={{ color: font, letterSpacing: 0.3, fontWeight: "bold" }}
+            >
+              Id:{" "}
+              {item.orderNumber.length > 5
+                ? item.orderNumber.substring(0, 10) + "..."
+                : item.orderNumber}
             </Text>
+            {copySuccess ? (
+              <View
+                style={{
+                  position: "absolute",
+                  top: -5,
+                  left: 20,
+                  zIndex: 20000,
+                  padding: 5,
+                  paddingHorizontal: 7.5,
+                  backgroundColor: currentTheme.disabled,
+                  borderRadius: 50,
+                  width: 80,
+                  opacity: 0.9,
+                }}
+              >
+                <Text
+                  style={{
+                    color: "#fff",
+                  }}
+                >
+                  {copySuccess}
+                </Text>
+              </View>
+            ) : null}
           </TouchableOpacity>
+          <StatusPopup
+            currentTheme={currentTheme}
+            selectedItem={selectedItem}
+            setSelectedItem={setSelectedItem}
+            setOpenStatusOption={setOpenStatusOption}
+            UpdateOrder={UpdateOrder}
+            Delete={DeleteOrder}
+          />
         </View>
-        <Text style={{ color: font, letterSpacing: 0.3 }}>
-          Procedure: {item.orderedProcedure}
-        </Text>
-        <Text style={{ color: font, letterSpacing: 0.3 }}>
-          Date: {item.date.slice(0, 16)}
-        </Text>
-        <Text style={{ color: font, letterSpacing: 0.3 }}>
-          Price: {item.orderSum} {currentUser.currency}
-        </Text>
+        <View
+          style={{
+            borderWidth: 1,
+            borderColor: currentTheme.line,
+            padding: 5,
+            paddingHorizontal: 10,
+            borderRadius: 50,
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 3,
+          }}
+        >
+          <Text style={{ fontWeight: "bold", color: font, letterSpacing: 0.2 }}>
+            Procedure:{" "}
+          </Text>
+          <Text style={{ color: font, letterSpacing: 0.2 }}>
+            {(() => {
+              let lab = proceduresOptions?.find(
+                (it) =>
+                  it?.value?.toLowerCase() ===
+                  item?.orderedProcedure?.toLowerCase()
+              );
+
+              return lab?.label;
+            })()}
+          </Text>
+        </View>
+        <View
+          style={{
+            borderWidth: 1,
+            borderColor: currentTheme.line,
+            padding: 5,
+            paddingHorizontal: 10,
+            borderRadius: 50,
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 3,
+          }}
+        >
+          {editRequest ? (
+            <View style={{ width: "100%", alignItems: "center" }}>
+              <ItemDateAndTimePicker
+                targetUser={currentUser}
+                dateAndTime={dateAndTime}
+                setDateAndTime={setDateAndTime}
+                orderId={item.orderNumber}
+                orderDuration={item.duration}
+                orderDate={item.date}
+              />
+            </View>
+          ) : (
+            <>
+              <Text
+                style={{ fontWeight: "bold", color: font, letterSpacing: 0.2 }}
+              >
+                Date:{" "}
+              </Text>
+              <Text style={{ color: font, letterSpacing: 0.2 }}>
+                {(() => {
+                  console.log("dom: " + item.date);
+                  let formattedDateWithMonthName = moment
+                    .utc(item.date)
+                    .format("DD MMMM YYYY - HH:mm");
+                  return formattedDateWithMonthName;
+                })()}
+              </Text>
+            </>
+          )}
+        </View>
+        <View
+          style={{
+            borderWidth: 1,
+            borderColor: currentTheme.line,
+            padding: 5,
+            paddingHorizontal: 10,
+            borderRadius: 50,
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 3,
+          }}
+        >
+          <Text style={{ fontWeight: "bold", color: font, letterSpacing: 0.2 }}>
+            Price:{" "}
+          </Text>
+          {item.orderSum ? (
+            <>
+              <Text style={{ color: font, letterSpacing: 0.2 }}>
+                {item.orderSum}{" "}
+              </Text>
+              {item?.currency === "Dollar" ? (
+                <FontAwesome name="dollar" color={"#111"} size={14} />
+              ) : item?.currency === "Euro" ? (
+                <FontAwesome name="euro" color={"#111"} size={14} />
+              ) : (
+                <Text
+                  style={{
+                    fontWeight: "bold",
+                    color: font,
+                    fontSize: 14,
+                  }}
+                >
+                  {"\u20BE"}
+                </Text>
+              )}
+            </>
+          ) : (
+            <Text
+              style={{
+                color: font,
+                fontSize: 14,
+              }}
+            >
+              N/A
+            </Text>
+          )}
+        </View>
+        <View
+          style={{
+            borderWidth: 1,
+            borderColor: currentTheme.line,
+            padding: 5,
+            paddingHorizontal: 10,
+            borderRadius: 50,
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 3,
+          }}
+        >
+          <Text style={{ fontWeight: "bold", color: font, letterSpacing: 0.2 }}>
+            Duration:{" "}
+          </Text>
+
+          <Text
+            style={{
+              color: font,
+              fontSize: 14,
+            }}
+          >
+            {item?.duration < 60
+              ? item?.duration + " min."
+              : item?.duration >= 60
+              ? Math.floor(item?.duration / 60) +
+                "h" +
+                (item?.duration % 60 > 0
+                  ? " " + (item?.duration % 60) + " min."
+                  : "")
+              : "N/A"}
+          </Text>
+        </View>
         <View style={{ marginTop: 10, gap: 10 }}>
-          <Text style={{ color: font, letterSpacing: 0.3 }}>Client:</Text>
+          <Text style={{ color: font, letterSpacing: 0.3, fontWeight: "bold" }}>
+            Client:
+          </Text>
           <View
             style={{
               width: "100%",
-              backgroundColor: "#333",
+              backgroundColor: "rgba(255,255,255,0.1)",
               padding: 10,
-              borderRadius: 10,
+              paddingVertical: 5,
+              borderRadius: 50,
               gap: 15,
               flexDirection: "row",
               justifyContent: "space-between",
@@ -187,7 +458,7 @@ export const Card = ({
               onPress={
                 item.user?._id
                   ? () =>
-                      navigation.navigate("OrderUserVisit", {
+                      navigation.navigate("UserVisit", {
                         user: item.user,
                       })
                   : undefined
@@ -242,7 +513,9 @@ export const Card = ({
                   <FontAwesome name="user" size={24} color={font} />
                 </TouchableOpacity>
               )}
-              <Text style={{ color: "#ccc", letterSpacing: 0.3 }}>
+              <Text
+                style={{ color: font, letterSpacing: 0.3, fontWeight: "bold" }}
+              >
                 {item.user.name}
               </Text>
             </TouchableOpacity>
@@ -259,16 +532,18 @@ export const Card = ({
               </TouchableOpacity>
             )}
           </View>
-          <TouchableOpacity
-            activeOpacity={0.3}
-            onPress={() => handleLinkPress(`tel:${item?.user?.phone}`)}
-            style={{ flexDirection: "row", alignItems: "center", gap: 5 }}
-          >
-            <MaterialCommunityIcons name="phone" size={22} color={font} />
-            <Text style={{ color: font, letterSpacing: 0.3 }}>
-              {item?.user?.phone}
-            </Text>
-          </TouchableOpacity>
+          {item?.user?.phone && (
+            <TouchableOpacity
+              activeOpacity={0.3}
+              onPress={() => handleLinkPress(`tel:${item?.user?.phone}`)}
+              style={{ flexDirection: "row", alignItems: "center", gap: 5 }}
+            >
+              <MaterialCommunityIcons name="phone" size={22} color={font} />
+              <Text style={{ color: font, letterSpacing: 0.3 }}>
+                {item?.user?.phone}
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
         <View
           style={{
@@ -277,16 +552,58 @@ export const Card = ({
             justifyContent: "space-between",
           }}
         >
-          <Text style={{ color: font, letterSpacing: 0.3, marginTop: 10 }}>
-            Ordered At: {item.orderAt}
-          </Text>
-          {item.status === "new" && (
+          <View
+            style={{
+              borderWidth: 1,
+              borderColor: currentTheme.line,
+              padding: 5,
+              paddingHorizontal: 10,
+              borderRadius: 50,
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 3,
+              marginTop: 5,
+            }}
+          >
+            <Text
+              style={{
+                color: font,
+                letterSpacing: 0.3,
+                fontWeight: "bold",
+                fontSize: 12,
+                fontStyle: "italic",
+              }}
+            >
+              Ordered At:{" "}
+              <Text
+                style={{
+                  color: font,
+                  letterSpacing: 0.2,
+                  fontSize: 12,
+                  fontWeight: "normal",
+                }}
+              >
+                {(() => {
+                  let myDateInTimezone = moment(item.orderedAt)
+                    .tz(Localization.timezone)
+                    .format();
+
+                  let formattedDateInTimezone = moment(item.orderedAt)
+                    .tz(Localization.timezone)
+                    .format("DD MMMM YYYY - HH:mm");
+
+                  return formattedDateInTimezone;
+                })()}
+              </Text>
+            </Text>
+          </View>
+          {item.status === "new" && !editRequest ? (
             <View
               style={{
                 flexDirection: "row",
                 alignItems: "center",
                 justifyContent: "center",
-                gap: 30,
+                gap: 25,
                 backgroundColor: currentTheme.background2,
                 borderRadius: 50,
                 padding: 5,
@@ -295,18 +612,71 @@ export const Card = ({
             >
               <TouchableOpacity
                 activeOpacity={0.8}
-                onPress={() => UpdateOrder("rejected")}
+                onPress={() => {
+                  UpdateOrder("rejected");
+                  dispatch(setRerenderOrders());
+                }}
               >
                 <FontAwesome size={20} name="remove" color="red" />
               </TouchableOpacity>
               <TouchableOpacity
                 activeOpacity={0.8}
-                onPress={() => UpdateOrder("active")}
+                onPress={() => {
+                  setEditRequest(true);
+                }}
+              >
+                <FontAwesome
+                  size={18}
+                  name="edit"
+                  color="orange"
+                  style={{ marginTop: 3, marginLeft: 5 }}
+                />
+              </TouchableOpacity>
+              <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={() => {
+                  UpdateOrder("active");
+                  dispatch(setRerenderOrders());
+                }}
               >
                 <FontAwesome size={20} name="check" color="green" />
               </TouchableOpacity>
             </View>
-          )}
+          ) : editRequest ? (
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 25,
+                backgroundColor: currentTheme.background2,
+                borderRadius: 50,
+                padding: 5,
+                paddingHorizontal: 15,
+              }}
+            >
+              <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={() => {
+                  setEditRequest(false);
+
+                  setDateAndTime(item.date);
+                }}
+              >
+                <Text style={{ fontWeight: "bold", color: "red" }}>Cancel</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={() => {
+                  ReturnRequest();
+                  dispatch(setRerenderOrders());
+                }}
+              >
+                <Text style={{ fontWeight: "bold", color: "green" }}>Send</Text>
+              </TouchableOpacity>
+            </View>
+          ) : null}
         </View>
       </TouchableOpacity>
     </>

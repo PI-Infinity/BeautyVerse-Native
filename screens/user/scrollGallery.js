@@ -236,7 +236,6 @@ const styles = StyleSheet.create({
 
 const FeedItem = (props) => {
   const dispatch = useDispatch();
-
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
   const currentUser = useSelector((state) => state.storeUser.currentUser);
@@ -280,7 +279,7 @@ const FeedItem = (props) => {
         dispatch(setAddStarRerenderFromScrollGallery());
       }, 300);
     } catch (error) {
-      console.error(error);
+      console.log(error.response.data.message);
     }
   };
 
@@ -300,7 +299,7 @@ const FeedItem = (props) => {
           dispatch(setRemoveStarRerenderFromScrollGallery());
         });
     } catch (error) {
-      console.log(error);
+      console.log(error.response.data.message);
     }
   };
 
@@ -316,7 +315,7 @@ const FeedItem = (props) => {
     const GetReviews = async () => {
       try {
         const response = await axios.get(
-          `https://beautyverse.herokuapp.com/api/v1/users/${props?.user?._id}/feeds/${props?.feed._id}/reviews?page=${reviewsPage}`
+          `https://beautyverse.herokuapp.com/api/v1/users/${props?.user?._id}/feeds/${props?.feed?._id}/reviews?page=${reviewsPage}`
         );
         setReviewsList(response.data.data.reviews);
         setReviewLength(response.data.result);
@@ -326,7 +325,7 @@ const FeedItem = (props) => {
     };
 
     GetReviews();
-  }, [props.feed._id]);
+  }, [props.feed?._id]);
 
   async function AddNewReviews(nextPage) {
     try {
@@ -344,7 +343,7 @@ const FeedItem = (props) => {
         return [...prev, ...uniqueReviews];
       });
     } catch (error) {
-      console.log(error);
+      console.log(error.response.data.message);
     }
   }
 
@@ -412,7 +411,7 @@ const FeedItem = (props) => {
         );
       }
     } catch (error) {
-      console.error(error);
+      console.log(error.response.data.message);
     }
   };
 
@@ -444,10 +443,10 @@ const FeedItem = (props) => {
 
         // Update the feed.reviews array by filtering out the deleted review
       } else {
-        console.error("Error deleting review:", response.status);
+        console.log("Error deleting review:", response.status);
       }
     } catch (error) {
-      console.log("Error fetching data:", error);
+      console.log("Error fetching data:", error.response.data.message);
     }
   };
 
@@ -479,6 +478,7 @@ const FeedItem = (props) => {
   //open feed options
 
   const [post, setPost] = useState("");
+
   useEffect(() => {
     setPost(props?.feed?.post);
   }, []);
@@ -510,7 +510,7 @@ const FeedItem = (props) => {
       try {
         await videoRef.current.setPositionAsync(value);
       } catch (error) {
-        console.error("Error setting video position:", error);
+        console.log("Error setting video position:", error);
       }
     }
   };
@@ -609,7 +609,7 @@ const FeedItem = (props) => {
             onClose={() => setFeedOption(false)}
             onSave={() => setFeedOption(false)}
             post={post}
-            itemId={props?.feed._id}
+            itemId={props?.feed?._id}
             fileFormat={props?.feed.fileFormat}
             itemName={props?.feed.name}
             setPost={setPost}
@@ -649,7 +649,7 @@ const FeedItem = (props) => {
             />
           </View>
         )}
-        {props?.feed?.post && props?.feed?.fileFormat === "img" && (
+        {props?.feed?.post?.length > 0 && props?.feed?.fileFormat === "img" && (
           <View style={{ paddingLeft: 10 }}>
             <Post
               currentTheme={currentTheme}
@@ -687,7 +687,7 @@ const FeedItem = (props) => {
               DotsFunction={() => setFeedOption(!feedOption)}
               fileFormat={props.feed.fileFormat}
             />
-            {props?.feed?.post && (
+            {props?.feed?.post?.length > 0 && (
               <View style={{ marginTop: 10 }}>
                 <Post
                   currentTheme={currentTheme}
@@ -789,7 +789,7 @@ const FeedItem = (props) => {
                   <Pressable
                     key={index}
                     onLongPress={() => props.navigation.goBack()}
-                    delayLongPress={50}
+                    delayLongPress={200}
                   >
                     <ZoomableImage
                       style={{
@@ -1053,17 +1053,18 @@ const ReviewItem = ({
   const [User, setUser] = useState(null);
   useEffect(() => {
     const GetUser = async () => {
-      const response = await axios.get(
-        "https://beautyverse.herokuapp.com/api/v1/users/" + item.reviewer.id
-      );
-      setUser(response.data.data.user);
-    };
-    try {
-      if (item) {
-        GetUser();
+      try {
+        const response = await axios.get(
+          "https://beautyverse.herokuapp.com/api/v1/users/" + item.reviewer.id
+        );
+        setUser(response.data.data.user);
+      } catch (error) {
+        console.log(error.response?.data.message || error.message);
       }
-    } catch (error) {
-      console.log(error.response.data.message);
+    };
+
+    if (item) {
+      GetUser();
     }
   }, [item]);
 
@@ -1106,10 +1107,13 @@ const ReviewItem = ({
           }}
         >
           <Pressable
-            onPress={() =>
-              navigation.navigate("User", {
-                user: User,
-              })
+            onPress={
+              User
+                ? () =>
+                    navigation.navigate("User", {
+                      user: User,
+                    })
+                : undefined
             }
           >
             {item.reviewer?.cover?.length > 30 ? (
@@ -1137,14 +1141,17 @@ const ReviewItem = ({
             )}
           </Pressable>
           <Pressable
-            onPress={() =>
-              navigation.navigate("User", {
-                user: User,
-              })
+            onPress={
+              User
+                ? () =>
+                    navigation.navigate("User", {
+                      user: User,
+                    })
+                : undefined
             }
           >
             <Text style={[styles.reviewItemName, { color: currentTheme.font }]}>
-              {item.reviewer.name}
+              {User ? item.reviewer.name : "Removed User"}
             </Text>
           </Pressable>
         </View>

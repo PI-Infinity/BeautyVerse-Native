@@ -12,6 +12,7 @@ import axios from "axios";
 import { useSelector, useDispatch } from "react-redux";
 import {
   setCleanUp,
+  setRerenderUserFeed,
   setRerenderUserFeeds,
   setRerenderCurrentUser,
   setRerenderUserList,
@@ -59,9 +60,8 @@ const SmoothModal = ({
   const UpdatePost = async () => {
     try {
       setPost(text);
-      console.log(text);
       await axios.patch(
-        `https://beautyverse.herokuapp.com/api/v1/users/${currentUser._id}/feeds/${feedId}`,
+        `https://beautyverse.herokuapp.com/api/v1/users/${currentUser?._id}/feeds/${itemId}`,
         {
           post: text,
         }
@@ -78,14 +78,9 @@ const SmoothModal = ({
 
   const Deleting = async () => {
     setLoading(true);
-    // props.setFeeds((prev) => prev.filter((item) => item._id !== itemId));
 
     const values = [];
-    /** delete from mongodb
-     */
 
-    /** delete from cloude
-     */
     // Create a reference to the file to delete
     let fileRef;
     if (fileFormat === "video") {

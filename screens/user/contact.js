@@ -40,23 +40,27 @@ export const Contact = ({ targetUser }) => {
         ]}
       >
         <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-          <View
-            style={[
-              styles.title,
-              { backgroundColor: currentTheme.background2 },
-            ]}
-          >
-            <Entypo name="phone" size={16} color={currentTheme.font} />
-          </View>
+          {targetUser?.type !== "user" && (
+            <>
+              <View
+                style={[
+                  styles.title,
+                  { backgroundColor: currentTheme.background2 },
+                ]}
+              >
+                <Entypo name="phone" size={16} color={currentTheme.font} />
+              </View>
 
-          <Text
-            style={[
-              [styles.value, { color: currentTheme.font }],
-              { color: currentTheme.font },
-            ]}
-          >
-            {targetUser.phone}
-          </Text>
+              <Text
+                style={[
+                  [styles.value, { color: currentTheme.font }],
+                  { color: currentTheme.font },
+                ]}
+              >
+                {targetUser.phone}
+              </Text>
+            </>
+          )}
         </View>
         <TouchableOpacity
           onPress={(event) => event.stopPropagation()}
@@ -416,7 +420,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
     gap: 5,
-    paddingTop: 30,
+    paddingTop: 20,
   },
   item: {
     padding: 0,

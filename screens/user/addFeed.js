@@ -21,6 +21,7 @@ import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { storage } from "../../firebase";
 import axios from "axios";
 import { UploaderPercentage } from "../../components/uploaderPercentage";
+import { BackDrop } from "../../components/backDropLoader";
 import { setCleanUp, setRerenderUserFeeds } from "../../redux/rerenders";
 import { Language } from "../../context/language";
 import { CacheableImage } from "../../components/cacheableImage";
@@ -258,7 +259,7 @@ export const AddFeed = ({ navigation }) => {
 
   return (
     <>
-      {loading && (
+      {loading && file?.type === "video" ? (
         <UploaderPercentage
           loading={loading}
           setLoading={setLoading}
@@ -268,6 +269,8 @@ export const AddFeed = ({ navigation }) => {
           setProgress={setUploadProgress}
           cancelUpload={cancelUpload}
         />
+      ) : (
+        loading && <BackDrop loading={loading} setLoading={setLoading} />
       )}
       <ScrollView
         showsVerticalScrollIndicator={false}

@@ -85,8 +85,7 @@ const Welcome = ({ navigation }) => {
             lineHeight: 24,
           }}
         >
-          "Discover your beauty universe with Beautyverse - where beauty meets
-          diversity"
+          {language?.language?.Auth?.auth?.slogan}
         </Text>
       </View>
       <View style={{ position: "relative", bottom: 30 }}>
@@ -98,7 +97,11 @@ const Welcome = ({ navigation }) => {
           source={require("../assets/logo.png")}
         />
       </View>
-      <AnimatedButton navigation={navigation} currentTheme={currentTheme} />
+      <AnimatedButton
+        navigation={navigation}
+        currentTheme={currentTheme}
+        title={language?.language?.Auth?.auth?.authentication}
+      />
       <View style={{ width: "100%", position: "relative", bottom: 15 }}>
         <Text
           style={[
@@ -108,7 +111,7 @@ const Welcome = ({ navigation }) => {
             },
           ]}
         >
-          Select theme:
+          {language?.language?.Auth?.auth?.selectTheme}
         </Text>
         <View
           style={{
@@ -131,7 +134,9 @@ const Welcome = ({ navigation }) => {
             {theme && (
               <MaterialIcons name="done" color={currentTheme.pink} size={22} />
             )}
-            <Text style={{ color: "#fff" }}>Dark</Text>
+            <Text style={{ color: "#fff" }}>
+              {language?.language?.Auth?.auth?.dark}
+            </Text>
           </Pressable>
           <Pressable
             onPress={async () => {
@@ -141,9 +146,12 @@ const Welcome = ({ navigation }) => {
               );
               dispatch(setTheme(false));
             }}
-            style={styles.themeModeButton2}
+            style={[
+              styles.themeModeButton2,
+              { backgroundColor: "rgba(230,227,234,1)" },
+            ]}
           >
-            <Text>Light</Text>
+            <Text>{language?.language?.Auth?.auth?.light}</Text>
             {!theme && (
               <MaterialIcons name="done" color={currentTheme.pink} size={22} />
             )}
@@ -160,7 +168,7 @@ const Welcome = ({ navigation }) => {
             },
           ]}
         >
-          Select language:
+          {language?.language?.Auth?.auth?.selectLanguage}
         </Text>
         <Pressable
           style={[

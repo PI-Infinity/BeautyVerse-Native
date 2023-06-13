@@ -2,10 +2,16 @@ import {
   createStackNavigator,
   CardStyleInterpolators,
 } from "@react-navigation/stack";
-import { View, Dimensions, Pressable } from "react-native";
+import { View, Dimensions, Pressable, TouchableOpacity } from "react-native";
 import { ScrollGallery } from "../screens/user/scrollGallery";
 import { User } from "../screens/user/user";
 import { AddFeed } from "../screens/user/addFeed";
+import { Orders } from "../screens/orders/orders";
+import { AddOrder } from "../screens/orders/addOrder";
+import { SentOrders } from "../screens/sentOrders/sentOrders";
+import { SendOrder } from "../screens/orders/sendOrder";
+import { DateScreen } from "../screens/orders/date";
+import { Statistics } from "../screens/orders/statistics";
 import { Settings } from "../screens/user/settings/settings";
 import { Addresses } from "../screens/user/settings/addresses";
 import { Prices } from "../screens/prices";
@@ -16,13 +22,17 @@ import { Terms } from "../screens/user/terms";
 import { QA } from "../screens/user/QA";
 import { Privacy } from "../screens/user/privacy";
 import { Usage } from "../screens/user/usage";
-
 import { Notifications } from "../screens/user/notifications";
-import { UserFeed } from "../screens/user/userFeed";
+import { FeedItem } from "../screens/feedScreen";
 import Charts from "../screens/user/statistics/chart";
-import { MaterialIcons } from "@expo/vector-icons";
-import { Octicons } from "@expo/vector-icons";
-import { Ionicons } from "@expo/vector-icons";
+import {
+  MaterialIcons,
+  MaterialCommunityIcons,
+  Ionicons,
+  Octicons,
+  Entypo,
+  FontAwesome,
+} from "@expo/vector-icons";
 import { Text } from "react-native";
 import { useSelector } from "react-redux";
 import { Language } from "../context/language";
@@ -40,12 +50,20 @@ const withVariant = (Component, variant) => {
   };
 };
 
+// specific component for orders page, passed some props into component
+const withVariantOrders = (navigation, refresh) => {
+  return (props) => {
+    return <Orders {...props} navigation={navigation} refresh={refresh} />;
+  };
+};
+
 export function ProfileStack({
   route,
   navigation,
   unreadNotifications,
   notifications,
   setNotifications,
+  refresh,
 }) {
   // language state
   const language = Language();
@@ -55,6 +73,8 @@ export function ProfileStack({
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
 
+  const newOrders = useSelector((state) => state.storeOrders.new);
+  const newSentOrders = useSelector((state) => state.storeSentOrders.new);
   /** in profile stack defined,
    * user personal data, settings
    * and control datas and feeds */
@@ -107,7 +127,12 @@ export function ProfileStack({
                 {currentUser.name} {/* current user name un screen header */}
               </Text>
               {currentUser.subscription.status === "active" && (
-                <MaterialIcons name="verified" size={14} color="#F866B1" />
+                <MaterialIcons
+                  name="verified"
+                  size={14}
+                  color="#F866B1"
+                  style={{ marginTop: 2 }}
+                />
               )}
             </View>
           ),
@@ -117,7 +142,7 @@ export function ProfileStack({
               {currentUser.type !== "user" && (
                 <Pressable
                   onPress={() => navigation.navigate("AddFeed")}
-                  style={{ marginRight: 12.5, padding: 5, paddingRight: 0 }}
+                  style={{ marginRight: 12, padding: 5, paddingRight: 0 }}
                 >
                   <MaterialIcons
                     name="add-box"
@@ -126,6 +151,56 @@ export function ProfileStack({
                   />
                 </Pressable>
               )}
+
+              <Pressable
+                acitveOpacity={0.3}
+                style={{
+                  marginRight: 10,
+                  marginLeft: 4,
+                  flexDirection: "row",
+
+                  alignItems: "center",
+                  backgroundColor: currentTheme.line,
+                  borderRadius: 50,
+                  padding: 5,
+                  paddingVertical: 2.5,
+                }}
+                onPress={() => navigation.navigate("Orders")}
+              >
+                {newOrders > 0 && (
+                  <View
+                    style={{
+                      width: "auto",
+                      minWidth: 13,
+                      height: 13,
+                      backgroundColor: currentTheme.pink,
+                      borderRadius: 50,
+                      alignItems: "center",
+                      justifyContent: "center",
+                      position: "absolute",
+                      zIndex: 2,
+                      right: -2,
+                      top: -2,
+                    }}
+                  >
+                    <Text style={{ color: "#fff", fontSize: 10 }}>
+                      {newOrders}
+                    </Text>
+                  </View>
+                )}
+                <Entypo name="list" size={24} color={currentTheme.disabled} />
+                <Text
+                  style={{
+                    color: currentTheme.pink,
+                    fontWeight: "bold",
+                    letterSpacing: -2,
+                    fontSize: 16,
+                  }}
+                >
+                  OMS
+                </Text>
+              </Pressable>
+
               <View>
                 {unreadNotifications.length > 0 && (
                   <View
@@ -164,12 +239,32 @@ export function ProfileStack({
                 onPress={() => navigation.navigate("Settings")}
                 style={{ marginRight: 15, padding: 5 }}
               >
-                {/* settings button*/}
+                {newSentOrders > 0 && (
+                  <View
+                    style={{
+                      width: "auto",
+                      minWidth: 13,
+                      height: 13,
+                      backgroundColor: currentTheme.pink,
+                      borderRadius: 50,
+                      alignItems: "center",
+                      justifyContent: "center",
+                      position: "absolute",
+                      zIndex: 2,
+                      right: -2,
+                      top: 0,
+                    }}
+                  >
+                    <Text style={{ color: "#fff", fontSize: 10 }}>
+                      {newSentOrders}
+                    </Text>
+                  </View>
+                )}
                 <Ionicons
                   name="settings"
                   size={20}
                   color={currentTheme.disabled}
-                  style={{ marginBottom: 1 }}
+                  style={{ marginBottom: 0.5 }}
                 />
               </Pressable>
             </View>
@@ -209,12 +304,20 @@ export function ProfileStack({
       />
       <Stack.Screen
         name="UserVisit"
-        component={withVariant(User, "visitPage")}
+        component={User}
         options={({ route }) => ({
           headerBackTitleVisible: false,
+          headerTitleAlign: "center",
           headerTitle: (props) => (
             <View
-              style={{ flexDirection: "row", alignItems: "center", gap: 5 }}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+                flex: 1,
+                width: "100%",
+                gap: 5,
+              }}
             >
               <Text
                 style={{
@@ -231,6 +334,28 @@ export function ProfileStack({
               )}
             </View>
           ),
+          headerRight: (props) => {
+            return (
+              <View style={{ marginRight: 20 }}>
+                {route.params.user._id !== currentUser._id && (
+                  <TouchableOpacity
+                    acitveOpacity={0.3}
+                    onPress={() =>
+                      navigation.navigate("Send Order", {
+                        user: route.params.user,
+                      })
+                    }
+                  >
+                    <FontAwesome
+                      name="calendar"
+                      size={18}
+                      color={currentTheme.font}
+                    />
+                  </TouchableOpacity>
+                )}
+              </View>
+            );
+          },
 
           headerStyle: {
             backgroundColor: currentTheme.background,
@@ -252,7 +377,7 @@ export function ProfileStack({
       />
       {/* current user feed's list screen */}
       <Stack.Screen
-        name="UserScrollGallery"
+        name="ScrollGallery"
         component={ScrollGallery}
         options={({ route }) => ({
           headerBackTitleVisible: false,
@@ -277,10 +402,10 @@ export function ProfileStack({
       />
       <Stack.Screen
         name="UserFeed"
-        component={UserFeed}
+        component={FeedItem}
         options={({ route }) => ({
           headerBackTitleVisible: false,
-          title: language?.language?.User?.userPage?.feeds,
+          title: "Feed",
           headerStyle: {
             backgroundColor: currentTheme.background,
 
@@ -306,6 +431,184 @@ export function ProfileStack({
         options={({ route }) => ({
           headerBackTitleVisible: false,
           title: language?.language?.User?.userPage?.add,
+          headerStyle: {
+            backgroundColor: currentTheme.background,
+
+            elevation: 0,
+            shadowOpacity: 0,
+            borderBottomWidth: 0,
+          },
+          headerTintColor: currentTheme.font,
+          headerTitleStyle: {
+            fontWeight: "bold",
+            fontSize: 18,
+            letterSpacing: 0.5,
+          },
+          cardStyle: {
+            backgroundColor: currentTheme.background,
+          },
+        })}
+      />
+      {/** main order list screen  */}
+      <Stack.Screen
+        name="Orders"
+        children={() => <Orders navigation={navigation} />}
+        options={({ navigation }) => ({
+          headerBackTitleVisible: false,
+          title: "Order Managment System",
+          headerStyle: {
+            backgroundColor: currentTheme.background,
+            elevation: 0,
+            shadowOpacity: 0,
+            borderBottomWidth: 0,
+          },
+          headerTintColor: currentTheme.font,
+          headerTitleStyle: {
+            fontWeight: "bold",
+            fontSize: 18,
+            letterSpacing: 0.5,
+          },
+          cardStyle: {
+            backgroundColor: currentTheme.background,
+          },
+
+          headerRight: () => (
+            <View
+              style={{ flexDirection: "row", gap: 10, alignItems: "center" }}
+            >
+              <TouchableOpacity
+                acitveOpacity={0.3}
+                style={{ marginLeft: 15 }}
+                onPress={() => navigation.navigate("Add Order")}
+              >
+                <MaterialIcons
+                  style={{
+                    color: currentTheme.pink,
+                  }}
+                  name="add"
+                  size={24}
+                />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                acitveOpacity={0.3}
+                style={{ marginRight: 15 }}
+                onPress={() => navigation.navigate("OrdersStatistics")}
+              >
+                <MaterialIcons
+                  name="bar-chart"
+                  size={26}
+                  color={currentTheme.font}
+                />
+              </TouchableOpacity>
+            </View>
+          ),
+        })}
+      />
+      <Stack.Screen
+        name="Add Order"
+        component={AddOrder}
+        options={({ route }) => ({
+          headerBackTitleVisible: false,
+          title: "Add new order",
+          headerStyle: {
+            backgroundColor: currentTheme.background,
+
+            elevation: 0,
+            shadowOpacity: 0,
+            borderBottomWidth: 0,
+          },
+          headerTintColor: currentTheme.font,
+          headerTitleStyle: {
+            fontWeight: "bold",
+            fontSize: 18,
+            letterSpacing: 0.5,
+          },
+          cardStyle: {
+            backgroundColor: currentTheme.background,
+          },
+        })}
+      />
+      <Stack.Screen
+        name="Send Order"
+        component={SendOrder}
+        options={({ route }) => ({
+          headerBackTitleVisible: false,
+          title: "Booking",
+          headerStyle: {
+            backgroundColor: currentTheme.background,
+            elevation: 0,
+            shadowOpacity: 0,
+            borderBottomWidth: 0,
+          },
+          headerTintColor: currentTheme.font,
+          headerTitleStyle: {
+            fontWeight: "bold",
+            fontSize: 18,
+            letterSpacing: 0.5,
+          },
+          cardStyle: {
+            backgroundColor: currentTheme.background,
+          },
+        })}
+      />
+      <Stack.Screen
+        name="Sent Orders"
+        component={SentOrders}
+        options={({ route }) => ({
+          headerBackTitleVisible: false,
+          title: "My Bookings",
+          headerStyle: {
+            backgroundColor: currentTheme.background,
+            elevation: 0,
+            shadowOpacity: 0,
+            borderBottomWidth: 0,
+          },
+          headerTintColor: currentTheme.font,
+          headerTitleStyle: {
+            fontWeight: "bold",
+            fontSize: 18,
+            letterSpacing: 0.5,
+          },
+          cardStyle: {
+            backgroundColor: currentTheme.background,
+          },
+        })}
+      />
+      <Stack.Screen
+        name="Date"
+        component={DateScreen}
+        options={({ route }) => {
+          let activedate = route.params.date;
+
+          return {
+            headerBackTitleVisible: false,
+            title: activedate, // Set the title to dayObj.value if it exists, otherwise empty string
+            headerStyle: {
+              backgroundColor: currentTheme.background,
+              elevation: 0,
+              shadowOpacity: 0,
+              borderBottomWidth: 0,
+            },
+            headerTintColor: currentTheme.font,
+            headerTitleStyle: {
+              fontWeight: "bold",
+              fontSize: 18,
+              letterSpacing: 0.5,
+            },
+            cardStyle: {
+              backgroundColor: currentTheme.background,
+            },
+          };
+        }}
+      />
+
+      <Stack.Screen
+        name="OrdersStatistics"
+        component={Statistics}
+        options={({ route }) => ({
+          headerBackTitleVisible: false,
+          title: "Order statistics",
           headerStyle: {
             backgroundColor: currentTheme.background,
 

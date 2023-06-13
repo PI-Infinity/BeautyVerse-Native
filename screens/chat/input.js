@@ -15,12 +15,16 @@ import {
   setRerederRooms,
   setRerenderScroll,
 } from "../../redux/chat";
+import { lightTheme, darkTheme } from "../../context/theme";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
 export const Input = ({ targetUser, setMessages, socket }) => {
   const [text, setText] = useState("");
   const [file, setFile] = useState("");
+
+  const theme = useSelector((state) => state.storeApp.theme);
+  const currentTheme = theme ? darkTheme : lightTheme;
 
   const dispatch = useDispatch();
 
@@ -116,9 +120,12 @@ export const Input = ({ targetUser, setMessages, socket }) => {
     <View
       style={{
         width: SCREEN_WIDTH,
-        height: 60,
+        height: 65,
         paddingHorizontal: SCREEN_WIDTH / 8,
-        backgroundColor: "#222",
+        paddingBottom: 8,
+        backgroundColor: currentTheme.background2,
+        borderTopWidth: 1,
+        borderColor: currentTheme.line,
         alignItems: "center",
         justifyContent: "center",
         flexDirection: "row",
@@ -126,7 +133,7 @@ export const Input = ({ targetUser, setMessages, socket }) => {
     >
       <TextInput
         placeholder="Type something.."
-        placeholderTextColor="#555"
+        placeholderTextColor={currentTheme.disabled}
         onChangeText={setText}
         autoFocus
         onFocus={ReadMessage}
@@ -156,7 +163,7 @@ export const Input = ({ targetUser, setMessages, socket }) => {
         onPress={text?.length > 0 ? SendMessage : undefined}
         activeOpacity={0.3}
       >
-        <FontAwesome name="send" size={20} color="#e5e5e5" />
+        <FontAwesome name="send" size={20} color={currentTheme.pink} />
       </TouchableOpacity>
     </View>
   );

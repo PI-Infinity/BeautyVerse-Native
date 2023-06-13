@@ -67,7 +67,7 @@ const Register = ({ navigation }) => {
       >
         <MaterialIcons
           name="add-business"
-          size={22}
+          size={26}
           color={currentTheme.pink}
         />
         <Text style={[styles.boxText, { color: currentTheme.font }]}>
@@ -110,7 +110,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    borderRadius: 20,
+    borderRadius: 10,
     shadowColor: "#000",
     shadowOffset: {
       width: 0,

@@ -16,10 +16,10 @@ export const Search = ({ search, setSearch }) => {
   return (
     <View
       style={{
-        width: "90%",
+        width: "95%",
         backgroundColor: currentTheme.background2,
         borderWidth: 1,
-        borderColor: currentTheme.font,
+        borderColor: currentTheme.pink,
         borderRadius: 50,
         flexDirection: "row",
         alignItems: "center",

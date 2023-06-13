@@ -177,8 +177,10 @@ export const Card = (props) => {
           <View
             style={{
               flexDirection: "row",
+              justifyContent: "center",
               alignItems: "center",
               width: "100%",
+              maxWidth: SCREEN_WIDTH / 2 - 20,
               paddingLeft: 15,
             }}
           >
@@ -193,9 +195,8 @@ export const Card = (props) => {
               ellipsizeMode={"tail"}
             >
               {props.user.address[0].city.replace("'", "")}
-              {props.user.address[0].distruct}
               {props.user.address[0].district &&
-                " - " + props.user.address[0].street}
+                " - " + props.user.address[0].district}
             </Text>
           </View>
           <View

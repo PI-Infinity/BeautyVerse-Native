@@ -11,7 +11,7 @@ import {
 import ConfirmDialog from "../../components/confirmDialog";
 import { ProceduresOptions } from "../../datas/registerDatas";
 import { Language } from "../../context/language";
-import { FontAwesome } from "@expo/vector-icons";
+import { FontAwesome, FontAwesome5 } from "@expo/vector-icons";
 import { lightTheme, darkTheme } from "../../context/theme";
 import { useSelector, useDispatch } from "react-redux";
 
@@ -22,6 +22,11 @@ export const ProceduresList = ({
   setProcedure,
   price,
   setPrice,
+  setDuration,
+  duration,
+  send,
+  setDate,
+  setTime,
 }) => {
   const language = Language();
   const [category, setCategory] = useState("");
@@ -56,13 +61,17 @@ export const ProceduresList = ({
 
   return (
     <View style={styles.container}>
-      {categories?.length > 1 && (
+      {categories?.length > 1 && !procedure && (
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
+          bounces={Platform.OS === "ios" ? false : undefined}
+          overScrollMode={Platform.OS === "ios" ? "never" : "always"}
           style={styles.navigator}
           contentContainerStyle={{
             flexDirection: "row",
+            gap: 8,
+            paddingRight: 30,
           }}
         >
           <TouchableOpacity
@@ -76,7 +85,10 @@ export const ProceduresList = ({
             <Text
               style={[
                 styles.buttonText,
-                { color: active === "all" ? "#e5e5e5" : "#ccc" },
+                {
+                  color: active === "all" ? "#e5e5e5" : "#ccc",
+                  letterSpacing: 0.2,
+                },
               ]}
             >
               {language?.language?.User?.userPage?.all}
@@ -101,6 +113,7 @@ export const ProceduresList = ({
                       active.toLowerCase() === cat.value.toLowerCase()
                         ? "#e5e5e5"
                         : "#ccc",
+                    letterSpacing: 0.2,
                   },
                 ]}
               >
@@ -110,8 +123,15 @@ export const ProceduresList = ({
           ))}
         </ScrollView>
       )}
-      <View style={{ gap: 10, alignItems: "center" }}>
+      <View style={{ gap: 10, alignItems: "center", marginTop: 8 }}>
         {targetUser.procedures
+          .filter((pr) => {
+            if (procedure) {
+              return procedure?.value === pr?.value;
+            } else {
+              return pr;
+            }
+          })
           .filter((item) => {
             if (active === "all") {
               return item;
@@ -125,49 +145,179 @@ export const ProceduresList = ({
             const label = proceduresOptions.find((c) => item.value === c.value);
             return (
               <TouchableOpacity
+                onPress={
+                  item.value !== procedure?.value
+                    ? () => {
+                        setProcedure(item);
+                        setPrice(item?.price ? item.price : "");
+                        setDuration(item?.duration ? item.duration : "");
+                        setTime && setTime(null);
+                      }
+                    : () => {
+                        setProcedure(null);
+                        setPrice("");
+                        setDuration("");
+                        setTime && setTime(null);
+                      }
+                }
                 activeOpacity={addOrder ? 0.5 : 1}
-                onPress={() => {
-                  setProcedure(item);
-                  setPrice(item?.price ? item.price : "");
-                }}
                 key={index}
                 style={{
-                  width: "90%",
+                  width: "95%",
                   backgroundColor:
                     procedure?.value === item?.value
-                      ? "green"
+                      ? "#F866B1"
                       : currentTheme.background2,
-                  borderRadius: 50,
+                  borderRadius: 10,
                   padding: 15,
+                  paddingVertical: 7.5,
                   justifyContent: "space-between",
-                  flexDirection: "row",
+                  // alignItems: "center",
+                  gap: 5,
+                  // flexDirection: "row",
                 }}
               >
-                <Text style={{ color: currentTheme.font }}>{label.label}</Text>
                 <View
-                  style={{ flexDirection: "row", gap: 5, alignItems: "center" }}
+                  style={{
+                    flexDirection: "row",
+                    width: "100%",
+                    justifyContent: "space-between",
+                    gap: 10,
+                    alignItems: "center",
+                  }}
                 >
-                  <Text style={{ color: currentTheme.font }}>
-                    {item?.price}
-                  </Text>
-                  {item?.price > 0 && (
-                    <>
-                      {targetUser?.currency === "Dollar" ? (
-                        <FontAwesome
-                          name="dollar"
-                          color={currentTheme.font}
-                          size={16}
-                        />
-                      ) : targetUser?.currency === "Euro" ? (
-                        <FontAwesome
-                          name="euro"
-                          color={currentTheme.font}
-                          size={16}
-                        />
-                      ) : (
-                        <Text style={{ color: currentTheme.font }}>Lari</Text>
-                      )}
-                    </>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      gap: 10,
+                      alignItems: "center",
+                    }}
+                  >
+                    <View
+                      style={{
+                        width: 10,
+                        height: 10,
+                        borderRadius: 10,
+                        backgroundColor:
+                          procedure?.value === item?.value
+                            ? "#111"
+                            : currentTheme.pink,
+                      }}
+                    ></View>
+                    <Text
+                      style={{
+                        color:
+                          procedure?.value === item?.value
+                            ? "#111"
+                            : currentTheme.font,
+                        letterSpacing: 0.2,
+                      }}
+                    >
+                      {label.label}
+                    </Text>
+                  </View>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      gap: 5,
+                      alignItems: "center",
+                    }}
+                  >
+                    <Text
+                      style={{
+                        color:
+                          procedure?.value === item?.value
+                            ? "#111"
+                            : currentTheme.font,
+                      }}
+                    >
+                      {item?.price}
+                    </Text>
+                    {item?.price > 0 && (
+                      <>
+                        {targetUser?.currency === "Dollar" ? (
+                          <FontAwesome
+                            name="dollar"
+                            color={
+                              procedure?.value === item?.value
+                                ? "#111"
+                                : currentTheme.font
+                            }
+                            size={16}
+                          />
+                        ) : targetUser?.currency === "Euro" ? (
+                          <FontAwesome
+                            name="euro"
+                            color={
+                              procedure?.value === item?.value
+                                ? "#111"
+                                : currentTheme.font
+                            }
+                            size={16}
+                          />
+                        ) : (
+                          <Text
+                            style={{
+                              fontWeight: "bold",
+                              color:
+                                procedure?.value === item?.value
+                                  ? "#111"
+                                  : currentTheme.font,
+                              fontSize: 16,
+                            }}
+                          >
+                            {"\u20BE"}
+                          </Text>
+                        )}
+                      </>
+                    )}
+                  </View>
+                </View>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 8,
+                    justifyContent: "flex-end",
+                  }}
+                >
+                  {item.duration && (
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        gap: 5,
+                        alignItems: "center",
+                      }}
+                    >
+                      <Text
+                        style={{
+                          color:
+                            procedure?.value === item?.value
+                              ? "#111"
+                              : currentTheme.disabled,
+                          fontSize: 12,
+                        }}
+                      >
+                        {item.duration < 60
+                          ? item.duration + " min."
+                          : item.duration >= 60
+                          ? Math.floor(item.duration / 60) +
+                            "h" +
+                            (item.duration % 60 > 0
+                              ? " " + (item.duration % 60) + " min."
+                              : "")
+                          : "0h"}
+                      </Text>
+                      <FontAwesome5
+                        name="clock"
+                        color={
+                          procedure?.value === item?.value
+                            ? "#111"
+                            : currentTheme.pink
+                        }
+                        size={12}
+                      />
+                    </View>
                   )}
                 </View>
               </TouchableOpacity>
@@ -195,11 +345,12 @@ const styles = StyleSheet.create({
     paddingLeft: 15,
   },
   categoryButton: {
-    borderRadius: 50,
     paddingHorizontal: 15,
     alignItems: "center",
     height: 25,
+    // backgroundColor: "#222",
     justifyContent: "center",
+    borderRadius: 50,
   },
   categoryButtonActive: {
     paddingHorizontal: 15,

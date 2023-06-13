@@ -87,11 +87,15 @@ export const Currency = ({ currentTheme }) => {
             gap: 5,
             marginBottom: 15,
             marginHorizontal: 20,
+            alignItems: "center",
           }}
         >
           <TouchableOpacity
             activeOpacity={0.3}
-            style={styles.itemOption}
+            style={[
+              styles.itemOption,
+              { backgroundColor: currentTheme.background },
+            ]}
             onPress={() => AddCurrency("Dollar")}
           >
             <Text style={[styles.optionText, { color: currentTheme.font }]}>
@@ -101,7 +105,10 @@ export const Currency = ({ currentTheme }) => {
           </TouchableOpacity>
           <TouchableOpacity
             activeOpacity={0.3}
-            style={styles.itemOption}
+            style={[
+              styles.itemOption,
+              { backgroundColor: currentTheme.background },
+            ]}
             onPress={() => AddCurrency("Euro")}
           >
             <Text style={[styles.optionText, { color: currentTheme.font }]}>
@@ -111,11 +118,23 @@ export const Currency = ({ currentTheme }) => {
           </TouchableOpacity>
           <TouchableOpacity
             activeOpacity={0.3}
-            style={styles.itemOption}
+            style={[
+              styles.itemOption,
+              { backgroundColor: currentTheme.background },
+            ]}
             onPress={() => AddCurrency("Lari")}
           >
             <Text style={[styles.optionText, { color: currentTheme.font }]}>
-              Lari
+              Lari{" "}
+            </Text>
+            <Text
+              style={{
+                fontWeight: "bold",
+                color: currentTheme.pink,
+                fontSize: 16,
+              }}
+            >
+              {"\u20BE"}
             </Text>
             {/* <FontAwesome name="gel" color={currentTheme.pink} size={16} /> */}
           </TouchableOpacity>
@@ -125,7 +144,7 @@ export const Currency = ({ currentTheme }) => {
         <TouchableOpacity
           onPress={() => setAdd(!add)}
           style={[
-            styles.itemOption,
+            [styles.itemOption, { backgroundColor: currentTheme.background }],
             {
               width: "30%",
               justifyContent: "center",
@@ -140,7 +159,17 @@ export const Currency = ({ currentTheme }) => {
               <FontAwesome name="dollar" color={currentTheme.pink} size={16} />
             ) : currentUser.currency === "Euro" ? (
               <FontAwesome name="euro" color={currentTheme.pink} size={16} />
-            ) : null}
+            ) : (
+              <Text
+                style={{
+                  fontWeight: "bold",
+                  color: currentTheme.pink,
+                  fontSize: 16,
+                }}
+              >
+                {"\u20BE"}
+              </Text>
+            )}
           </Text>
           {/* <FontAwesome name="gel" color={currentTheme.pink} size={16} /> */}
         </TouchableOpacity>
@@ -157,12 +186,13 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   itemOption: {
-    width: "100%",
+    width: "60%",
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
     gap: 15,
     padding: 10,
-    borderRadius: 5,
+    borderRadius: 50,
   },
   option: {
     width: (Dimensions.get("window").width * 85) / 100,

@@ -78,7 +78,7 @@ export function AuthStack({ route }) {
                   letterSpacing: 0.5,
                 }}
               >
-                Welcome
+                {language?.language?.Auth?.auth?.welcome}
               </Text>
             </View>
           ),

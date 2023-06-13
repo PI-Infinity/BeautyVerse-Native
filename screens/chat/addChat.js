@@ -10,7 +10,8 @@ import {
   Dimensions,
   Alert,
   Animated,
-  PanResponder,
+  // PanResponder,
+  ActivityIndicator,
 } from "react-native";
 import React, { useState, useEffect, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
@@ -22,12 +23,20 @@ import {
 import axios from "axios";
 import { Search } from "../../screens/chat/search";
 import { CacheableImage } from "../../components/cacheableImage";
+import { useNavigation } from "@react-navigation/native";
+import { lightTheme, darkTheme } from "../../context/theme";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
-export const AddChat = ({ navigation }) => {
+export const AddChat = ({}) => {
+  const navigation = useNavigation();
   const dispatch = useDispatch();
   const [search, setSearch] = useState("");
+
+  const [loading, setLoading] = useState(true);
+
+  const theme = useSelector((state) => state.storeApp.theme);
+  const currentTheme = theme ? darkTheme : lightTheme;
 
   const [followings, setFollowings] = useState([]);
 
@@ -35,19 +44,21 @@ export const AddChat = ({ navigation }) => {
 
   useEffect(() => {
     async function GetAudience(userId) {
-      const response = await fetch(
-        `https://beautyverse.herokuapp.com/api/v1/users/${currentUser?._id}/followings`
-      )
-        .then((response) => response.json())
-        .then((data) => {
-          setFollowings(data.data?.followings);
-        })
-        .catch((error) => {
-          console.log("Error fetching data:", error);
-        });
+      try {
+        const response = await fetch(
+          `https://beautyverse.herokuapp.com/api/v1/users/${userId}/followings`
+        );
+        const data = await response.json();
+        setFollowings(data.data?.followings);
+        setTimeout(() => {
+          setLoading(false);
+        }, 300);
+      } catch (error) {
+        console.log("Error fetching data:", error);
+      }
     }
     if (currentUser?._id) {
-      GetAudience();
+      GetAudience(currentUser._id);
     }
   }, [currentUser?._id]);
 
@@ -84,13 +95,36 @@ export const AddChat = ({ navigation }) => {
       dispatch(setRerederRooms());
       dispatch(setOpenAddChat(false));
     } catch (error) {
-      Alert.alert(error.response.data.message);
+      if (error.response) {
+        // The request was made and the server responded with a status code
+        // that falls out of the range of 2xx
+        console.log(error.response.data);
+        console.log(error.response.status);
+        console.log(error.response.headers);
+        Alert.alert(
+          error.response.data
+            ? error.response.data.message
+            : "An error occurred"
+        );
+      } else if (error.request) {
+        // The request was made but no response was received
+        console.log(error.request);
+        Alert.alert("An error occurred. Please try again.");
+      } else {
+        // Something happened in setting up the request that triggered an Error
+        console.log("Error", error.message);
+        Alert.alert("An error occurred. Please try again.");
+      }
+      console.log(error.config);
     }
   };
 
   const RenderItem = ({ item }) => (
     <TouchableOpacity
-      style={styles.userItem}
+      style={[
+        styles.userItem,
+        { borderWidth: 1, borderColor: currentTheme.line },
+      ]}
       onPress={() =>
         GetChatRoom({
           member2Id: item._id,
@@ -99,47 +133,69 @@ export const AddChat = ({ navigation }) => {
         })
       }
     >
-      {item.cover?.length > 10 && (
-        <CacheableImage
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+        {item.cover?.length > 10 && (
+          <CacheableImage
+            style={{
+              height: 40,
+              width: 40,
+              borderRadius: 50,
+              resizeMode: "cover",
+            }}
+            source={{ uri: item.cover }}
+            manipulationOptions={[
+              { resize: { width: 40, height: 40 } },
+              { rotate: 90 },
+            ]}
+          />
+        )}
+        <Text
           style={{
-            height: 40,
-            width: 40,
-            borderRadius: 50,
-            resizeMode: "cover",
+            fontSize: 14,
+            fontWeight: "bold",
+            color: "#e5e5e5",
+            letterSpacing: 0.2,
           }}
-          source={{ uri: item.cover }}
-          manipulationOptions={[
-            { resize: { width: 40, height: 40 } },
-            { rotate: 90 },
-          ]}
-        />
-      )}
-      <Text style={{ fontSize: 14, fontWeight: "bold", color: "#e5e5e5" }}>
-        {item?.name}
+        >
+          {item?.name}
+        </Text>
+      </View>
+      <Text
+        style={{
+          fontSize: 14,
+          color: currentTheme.disabled,
+          letterSpacing: 0.2,
+          paddingRight: 8,
+        }}
+      >
+        {item.type === "beautycenter"
+          ? "Beauty Salon"
+          : item.type === "specialist"
+          ? "Specialist"
+          : item?.type}
       </Text>
-      <Text style={{ fontSize: 14, color: "#e5e5e5" }}>{item?.type}</Text>
     </TouchableOpacity>
   );
 
   const translateY = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
 
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onPanResponderMove: (_, gestureState) => {
-        if (gestureState.dy > 0) {
-          translateY.setValue(gestureState.dy);
-        }
-      },
-      onPanResponderRelease: (_, gestureState) => {
-        if (gestureState.dy > 100) {
-          closeAddChat();
-        } else {
-          openAddChat();
-        }
-      },
-    })
-  ).current;
+  // const panResponder = useRef(
+  //   PanResponder.create({
+  //     onStartShouldSetPanResponder: () => true,
+  //     onPanResponderMove: (_, gestureState) => {
+  //       if (gestureState.dy > 0) {
+  //         translateY.setValue(gestureState.dy);
+  //       }
+  //     },
+  //     onPanResponderRelease: (_, gestureState) => {
+  //       if (gestureState.dy > 100) {
+  //         closeAddChat();
+  //       } else {
+  //         openAddChat();
+  //       }
+  //     },
+  //   })
+  // ).current;
 
   const openAddChat = () => {
     Animated.timing(translateY, {
@@ -154,20 +210,20 @@ export const AddChat = ({ navigation }) => {
       toValue: SCREEN_HEIGHT,
       duration: 300,
       useNativeDriver: true,
-    }).start(() => {
-      dispatch(setOpenAddChat(false));
-    });
+    }).start();
   };
 
   useEffect(() => {
     openAddChat();
+
+    return () => translateY.stopAnimation(); // Stop the animation on unmount
   }, []);
 
   // ... your existing components ...
 
   return (
     <Animated.View
-      {...panResponder.panHandlers}
+      // {...panResponder.panHandlers}
       style={[
         styles.container,
         {
@@ -182,7 +238,9 @@ export const AddChat = ({ navigation }) => {
       <TouchableOpacity
         onPress={() => dispatch(setOpenAddChat(false))}
         style={{
-          backgroundColor: "#222",
+          backgroundColor: currentTheme.background2,
+          borderWidth: 1,
+          borderColor: currentTheme.line,
           borderTopLeftRadius: 10,
           borderTopRightRadius: 10,
           flex: 1,
@@ -194,11 +252,30 @@ export const AddChat = ({ navigation }) => {
         }}
       >
         <View style={styles.modalContent}>
-          <Search />
-          <ScrollView contentContainerStyle={{ gap: 10 }}>
-            {followings?.map((item, index) => {
-              return <RenderItem key={index} item={item} />;
-            })}
+          <View
+            style={{ marginBottom: 8, width: "100%", alignItems: "center" }}
+          >
+            <Search />
+          </View>
+          <ScrollView contentContainerStyle={{ gap: 0 }}>
+            {loading ? (
+              <View
+                style={{
+                  flex: 1,
+                  height: 500,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <ActivityIndicator size="large" color={currentTheme.pink} />
+              </View>
+            ) : (
+              <>
+                {followings?.map((item, index) => {
+                  return <RenderItem key={index} item={item} />;
+                })}
+              </>
+            )}
           </ScrollView>
         </View>
       </TouchableOpacity>
@@ -233,13 +310,13 @@ const styles = StyleSheet.create({
     paddingLeft: 5,
   },
   userItem: {
-    width: SCREEN_WIDTH - 60,
-    marginBottom: 10,
+    width: SCREEN_WIDTH - 50,
+    marginBottom: 8,
     flexDirection: "row",
     gap: 15,
     alignItems: "center",
-    padding: 10,
-    backgroundColor: "rgba(255,255,255,0.02)",
-    borderRadius: 10,
+    justifyContent: "space-between",
+    padding: 8,
+    borderRadius: 50,
   },
 });

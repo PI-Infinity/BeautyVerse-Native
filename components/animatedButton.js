@@ -3,7 +3,7 @@ import { Animated } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { TouchableOpacity, Text } from "react-native";
 
-export default function AnimatedButton({ navigation, currentTheme }) {
+export default function AnimatedButton({ navigation, currentTheme, title }) {
   const animation = useRef(new Animated.Value(0)).current;
 
   const startAnimation = () => {
@@ -46,7 +46,7 @@ export default function AnimatedButton({ navigation, currentTheme }) {
       }}
     >
       <Text style={{ color: "#fff", fontWeight: "bold", letterSpacing: 0.5 }}>
-        Authentication
+        {title}
       </Text>
     </TouchableOpacity>
   );

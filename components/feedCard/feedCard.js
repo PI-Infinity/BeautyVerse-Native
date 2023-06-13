@@ -336,11 +336,13 @@ export const Feed = (props) => {
     hght = originalHeight / percented;
   }
 
+  const cleanUp = useSelector((state) => state.storeRerenders.cleanUp);
+
   useEffect(() => {
     if (hght) {
       GetFeedObj(page);
     }
-  }, []);
+  }, [cleanUp]);
 
   return (
     <Animated.View
@@ -603,6 +605,7 @@ export const Feed = (props) => {
                 reviewsLength={feedObj[activeFeed]?.reviewsLength}
                 checkIfStared={feedObj[activeFeed]?.checkIfStared}
                 starsLength={feedObj[activeFeed]?.starsLength}
+                GetFeedObj={GetFeedObj}
               />
             )}
           </Pressable>
@@ -641,6 +644,7 @@ export const Feed = (props) => {
                 reviewsLength={feedObj[activeFeed]?.reviewsLength}
                 checkIfStared={feedObj[activeFeed]?.checkIfStared}
                 starsLength={feedObj[activeFeed]?.starsLength}
+                GetFeedObj={GetFeedObj}
               />
             )}
           </View>

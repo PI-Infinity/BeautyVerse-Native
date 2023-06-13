@@ -32,7 +32,6 @@ export const WorkingInfo = ({ targetUser, navigation }) => {
           let label = workingDaysOptions.find(
             (item) => item.value.toLowerCase() === option.value.toLowerCase()
           );
-          console.log(label);
           let labelLang;
           if (lang === "en") {
             labelLang = label?.en;

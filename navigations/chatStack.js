@@ -27,6 +27,9 @@ import { Language } from "../context/language";
 import { ScrollGallery } from "../screens/user/scrollGallery";
 import { User } from "../screens/user/user";
 import { lightTheme, darkTheme } from "../context/theme";
+import { SendOrder } from "../screens/orders/sendOrder";
+import { SentOrders } from "../screens/sentOrders/sentOrders";
+import axios from "axios";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -43,13 +46,7 @@ const withVariant2 = (socket) => {
   };
 };
 
-const withVariant3 = (Component, variant) => {
-  return (props) => {
-    return <User {...props} variant={variant} />;
-  };
-};
-
-export function ChatStack({ route, socket }) {
+export function ChatStack({ route, socket, navigation }) {
   const language = Language();
   const currentChat = useSelector((state) => state.storeChat.currentChat);
   const currentUser = useSelector((state) => state.storeUser.currentUser);
@@ -71,7 +68,25 @@ export function ChatStack({ route, socket }) {
     };
   }
 
-  const chatUser = useSelector((state) => state.storeChat.chatUser);
+  const [userObj, setUserObj] = useState(null);
+  useEffect(() => {
+    const GetUser = async () => {
+      try {
+        // Make a request to get the current user's data from the server
+        const response = await axios.get(
+          `https://beautyverse.herokuapp.com/api/v1/users/${targetChatMember?.id}`
+        );
+        // Set the current user in the user's Redux store
+        setUserObj(response.data.data.user);
+      } catch (error) {
+        console.log(error.response.data.message);
+      }
+    };
+    if (targetChatMember) {
+      // Call GetUser if currUser is not null
+      GetUser();
+    }
+  }, [currentChat]);
 
   const dispatch = useDispatch();
   return (
@@ -83,7 +98,7 @@ export function ChatStack({ route, socket }) {
     >
       <Stack.Screen
         name="Chats"
-        component={withVariant2(socket)}
+        children={() => <Chat socket={socket} navigation={navigation} />}
         options={{
           headerBackTitleVisible: false,
           title: "Chats",
@@ -106,7 +121,7 @@ export function ChatStack({ route, socket }) {
           headerLeft: () => (
             <TouchableOpacity
               acitveOpacity={0.3}
-              style={{ marginLeft: 15 }}
+              style={{ marginLeft: 15, padding: 5 }}
               onPress={() => dispatch(setOpenAddChat(true))}
             >
               <FontAwesome name="plus" size={18} color={currentTheme.font} />
@@ -121,10 +136,10 @@ export function ChatStack({ route, socket }) {
       />
       <Stack.Screen
         name="Room"
-        component={withVariant(socket)}
+        children={() => <Room socket={socket} navigation={navigation} />}
         options={({ route, navigation }) => ({
           headerBackTitleVisible: false,
-          title: chatUser?.name,
+          // title: "name",
           headerStyle: {
             backgroundColor: currentTheme.background,
 
@@ -136,7 +151,7 @@ export function ChatStack({ route, socket }) {
             <Pressable
               onPress={() =>
                 navigation.navigate("User", {
-                  user: chatUser,
+                  user: userObj,
                 })
               }
               style={{
@@ -188,12 +203,20 @@ export function ChatStack({ route, socket }) {
       />
       <Stack.Screen
         name="User"
-        component={withVariant3(User, "visitPage")}
+        component={User}
         options={({ route }) => ({
           headerBackTitleVisible: false,
+          headerTitleAlign: "center",
           headerTitle: (props) => (
             <View
-              style={{ flexDirection: "row", alignItems: "center", gap: 5 }}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+                flex: 1,
+                width: "100%",
+                gap: 5,
+              }}
             >
               <Text
                 style={{
@@ -210,7 +233,30 @@ export function ChatStack({ route, socket }) {
               )}
             </View>
           ),
-
+          headerRight: (props) => {
+            if (currentUser?.type.toLowerCase() !== "beautycenter") {
+              return (
+                <View style={{ marginRight: 20 }}>
+                  {route.params.user._id !== currentUser._id && (
+                    <TouchableOpacity
+                      acitveOpacity={0.3}
+                      onPress={() =>
+                        navigation.navigate("Send Order", {
+                          user: route.params.user,
+                        })
+                      }
+                    >
+                      <FontAwesome
+                        name="calendar"
+                        size={18}
+                        color={currentTheme.font}
+                      />
+                    </TouchableOpacity>
+                  )}
+                </View>
+              );
+            }
+          },
           headerStyle: {
             backgroundColor: currentTheme.background,
 
@@ -223,6 +269,81 @@ export function ChatStack({ route, socket }) {
             fontWeight: "bold",
             letterSpacing: 0.5,
             fontSize: 18,
+          },
+          cardStyle: {
+            backgroundColor: currentTheme.background,
+          },
+        })}
+      />
+      <Stack.Screen
+        name="UserVisit"
+        component={User}
+        options={({ route }) => ({
+          headerBackTitleVisible: false,
+          headerTitleAlign: "center",
+          headerTitle: (props) => (
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+                flex: 1,
+                width: "100%",
+                gap: 5,
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 18,
+                  letterSpacing: 0.5,
+                  color: currentTheme.font,
+                  fontWeight: "bold",
+                }}
+              >
+                {route.params.user.name}
+              </Text>
+              {route.params.user.subscription.status === "active" && (
+                <MaterialIcons name="verified" size={14} color="#F866B1" />
+              )}
+            </View>
+          ),
+          headerRight: (props) => {
+            if (currentUser?.type.toLowerCase() !== "beautycenter") {
+              return (
+                <View style={{ marginRight: 20 }}>
+                  {route.params.user._id !== currentUser._id && (
+                    <TouchableOpacity
+                      acitveOpacity={0.3}
+                      onPress={() =>
+                        navigation.navigate("Send Order", {
+                          user: route.params.user,
+                        })
+                      }
+                    >
+                      <FontAwesome
+                        name="calendar"
+                        size={18}
+                        color={currentTheme.font}
+                      />
+                    </TouchableOpacity>
+                  )}
+                </View>
+              );
+            }
+          },
+
+          headerStyle: {
+            backgroundColor: currentTheme.background,
+
+            elevation: 0,
+            shadowOpacity: 0,
+            borderBottomWidth: 0,
+          },
+          headerTintColor: currentTheme.font,
+          headerTitleStyle: {
+            fontWeight: "bold",
+            fontSize: 18,
+            letterSpacing: 0.5,
           },
           cardStyle: {
             backgroundColor: currentTheme.background,
@@ -247,6 +368,52 @@ export function ChatStack({ route, socket }) {
             fontWeight: "bold",
             letterSpacing: 0.5,
             fontSize: 18,
+          },
+          cardStyle: {
+            backgroundColor: currentTheme.background,
+          },
+        })}
+      />
+      <Stack.Screen
+        name="Send Order"
+        component={SendOrder}
+        options={({ route }) => ({
+          headerBackTitleVisible: false,
+          title: "Booking",
+          headerStyle: {
+            backgroundColor: currentTheme.background,
+            elevation: 0,
+            shadowOpacity: 0,
+            borderBottomWidth: 0,
+          },
+          headerTintColor: currentTheme.font,
+          headerTitleStyle: {
+            fontWeight: "bold",
+            fontSize: 18,
+            letterSpacing: 0.5,
+          },
+          cardStyle: {
+            backgroundColor: currentTheme.background,
+          },
+        })}
+      />
+      <Stack.Screen
+        name="Sent Orders"
+        component={SentOrders}
+        options={({ route }) => ({
+          headerBackTitleVisible: false,
+          title: "My Bookings",
+          headerStyle: {
+            backgroundColor: currentTheme.background,
+            elevation: 0,
+            shadowOpacity: 0,
+            borderBottomWidth: 0,
+          },
+          headerTintColor: currentTheme.font,
+          headerTitleStyle: {
+            fontWeight: "bold",
+            fontSize: 18,
+            letterSpacing: 0.5,
           },
           cardStyle: {
             backgroundColor: currentTheme.background,

@@ -83,9 +83,6 @@ export const Filter = ({ navigation }) => {
     GetDistricts();
   }, [city]);
 
-  console.log(city);
-  console.log(district);
-
   return (
     <ScrollView
       contentContainerStyle={{ gap: 5, alignItems: "center", paddingTop: 10 }}

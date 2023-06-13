@@ -45,7 +45,7 @@ const InputFile = ({ targetUser, onCoverUpdate }) => {
       quality: 1,
       base64: true, // This option will return base64 data
     });
-    console.log(result.assets[0].cancelled);
+
     if (result.assets) {
       let newWidth = 300;
       let newHeight =

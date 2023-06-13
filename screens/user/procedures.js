@@ -11,7 +11,7 @@ import {
 import ConfirmDialog from "../../components/confirmDialog";
 import { ProceduresOptions } from "../../datas/registerDatas";
 import { Language } from "../../context/language";
-import { FontAwesome } from "@expo/vector-icons";
+import { FontAwesome, FontAwesome5 } from "@expo/vector-icons";
 import { lightTheme, darkTheme } from "../../context/theme";
 import { useSelector, useDispatch } from "react-redux";
 
@@ -56,6 +56,7 @@ export const ProceduresList = ({ targetUser, addOrder }) => {
           style={styles.navigator}
           contentContainerStyle={{
             flexDirection: "row",
+            paddingRight: 30,
           }}
         >
           <TouchableOpacity
@@ -69,7 +70,7 @@ export const ProceduresList = ({ targetUser, addOrder }) => {
             <Text
               style={[
                 styles.buttonText,
-                { color: active === "all" ? "#e5e5e5" : "#ccc" },
+                { color: active === "all" ? "#111" : "#ccc" },
               ]}
             >
               {language?.language?.User?.userPage?.all}
@@ -91,7 +92,7 @@ export const ProceduresList = ({ targetUser, addOrder }) => {
                   {
                     color:
                       active.toLowerCase() === cat.value.toLowerCase()
-                        ? "#e5e5e5"
+                        ? "#111"
                         : "#ccc",
                   },
                 ]}
@@ -120,61 +121,121 @@ export const ProceduresList = ({ targetUser, addOrder }) => {
                 activeOpacity={addOrder ? 0.5 : 1}
                 key={index}
                 style={{
-                  width: "90%",
+                  width: "95%",
                   backgroundColor: currentTheme.background2,
-                  borderRadius: 50,
+                  borderRadius: 10,
                   padding: 15,
-                  paddingVertical: 10,
+                  paddingVertical: 7.5,
                   justifyContent: "space-between",
-                  alignItems: "center",
-                  flexDirection: "row",
+                  // alignItems: "center",
+                  gap: 5,
+                  // flexDirection: "row",
                 }}
               >
                 <View
                   style={{
                     flexDirection: "row",
+                    width: "100%",
+                    justifyContent: "space-between",
                     gap: 10,
                     alignItems: "center",
                   }}
                 >
                   <View
                     style={{
-                      width: 10,
-                      height: 10,
-                      borderRadius: 10,
-                      backgroundColor: currentTheme.pink,
+                      flexDirection: "row",
+                      gap: 10,
+                      alignItems: "center",
                     }}
-                  ></View>
-                  <Text
-                    style={{ color: currentTheme.font, letterSpacing: 0.2 }}
                   >
-                    {label.label}
-                  </Text>
+                    <View
+                      style={{
+                        width: 10,
+                        height: 10,
+                        borderRadius: 10,
+                        backgroundColor: currentTheme.pink,
+                      }}
+                    ></View>
+                    <Text
+                      style={{ color: currentTheme.font, letterSpacing: 0.2 }}
+                    >
+                      {label.label}
+                    </Text>
+                  </View>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      gap: 5,
+                      alignItems: "center",
+                    }}
+                  >
+                    <Text style={{ color: currentTheme.font }}>
+                      {item?.price}
+                    </Text>
+                    {item?.price > 0 && (
+                      <>
+                        {targetUser?.currency === "Dollar" ? (
+                          <FontAwesome
+                            name="dollar"
+                            color={currentTheme.pink}
+                            size={16}
+                          />
+                        ) : targetUser?.currency === "Euro" ? (
+                          <FontAwesome
+                            name="euro"
+                            color={currentTheme.pink}
+                            size={16}
+                          />
+                        ) : (
+                          <Text
+                            style={{
+                              fontWeight: "bold",
+                              color: currentTheme.pink,
+                              fontSize: 16,
+                            }}
+                          >
+                            {"\u20BE"}
+                          </Text>
+                        )}
+                      </>
+                    )}
+                  </View>
                 </View>
                 <View
-                  style={{ flexDirection: "row", gap: 5, alignItems: "center" }}
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 8,
+                    justifyContent: "flex-end",
+                  }}
                 >
-                  <Text style={{ color: currentTheme.font }}>
-                    {item?.price}
-                  </Text>
-                  {item?.price > 0 && (
-                    <>
-                      {targetUser?.currency === "Dollar" ? (
-                        <FontAwesome
-                          name="dollar"
-                          color={currentTheme.font}
-                          size={16}
-                        />
-                      ) : targetUser?.currency === "Euro" ? (
-                        <FontAwesome
-                          name="euro"
-                          color={currentTheme.font}
-                          size={16}
-                        />
-                      ) : (
-                        <Text style={{ color: currentTheme.font }}>Lari</Text>
-                      )}
-                    </>
+                  {item.duration && (
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        gap: 5,
+                        alignItems: "center",
+                      }}
+                    >
+                      <Text
+                        style={{ color: currentTheme.disabled, fontSize: 12 }}
+                      >
+                        {item.duration < 60
+                          ? item.duration + " min."
+                          : item.duration >= 60
+                          ? Math.floor(item.duration / 60) +
+                            "h" +
+                            (item.duration % 60 > 0
+                              ? " " + (item.duration % 60) + " min."
+                              : "")
+                          : "0h"}
+                      </Text>
+                      <FontAwesome5
+                        name="clock"
+                        color={currentTheme.pink}
+                        size={12}
+                      />
+                    </View>
                   )}
                 </View>
               </TouchableOpacity>
@@ -193,7 +254,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     gap: 15,
-    marginTop: 25,
+    marginTop: 15,
     paddingBottom: 15,
   },
   navigator: {

@@ -1,16 +1,91 @@
-import { StyleSheet, Text, View, Pressable, Dimensions } from "react-native";
-import React from "react";
+import {
+  StyleSheet,
+  Text,
+  View,
+  Pressable,
+  Dimensions,
+  Share,
+  Linking,
+} from "react-native";
+import React, { useState, useEffect } from "react";
 import { CacheableImage } from "../../components/cacheableImage";
 import { MaterialIcons } from "@expo/vector-icons";
-import { FontAwesome } from "@expo/vector-icons";
+import { FontAwesome, Fontisto } from "@expo/vector-icons";
 import GetTimesAgo from "../../functions/getTimesAgo";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSelector, useDispatch } from "react-redux";
+import axios from "axios";
+import {
+  setCleanUp,
+  setRerenderUserFeeds,
+  setRerenderUserFeed,
+} from "../../redux/rerenders";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
+// share content
+
 export const BottomSection = (props) => {
   const dispatch = useDispatch();
+  // share function
+  const [shares, setShares] = useState(null);
+
+  useEffect(() => {
+    setShares(props?.feed?.shares);
+  }, [props?.feed?.shares]);
+  const shareAndOpenURL = async (url, userId, itemId, val) => {
+    const UpdatePost = async () => {
+      try {
+        setShares(shares + 1);
+        await axios.patch(
+          `https://beautyverse.herokuapp.com/api/v1/users/${userId}/feeds/${itemId}`,
+          {
+            shares: val + 1,
+          }
+        );
+        dispatch(setCleanUp());
+        dispatch(setRerenderUserFeeds());
+        dispatch(setRerenderUserFeed());
+        if (props.GetFeedObj) {
+          props.GetFeedObj();
+        }
+      } catch (error) {
+        console.log(error.response.data.message);
+      }
+    };
+    try {
+      const canOpen = await Linking.canOpenURL(url);
+
+      if (!canOpen) {
+        console.log(`Can't open URL: ${url}`);
+        return;
+      }
+
+      const result = await Share.share({
+        title: "Open My App",
+        message: `Check this out: ${url}`,
+        url,
+      });
+
+      if (result.action === Share.sharedAction) {
+        if (result.activityType) {
+          // shared with activity type of result.activityType
+          console.log(`Shared with activity type of ${result.activityType}`);
+          UpdatePost();
+        } else {
+          // shared
+          console.log("Shared successfully");
+        }
+      } else if (result.action === Share.dismissedAction) {
+        // dismissed
+        console.log("Share was dismissed");
+      }
+
+      // await Linking.openURL(url);
+    } catch (err) {
+      console.error("An error occurred", err);
+    }
+  };
   // define times ago
   const currentPostTime = GetTimesAgo(
     new Date(props.feed?.createdAt).getTime()
@@ -112,6 +187,7 @@ export const BottomSection = (props) => {
               {props.starsLength}
             </Text>
           </View>
+
           <Pressable
             onPress={
               !props.from && !props.notifications
@@ -128,7 +204,7 @@ export const BottomSection = (props) => {
                 : () => props.setOpenReviews(!props.openReviews)
             }
             style={{
-              flex: 1,
+              // flex: 1,
               alignItems: "center",
               flexDirection: "row",
               marginBottom: 2,
@@ -161,6 +237,48 @@ export const BottomSection = (props) => {
               {props?.reviewsLength}
             </Text>
           </Pressable>
+          <View
+            style={{
+              flexDirection: "row",
+              gap: 5,
+              alignItems: "center",
+              marginBottom: 2,
+            }}
+          >
+            <Pressable
+              style={{
+                height: 35,
+                marginLeft: 11,
+                justifyContent: "center",
+                position: "relative",
+              }}
+              onPress={() =>
+                shareAndOpenURL(
+                  "https://expo.dev/@beautyverse/beautyverse-app?serviceType=classic&distribution=expo-go",
+                  props.user._id,
+                  props.feed._id,
+                  shares ? shares : 0
+                )
+              }
+            >
+              <Fontisto
+                name="share-a"
+                size={17}
+                color="#f7f7f7"
+                style={{ marginTop: 1 }}
+              />
+            </Pressable>
+            <Text
+              style={[
+                styles.bottomText,
+                {
+                  color: "#f7f7f7",
+                },
+              ]}
+            >
+              {shares}
+            </Text>
+          </View>
         </View>
         {props.feed?.fileFormat === "video" && (
           <View
@@ -210,7 +328,13 @@ const styles = StyleSheet.create({
     // paddingHorizontal: 10,
     zIndex: 120,
   },
-  stars: { flexDirection: "row", alignItems: "center", flex: 1 },
+  stars: {
+    // backgroundColor: "green",
+    flexDirection: "row",
+    alignItems: "center",
+    // justifyContent: "space-evenly",
+    // width: 150,
+  },
   starsQnt: {
     color: "#fff",
     fontSize: 12,

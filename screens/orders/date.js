@@ -1,135 +1,217 @@
-// import React, { useState, useEffect, useRef } from "react";
-// import {
-//   StyleSheet,
-//   Text,
-//   View,
-//   FlatList,
-//   Dimensions,
-//   TouchableOpacity,
-// } from "react-native";
-// import moment from "moment";
+import {
+  View,
+  Button,
+  Platform,
+  TouchableOpacity,
+  Text,
+  ActivityIndicator,
+  ScrollView,
+} from "react-native";
+import { useState, useEffect } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { lightTheme, darkTheme } from "../../context/theme";
+import axios from "axios";
+import { ProceduresOptions } from "../../datas/registerDatas";
 
-// const DATE_ITEM_WIDTH = Dimensions.get("window").width / 5;
+export const DateScreen = ({ route }) => {
+  const dispatch = useDispatch();
+  const theme = useSelector((state) => state.storeApp.theme);
+  const currentTheme = theme ? darkTheme : lightTheme;
 
-// const DateItem = ({ item, index, selectedIndex, onPress }) => {
-//   let opacity;
-//   const distance = Math.abs(selectedIndex - index);
-//   switch (distance) {
-//     case 0:
-//       opacity = 1;
-//       break;
-//     case 1:
-//       opacity = 0.7;
-//       break;
-//     default:
-//       opacity = 0.4;
-//       break;
-//   }
+  const proceduresOptions = ProceduresOptions();
 
-//   const isToday = moment().isSame(item, "day");
+  // define active hours in this day
+  let activedate = route.params.date;
+  const date = new Date(activedate);
+  const activeDates = date.toString();
+  const activeDate = date.toLocaleDateString("en-US", { weekday: "long" });
+  const activeDatename = activeDate?.split(",");
+  const activeDateName = activeDatename[0]?.toLowerCase();
+  const currentUser = useSelector((state) => state.storeUser.currentUser);
+  const dayObj = currentUser?.workingDays?.find(
+    (item) =>
+      item.value?.toLowerCase() === activeDateName ||
+      item.value?.toLowerCase() === "workingdays" ||
+      item.value?.toLowerCase() === "everyday"
+  );
+  const dayHours = dayObj.hours?.split(" - ");
+  const startHour = dayHours[0];
+  const endHour = dayHours[1];
 
-//   return (
-//     <TouchableOpacity
-//       style={[styles.item, { opacity }]}
-//       onPress={() => onPress(index)}
-//     >
-//       <Text style={styles.date}>{item.format("DD")}</Text>
-//       {!isToday && <Text style={styles.month}>{item.format("MMM")}</Text>}
-//       {isToday && <Text style={styles.today}>Today</Text>}
-//     </TouchableOpacity>
-//   );
-// };
+  // hours list
+  const [hoursList, setHoursList] = useState([]);
 
-// const DateComponent = () => {
-//   const [dates, setDates] = useState(getDates(365)); // get dates for a year
-//   const [selectedIndex, setSelectedIndex] = useState(dates.length / 2); // start with the current date
-//   const flatListRef = useRef();
+  useEffect(() => {
+    const startTime = new Date(`2000-01-01T${startHour}`);
+    const endTime = new Date(`2000-01-01T${endHour}`);
 
-//   useEffect(() => {
-//     const timer = setInterval(() => {
-//       setDates(getDates(365));
-//     }, 1000 * 60 * 60 * 24); // update dates every day
+    const list = [];
+    let currentHour = startTime;
 
-//     return () => clearInterval(timer);
-//   }, []);
+    while (currentHour <= endTime) {
+      const hour = currentHour.toLocaleTimeString("en-US", {
+        hour: "numeric",
+        minute: "numeric",
+      });
+      list.push(hour);
+      currentHour.setMinutes(currentHour.getMinutes() + 15);
+    }
 
-//   function getDates(days) {
-//     const now = moment();
-//     let dates = [];
-//     for (let i = -days / 2; i <= days / 2; i++) {
-//       dates.push(moment(now).add(i, "days"));
-//     }
-//     return dates;
-//   }
+    setHoursList(list);
+  }, [startHour, endHour]);
 
-//   const selectDate = (index) => {
-//     setSelectedIndex(index);
-//     if (flatListRef.current) {
-//       flatListRef.current.scrollToIndex({ index });
-//     }
-//   };
+  // get orders in this date
+  const [loader, setLoader] = useState(true);
+  const [orders, setOrders] = useState([]);
+  const [ordersResult, setOrdersResult] = useState(null);
+  useEffect(() => {
+    const GetOrders = async () => {
+      try {
+        setLoader(true);
+        const response = await axios.get(
+          "https://beautyverse.herokuapp.com/api/v1/users/" +
+            currentUser._id +
+            `/orders?date=${activedate}&page=1`
+        );
+        setOrders(response.data.data.orders);
+        setOrdersResult(response.data.filterResult);
+        setTimeout(() => {
+          setLoader(false);
+        }, 200);
+      } catch (error) {
+        console.log(error.response.data.message);
+      }
+    };
 
-//   const onViewRef = React.useRef(({ viewableItems }) => {
-//     if (viewableItems && viewableItems.length > 0) {
-//       setSelectedIndex(viewableItems[0].index);
-//     }
-//   });
+    if (currentUser) {
+      GetOrders();
+    }
+  }, []);
 
-//   const viewConfigRef = React.useRef({ viewAreaCoveragePercentThreshold: 50 });
+  return (
+    <>
+      {loader ? (
+        <View
+          style={{
+            flex: 1,
+            alignItems: "center",
+            justifyContent: "center",
+            height: 500,
+          }}
+        >
+          <ActivityIndicator color={currentTheme.pink} size="large" />
+        </View>
+      ) : (
+        <View
+          style={{
+            alignItems: "center",
+            paddingHorizontal: 10,
+            flex: 1,
+          }}
+        >
+          <Text style={{ color: currentTheme.font, marginVertical: 8 }}>
+            Total orders: {ordersResult}
+          </Text>
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ gap: 8 }}
+            style={{ width: "100%", marginTop: 15 }}
+          >
+            {hoursList.map((hour) => {
+              const [hours, minutes] = hour.split(":");
 
-//   return (
-//     <FlatList
-//       ref={flatListRef}
-//       horizontal
-//       showsHorizontalScrollIndicator={false}
-//       data={dates}
-//       keyExtractor={(item, index) => index.toString()}
-//       renderItem={({ item, index }) => (
-//         <DateItem
-//           item={item}
-//           index={index}
-//           selectedIndex={selectedIndex}
-//           onPress={selectDate}
-//         />
-//       )}
-//       onViewableItemsChanged={onViewRef.current}
-//       viewabilityConfig={viewConfigRef.current}
-//       initialScrollIndex={dates.length / 2}
-//       getItemLayout={(data, index) => ({
-//         length: DATE_ITEM_WIDTH,
-//         offset: DATE_ITEM_WIDTH * index,
-//         index,
-//       })}
-//       snapToInterval={DATE_ITEM_WIDTH}
-//       snapToAlignment="center"
-//       decelerationRate="fast"
-//       contentContainerStyle={{
-//         paddingHorizontal:
-//           Dimensions.get("window").width / 2 - DATE_ITEM_WIDTH / 2,
-//       }}
-//     />
-//   );
-// };
+              const foundItem = orders?.find((item) => {
+                const itemDate = new Date(item.date);
+                const itemHours = itemDate.getHours();
+                const itemMinutes = itemDate.getMinutes();
 
-// const styles = StyleSheet.create({
-//   item: {
-//     // flex: 1,
-//     justifyContent: "center",
-//     alignItems: "center",
-//     width: DATE_ITEM_WIDTH,
-//   },
-//   date: {
-//     fontSize: 24,
-//     color: "#ccc",
-//   },
-//   month: {
-//     fontSize: 14,
-//     color: "#ccc",
-//   },
-//   today: {
-//     fontSize: 16,
-//     color: "#ccc",
-//   },
-// });
+                if (
+                  parseInt(hours) === parseInt(itemHours) &&
+                  parseInt(minutes) === parseInt(itemMinutes)
+                ) {
+                  return itemHours + ":" + itemMinutes;
+                }
+              });
 
-// export default DateComponent;
+              if (foundItem) {
+                let lab = proceduresOptions?.find(
+                  (pr) =>
+                    pr.value?.toLowerCase() ===
+                    foundItem.orderedProcedure?.value?.toLowerCase()
+                );
+                return (
+                  <View
+                    key={hour}
+                    style={{
+                      width: "100%",
+                      borderWidth: 1,
+                      borderColor: currentTheme.line,
+                      padding: 10,
+                      borderRadius: 8,
+                      flexDirection: "row",
+                      gap: 10,
+                      backgroundColor:
+                        foundItem.status === "active"
+                          ? currentTheme.pink
+                          : currentTheme.background,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        color:
+                          foundItem.status === "active"
+                            ? "#111"
+                            : currentTheme.disabled,
+                        letterSpacing: 0.2,
+                        fontWeight: "bold",
+                      }}
+                    >
+                      {hour}
+                    </Text>
+                    <Text
+                      style={{
+                        color:
+                          foundItem.status === "active"
+                            ? "#111"
+                            : currentTheme.disabled,
+                        letterSpacing: 0.2,
+                        fontWeight: "bold",
+                      }}
+                    >
+                      {lab.label}
+                    </Text>
+                    <Text
+                      style={{
+                        color:
+                          foundItem.status === "active"
+                            ? "#111"
+                            : currentTheme.disabled,
+                        letterSpacing: 0.2,
+                        fontWeight: "bold",
+                      }}
+                    >
+                      {foundItem.user.name}
+                    </Text>
+                    <Text
+                      style={{
+                        color:
+                          foundItem.status === "active"
+                            ? "#111"
+                            : currentTheme.disabled,
+                        letterSpacing: 0.2,
+                        fontWeight: "bold",
+                        marginLeft: "auto",
+                      }}
+                    >
+                      {foundItem.status}
+                    </Text>
+                  </View>
+                );
+              }
+            })}
+          </ScrollView>
+        </View>
+      )}
+    </>
+  );
+};

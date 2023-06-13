@@ -4,11 +4,13 @@ import { Rooms } from "../../screens/chat/rooms";
 import { AddChat } from "../../screens/chat/addChat";
 import { useSelector, useDispatch } from "react-redux";
 import { useState } from "react";
+import { useNavigation } from "@react-navigation/native";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
-export const Chat = ({ navigation, socket }) => {
+export const Chat = ({ socket }) => {
   const openAddChat = useSelector((state) => state.storeChat.openAddChat);
+  const navigation = useNavigation();
 
   const [search, setSearch] = useState("");
   return (

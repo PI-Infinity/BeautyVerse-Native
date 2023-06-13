@@ -61,6 +61,8 @@ export const Settings = ({ navigation }) => {
     }
   };
 
+  const newSentOrders = useSelector((state) => state.storeSentOrders.new);
+
   return (
     <ScrollView
       contentContainerStyle={{ alignItems: "center", paddingBottom: 30 }}
@@ -72,6 +74,47 @@ export const Settings = ({ navigation }) => {
         backgroundColor: currentTheme.background,
       }}
     >
+      {currentUser?.type.toLowerCase() !== "beautycenter" && (
+        <TouchableOpacity
+          activeOpacity={0.5}
+          onPress={() => navigation.navigate("Sent Orders")}
+          style={[styles.item, { backgroundColor: currentTheme.background2 }]}
+        >
+          <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
+            <Text
+              style={[
+                styles.sectionTitle,
+                { color: currentTheme.font, letterSpacing: 0.2 },
+              ]}
+            >
+              {/* {language?.language?.User?.userPage?.personalInfo} */}
+              My Bookings
+            </Text>
+            {newSentOrders > 0 && (
+              <View
+                style={{
+                  width: "auto",
+                  minWidth: 16,
+                  height: 16,
+                  backgroundColor: "green",
+                  borderRadius: 50,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Text style={{ color: "#fff", fontSize: 10 }}>
+                  {newSentOrders}
+                </Text>
+              </View>
+            )}
+          </View>
+          <MaterialIcons
+            name={"arrow-right"}
+            color={currentTheme.pink}
+            size={18}
+          />
+        </TouchableOpacity>
+      )}
       <TouchableOpacity
         activeOpacity={0.5}
         onPress={() => navigation.navigate("Personal info")}
@@ -378,49 +421,59 @@ export const Settings = ({ navigation }) => {
           style={styles.switch}
         />
       </View>
-      <View style={[styles.item, { backgroundColor: "rgba(0,0,0,0)" }]}>
-        <Text
+      {currentUser?.type !== "user" && (
+        <View style={[styles.item, { backgroundColor: "rgba(0,0,0,0)" }]}>
+          <Text
+            style={[
+              styles.sectionTitle,
+              { color: currentTheme.font, letterSpacing: 0.2 },
+            ]}
+          >
+            {language?.language?.User?.userPage?.activation}
+          </Text>
+          <Switch
+            trackColor={{ false: "#e5e5e5", true: "#F866B1" }}
+            thumbColor={currentUser.active ? "#e5e5e5" : "#F866B1"}
+            value={currentUser.active}
+            onValueChange={ControlActivity}
+            style={styles.switch}
+          />
+        </View>
+      )}
+      {currentUser?.type !== "user" && (
+        <TouchableOpacity
+          activeOpacity={0.5}
+          onPress={() => navigation.navigate("Prices", { from: "Settings" })}
           style={[
-            styles.sectionTitle,
-            { color: currentTheme.font, letterSpacing: 0.2 },
+            styles.item,
+            { backgroundColor: currentTheme.background2, marginTop: 20 },
           ]}
         >
-          {language?.language?.User?.userPage?.activation}
-        </Text>
-        <Switch
-          trackColor={{ false: "#e5e5e5", true: "#F866B1" }}
-          thumbColor={currentUser.active ? "#e5e5e5" : "#F866B1"}
-          value={currentUser.active}
-          onValueChange={ControlActivity}
-          style={styles.switch}
-        />
-      </View>
-      <TouchableOpacity
-        activeOpacity={0.5}
-        onPress={() => navigation.navigate("Prices", { from: "Settings" })}
-        style={[
-          styles.item,
-          { backgroundColor: currentTheme.background2, marginTop: 30 },
-        ]}
-      >
-        <Text
-          style={[
-            styles.sectionTitle,
-            { color: currentTheme.font, letterSpacing: 0.2 },
-          ]}
-        >
-          {language?.language?.User?.userPage?.prices}
-        </Text>
-        <MaterialIcons
-          name={"arrow-right"}
-          color={currentTheme.pink}
-          size={18}
-        />
-      </TouchableOpacity>
+          <Text
+            style={[
+              styles.sectionTitle,
+              { color: currentTheme.font, letterSpacing: 0.2 },
+            ]}
+          >
+            {language?.language?.User?.userPage?.prices}
+          </Text>
+          <MaterialIcons
+            name={"arrow-right"}
+            color={currentTheme.pink}
+            size={18}
+          />
+        </TouchableOpacity>
+      )}
       <TouchableOpacity
         activeOpacity={0.5}
         onPress={() => navigation.navigate("Terms")}
-        style={[styles.item, { backgroundColor: currentTheme.background2 }]}
+        style={[
+          styles.item,
+          {
+            backgroundColor: currentTheme.background2,
+            marginTop: currentUser?.type === "user" ? 20 : 0,
+          },
+        ]}
       >
         <Text
           style={[

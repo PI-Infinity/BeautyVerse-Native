@@ -153,15 +153,28 @@ const NotificationItem = ({
   const [feedObj, setFeedObj] = useState(null);
   const [user, setUser] = useState(null);
 
+  const rerenderUserFeed = useSelector(
+    (state) => state.storeRerenders.rerenderUserFeed
+  );
+
   async function GetFeedObj(currentPage) {
     try {
       if (item?.type !== "welcome") {
         let response = await axios.get(
           `https://beautyverse.herokuapp.com/api/v1/users/${
             currentUser?._id
-          }/feeds/${feed[feed?.length - 1]}`
+          }/feeds/${feed[feed?.length - 1]}?check=${currentUser._id}`
         );
-        setFeedObj(response.data);
+
+        setFeedObj(response.data.data.feedObj);
+      }
+    } catch (error) {
+      console.log(error.response.data.message);
+    }
+  }
+  async function GetUser(currentPage) {
+    try {
+      if (item?.type !== "welcome") {
         let res = await axios.get(
           `https://beautyverse.herokuapp.com/api/v1/users/${item?.senderId}`
         );
@@ -176,7 +189,7 @@ const NotificationItem = ({
     if (feedObj) {
       navigation.navigate("UserFeed", {
         user: currentUser,
-        feedObj: feedObj.data.feedObj,
+        feed: feedObj,
       });
     } else {
       Alert.alert("Feed not defined");
@@ -185,15 +198,16 @@ const NotificationItem = ({
 
   useEffect(() => {
     GetFeedObj();
-  }, []);
+    GetUser();
+  }, [rerenderUserFeed]);
 
   // delete notification
 
   const DeleteNotification = async () => {
     try {
       Vibration.vibrate();
-      const updatedNotifications = notifications.filter(
-        (notification) => notification._id !== item?._id
+      const updatedNotifications = notifications?.filter(
+        (notification) => notification?._id !== item?._id
       );
       setNotifications(updatedNotifications);
       await axios.delete(

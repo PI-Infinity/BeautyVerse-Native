@@ -4,7 +4,7 @@ const Menu = {
     notifications: "Notifications",
     tr: "Terms and rules",
     privacy: "Privacy",
-    howitworks: "How it works?",
+    howitworks: "How does it work?",
     qa: "Q&A",
     logout: "Logout",
     login: "Login",
@@ -22,12 +22,12 @@ const Menu = {
   ru: {
     profile: "Личный кабинет",
     notifications: "Уведомления",
-    tr: "Условия и правила",
+    tr: "Правила и условия",
     privacy: "Конфиденциальность",
     howitworks: "Как это работает?",
     qa: "Вопросы и ответы",
     logout: "Выйти",
-    login: "Авторизоваться",
+    login: "Войти",
   },
 };
 

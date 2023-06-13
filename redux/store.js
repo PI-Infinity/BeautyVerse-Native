@@ -8,6 +8,8 @@ import FilterReducer from "./filter";
 import ChatReducer from "./chat";
 import FeedReducer from "./feed";
 import OrdersReducer from "./orders";
+import SentOrdersReducer from "./sentOrders";
+import AlertsReducer from "./alerts";
 
 export const store = configureStore({
   reducer: {
@@ -20,5 +22,7 @@ export const store = configureStore({
     storeChat: ChatReducer,
     storeFeed: FeedReducer,
     storeOrders: OrdersReducer,
+    storeSentOrders: SentOrdersReducer,
+    storeAlerts: AlertsReducer,
   },
 });

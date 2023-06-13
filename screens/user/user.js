@@ -87,7 +87,7 @@ export const User = ({ navigation, user, variant }) => {
   // useEffect for setting cover image
   useEffect(() => {
     setCover(targetUser.cover + `?rand=${Math.random()}`);
-  }, [currentUser, rerenderCurrentUser]);
+  }, [currentUser, rerenderCurrentUser, route]);
 
   // Function to handle cover updates
   const handleCoverUpdate = (newCover) => {
@@ -115,6 +115,12 @@ export const User = ({ navigation, user, variant }) => {
 
   // State for active navigator
   const [active, setActive] = useState(targetUser.type === "user" ? 1 : 0);
+  const navigatorRef = useRef(null);
+
+  useEffect(() => {
+    setActive(targetUser.type === "user" ? 1 : 0);
+    navigatorRef.current.scrollToOffset({ offset: 0, animated: true });
+  }, [route]);
 
   // State for number of visible lines in about
   const [numOfLines, setNumOfLines] = useState(3);
@@ -365,6 +371,10 @@ export const User = ({ navigation, user, variant }) => {
     }).start();
   }, []);
 
+  console.log(route.name);
+  // console.log(targetUser._id);
+  // console.log(currentUser._id);
+
   return (
     <ScrollView
       ref={scrollViewRef}
@@ -383,28 +393,29 @@ export const User = ({ navigation, user, variant }) => {
           }}
         >
           <View style={styles.coverImg}>
-            {variant !== "visitPage" && (
-              <View
-                style={{
-                  position: "absolute",
-                  zIndex: 10000,
-                  height: 100,
-                  width: 100,
-                }}
-              >
-                {Platform.OS === "ios" ? (
-                  <InputFile
-                    targetUser={targetUser}
-                    onCoverUpdate={handleCoverUpdate}
-                  />
-                ) : (
-                  <InputCoverAndroid
-                    targetUser={targetUser}
-                    onCoverUpdate={handleCoverUpdate}
-                  />
-                )}
-              </View>
-            )}
+            {route.name === "UserProfile" &&
+              currentUser._id === targetUser._id && (
+                <View
+                  style={{
+                    position: "absolute",
+                    zIndex: 10000,
+                    height: 100,
+                    width: 100,
+                  }}
+                >
+                  {Platform.OS === "ios" ? (
+                    <InputFile
+                      targetUser={targetUser}
+                      onCoverUpdate={handleCoverUpdate}
+                    />
+                  ) : (
+                    <InputCoverAndroid
+                      targetUser={targetUser}
+                      onCoverUpdate={handleCoverUpdate}
+                    />
+                  )}
+                </View>
+              )}
             {cover?.length > 30 ? (
               <View
                 style={{
@@ -548,6 +559,7 @@ export const User = ({ navigation, user, variant }) => {
           ]}
         >
           <FlatList
+            ref={navigatorRef}
             data={navigatorItems}
             horizontal={true}
             showsHorizontalScrollIndicator={false}
