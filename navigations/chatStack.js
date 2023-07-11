@@ -2,11 +2,9 @@ import {
   createStackNavigator,
   CardStyleInterpolators,
 } from "@react-navigation/stack";
-
 import {
   View,
   TouchableOpacity,
-  Image,
   Text,
   Dimensions,
   Pressable,
@@ -15,10 +13,6 @@ import { Chat } from "../screens/chat/chat";
 import { Room } from "../screens/chat/room";
 import { FontAwesome } from "@expo/vector-icons";
 import React, { useState, useEffect } from "react";
-import {
-  getFocusedRouteNameFromRoute,
-  useNavigation,
-} from "@react-navigation/native";
 import { useSelector, useDispatch } from "react-redux";
 import { setOpenAddChat } from "../redux/chat";
 import { CacheableImage } from "../components/cacheableImage";
@@ -30,65 +24,40 @@ import { lightTheme, darkTheme } from "../context/theme";
 import { SendOrder } from "../screens/orders/sendOrder";
 import { SentOrders } from "../screens/sentOrders/sentOrders";
 import axios from "axios";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { FeedItem } from "../screens/feedScreen";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
 const Stack = createStackNavigator();
 
-const withVariant = (socket) => {
-  return (props) => {
-    return <Room {...props} socket={socket} />;
-  };
-};
-const withVariant2 = (socket) => {
-  return (props) => {
-    return <Chat {...props} socket={socket} />;
-  };
-};
-
-export function ChatStack({ route, socket, navigation }) {
+export function ChatStack({ navigation }) {
   const language = Language();
-  const currentChat = useSelector((state) => state.storeChat.currentChat);
   const currentUser = useSelector((state) => state.storeUser.currentUser);
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
-  // define target member
-  let targetChatMember;
-  if (currentChat?.members.member1 === currentUser._id) {
-    targetChatMember = {
-      id: currentChat?.members.member2,
-      name: currentChat?.members.member2Name,
-      cover: currentChat?.members.member2Cover,
-    };
-  } else {
-    targetChatMember = {
-      id: currentChat?.members.member1,
-      name: currentChat?.members.member1Name,
-      cover: currentChat?.members.member1Cover,
-    };
-  }
-
-  const [userObj, setUserObj] = useState(null);
-  useEffect(() => {
-    const GetUser = async () => {
-      try {
-        // Make a request to get the current user's data from the server
-        const response = await axios.get(
-          `https://beautyverse.herokuapp.com/api/v1/users/${targetChatMember?.id}`
-        );
-        // Set the current user in the user's Redux store
-        setUserObj(response.data.data.user);
-      } catch (error) {
-        console.log(error.response.data.message);
-      }
-    };
-    if (targetChatMember) {
-      // Call GetUser if currUser is not null
-      GetUser();
-    }
-  }, [currentChat]);
 
   const dispatch = useDispatch();
+
+  // define screen height
+
+  const insets = useSafeAreaInsets();
+
+  // const [keyboardHeight, setKeyboardHeight] = useState(0);
+
+  // useEffect(() => {
+  //   const GetHeight = async () => {
+  //     let kHeight = await AsyncStorage.getItem("Beautyverse:keyboardHeight");
+  //     setKeyboardHeight(JSON.parse(kHeight));
+  //   };
+  //   GetHeight();
+  // }, []);
+
+  const screenHeight = SCREEN_HEIGHT - insets.top - insets.bottom;
+
+  // user obj
+
   return (
     <Stack.Navigator
       screenOptions={{
@@ -98,7 +67,7 @@ export function ChatStack({ route, socket, navigation }) {
     >
       <Stack.Screen
         name="Chats"
-        children={() => <Chat socket={socket} navigation={navigation} />}
+        component={Chat}
         options={{
           headerBackTitleVisible: false,
           title: "Chats",
@@ -127,17 +96,13 @@ export function ChatStack({ route, socket, navigation }) {
               <FontAwesome name="plus" size={18} color={currentTheme.font} />
             </TouchableOpacity>
           ),
-          // headerRight: () => (
-          //   <View style={{ marginRight: 15 }}>
-          //     <FontAwesome name="bars" size={18} color={currentTheme.font} />
-          //   </View>
-          // ),
         }}
       />
       <Stack.Screen
         name="Room"
-        children={() => <Room socket={socket} navigation={navigation} />}
-        options={({ route, navigation }) => ({
+        component={Room}
+        initialParams={{ screenHeight }}
+        options={({ navigation, route }) => ({
           headerBackTitleVisible: false,
           // title: "name",
           headerStyle: {
@@ -147,49 +112,51 @@ export function ChatStack({ route, socket, navigation }) {
             shadowOpacity: 0,
             borderBottomWidth: 0,
           },
-          headerTitle: (props) => (
-            <Pressable
-              onPress={() =>
-                navigation.navigate("User", {
-                  user: userObj,
-                })
-              }
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 10,
-                justifyContent: "center",
-                width: SCREEN_WIDTH - 150,
-              }}
-            >
-              {targetChatMember?.cover?.length > 0 && (
-                <CacheableImage
-                  source={{ uri: targetChatMember?.cover }}
-                  style={{
-                    height: 30,
-                    width: 30,
-                    borderRadius: 50,
-                    resizeMode: "cover",
-                  }}
-                  manipulationOptions={[
-                    { resize: { width: 30, height: 30 } },
-                    { rotate: 90 },
-                  ]}
-                />
-              )}
-
-              <Text
+          headerTitle: (props) => {
+            return (
+              <Pressable
+                onPress={() =>
+                  navigation.navigate("User", {
+                    user: route.params.user,
+                  })
+                }
                 style={{
-                  fontSize: 18,
-                  letterSpacing: 0.5,
-                  color: currentTheme.font,
-                  fontWeight: "bold",
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 10,
+                  justifyContent: "center",
+                  width: SCREEN_WIDTH - 150,
                 }}
               >
-                {targetChatMember?.name}
-              </Text>
-            </Pressable>
-          ),
+                {route.params.user?.cover?.length > 0 && (
+                  <CacheableImage
+                    source={{ uri: route.params.user?.cover }}
+                    style={{
+                      height: 30,
+                      width: 30,
+                      borderRadius: 50,
+                      resizeMode: "cover",
+                    }}
+                    manipulationOptions={[
+                      { resize: { width: 30, height: 30 } },
+                      { rotate: 90 },
+                    ]}
+                  />
+                )}
+
+                <Text
+                  style={{
+                    fontSize: 18,
+                    letterSpacing: 0.5,
+                    color: currentTheme.font,
+                    fontWeight: "bold",
+                  }}
+                >
+                  {route.params.user?.name}
+                </Text>
+              </Pressable>
+            );
+          },
           headerTintColor: currentTheme.font,
           headerTitleStyle: {
             fontWeight: "bold",
@@ -351,11 +318,11 @@ export function ChatStack({ route, socket, navigation }) {
         })}
       />
       <Stack.Screen
-        name="ScrollGallery"
-        component={ScrollGallery}
+        name="UserFeed"
+        component={FeedItem}
         options={({ route }) => ({
           headerBackTitleVisible: false,
-          title: language?.language?.User?.userPage?.feeds,
+          title: "Feed",
           headerStyle: {
             backgroundColor: currentTheme.background,
 
@@ -366,8 +333,8 @@ export function ChatStack({ route, socket, navigation }) {
           headerTintColor: currentTheme.font,
           headerTitleStyle: {
             fontWeight: "bold",
-            letterSpacing: 0.5,
             fontSize: 18,
+            letterSpacing: 0.5,
           },
           cardStyle: {
             backgroundColor: currentTheme.background,

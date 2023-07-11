@@ -1,73 +1,95 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import axios from "axios";
+import { useEffect, useState } from "react";
 import {
-  View,
+  Keyboard,
+  KeyboardAvoidingView,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
-  Dimensions,
-  Alert,
-  KeyboardAvoidingView,
+  View,
 } from "react-native";
-import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { setCurrentUser } from "../../redux/auth";
-import axios from "axios";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import AlertMessage from "../../components/alertMessage";
 import EmailPopup from "../../components/inputPopup";
+import { Language } from "../../context/language";
+import { darkTheme, lightTheme } from "../../context/theme";
+import { setCurrentUser } from "../../redux/auth";
 import { setRerenderCurrentUser } from "../../redux/rerenders";
 import PasswordRessetPopup from "../../screens/authentication/resetPassword";
-import { Language } from "../../context/language";
-import { lightTheme, darkTheme } from "../../context/theme";
-import AlertMessage from "../../components/alertMessage";
 
-const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
+/**
+ * Login Screen
+ */
 
 export const Login = ({ navigation }) => {
+  // login email and password states
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
+  // define languuage context
   const language = Language();
 
+  // use redux toolkit dispatch
   const dispatch = useDispatch();
 
+  // define theme state
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
 
-  // verify email
+  // verify email states
   const [verify, setVerify] = useState(false);
   const [code, setCode] = useState("");
 
   // alert message
   const [alert, setAlert] = useState({ active: false, text: "", type: "" });
 
+  /**
+   * Login function
+   */
   const Login = async () => {
     try {
+      // post login to backend
       await axios
         .post("https://beautyverse.herokuapp.com/api/v1/login", {
           email: email,
           password: password,
         })
         .then(async (data) => {
+          // if email verified go to next steps to naviagtion to main content
           if (data.data.filteredUser.verifiedEmail) {
             if (
+              /**
+               * if user type is not "user" and procedures are not defined (user has stoped register until choising procedures),
+               * save user info to redux toolkit to go on the register to complete
+               * after saving info navigate to business register screen
+               */
               data.data.filteredUser.type !== "user" &&
               data.data.filteredUser.procedures?.length < 1
             ) {
               dispatch(setCurrentUser(data.data.filteredUser));
               navigation.navigate("Business");
             } else {
+              /**
+               * if user's type is not "user" and procedures defined, or type is "user"
+               * set repoonsed user info to async storage
+               */
               await AsyncStorage.setItem(
                 "Beautyverse:currentUser",
                 JSON.stringify(data.data.filteredUser)
               );
+              // after save user to async storage, rerender user info to complete login and navigate to main content
               dispatch(setRerenderCurrentUser());
             }
+            // if email not verified, lets verify it
           } else {
             setVerify(true);
           }
         });
     } catch (err) {
       console.log(err.response.data.message);
+      // alert errors to be visible for users
       setAlert({
         active: true,
         text: err.response.data.message,
@@ -76,6 +98,11 @@ export const Login = ({ navigation }) => {
     }
   };
 
+  /**
+   * if this function need to use, so user registered succesfully but not verified email yet
+   * now when login, need complete register and need verify email
+   * Veryify function verifes email by 6 random numbers
+   */
   async function Verify() {
     try {
       const response = await axios.post(
@@ -85,9 +112,8 @@ export const Login = ({ navigation }) => {
           code: code,
         }
       );
-
       const newUser = response.data.data.newUser;
-
+      // if user type is "user" complete register and navigate to main content
       if (newUser?.type === "user") {
         await AsyncStorage.setItem(
           "Beautyverse:currentUser",
@@ -95,6 +121,7 @@ export const Login = ({ navigation }) => {
         );
         dispatch(setRerenderCurrentUser());
       } else {
+        // if user type not "user", after verifying email navigate to business register screen
         dispatch(setCurrentUser(newUser));
         navigation.navigate("Business");
       }
@@ -108,16 +135,21 @@ export const Login = ({ navigation }) => {
     }
   }
 
+  /**
+   * this is states for reset passwords.
+   * email input and to open/close reset password popup
+   */
   const [emailInput, setEmailInput] = useState("");
   const [resetPopup, setResetPopup] = useState(false);
 
   /**
    * send email to reset password
+   * after send request, user gettings link to navigate to beautyverse web, where user can set new password
    */
 
   async function SendEmail() {
     try {
-      const response = await axios.post(
+      await axios.post(
         "https://beautyverse.herokuapp.com/api/v1/forgotPassword",
         {
           email: emailInput,
@@ -138,6 +170,30 @@ export const Login = ({ navigation }) => {
     }
     setResetPopup(false);
   }
+
+  // this state used to show/hide password when input
+  const [passwordFocused, setPasswordFocused] = useState(false);
+
+  /**
+   * this functions below defines keyboard height of device
+   */
+  async function onKeyboardDidShow(e) {
+    if (passwordFocused) {
+      await AsyncStorage.setItem(
+        "Beautyverse:keyboardHeight",
+        JSON.stringify(e.endCoordinates.height + 45)
+      );
+    }
+  }
+  useEffect(() => {
+    const keyboardDidShowListener = Keyboard.addListener(
+      "keyboardDidShow",
+      onKeyboardDidShow
+    );
+    return () => {
+      keyboardDidShowListener.remove();
+    };
+  }, [passwordFocused]);
 
   return (
     <KeyboardAvoidingView
@@ -183,7 +239,6 @@ export const Login = ({ navigation }) => {
             styles.input,
             {
               color: currentTheme.font,
-              // backgroundColor: currentTheme.background2,
               borderColor: currentTheme.line,
             },
           ]}
@@ -198,11 +253,12 @@ export const Login = ({ navigation }) => {
             styles.input,
             {
               color: currentTheme.font,
-              // backgroundColor: currentTheme.background2,
               borderColor: currentTheme.line,
             },
           ]}
           placeholderTextColor={currentTheme.disabled}
+          onFocus={() => setPasswordFocused(true)}
+          onBlur={() => setPasswordFocused(false)}
         />
         <TouchableOpacity style={styles.button} onPress={Login}>
           <Text style={styles.buttonText}>
@@ -242,14 +298,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: "bold",
-    color: "#e5e5e5",
     marginBottom: 20,
   },
   input: {
     width: "80%",
     padding: 12.5,
     fontSize: 14,
-    color: "#e5e5e5",
     borderBottomWidth: 1,
     letterSpacing: 0.2,
     shadowColor: "#000",
@@ -270,13 +324,11 @@ const styles = StyleSheet.create({
     borderRadius: 50,
   },
   buttonText: {
-    color: "#e5e5e5",
     textAlign: "center",
     letterSpacing: 0.2,
     fontWeight: "bold",
   },
   forgot: {
-    color: "#e5e5e5",
     textAlign: "center",
     marginTop: 10,
     marginBottom: 10,
@@ -284,7 +336,6 @@ const styles = StyleSheet.create({
     textDecorationLine: "underline",
   },
   registerQuestion: {
-    color: "#e5e5e5",
     textAlign: "center",
     letterSpacing: 0.2,
   },

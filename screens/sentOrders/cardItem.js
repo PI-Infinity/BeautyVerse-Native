@@ -1,33 +1,23 @@
-import {
-  StyleSheet,
-  Text,
-  View,
-  ScrollView,
-  TouchableOpacity,
-  Platform,
-  Linking,
-  Vibration,
-} from "react-native";
-import { CacheableImage } from "../../components/cacheableImage";
-import { Entypo } from "@expo/vector-icons";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { MaterialIcons } from "@expo/vector-icons";
-import { FontAwesome } from "@expo/vector-icons";
+import { FontAwesome, MaterialCommunityIcons } from "@expo/vector-icons";
 import axios from "axios";
-import DeleteConfirm from "../../components/confirmDialog";
-import { useState, useEffect } from "react";
-import { StatusPopup } from "../../screens/orders/statusPopup";
-import { useSelector, useDispatch } from "react-redux";
-import { setSentOrders } from "../../redux/sentOrders";
-import { setRerenderOrders } from "../../redux/rerenders";
-import { BackDrop } from "../../components/backDropLoader";
-import { lightTheme, darkTheme } from "../../context/theme";
-import { ProceduresOptions } from "../../datas/registerDatas";
+import * as Clipboard from "expo-clipboard";
+import * as Localization from "expo-localization";
 import moment from "moment";
 import "moment-timezone";
-import * as Localization from "expo-localization";
-import * as Clipboard from "expo-clipboard";
+import { useEffect, useState } from "react";
+import { Linking, Text, TouchableOpacity, Vibration, View } from "react-native";
+import { useDispatch, useSelector } from "react-redux";
+import { CacheableImage } from "../../components/cacheableImage";
+import DeleteConfirm from "../../components/confirmDialog";
+import { useSocket } from "../../context/socketContext";
+import { ProceduresOptions } from "../../datas/registerDatas";
+import { setRerenderOrders } from "../../redux/rerenders";
 import ItemDateAndTimePicker from "../../screens/orders/itemDateAndTimePicker";
+import { StatusPopup } from "../../screens/orders/statusPopup";
+
+/**
+ * Card item for sent orders
+ */
 
 export const Card = ({
   item,
@@ -36,27 +26,45 @@ export const Card = ({
   navigation,
   setLoader,
 }) => {
+  // defines redux dispatch
   const dispatch = useDispatch();
-  const orders = useSelector((state) => state.storeSentOrders.orders);
+
+  // defines socket server
+  const socket = useSocket();
+
+  // defines link from url
   const handleLinkPress = (url) => {
     Linking.openURL(url);
   };
 
+  // copy id
   const [copySuccess, setCopySuccess] = useState(null);
   const copyToClipboard = () => {
     Clipboard.setString(item?.orderNumber);
     setCopySuccess("Id copied!");
   };
 
+  useEffect(() => {
+    if (copySuccess) {
+      setTimeout(() => setCopySuccess(null), 2000); // Remove the message after 2 seconds
+    }
+  }, [copySuccess]);
+
+  // defines beautyverse procedures
   const proceduresOptions = ProceduresOptions();
 
+  // defines confirm dialog state
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
 
   // edit request
   const [editRequest, setEditRequest] = useState(false);
 
+  // defines date and time
   const [dateAndTime, setDateAndTime] = useState(item.date);
 
+  /**
+   * Delete order function
+   */
   const DeleteOrder = async () => {
     try {
       setLoader(true);
@@ -101,6 +109,10 @@ export const Card = ({
     }
   };
 
+  /**
+   * Edit returned order
+   */
+
   const ReturnRequest = async (val) => {
     try {
       await axios.patch(
@@ -139,6 +151,9 @@ export const Card = ({
           status: "pending",
         }
       );
+      socket.emit("updateOrders", {
+        targetId: item.user?._id,
+      });
       dispatch(setRerenderOrders());
     } catch (error) {
       console.log(error.response.data.message);
@@ -200,41 +215,45 @@ export const Card = ({
       >
         <View
           style={{
+            borderWidth: 1,
+            borderColor: currentTheme.line,
+            padding: 5,
+            paddingHorizontal: 0,
+            borderRadius: 50,
             flexDirection: "row",
-            alignItems: "center",
             justifyContent: "space-between",
+            alignItems: "center",
+            gap: 3,
           }}
         >
-          <Text style={{ color: font, letterSpacing: 0.3, fontWeight: "bold" }}>
-            Id:{" "}
-            {item.orderNumber.length > 5
-              ? item.orderNumber.substring(0, 10) + "..."
-              : item.orderNumber}
-          </Text>
-          {copySuccess ? (
-            <View
-              style={{
-                position: "absolute",
-                top: -5,
-                left: 20,
-                zIndex: 20000,
-                padding: 5,
-                paddingHorizontal: 7.5,
-                backgroundColor: currentTheme.disabled,
-                borderRadius: 50,
-                width: 80,
-                opacity: 0.9,
-              }}
-            >
+          {editRequest ? (
+            <View style={{ width: "100%", alignItems: "center" }}>
+              <ItemDateAndTimePicker
+                targetUser={item.user}
+                dateAndTime={dateAndTime}
+                setDateAndTime={setDateAndTime}
+                orderId={item.orderNumber}
+                orderDuration={item.duration}
+                orderDate={item.date}
+              />
+            </View>
+          ) : (
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
               <Text
-                style={{
-                  color: "#fff",
-                }}
+                style={{ fontWeight: "bold", color: font, letterSpacing: 0.2 }}
               >
-                {copySuccess}
+                Date:{" "}
+              </Text>
+              <Text style={{ color: font, letterSpacing: 0.2 }}>
+                {(() => {
+                  let formattedDateWithMonthName = moment
+                    .utc(item.date)
+                    .format("DD MMMM YYYY - HH:mm");
+                  return formattedDateWithMonthName;
+                })()}
               </Text>
             </View>
-          ) : null}
+          )}
           <StatusPopup
             currentTheme={currentTheme}
             selectedItem={selectedItem}
@@ -271,47 +290,7 @@ export const Card = ({
             })()}
           </Text>
         </View>
-        <View
-          style={{
-            borderWidth: 1,
-            borderColor: currentTheme.line,
-            padding: 5,
-            paddingHorizontal: 10,
-            borderRadius: 50,
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 3,
-          }}
-        >
-          {editRequest ? (
-            <View style={{ width: "100%", alignItems: "center" }}>
-              <ItemDateAndTimePicker
-                targetUser={item.user}
-                dateAndTime={dateAndTime}
-                setDateAndTime={setDateAndTime}
-                orderId={item.orderNumber}
-                orderDuration={item.duration}
-                orderDate={item.date}
-              />
-            </View>
-          ) : (
-            <>
-              <Text
-                style={{ fontWeight: "bold", color: font, letterSpacing: 0.2 }}
-              >
-                Date:{" "}
-              </Text>
-              <Text style={{ color: font, letterSpacing: 0.2 }}>
-                {(() => {
-                  let formattedDateWithMonthName = moment
-                    .utc(item.date)
-                    .format("DD MMMM YYYY - HH:mm");
-                  return formattedDateWithMonthName;
-                })()}
-              </Text>
-            </>
-          )}
-        </View>
+
         <View
           style={{
             borderWidth: 1,
@@ -392,6 +371,43 @@ export const Card = ({
               : "N/A"}
           </Text>
         </View>
+        <TouchableOpacity
+          onPress={copyToClipboard}
+          style={{ paddingHorizontal: 10, padding: 5 }}
+        >
+          <Text style={{ color: font, letterSpacing: 0.3, fontWeight: "bold" }}>
+            Id:{" "}
+            <Text style={{ fontWeight: "normal" }}>
+              {item.orderNumber.length > 5
+                ? item.orderNumber.substring(0, 10) + "..."
+                : item.orderNumber}
+            </Text>
+          </Text>
+          {copySuccess ? (
+            <View
+              style={{
+                position: "absolute",
+                top: -5,
+                left: 20,
+                zIndex: 20000,
+                padding: 5,
+                paddingHorizontal: 7.5,
+                backgroundColor: currentTheme.disabled,
+                borderRadius: 50,
+                width: 80,
+                opacity: 0.9,
+              }}
+            >
+              <Text
+                style={{
+                  color: "#fff",
+                }}
+              >
+                {copySuccess}
+              </Text>
+            </View>
+          ) : null}
+        </TouchableOpacity>
         <View style={{ marginTop: 10, gap: 10 }}>
           <Text style={{ color: font, letterSpacing: 0.3, fontWeight: "bold" }}>
             Specialist:

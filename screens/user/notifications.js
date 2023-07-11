@@ -1,24 +1,30 @@
-import { useState, useEffect, useRef } from "react";
+import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
+import axios from "axios";
+import React, { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
+  Alert,
+  Dimensions,
+  Image,
+  Platform,
+  Pressable,
+  ScrollView,
   StyleSheet,
   Text,
-  View,
-  ScrollView,
-  Image,
-  ActivityIndicator,
-  Dimensions,
   TouchableOpacity,
-  Pressable,
-  Alert,
   Vibration,
-  Platform,
+  View,
 } from "react-native";
-import React from "react";
-import { useSelector, useDispatch } from "react-redux";
-import { lightTheme, darkTheme } from "../../context/theme";
-import axios from "axios";
-import { setRerenderCurrentUser } from "../../redux/rerenders";
-import { MaterialIcons, FontAwesome } from "@expo/vector-icons";
+import { useSelector } from "react-redux";
+import { Language } from "../../context/language";
+import { darkTheme, lightTheme } from "../../context/theme";
+import GetTimesAgo from "../../functions/getTimesAgo";
+
+/**
+ * this file includes 2 components (list and item)
+ * Define notifications screen
+ * Bellow notification item component
+ */
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -26,9 +32,9 @@ export const Notifications = ({
   notifications,
   navigation,
   setNotifications,
+  setUnreadNotifications,
 }) => {
-  const dispatch = useDispatch();
-  // curent user
+  // current user
   const currentUser = useSelector((state) => state.storeUser.currentUser);
 
   // theme state
@@ -41,6 +47,7 @@ export const Notifications = ({
   // read notification
   const ReadNotification = async (id) => {
     try {
+      setUnreadNotifications((prev) => prev - 1);
       setNotifications((prev) => {
         return prev.map((item) => {
           // Check if the current item's _id matches the given id
@@ -61,7 +68,6 @@ export const Notifications = ({
           status: "read",
         }
       );
-      // dispatch(setRerenderCurrentUser());
     } catch (error) {
       console.log(error.response.data.message);
     }
@@ -75,6 +81,7 @@ export const Notifications = ({
 
   return (
     <ScrollView
+      scrollEventThrottle={16}
       style={{ flex: 1, backgroundColor: currentTheme.background }}
       bounces={Platform.OS === "ios" ? false : undefined}
       overScrollMode={Platform.OS === "ios" ? "never" : "always"}
@@ -110,7 +117,6 @@ export const Notifications = ({
                 currentTheme={currentTheme}
                 navigation={navigation}
                 ReadNotification={ReadNotification}
-                setLoading={setLoading}
                 currentUser={currentUser}
                 setNotifications={setNotifications}
                 notifications={notifications}
@@ -136,28 +142,37 @@ export const Notifications = ({
   );
 };
 
-const styles = StyleSheet.create({});
+/**
+ * Notification item component
+ */
 
 const NotificationItem = ({
   item,
   currentTheme,
   navigation,
   ReadNotification,
-  setLoading,
   currentUser,
   setNotifications,
   notifications,
 }) => {
+  // define screen id by query split
   let feed = item?.feed?.split("/");
 
+  // define some states
+  const [loadCover, setLoadCover] = useState(true);
   const [feedObj, setFeedObj] = useState(null);
   const [user, setUser] = useState(null);
 
+  // define language
+  const language = Language();
+
+  // define rerender user feed state
   const rerenderUserFeed = useSelector(
     (state) => state.storeRerenders.rerenderUserFeed
   );
 
-  async function GetFeedObj(currentPage) {
+  // get feed from DB
+  async function GetFeedObj() {
     try {
       if (item?.type !== "welcome") {
         let response = await axios.get(
@@ -172,7 +187,9 @@ const NotificationItem = ({
       console.log(error.response.data.message);
     }
   }
-  async function GetUser(currentPage) {
+
+  // Get user from DB
+  async function GetUser() {
     try {
       if (item?.type !== "welcome") {
         let res = await axios.get(
@@ -185,6 +202,7 @@ const NotificationItem = ({
     }
   }
 
+  // on press navigate to feed screen
   const handlePress = () => {
     if (feedObj) {
       navigation.navigate("UserFeed", {
@@ -202,7 +220,6 @@ const NotificationItem = ({
   }, [rerenderUserFeed]);
 
   // delete notification
-
   const DeleteNotification = async () => {
     try {
       Vibration.vibrate();
@@ -218,6 +235,35 @@ const NotificationItem = ({
       console.log(error.response.data.message);
     }
   };
+
+  /**
+   * Define notification time
+   */
+  const notifiyTime = GetTimesAgo(new Date(item.date).getTime());
+
+  let definedTime;
+  if (notifiyTime?.includes("min")) {
+    definedTime =
+      notifiyTime?.slice(0, -3) + language?.language.Main.feedCard.min;
+  } else if (notifiyTime?.includes("h")) {
+    definedTime =
+      notifiyTime?.slice(0, -1) + language?.language.Main.feedCard.h;
+  } else if (notifiyTime?.includes("d")) {
+    definedTime =
+      notifiyTime?.slice(0, -1) + language?.language.Main.feedCard.d;
+  } else if (notifiyTime?.includes("j")) {
+    definedTime =
+      notifiyTime?.slice(0, -1) + language?.language.Main.feedCard.justNow;
+  } else if (notifiyTime?.includes("w")) {
+    definedTime =
+      notifiyTime?.slice(0, -1) + language?.language.Main.feedCard.w;
+  } else if (notifiyTime?.includes("mo")) {
+    definedTime =
+      notifiyTime?.slice(0, -2) + " " + language?.language.Main.feedCard.mo;
+  } else if (notifiyTime?.includes("y")) {
+    definedTime =
+      notifiyTime?.slice(0, -1) + language?.language.Main.feedCard.y;
+  }
 
   return (
     <>
@@ -247,10 +293,25 @@ const NotificationItem = ({
               })
             }
           >
+            {loadCover && item?.senderCover?.length > 10 && (
+              <View
+                style={{
+                  position: "absolute",
+                  zIndex: 1000,
+                  width: "100%",
+                  height: "100%",
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <ActivityIndicator size="small" color={currentTheme.pink} />
+              </View>
+            )}
             {item?.senderCover?.length > 10 ? (
               <Image
                 source={{ uri: item?.senderCover }}
                 style={{ height: 40, width: 40, borderRadius: 50 }}
+                onLoad={() => setLoadCover(false)}
               />
             ) : (
               <View style={{ padding: 5 }}>
@@ -270,16 +331,36 @@ const NotificationItem = ({
               justifyContent: "center",
             }}
           >
-            <Text
+            <View
               style={{
-                color:
-                  item?.status === "unread" ? "#f1f1f1" : currentTheme.font,
-                fontWeight: "bold",
-                fontSize: 14,
+                flexDirection: "row",
+                width: "70%",
+                alignItems: "center",
+                gap: 8,
               }}
             >
-              {item?.senderName}
-            </Text>
+              <Text
+                style={{
+                  color:
+                    item?.status === "unread" ? "#f1f1f1" : currentTheme.font,
+                  fontWeight: "bold",
+                  fontSize: 14,
+                }}
+              >
+                {item?.senderName}
+              </Text>
+              <Text
+                style={{
+                  color:
+                    item?.status === "unread"
+                      ? "#f1f1f1"
+                      : currentTheme.disabled,
+                  fontSize: 12,
+                }}
+              >
+                {definedTime}.
+              </Text>
+            </View>
             <Text
               style={{
                 color:

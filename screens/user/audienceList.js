@@ -1,18 +1,20 @@
+import React from "react";
 import {
-  StyleSheet,
-  Text,
-  View,
-  Image,
   Dimensions,
   Pressable,
+  StyleSheet,
+  Text,
   Vibration,
+  View,
 } from "react-native";
-import React from "react";
-import axios from "axios";
-import { useSelector, useDispatch } from "react-redux";
+import { useSelector } from "react-redux";
 import { CacheableImage } from "../../components/cacheableImage";
 
-const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
+/**
+ * Audience list component in user screen audience section
+ */
+
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 export const AudienceList = ({
   list,
@@ -24,11 +26,14 @@ export const AudienceList = ({
   renderCheck,
   setRenderCheck,
 }) => {
+  // function capitalizes first letter
   function capitalizeFirstLetter(string) {
     return string?.charAt(0).toUpperCase() + string?.slice(1);
   }
 
-  const currentUser = useSelector((state) => state.storeUser.currentUser);
+  /**
+   * Unfollow user
+   */
 
   const DeleteUser = async (followerId, followingId) => {
     //

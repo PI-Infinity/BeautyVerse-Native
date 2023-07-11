@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from "react";
-import { StyleSheet, View, Text, Dimensions } from "react-native";
-import MapView, { PROVIDER_GOOGLE, Marker } from "react-native-maps";
+import React, { useEffect, useState } from "react";
+import { StyleSheet, View } from "react-native";
+import MapView, { Marker } from "react-native-maps";
 
-const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
+/**
+ * Apple map component
+ */
 
 const Map = ({ latitude, longitude, mapViewRef, height }) => {
   const [selectedCoordinate, setSelectedCoordinate] = useState(null);
@@ -35,7 +37,7 @@ const Map = ({ latitude, longitude, mapViewRef, height }) => {
     >
       <MapView
         ref={mapViewRef}
-        provider={PROVIDER_GOOGLE}
+        // provider={PROVIDER_GOOGLE}
         style={[styles.map, { height: height, width: "100%" }]}
         initialRegion={{
           latitude: latitude,

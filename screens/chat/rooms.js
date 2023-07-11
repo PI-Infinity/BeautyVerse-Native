@@ -1,112 +1,63 @@
+import { FontAwesome } from "@expo/vector-icons";
+import axios from "axios";
+import React, { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
+  Alert,
+  Dimensions,
+  Pressable,
+  ScrollView,
   StyleSheet,
   Text,
-  View,
-  ScrollView,
-  Dimensions,
-  Image,
-  Pressable,
-  Alert,
   Vibration,
-  ActivityIndicator,
+  View,
 } from "react-native";
-import React, { useState, useEffect } from "react";
-import axios from "axios";
-import { useSelector, useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { CacheableImage } from "../../components/cacheableImage";
+import DeleteChatPopup from "../../components/confirmDialog";
+import { Language } from "../../context/language";
+import { useSocket } from "../../context/socketContext";
+import { darkTheme, lightTheme } from "../../context/theme";
+import GetTimesAgo from "../../functions/getTimesAgo";
 import {
+  setChatUser,
   setCurrentChat,
   setRerederRooms,
   setRerenderScroll,
-  setChatUser,
+  setRooms,
 } from "../../redux/chat";
-import GetTimesAgo from "../../functions/getTimesAgo";
-import { Language } from "../../context/language";
-import { CacheableImage } from "../../components/cacheableImage";
-import { FontAwesome } from "@expo/vector-icons";
-import { lightTheme, darkTheme } from "../../context/theme";
+
+/**
+ * Rooms component
+ * Defines 2 component (list, item)
+ * Item bellow
+ */
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
-export const Rooms = ({ navigation, search, socket }) => {
+export const Rooms = ({ navigation, search }) => {
+  // define redux dispatch
   const dispatch = useDispatch();
-  const currentChat = useSelector((state) => state.storeChat.currentChat);
-  const rerenderRooms = useSelector((state) => state.storeChat.rerenderRooms);
+
+  // define socket server
+  const socket = useSocket();
+
+  // defines current user
   const currentUser = useSelector((state) => state.storeUser.currentUser);
-  const [loading, setLoading] = useState(false);
-  // theme state
+
+  // defines theme state
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
 
-  const [rooms, setRooms] = useState([]);
-  useEffect(() => {
-    const GetChats = async () => {
-      try {
-        const response = await axios.get(
-          "https://beautyverse.herokuapp.com/api/v1/chats/members/" +
-            currentUser._id
-        );
-        setRooms(response.data.data.chats);
-        setLoading(false);
-      } catch (error) {
-        console.log(error.response.data.message);
-        setLoading(false);
-      }
-    };
-    if (currentUser._id) {
-      setLoading(true);
-      GetChats();
-    }
-  }, [rerenderRooms]);
+  // defines rooms list
+  const rooms = useSelector((state) => state.storeChat.rooms);
 
+  // real time rooms update
   useEffect(() => {
-    if (socket.current) {
-      socket.current.on("chatUpdate", (data) => {
-        setTimeout(() => {
-          dispatch(setRerederRooms());
-        }, 2000);
-      });
-    }
+    socket.on("chatUpdate", (data) => {
+      dispatch(setRerederRooms());
+    });
   }, []);
-
-  useEffect(() => {
-    if (socket.current && rooms.length > 0) {
-      socket.current.on("getMessage", (data) => {
-        let updatedRooms = rooms.map((item) => {
-          if (item.room === data.room) {
-            return {
-              ...item,
-              lastMessage: data.text,
-              lastMessageCreatedAt: new Date().toISOString(),
-              lastSender: data.senderId,
-              status: "unread",
-              hideFor: "",
-            };
-          }
-          return item;
-        });
-        setRooms(updatedRooms);
-      });
-    } else if (socket.current) {
-      socket.current.on("getMessage", (data) => {
-        let updatedRooms = {
-          room: data.room,
-          members: {
-            member1: data.senderId,
-            member1Name: data.senderName,
-            member1Cover: data.senderCover,
-            member2: data.receiverId,
-          },
-          lastMessage: data.text,
-          lastMessageCreatedAt: new Date().toISOString(),
-          lastSender: data.senderId,
-          status: "unread",
-          hideFor: "",
-        };
-
-        setRooms((prev) => [...prev, updatedRooms]);
-      });
-    }
-  }, [socket, rooms]);
 
   return (
     <>
@@ -122,9 +73,18 @@ export const Rooms = ({ navigation, search, socket }) => {
           <ActivityIndicator size="large" color={currentTheme.pink} />
         </View>
       ) : (
-        <ScrollView>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ marginTop: 0 }}
+        >
           {rooms?.length > 0 ? (
-            rooms
+            rooms &&
+            [...rooms]
+              .sort(
+                (a, b) =>
+                  new Date(b.lastMessageCreatedAt) -
+                  new Date(a.lastMessageCreatedAt)
+              )
               ?.filter((item) => {
                 let targetChatMember;
                 if (item?.members.member1 === currentUser._id) {
@@ -167,8 +127,6 @@ export const Rooms = ({ navigation, search, socket }) => {
                         key={index}
                         targetChatMember={targetChatMember}
                         item={item}
-                        rooms={rooms}
-                        setRooms={setRooms}
                         navigation={navigation}
                         socket={socket}
                       />
@@ -185,7 +143,12 @@ export const Rooms = ({ navigation, search, socket }) => {
                 height: SCREEN_HEIGHT / 1.4,
               }}
             >
-              <Text style={{ color: "rgba(255,255,255,0.3)" }}>
+              <Text
+                style={{
+                  letterSpacing: 0.3,
+                  color: "rgba(255,255,255,0.3)",
+                }}
+              >
                 No chats found
               </Text>
             </View>
@@ -196,39 +159,49 @@ export const Rooms = ({ navigation, search, socket }) => {
   );
 };
 
-const styles = StyleSheet.create({});
+/**
+ * Chat room list Item
+ */
 
-const RoomItem = ({
-  targetChatMember,
-  item,
-  rooms,
-  setRooms,
-  navigation,
-  socket,
-}) => {
+const RoomItem = ({ targetChatMember, item, navigation, socket }) => {
+  // defines redux dispatch
   const dispatch = useDispatch();
 
-  const currentChat = useSelector((state) => state.storeChat.currentChat);
+  // defines rooms list
+  const rooms = useSelector((state) => state.storeChat.rooms);
+
+  // delete confrim
+  const [deletePopup, setDeletePopup] = useState(false);
+
+  // defines current user
   const currentUser = useSelector((state) => state.storeUser.currentUser);
 
+  // defines user object
+  const [userObj, setUserObj] = useState(null);
+
+  // Get user info from db
   const GetUser = async () => {
     try {
       const response = await axios.get(
         `https://beautyverse.herokuapp.com/api/v1/users/${targetChatMember?.id}`
       );
       dispatch(setChatUser(response.data.data.user));
+      setUserObj(response.data.data.user);
     } catch (error) {
       console.log(error);
     }
   };
-  // get chat room
-  const GetChatRoom = async (Room, member2) => {
+  useEffect(() => {
     GetUser();
+  }, []);
+
+  /* 
+    get chat room on press and navigate
+  */
+  const GetChatRoom = async (Room) => {
     try {
-      await dispatch(setCurrentChat(Room));
-      navigation.navigate("Room", {
-        Room,
-      });
+      dispatch(setCurrentChat(Room));
+      navigation.navigate("Room", { user: userObj });
       if (Room.lastSender !== currentUser._id) {
         await axios.patch(
           "https://beautyverse.herokuapp.com/api/v1/chats/" + Room.room,
@@ -237,7 +210,16 @@ const RoomItem = ({
           }
         );
       }
-      dispatch(setRerederRooms());
+      let currentRoomIndex = rooms.findIndex((r) => r._id === item._id);
+
+      if (currentRoomIndex !== -1) {
+        let newRooms = [...rooms];
+        newRooms[currentRoomIndex] = {
+          ...newRooms[currentRoomIndex],
+          status: "read",
+        };
+        dispatch(setRooms(newRooms));
+      }
       dispatch(setRerenderScroll());
     } catch (error) {
       Alert.alert(error.response.data.message);
@@ -247,26 +229,34 @@ const RoomItem = ({
   // delete chat
   const DeleteChat = async (ch) => {
     try {
-      setRooms(rooms.filter((room) => room.room !== ch.room));
+      dispatch(setRooms(rooms.filter((room) => room.room !== ch.room)));
 
-      await axios.patch(
-        "https://beautyverse.herokuapp.com/api/v1/chats/messages/" +
-          ch.room +
-          "/" +
-          currentUser._id
-      );
       if (ch.hideFor?.length > 0) {
         await axios.delete(
           "https://beautyverse.herokuapp.com/api/v1/chats/" + ch.room
+        );
+        await axios.patch(
+          "https://beautyverse.herokuapp.com/api/v1/chats/messages/" +
+            ch.room +
+            "/" +
+            currentUser._id
         );
       } else {
         await axios.patch(
           "https://beautyverse.herokuapp.com/api/v1/chats/" + ch.room,
           {
+            status: "read",
+            lastMessage: "User has deleted own messages..",
             hideFor: currentUser._id,
           }
         );
-        socket.current.emit("updateChat", {
+        await axios.patch(
+          "https://beautyverse.herokuapp.com/api/v1/chats/messages/" +
+            ch.room +
+            "/" +
+            currentUser._id
+        );
+        socket.emit("updateChat", {
           targetId: targetChatMember.id,
         });
       }
@@ -306,89 +296,116 @@ const RoomItem = ({
   }
 
   return (
-    <Pressable
-      onPress={() => GetChatRoom(item)}
-      onLongPress={() => {
-        Vibration.vibrate();
-        DeleteChat(item);
-      }}
-      delayLongPress={300}
-      style={{
-        width: SCREEN_WIDTH - 60,
-        borderRadius: 5,
-        height: 60,
-        borderBottomWidth: 1,
-        borderBottomColor: "#222",
-        flexDirection: "row",
-      }}
-    >
-      <View
+    <>
+      {deletePopup && (
+        <DeleteChatPopup
+          isVisible={deletePopup}
+          onClose={() => setDeletePopup(false)}
+          onDelete={() => DeleteChat(item)}
+          title="Are you sure to want to delete this Chat?"
+          delet="Delete"
+          cancel="Cancel"
+        />
+      )}
+      <Pressable
+        onPress={() => GetChatRoom(item)}
+        onLongPress={() => {
+          Vibration.vibrate();
+          setDeletePopup(true);
+        }}
+        delayLongPress={300}
         style={{
-          flex: 2,
+          width: SCREEN_WIDTH - 20,
+          borderRadius: 5,
+          height: 70,
+          borderBottomWidth: 1,
+          borderBottomColor: "#222",
+          flexDirection: "row",
           alignItems: "center",
-          justifyContent: "center",
         }}
       >
-        {targetChatMember.cover?.length > 30 ? (
-          <View
-            style={{
-              width: 50,
-              height: 50,
-              borderRadius: 100,
-              overflow: "hidden",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <CacheableImage
-              style={{
-                height: 52,
-                width: 52,
-                borderRadius: 100,
-                resizeMode: "cover",
-              }}
-              source={{ uri: targetChatMember.cover }}
-            />
-          </View>
-        ) : (
-          <View
-            style={{
-              borderRadius: 100,
-              width: 50,
-              aspectRatio: 1,
-              alignItems: "center",
-              justifyContent: "center",
-              backgroundColor: "rgba(255,255,255,0.1)",
-            }}
-          >
-            <FontAwesome name="user" size={25} color="#e5e5e5" />
-          </View>
-        )}
-      </View>
-      <View
-        style={{
-          flex: 6,
-          justifyContent: "center",
-          paddingLeft: 15,
-        }}
-      >
-        <Text style={{ fontWeight: "bold", color: "#e5e5e5" }}>
-          {targetChatMember.name}
-        </Text>
-        <Text
+        <View
           style={{
-            color:
-              item.status === "unread" && item.lastSender !== currentUser._id
-                ? "green"
-                : "#888",
+            flex: 2,
+            alignItems: "center",
+            justifyContent: "center",
           }}
         >
-          {item.lastMessage}
-        </Text>
-      </View>
-      <View style={{ flex: 2, height: "100%", justifyContent: "center" }}>
-        <Text style={{ color: "#888", fontSize: 12 }}>{definedTime}</Text>
-      </View>
-    </Pressable>
+          {targetChatMember.cover?.length > 30 ? (
+            <View
+              style={{
+                width: 50,
+                height: 50,
+                borderRadius: 100,
+                overflow: "hidden",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <CacheableImage
+                style={{
+                  height: 52,
+                  width: 52,
+                  borderRadius: 100,
+                  resizeMode: "cover",
+                }}
+                source={{ uri: targetChatMember.cover }}
+              />
+            </View>
+          ) : (
+            <View
+              style={{
+                borderRadius: 100,
+                width: 50,
+                aspectRatio: 1,
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: "rgba(255,255,255,0.1)",
+              }}
+            >
+              <FontAwesome name="user" size={25} color="#e5e5e5" />
+            </View>
+          )}
+        </View>
+        <View
+          style={{
+            flex: 6,
+            paddingLeft: 0,
+            gap: 3,
+            height: 45,
+            paddingTop: 5,
+            overflow: "hidden",
+          }}
+        >
+          <Text
+            style={{ fontWeight: "bold", letterSpacing: 0.3, color: "#e5e5e5" }}
+          >
+            {targetChatMember.name}
+          </Text>
+          <Text
+            style={{
+              letterSpacing: 0.3,
+              color:
+                item.status === "unread" && item.lastSender !== currentUser._id
+                  ? "green"
+                  : "#888",
+            }}
+          >
+            {item.lastMessage}
+          </Text>
+        </View>
+        <View style={{ flex: 1.5, height: "100%", justifyContent: "center" }}>
+          <Text
+            style={{
+              letterSpacing: 0.3,
+              color: "#888",
+              fontSize: 12,
+            }}
+          >
+            {definedTime}
+          </Text>
+        </View>
+      </Pressable>
+    </>
   );
 };

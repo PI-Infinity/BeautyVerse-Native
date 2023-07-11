@@ -1,77 +1,78 @@
-import { useEffect, useState, useRef } from "react";
-import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { FeedsStack } from "../navigations/feedsStack";
-import { CardsStack } from "../navigations/cardsStack";
-import { ProfileStack } from "../navigations/profileStack";
-import { FilterStack } from "../navigations/filterStack";
-import { ChatStack } from "../navigations/chatStack";
-import { FontAwesome } from "@expo/vector-icons";
 import {
+  FontAwesome,
   MaterialCommunityIcons,
-  Feather,
-  Ionicons,
   MaterialIcons,
 } from "@expo/vector-icons";
-import { setCleanUp, setRerenderCurrentUser } from "../redux/rerenders";
-import { useDispatch } from "react-redux";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import {
+  getFocusedRouteNameFromRoute,
+  useIsFocused,
   useNavigation,
   useRoute,
-  useIsFocused,
-  getFocusedRouteNameFromRoute,
 } from "@react-navigation/native";
-import { useSelector } from "react-redux";
-import { View, Text, Image, Pressable, TouchableOpacity } from "react-native";
-import { Language } from "../context/language";
-import { CacheableImage } from "../components/cacheableImage";
-import { lightTheme, darkTheme } from "../context/theme";
 import axios from "axios";
+import { LinearGradient } from "expo-linear-gradient";
+import { useEffect, useState } from "react";
+import { Pressable, Text, View } from "react-native";
+import { useDispatch, useSelector } from "react-redux";
+import { CacheableImage } from "../components/cacheableImage";
+import { useSocket } from "../context/socketContext";
+import { darkTheme, lightTheme } from "../context/theme";
+import { ProceduresOptions } from "../datas/registerDatas";
+import { CardsStack } from "../navigations/cardsStack";
+import { ChatStack } from "../navigations/chatStack";
+import { FeedsStack } from "../navigations/feedsStack";
+import { FilterStack } from "../navigations/filterStack";
+import { ProfileStack } from "../navigations/profileStack";
+import { setRerederRooms, setRooms } from "../redux/chat";
+import { setSearch } from "../redux/filter";
 import {
-  setOrders,
-  addOrders,
-  setLoader,
-  setTotalResult,
-  setFilterResult,
   setActiveOrders,
+  setCanceledOrders,
+  setCompletedOrders,
+  setFilterResult,
+  setLoader,
   setNewOrders,
+  setOrders,
+  setPendingOrders,
+  setRejectedOrders,
+  setTotalResult,
 } from "../redux/orders";
 import {
-  setLoaderSentOrders,
-  setSentOrders,
-  setSentOrdersTotalResult,
-  setSentOrdersFilterResult,
-  setNewSentOrders,
+  setCleanUp,
+  setRerenderCurrentUser,
+  setRerenderOrders,
+} from "../redux/rerenders";
+import {
   setActiveSentOrders,
+  setCanceledSentOrders,
+  setCompletedSentOrders,
+  setLoaderSentOrders,
+  setNewSentOrders,
+  setPendingSentOrders,
+  setRejectedSentOrders,
+  setSentOrders,
+  setSentOrdersFilterResult,
+  setSentOrdersTotalResult,
 } from "../redux/sentOrders";
-import { setSearch } from "../redux/filter";
-import { setRerenderUserList, setRerenderOrders } from "../redux/rerenders";
-import { ProceduresOptions } from "../datas/registerDatas";
-import { LinearGradient } from "expo-linear-gradient";
 
+/**
+ * create tab bar
+ */
 const Tab = createBottomTabNavigator();
 
-const CustomTabBarFeedsIcon = ({
-  color,
-  size,
-  render,
-  setRender,
-  sum,
-  currentTheme,
-}) => {
+// Custom Feed icon for tab bar, includes functions etc.
+
+const CustomTabBarFeedsIcon = ({ color, render, setRender }) => {
+  // define some routes and contexts
   const navigation = useNavigation();
   const isFocused = useIsFocused();
   const dispatch = useDispatch();
   const route = useRoute();
   const routeName = getFocusedRouteNameFromRoute(route);
-  const result = useSelector((state) => state.storeApp.feedsResult);
 
   return (
-    <TouchableOpacity
-      activeOpacity={0.8}
-      // style={{
-      //   borderTopWidth: 2,
-      //   borderColor: isFocused ? "pink" : "rgba(0,0,0,0)",
-      // }}
+    <Pressable
       onPress={() => {
         if (isFocused) {
           if (routeName === "Feeds") {
@@ -91,20 +92,23 @@ const CustomTabBarFeedsIcon = ({
         color={color}
         style={{ marginTop: 5 }}
       />
-    </TouchableOpacity>
+    </Pressable>
   );
 };
-const CustomTabBarCardsIcon = ({ color, size, sum, currentTheme }) => {
+
+// define custom cards icon, includes functions etc.
+
+const CustomTabBarCardsIcon = ({ color }) => {
+  // define some contexts and routes
+
   const navigation = useNavigation();
   const isFocused = useIsFocused();
   const dispatch = useDispatch();
   const route = useRoute();
   const routeName = getFocusedRouteNameFromRoute(route);
-  const result = useSelector((state) => state.storeApp.cardsResult);
 
   return (
-    <TouchableOpacity
-      activeOpacity={0.8}
+    <Pressable
       onPress={() => {
         if (isFocused) {
           if (routeName === "cards") {
@@ -123,44 +127,42 @@ const CustomTabBarCardsIcon = ({ color, size, sum, currentTheme }) => {
         color={color}
         style={{ marginTop: 5 }}
       />
-    </TouchableOpacity>
+    </Pressable>
   );
 };
 
+// define custom filter icons
+
 const CustomTabBarFilterIcon = (props) => {
+  // define some routes and contexts
   const navigation = useNavigation();
   const isFocused = useIsFocused();
   const dispatch = useDispatch();
 
+  // search input state
   const searchInput = useSelector((state) => state.storeFilter.searchInput);
-  const search = useSelector((state) => state.storeFilter.search);
-  const [navigate, setNavigate] = useState(false);
 
-  const proceduresOptions = ProceduresOptions();
+  // navigate state, after change state value, runs useeffect to navigate trough screen
+  const [navigate, setNavigate] = useState(false);
 
   useEffect(() => {
     navigation.navigate("Main");
   }, [navigate]);
 
+  // define procedures list
+  const proceduresOptions = ProceduresOptions();
+
   return (
     <LinearGradient
       start={{ x: 0.0, y: 0.25 }}
       end={{ x: 0.5, y: 1.0 }}
-      colors={[
-        props.currentTheme.lightPink,
-        // props.currentTheme.pink,
-        props.currentTheme.pink,
-        props.currentTheme.pink,
-        // props.currentTheme.pink,
-        props.currentTheme.pink,
-      ]}
+      colors={[props.currentTheme.pink, props.currentTheme.pink]}
       style={{
         padding: 2,
-        // backgroundColor: props.currentTheme.pink,
         position: "absolute",
-        top: -15,
-        width: 42,
-        height: 42,
+        top: -10,
+        width: 45,
+        height: 45,
         borderRadius: 50,
         alignItems: "center",
         justifyContent: "center",
@@ -169,8 +171,7 @@ const CustomTabBarFilterIcon = (props) => {
         overflow: "hidden",
       }}
     >
-      <TouchableOpacity
-        activeOpacity={0.5}
+      <Pressable
         onPress={
           isFocused
             ? () => {
@@ -182,7 +183,6 @@ const CustomTabBarFilterIcon = (props) => {
                 } else {
                   dispatch(setSearch(searchInput));
                 }
-
                 setTimeout(() => {
                   setNavigate(!navigate);
                   dispatch(setCleanUp());
@@ -194,18 +194,12 @@ const CustomTabBarFilterIcon = (props) => {
         }
         style={{
           justifyContent: "center",
-          // backgroundColor: props.currentTheme.background2,
-          width: 45,
-          height: 45,
+          width: 52,
+          height: 52,
           borderRadius: 50,
           alignItems: "center",
           justifyContent: "center",
           overflow: "hidden",
-
-          // borderWidth: 1.5,
-          // borderColor: props.focused
-          //   ? props.currentTheme.pink
-          //   : props.currentTheme.disabled,
         }}
       >
         {/** badge for filter */}
@@ -219,10 +213,7 @@ const CustomTabBarFilterIcon = (props) => {
               borderRadius: 50,
               alignItems: "center",
               justifyContent: "center",
-              // position: "absolute",
               zIndex: 10,
-              // right: -10,
-              // top: -7,
               position: "absolute",
               top: 6,
               right: 8,
@@ -255,9 +246,7 @@ const CustomTabBarFilterIcon = (props) => {
             name="arrow-up"
             size={20}
             color={
-              props.sum > 0 && props.focused
-                ? "#f1f1f1"
-                : props.currentTheme.pink2
+              props.sum > 0 && props.focused ? "#fff" : props.currentTheme.pink2
             }
           />
         ) : (
@@ -265,28 +254,117 @@ const CustomTabBarFilterIcon = (props) => {
             name="saved-search"
             size={40}
             color={
-              props.sum > 0 && isFocused ? props.currentTheme.pink : "#f1f1f1"
+              props.sum > 0 && isFocused ? props.currentTheme.pink : "#fff"
             }
-            style={{ marginLeft: 6, marginTop: 6 }}
+            style={{ marginLeft: 8, marginTop: 9 }}
           />
         )}
-      </TouchableOpacity>
+      </Pressable>
     </LinearGradient>
   );
 };
+
+// defined custom chat icon with functions
+
+const CustomTabBarChatIcon = ({ color, currentTheme }) => {
+  // defined some routes and contexts
+
+  const navigation = useNavigation();
+  const isFocused = useIsFocused();
+  const dispatch = useDispatch();
+  const route = useRoute();
+  const routeName = getFocusedRouteNameFromRoute(route);
+  const rooms = useSelector((state) => state.storeChat.rooms);
+  const currentUser = useSelector((state) => state.storeUser.currentUser);
+
+  // define unread messages for chat, shown in badge
+
+  const definedQnt =
+    rooms?.length > 0 &&
+    rooms?.filter(
+      (r) => r.status === "unread" && r.lastSender !== currentUser._id
+    );
+
+  return (
+    <Pressable
+      onPress={() => {
+        if (isFocused) {
+          if (routeName === "Chats") {
+            console.log("render");
+            dispatch(setRerederRooms());
+          } else {
+            dispatch(setRerederRooms());
+            navigation.navigate("Chats");
+          }
+        } else {
+          navigation.navigate("Chat");
+        }
+      }}
+    >
+      {/** badge for chat */}
+      {definedQnt.length > 0 && (
+        <View
+          style={{
+            width: "auto",
+            minWidth: 15,
+            height: 15,
+            backgroundColor: currentTheme.pink,
+            borderRadius: 50,
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 10,
+            position: "absolute",
+            right: 0,
+            marginBottom: 2,
+            shadowColor: "#000",
+            shadowOffset: {
+              width: 0,
+              height: 3, // negative value places shadow on top
+            },
+            shadowOpacity: 0.2,
+            shadowRadius: 2,
+            elevation: 1,
+          }}
+        >
+          <Text
+            style={{
+              color: "#f1f1f1",
+              fontSize: 10,
+              fontWeight: "bold",
+              letterSpacing: 0.15,
+            }}
+          >
+            {definedQnt?.length}
+          </Text>
+        </View>
+      )}
+      <FontAwesome
+        name="wechat"
+        size={26}
+        color={color}
+        style={{ marginTop: 5 }}
+      />
+    </Pressable>
+  );
+};
+
+// profile custom icon with functions and profile cover
+
 const CustomTabBarProfileIcon = (props) => {
+  // define some routes and contexts
+
   const navigation = useNavigation();
   const isFocused = useIsFocused();
   const dispatch = useDispatch();
   const route = useRoute();
   const routeName = getFocusedRouteNameFromRoute(route);
 
+  // recieved and sent orders redux states
   const newOrders = useSelector((state) => state.storeOrders.new);
   const newSentOrders = useSelector((state) => state.storeSentOrders.new);
 
   return (
-    <TouchableOpacity
-      activeOpacity={0.9}
+    <Pressable
       onPress={() => {
         if (isFocused) {
           if (routeName !== "UserProfile") {
@@ -300,7 +378,7 @@ const CustomTabBarProfileIcon = (props) => {
         }
       }}
     >
-      {(props.unreadNotifications.length > 0 ||
+      {(props.unreadNotifications > 0 ||
         newOrders > 0 ||
         newSentOrders > 0) && (
         <View
@@ -326,7 +404,7 @@ const CustomTabBarProfileIcon = (props) => {
               letterSpacing: 0.15,
             }}
           >
-            {props.unreadNotifications?.length + newOrders + newSentOrders}
+            {props.unreadNotifications + newOrders + newSentOrders}
           </Text>
         </View>
       )}
@@ -358,17 +436,21 @@ const CustomTabBarProfileIcon = (props) => {
           }
         />
       )}
-    </TouchableOpacity>
+    </Pressable>
   );
 };
 
-export const BottomTabNavigator = ({ socket, onTabBarLayout }) => {
-  const language = Language();
+export const BottomTabNavigator = () => {
+  // redux toolkit dispatch
   const dispatch = useDispatch();
+
+  // define socker context
+  const socket = useSocket();
+
+  // use navigation hooks to handle navigate trough screens
   const navigation = useNavigation();
 
-  const isFocused = useIsFocused();
-
+  // addational render state (after change value, renders some components by useEffect)
   const [render, setRender] = useState(false);
 
   // Get the filter badge sum from the app state. badge for bottom tab filter icon. when user changes any filter, badge shows how many filter is set currently
@@ -384,34 +466,36 @@ export const BottomTabNavigator = ({ socket, onTabBarLayout }) => {
   /**
    * get user notifications
    */
+  // after run this state, it changes value and rerenders notifications api
   const rerenderNotifications = useSelector(
     (state) => state.storeRerenders.rerenderNotifications
   );
+  // notifications state
   const [notifications, setNotifications] = useState([]);
+  // unread notifications state
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
+  // useEffect defines notifications and unread notifications from user's info and defines them in tab bar useStste
   useEffect(() => {
     setNotifications(currentUser.notifications);
+    setUnreadNotifications(
+      currentUser.notifications.filter((n) => n.status === "unread").length
+    );
   }, [rerenderNotifications]);
-
-  let unreadNotifications = notifications?.filter(
-    (item) => item?.status === "unread"
-  );
 
   /**
    * get orders
    */
+
+  // after run this state, it changes value and rerenders orders api
   const rerenderOrders = useSelector(
     (state) => state.storeRerenders.rerenderOrders
   );
+  // this render also addationally renders some useffects
   const [renderOrders, setRenderOrders] = useState(false);
 
-  /**
-   * refresh orders
-   */
-  const [refresh, setRefresh] = useState(true);
-
+  // some filters for orders
   const statusFilter = useSelector((state) => state.storeOrders.statusFilter);
   const date = useSelector((state) => state.storeOrders.date);
-
   const createdAt = useSelector((state) => state.storeOrders.createdAt);
   const procedure = useSelector((state) => state.storeOrders.procedure);
 
@@ -429,17 +513,21 @@ export const BottomTabNavigator = ({ socket, onTabBarLayout }) => {
               date.active ? date.date : ""
             }&createdAt=${createdAt}&procedure=${procedure}`
         );
-
+        // define orders with specific status
         dispatch(setOrders(response.data.data.orders));
         dispatch(setTotalResult(response.data.totalResult));
         dispatch(setFilterResult(response.data.filterResult));
         dispatch(setNewOrders(response.data.new));
+        dispatch(setPendingOrders(response.data.pending));
         dispatch(setActiveOrders(response.data.active));
+        dispatch(setCompletedOrders(response.data.completed));
+        dispatch(setRejectedOrders(response.data.rejected));
+        dispatch(setCanceledOrders(response.data.canceled));
         setTimeout(() => {
           dispatch(setLoader(false));
         }, 500);
       } catch (error) {
-        console.log(error.response.data.message);
+        console.log(error);
       }
     };
 
@@ -481,6 +569,10 @@ export const BottomTabNavigator = ({ socket, onTabBarLayout }) => {
         dispatch(setSentOrdersFilterResult(response.data.filterResult));
         dispatch(setNewSentOrders(response.data.new));
         dispatch(setActiveSentOrders(response.data.active));
+        dispatch(setPendingSentOrders(response.data.pending));
+        dispatch(setCanceledSentOrders(response.data.canceled));
+        dispatch(setRejectedSentOrders(response.data.rejected));
+        dispatch(setCompletedSentOrders(response.data.completed));
         setTimeout(() => {
           dispatch(setLoaderSentOrders(false));
         }, 500);
@@ -501,15 +593,49 @@ export const BottomTabNavigator = ({ socket, onTabBarLayout }) => {
     createdAtSentOrders,
   ]);
 
+  // this useeffect rerenders orders in real time when some users sends booking requests
+  useEffect(() => {
+    socket.on("ordersUpdate", () => {
+      dispatch(setRerenderOrders());
+    });
+  }, []);
+
+  /* 
+    Get Chats 
+  */
+
+  // render state for rooms
+  const rerenderRooms = useSelector((state) => state.storeChat.rerenderRooms);
+
+  // getting chat rooms
+  useEffect(() => {
+    const GetChats = async () => {
+      try {
+        const response = await axios.get(
+          "https://beautyverse.herokuapp.com/api/v1/chats/members/" +
+            currentUser._id
+        );
+        // save them in redux toolkit
+        dispatch(setRooms(response.data.data.chats));
+      } catch (error) {
+        dispatch(setRooms([]));
+        console.log(error.response.data.message);
+      }
+    };
+    GetChats();
+  }, [rerenderRooms]);
+
   return (
     <Tab.Navigator
       screenOptions={{
         tabBarStyle: {
           backgroundColor: currentTheme.background,
+          transform: [{ scale: 0.5 }],
         },
         headerShown: false,
         style: {
           backgroundColor: currentTheme.background,
+
           elevation: 1,
           // for Android
           shadowOffset: {
@@ -623,7 +749,7 @@ export const BottomTabNavigator = ({ socket, onTabBarLayout }) => {
       {/** Chat screen, chat stack screens inside tab */}
       <Tab.Screen
         name="Chat"
-        children={() => <ChatStack socket={socket} />}
+        component={ChatStack}
         options={({ route }) => ({
           tabBarLabel: "",
           tabBarInactiveTintColor: currentTheme.disabled,
@@ -643,13 +769,8 @@ export const BottomTabNavigator = ({ socket, onTabBarLayout }) => {
             shadowRadius: 5,
             elevation: 5, // required for android
           },
-          tabBarIcon: ({ color, size }) => (
-            <FontAwesome
-              name="wechat"
-              size={26}
-              color={color}
-              style={{ marginTop: 5 }}
-            />
+          tabBarIcon: (props) => (
+            <CustomTabBarChatIcon currentTheme={currentTheme} {...props} />
           ),
         })}
       />
@@ -659,12 +780,11 @@ export const BottomTabNavigator = ({ socket, onTabBarLayout }) => {
         name="Profile"
         children={() => (
           <ProfileStack
-            socket={socket}
             notifications={notifications}
             unreadNotifications={unreadNotifications}
             navigation={navigation}
             setNotifications={setNotifications}
-            refresh={refresh}
+            setUnreadNotifications={setUnreadNotifications}
           />
         )}
         options={{
@@ -697,20 +817,5 @@ export const BottomTabNavigator = ({ socket, onTabBarLayout }) => {
         }}
       />
     </Tab.Navigator>
-  );
-};
-
-// image cover for profile tab bar.
-const TabBarIcon = (props) => {
-  const currentUser = useSelector((state) => state.storeUser.currentUser);
-  return (
-    <Image
-      source={{ uri: currentUser?.cover }}
-      resizeMode="contain"
-      style={{
-        width: focused ? 24 : 20,
-        height: focused ? 24 : 20,
-      }}
-    />
   );
 };

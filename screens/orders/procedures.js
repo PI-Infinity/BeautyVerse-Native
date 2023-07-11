@@ -1,47 +1,44 @@
 // ProceduresList.js
+import { FontAwesome, FontAwesome5 } from "@expo/vector-icons";
 import React, { useState } from "react";
 import {
-  View,
+  ScrollView,
+  StyleSheet,
   Text,
   TouchableOpacity,
-  FlatList,
-  StyleSheet,
-  ScrollView,
+  View,
 } from "react-native";
+import { useSelector } from "react-redux";
 import ConfirmDialog from "../../components/confirmDialog";
-import { ProceduresOptions } from "../../datas/registerDatas";
 import { Language } from "../../context/language";
-import { FontAwesome, FontAwesome5 } from "@expo/vector-icons";
-import { lightTheme, darkTheme } from "../../context/theme";
-import { useSelector, useDispatch } from "react-redux";
+import { darkTheme, lightTheme } from "../../context/theme";
+import { ProceduresOptions } from "../../datas/registerDatas";
+
+/**
+ * Defines procedure list
+ */
 
 export const ProceduresList = ({
   targetUser,
   addOrder,
   procedure,
   setProcedure,
-  price,
   setPrice,
   setDuration,
-  duration,
-  send,
-  setDate,
   setTime,
 }) => {
+  // defines language context
   const language = Language();
-  const [category, setCategory] = useState("");
+
+  // defines confirm dialog
   const [confirmDialogVisible, setConfirmDialogVisible] = useState(false);
+
+  // defines theme
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
+
+  // defines beautyverse procedures list
   const proceduresOptions = ProceduresOptions();
-
-  const filterProcedures = (category) => {
-    setCategory(category);
-  };
-
-  const filteredProcedures = targetUser.procedures.filter(
-    (item) => !category || item.value.split(" - ")[0] === category
-  );
 
   const cats = Array.from(
     new Set(targetUser.procedures.map((item) => item.value.split(" - ")[0]))
@@ -53,11 +50,8 @@ export const ProceduresList = ({
     return lab;
   });
 
+  // defines active procedure category
   const [active, setActive] = useState("all");
-
-  const handleLongPress = (item) => {
-    setConfirmDialogVisible(true);
-  };
 
   return (
     <View style={styles.container}>
@@ -348,7 +342,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     alignItems: "center",
     height: 25,
-    // backgroundColor: "#222",
     justifyContent: "center",
     borderRadius: 50,
   },

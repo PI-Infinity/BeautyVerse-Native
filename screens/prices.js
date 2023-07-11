@@ -1,20 +1,20 @@
-import {
-  StyleSheet,
-  Text,
-  View,
-  ScrollView,
-  TouchableOpacity,
-} from "react-native";
-import React, { useState } from "react";
-import { lightTheme, darkTheme } from "../context/theme";
-import { useSelector, useDispatch } from "react-redux";
 import { MaterialIcons, Octicons } from "@expo/vector-icons";
 import axios from "axios";
+import React, { useState } from "react";
+import {
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { useDispatch, useSelector } from "react-redux";
+import { BackDrop } from "../components/backDropLoader";
+import { darkTheme, lightTheme } from "../context/theme";
 import {
   setRerenderCurrentUser,
   setRerenderUserList,
 } from "../redux/rerenders";
-import { BackDrop } from "../components/backDropLoader";
 
 export const Prices = ({ route }) => {
   const dispatch = useDispatch();

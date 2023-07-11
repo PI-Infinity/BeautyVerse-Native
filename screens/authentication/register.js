@@ -5,10 +5,18 @@ import { setType } from "../../redux/auth";
 import { Language } from "../../context/language";
 import { lightTheme, darkTheme } from "../../context/theme";
 import { MaterialIcons, FontAwesome, Entypo } from "@expo/vector-icons";
-const Register = ({ navigation }) => {
-  const language = Language();
-  const dispatch = useDispatch();
 
+/*
+  Register Screen,
+  in this screen user choice type of user and navigates to identify screen
+*/
+
+const Register = ({ navigation }) => {
+  //language context
+  const language = Language();
+  // redux tpplkit dispatch
+  const dispatch = useDispatch();
+  // theme state and context
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
 
@@ -121,12 +129,10 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   boxText: {
-    color: "#fff",
     fontWeight: "bold",
     letterSpacing: 0.3,
   },
   loginQuestion: {
-    color: "#fff",
     textAlign: "center",
     marginTop: 15,
     letterSpacing: 0.2,

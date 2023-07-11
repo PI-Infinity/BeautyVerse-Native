@@ -1,29 +1,29 @@
 import React, { useState } from "react";
 import {
-  View,
+  KeyboardAvoidingView,
+  Modal,
+  StyleSheet,
   Text,
   TextInput,
-  Button,
-  StyleSheet,
-  Modal,
-  KeyboardAvoidingView,
   TouchableOpacity,
+  View,
 } from "react-native";
+import { useSelector } from "react-redux";
 import { Language } from "../context/language";
-import { lightTheme, darkTheme } from "../context/theme";
-import { useSelector, useDispatch } from "react-redux";
+import { darkTheme, lightTheme } from "../context/theme";
+
+/**
+ * authentication email Verification code input popup
+ */
 
 const InputPopup = (props) => {
   const language = Language();
-  const [email, setEmail] = useState("");
 
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
 
   const handleSend = () => {
-    // Your send logic here
     props.setFunction();
-    // props.setOpen(false);
   };
 
   const handleCancel = () => {

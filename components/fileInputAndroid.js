@@ -1,27 +1,26 @@
-import React, { useEffect, useState } from "react";
+import { MaterialIcons } from "@expo/vector-icons";
+import * as ImageManipulator from "expo-image-manipulator";
+import * as ImagePicker from "expo-image-picker";
+import React, { useEffect } from "react";
 import {
-  Button,
-  Image,
-  View,
+  Alert,
+  Dimensions,
   Platform,
   StyleSheet,
-  Alert,
-  ScrollView,
-  Dimensions,
   Text,
   TouchableOpacity,
 } from "react-native";
-import * as ImagePicker from "expo-image-picker";
-import { MaterialIcons } from "@expo/vector-icons";
-import * as ImageManipulator from "expo-image-manipulator";
 
-const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
+/**
+ * File input on android
+ */
 
 export default function ImagePickerExample({
   setFile,
   file,
   currentTheme,
-  language,
+  from,
+  title,
 }) {
   useEffect(() => {
     (async () => {
@@ -39,7 +38,7 @@ export default function ImagePickerExample({
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.All,
       quality: 1,
-      allowsMultipleSelection: true,
+      allowsMultipleSelection: from === "chat" ? false : true,
       base64: true, // This option will return base64 data
     });
 
@@ -78,7 +77,7 @@ export default function ImagePickerExample({
     <TouchableOpacity onPress={pickImage} style={styles.button}>
       <MaterialIcons name="image" size={20} color={currentTheme.font} />
       <Text style={[styles.buttonText, { color: currentTheme.font }]}>
-        {language?.language?.User?.addFeed?.selectImage}
+        {title}
       </Text>
     </TouchableOpacity>
   );

@@ -1,69 +1,61 @@
 import {
-  createStackNavigator,
-  CardStyleInterpolators,
-} from "@react-navigation/stack";
-import { View, Dimensions, Pressable, TouchableOpacity } from "react-native";
-import { ScrollGallery } from "../screens/user/scrollGallery";
-import { User } from "../screens/user/user";
-import { AddFeed } from "../screens/user/addFeed";
-import { Orders } from "../screens/orders/orders";
-import { AddOrder } from "../screens/orders/addOrder";
-import { SentOrders } from "../screens/sentOrders/sentOrders";
-import { SendOrder } from "../screens/orders/sendOrder";
-import { DateScreen } from "../screens/orders/date";
-import { Statistics } from "../screens/orders/statistics";
-import { Settings } from "../screens/user/settings/settings";
-import { Addresses } from "../screens/user/settings/addresses";
-import { Prices } from "../screens/prices";
-import { PersonalInfo } from "../screens/user/settings/personalInfo";
-import { WorkingInfo } from "../screens/user/settings/workingInfo";
-import { Procedures } from "../screens/user/settings/procedures";
-import { Terms } from "../screens/user/terms";
-import { QA } from "../screens/user/QA";
-import { Privacy } from "../screens/user/privacy";
-import { Usage } from "../screens/user/usage";
-import { Notifications } from "../screens/user/notifications";
-import { FeedItem } from "../screens/feedScreen";
-import Charts from "../screens/user/statistics/chart";
-import {
-  MaterialIcons,
-  MaterialCommunityIcons,
-  Ionicons,
-  Octicons,
   Entypo,
   FontAwesome,
+  Ionicons,
+  MaterialIcons,
 } from "@expo/vector-icons";
-import { Text } from "react-native";
+import {
+  CardStyleInterpolators,
+  createStackNavigator,
+} from "@react-navigation/stack";
+import {
+  Dimensions,
+  Pressable,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useSelector } from "react-redux";
+import { CacheableImage } from "../components/cacheableImage";
 import { Language } from "../context/language";
-import { lightTheme, darkTheme } from "../context/theme";
-import axios from "axios";
+import { darkTheme, lightTheme } from "../context/theme";
+import { Room } from "../screens/chat/room";
+import { FeedItem } from "../screens/feedScreen";
+import { AddOrder } from "../screens/orders/addOrder";
+import { Orders } from "../screens/orders/orders";
+import { SendOrder } from "../screens/orders/sendOrder";
+import { Statistics } from "../screens/orders/statistics";
+import { Prices } from "../screens/prices";
+import { SentOrders } from "../screens/sentOrders/sentOrders";
+import { QA } from "../screens/user/QA";
+import { AddFeed } from "../screens/user/addFeed";
+import { Notifications } from "../screens/user/notifications";
+import { Privacy } from "../screens/user/privacy";
+import { ScrollGallery } from "../screens/user/scrollGallery";
+import { Addresses } from "../screens/user/settings/addresses";
+import { PersonalInfo } from "../screens/user/settings/personalInfo";
+import { Procedures } from "../screens/user/settings/procedures";
+import { Settings } from "../screens/user/settings/settings";
+import { WorkingInfo } from "../screens/user/settings/workingInfo";
+import Charts from "../screens/user/statistics/chart";
+import { Terms } from "../screens/user/terms";
+import { Usage } from "../screens/user/usage";
+import { User } from "../screens/user/user";
 
+/**
+ * Create user profile stack, where include all main configs
+ */
 const Stack = createStackNavigator();
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
-// specific component for user page, passed some props into component
-const withVariant = (Component, variant) => {
-  return (props) => {
-    return <User {...props} variant={variant} />;
-  };
-};
-
-// specific component for orders page, passed some props into component
-const withVariantOrders = (navigation, refresh) => {
-  return (props) => {
-    return <Orders {...props} navigation={navigation} refresh={refresh} />;
-  };
-};
-
 export function ProfileStack({
-  route,
   navigation,
   unreadNotifications,
+  setUnreadNotifications,
   notifications,
   setNotifications,
-  refresh,
 }) {
   // language state
   const language = Language();
@@ -78,6 +70,11 @@ export function ProfileStack({
   /** in profile stack defined,
    * user personal data, settings
    * and control datas and feeds */
+
+  const insets = useSafeAreaInsets();
+
+  const screenHeight = SCREEN_HEIGHT - insets.top - insets.bottom;
+
   return (
     <Stack.Navigator
       initialRouteName="UserProfile"
@@ -114,6 +111,7 @@ export function ProfileStack({
                 alignItems: "center",
                 gap: 5,
                 marginLeft: 15,
+                maxWidth: "75%",
               }}
             >
               <Text
@@ -123,6 +121,8 @@ export function ProfileStack({
                   color: currentTheme.font,
                   fontWeight: "bold",
                 }}
+                numberOfLines={1}
+                ellipsizeMode={"tail"}
               >
                 {currentUser.name} {/* current user name un screen header */}
               </Text>
@@ -158,7 +158,7 @@ export function ProfileStack({
                   marginRight: 10,
                   marginLeft: 4,
                   flexDirection: "row",
-
+                  opacity: 1,
                   alignItems: "center",
                   backgroundColor: currentTheme.line,
                   borderRadius: 50,
@@ -191,7 +191,10 @@ export function ProfileStack({
                 <Entypo name="list" size={24} color={currentTheme.disabled} />
                 <Text
                   style={{
-                    color: currentTheme.pink,
+                    color:
+                      currentUser.subscription.status === "active"
+                        ? currentTheme.pink
+                        : currentTheme.disabled,
                     fontWeight: "bold",
                     letterSpacing: -2,
                     fontSize: 16,
@@ -202,7 +205,7 @@ export function ProfileStack({
               </Pressable>
 
               <View>
-                {unreadNotifications.length > 0 && (
+                {unreadNotifications > 0 && (
                   <View
                     style={{
                       width: "auto",
@@ -219,7 +222,7 @@ export function ProfileStack({
                     }}
                   >
                     <Text style={{ color: "#fff", fontSize: 10 }}>
-                      {unreadNotifications.length}
+                      {unreadNotifications}
                     </Text>
                   </View>
                 )}
@@ -279,6 +282,7 @@ export function ProfileStack({
             notifications={notifications}
             navigation={navigation}
             setNotifications={setNotifications}
+            setUnreadNotifications={setUnreadNotifications}
           />
         )}
         options={({ route }) => ({
@@ -304,7 +308,7 @@ export function ProfileStack({
       />
       <Stack.Screen
         name="UserVisit"
-        component={User}
+        children={() => <User navigation={navigation} />}
         options={({ route }) => ({
           headerBackTitleVisible: false,
           headerTitleAlign: "center",
@@ -337,22 +341,23 @@ export function ProfileStack({
           headerRight: (props) => {
             return (
               <View style={{ marginRight: 20 }}>
-                {route.params.user._id !== currentUser._id && (
-                  <TouchableOpacity
-                    acitveOpacity={0.3}
-                    onPress={() =>
-                      navigation.navigate("Send Order", {
-                        user: route.params.user,
-                      })
-                    }
-                  >
-                    <FontAwesome
-                      name="calendar"
-                      size={18}
-                      color={currentTheme.font}
-                    />
-                  </TouchableOpacity>
-                )}
+                {route.params.user._id !== currentUser._id &&
+                  currentUser.type !== "beautycenter" && (
+                    <TouchableOpacity
+                      acitveOpacity={0.3}
+                      onPress={() =>
+                        navigation.navigate("Send Order", {
+                          user: route.params.user,
+                        })
+                      }
+                    >
+                      <FontAwesome
+                        name="calendar"
+                        size={18}
+                        color={currentTheme.font}
+                      />
+                    </TouchableOpacity>
+                  )}
               </View>
             );
           },
@@ -455,7 +460,7 @@ export function ProfileStack({
         children={() => <Orders navigation={navigation} />}
         options={({ navigation }) => ({
           headerBackTitleVisible: false,
-          title: "Order Managment System",
+          title: "Order Managment",
           headerStyle: {
             backgroundColor: currentTheme.background,
             elevation: 0,
@@ -478,7 +483,7 @@ export function ProfileStack({
             >
               <TouchableOpacity
                 acitveOpacity={0.3}
-                style={{ marginLeft: 15 }}
+                style={{ marginRight: 15 }}
                 onPress={() => navigation.navigate("Add Order")}
               >
                 <MaterialIcons
@@ -490,17 +495,17 @@ export function ProfileStack({
                 />
               </TouchableOpacity>
 
-              <TouchableOpacity
+              {/* <TouchableOpacity
                 acitveOpacity={0.3}
                 style={{ marginRight: 15 }}
-                onPress={() => navigation.navigate("OrdersStatistics")}
+                onPress={() => navigation.navigate("Order Statistics")}
               >
                 <MaterialIcons
                   name="bar-chart"
                   size={26}
                   color={currentTheme.font}
                 />
-              </TouchableOpacity>
+              </TouchableOpacity> */}
             </View>
           ),
         })}
@@ -575,36 +580,9 @@ export function ProfileStack({
           },
         })}
       />
-      <Stack.Screen
-        name="Date"
-        component={DateScreen}
-        options={({ route }) => {
-          let activedate = route.params.date;
-
-          return {
-            headerBackTitleVisible: false,
-            title: activedate, // Set the title to dayObj.value if it exists, otherwise empty string
-            headerStyle: {
-              backgroundColor: currentTheme.background,
-              elevation: 0,
-              shadowOpacity: 0,
-              borderBottomWidth: 0,
-            },
-            headerTintColor: currentTheme.font,
-            headerTitleStyle: {
-              fontWeight: "bold",
-              fontSize: 18,
-              letterSpacing: 0.5,
-            },
-            cardStyle: {
-              backgroundColor: currentTheme.background,
-            },
-          };
-        }}
-      />
 
       <Stack.Screen
-        name="OrdersStatistics"
+        name="Order Statistics"
         component={Statistics}
         options={({ route }) => ({
           headerBackTitleVisible: false,
@@ -892,6 +870,76 @@ export function ProfileStack({
             fontWeight: "bold",
             fontSize: 18,
             letterSpacing: 0.5,
+          },
+          cardStyle: {
+            backgroundColor: currentTheme.background,
+          },
+        })}
+      />
+      <Stack.Screen
+        name="Room"
+        component={Room}
+        initialParams={{ screenHeight }}
+        options={({ navigation, route }) => ({
+          headerBackTitleVisible: false,
+          // title: "name",
+          headerStyle: {
+            backgroundColor: currentTheme.background,
+
+            elevation: 0,
+            shadowOpacity: 0,
+            borderBottomWidth: 0,
+          },
+          headerTitle: (props) => {
+            return (
+              <Pressable
+                onPress={() =>
+                  navigation.navigate("UserVisit", {
+                    user: route.params.user,
+                  })
+                }
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 10,
+                  justifyContent: "center",
+                  width: SCREEN_WIDTH - 150,
+                }}
+              >
+                {route.params.user?.cover?.length > 0 && (
+                  <CacheableImage
+                    source={{ uri: route.params.user?.cover }}
+                    style={{
+                      height: 30,
+                      width: 30,
+                      borderRadius: 50,
+                      resizeMode: "cover",
+                    }}
+                    manipulationOptions={[
+                      { resize: { width: 30, height: 30 } },
+                      { rotate: 90 },
+                    ]}
+                  />
+                )}
+
+                <Text
+                  style={{
+                    fontSize: 18,
+                    letterSpacing: 0.5,
+                    color: currentTheme.font,
+                    fontWeight: "bold",
+                  }}
+                >
+                  {route.params.user?.name}
+                </Text>
+              </Pressable>
+            );
+          },
+          headerTintColor: currentTheme.font,
+          headerTitleStyle: {
+            fontWeight: "bold",
+            letterSpacing: 0.5,
+            fontSize: 18,
           },
           cardStyle: {
             backgroundColor: currentTheme.background,

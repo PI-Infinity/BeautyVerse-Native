@@ -1,36 +1,36 @@
 // ProceduresList.js
+import { FontAwesome, FontAwesome5 } from "@expo/vector-icons";
 import React, { useState } from "react";
 import {
-  View,
+  ScrollView,
+  StyleSheet,
   Text,
   TouchableOpacity,
-  FlatList,
-  StyleSheet,
-  ScrollView,
+  View,
 } from "react-native";
+import { useSelector } from "react-redux";
 import ConfirmDialog from "../../components/confirmDialog";
-import { ProceduresOptions } from "../../datas/registerDatas";
 import { Language } from "../../context/language";
-import { FontAwesome, FontAwesome5 } from "@expo/vector-icons";
-import { lightTheme, darkTheme } from "../../context/theme";
-import { useSelector, useDispatch } from "react-redux";
+import { darkTheme, lightTheme } from "../../context/theme";
+import { ProceduresOptions } from "../../datas/registerDatas";
+
+/**
+ * User Procedures section in user screen
+ */
 
 export const ProceduresList = ({ targetUser, addOrder }) => {
+  // define some context
   const language = Language();
-  const [category, setCategory] = useState("");
-  const [confirmDialogVisible, setConfirmDialogVisible] = useState(false);
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
+
+  // define confirm dialog state
+  const [confirmDialogVisible, setConfirmDialogVisible] = useState(false);
+
+  // define all beautyverse's procedures list
   const proceduresOptions = ProceduresOptions();
 
-  const filterProcedures = (category) => {
-    setCategory(category);
-  };
-
-  const filteredProcedures = targetUser.procedures.filter(
-    (item) => !category || item.value.split(" - ")[0] === category
-  );
-
+  // define categories
   const cats = Array.from(
     new Set(targetUser.procedures.map((item) => item.value.split(" - ")[0]))
   );
@@ -41,11 +41,8 @@ export const ProceduresList = ({ targetUser, addOrder }) => {
     return lab;
   });
 
+  // define active category
   const [active, setActive] = useState("all");
-
-  const handleLongPress = (item) => {
-    setConfirmDialogVisible(true);
-  };
 
   return (
     <View style={styles.container}>

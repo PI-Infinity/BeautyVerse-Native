@@ -1,19 +1,22 @@
-import React, { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  FlatList,
-  TextInput,
-  Dimensions,
-} from "react-native";
-import { useSelector, useDispatch } from "react-redux";
-import { setDistrict } from "../redux/filter"; // Import the setCity action from your actions file
 import { MaterialIcons } from "@expo/vector-icons";
+import React, { useState } from "react";
+import {
+  Dimensions,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { useDispatch, useSelector } from "react-redux";
+import { setDistrict } from "../redux/filter"; // Import the setCity action from your actions file
 import { setCleanUp } from "../redux/rerenders";
 
-const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
+/**
+ * Defines districts in filter
+ */
+
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 export const Districts = ({ districts, currentTheme }) => {
   const dispatch = useDispatch();

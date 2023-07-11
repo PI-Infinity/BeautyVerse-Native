@@ -1,37 +1,51 @@
-import {
-  StyleSheet,
-  Text,
-  View,
-  ScrollView,
-  TouchableOpacity,
-  Platform,
-  Vibration,
-} from "react-native";
-import { CacheableImage } from "../../components/cacheableImage";
-import { Entypo } from "@expo/vector-icons";
-import { FontAwesome } from "@expo/vector-icons";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { FontAwesome, MaterialCommunityIcons } from "@expo/vector-icons";
 import axios from "axios";
-import DeleteConfirm from "../../components/confirmDialog";
+import * as Localization from "expo-localization";
+import moment from "moment";
 import { useState } from "react";
-import { StatusPopup } from "../../screens/orders/statusPopup";
-import { useSelector, useDispatch } from "react-redux";
-import { setOrders } from "../../redux/orders";
+import {
+  Platform,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  Vibration,
+  View,
+} from "react-native";
+import { useDispatch } from "react-redux";
+import { CacheableImage } from "../../components/cacheableImage";
+import DeleteConfirm from "../../components/confirmDialog";
+import { useSocket } from "../../context/socketContext";
+import { ProceduresOptions } from "../../datas/registerDatas";
 import { setRerenderOrders } from "../../redux/rerenders";
+import { StatusPopup } from "../../screens/orders/statusPopup";
 
-export const ListItem = ({ item, currentUser, currentTheme, navigation }) => {
+/**
+ *
+ * @returns List view item
+ */
+
+export const ListItem = ({
+  item,
+  currentUser,
+  currentTheme,
+  navigation,
+  setLoader,
+}) => {
+  // defines redux dispatch
   const dispatch = useDispatch();
-  const orders = useSelector((state) => state.storeOrders.orders);
+
+  // defines socket server
+  const socket = useSocket();
+
+  // defines delete confirm dialog
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+
+  /**
+   * Delete order
+   */
   const DeleteOrder = async () => {
     try {
-      if (item._id) {
-        dispatch(setOrders(orders.filter((order) => order._id !== item._id)));
-      } else {
-        dispatch(
-          setOrders(orders.filter((order) => order.orderId !== item.orderId))
-        );
-      }
+      setLoader(true);
       await axios.delete(
         "https://beautyverse.herokuapp.com/api/v1/users/" +
           currentUser._id +
@@ -39,6 +53,9 @@ export const ListItem = ({ item, currentUser, currentTheme, navigation }) => {
           item._id
       );
       dispatch(setRerenderOrders());
+      setTimeout(() => {
+        setLoader(false);
+      }, 200);
     } catch (error) {
       console.log(error.response.data.message);
     }
@@ -46,22 +63,28 @@ export const ListItem = ({ item, currentUser, currentTheme, navigation }) => {
   // change status
   const UpdateOrder = async (val) => {
     try {
-      dispatch(
-        setOrders(
-          orders.map((order) =>
-            order._id === item._id ? { ...order, status: val } : order
-          )
-        )
-      );
+      console.log(val);
       await axios.patch(
         "https://beautyverse.herokuapp.com/api/v1/users/" +
           currentUser._id +
           "/orders/" +
-          item._id,
+          item.orderNumber,
         {
           status: val,
         }
       );
+      await axios.patch(
+        "https://beautyverse.herokuapp.com/api/v1/users/" +
+          item.user._id +
+          "/sentorders/" +
+          item.orderNumber,
+        {
+          status: val,
+        }
+      );
+      socket.emit("updateOrders", {
+        targetId: item.user?._id,
+      });
       dispatch(setRerenderOrders());
     } catch (error) {
       console.log(error.response.data.message);
@@ -72,22 +95,29 @@ export const ListItem = ({ item, currentUser, currentTheme, navigation }) => {
   const [selectedItem, setSelectedItem] = useState(item.status);
   const [openStatusOption, setOpenStatusOption] = useState(false);
 
-  // define some styiling
+  // defines beautyverse procedures list
+  const proceduresOptions = ProceduresOptions();
+
+  // define some style
   let bg;
   let font;
   if (selectedItem === "new") {
     bg = "green";
     font = "#ccc";
+  } else if (selectedItem === "pending") {
+    bg = "orange";
+    font = "#111";
   } else if (selectedItem === "canceled" || selectedItem === "rejected") {
-    bg = "red";
+    bg = currentTheme.disabled;
     font = "#ccc";
   } else if (selectedItem === "active") {
-    bg = "orange";
+    bg = currentTheme.pink;
     font = "#111";
   } else {
     bg = currentTheme.background2;
     font = "#ccc";
   }
+
   return (
     <>
       <ScrollView
@@ -97,7 +127,8 @@ export const ListItem = ({ item, currentUser, currentTheme, navigation }) => {
         overScrollMode={Platform.OS === "ios" ? "never" : "always"}
         contentContainerStyle={{
           height: openStatusOption ? 205 : 40,
-          alignItems: openStatusOption ? "start" : "center",
+          paddingRight: 80,
+          alignItems: openStatusOption ? "skretch" : "center",
           // justifyContent: "center",
         }}
         style={{
@@ -118,19 +149,15 @@ export const ListItem = ({ item, currentUser, currentTheme, navigation }) => {
             />
           </View>
         )}
-        {openStatusOption && selectedItem !== "new" && (
-          <View
-            style={{ position: "absolute", top: 5, left: 5, zIndex: 10000 }}
-          >
-            <StatusPopup
-              currentTheme={currentTheme}
-              selectedItem={selectedItem}
-              setSelectedItem={setSelectedItem}
-              setOpenStatusOption={setOpenStatusOption}
-              UpdateOrder={UpdateOrder}
-            />
-          </View>
-        )}
+        <View style={{ marginLeft: 8 }}>
+          <StatusPopup
+            currentTheme={currentTheme}
+            selectedItem={selectedItem}
+            setSelectedItem={setSelectedItem}
+            UpdateOrder={UpdateOrder}
+            Delete={DeleteOrder}
+          />
+        </View>
         <TouchableOpacity
           activeOpacity={0.8}
           style={{ flexDirection: "row" }}
@@ -148,99 +175,87 @@ export const ListItem = ({ item, currentUser, currentTheme, navigation }) => {
               paddingHorizontal: 10,
               alignItems: "center",
               justifyContent: "center",
-              minWidth: 50,
             }}
           >
             <Text style={{ color: font, letterSpacing: 0.3 }}>
-              N{item.orderNumber}
+              {(() => {
+                let formattedDateInTimezone = moment(item.date)
+                  .tz(Localization.timezone)
+                  .format("DD/MM/YYYY - HH:mm");
+
+                return formattedDateInTimezone;
+              })()}
             </Text>
           </View>
-          <TouchableOpacity
-            activeOpacity={0.9}
-            onPress={() => setOpenStatusOption(true)}
+
+          <View
             style={{
-              // height: "100%",
+              flex: 1,
               borderRightWidth: 1,
               borderColor: currentTheme.disabled,
-              padding: 5,
-              paddingHorizontal: 10,
-              justifyContent: "center",
-              minWidth: 150,
+              // padding: 5,
+              // paddingHorizontal: 10,
               flexDirection: "row",
               alignItems: "center",
-              gap: 20,
+              justifyContent: "center",
             }}
           >
-            <Text
-              style={{
-                color: font,
-                letterSpacing: 0.3,
-              }}
-            >
-              Status: {selectedItem}
+            <Text style={{ color: font, letterSpacing: 0.3 }}>
+              {(() => {
+                let lab = proceduresOptions?.find(
+                  (it) =>
+                    it?.value?.toLowerCase() ===
+                    item?.orderedProcedure?.toLowerCase()
+                );
+
+                return lab?.label;
+              })()}
             </Text>
-            {selectedItem === "new" && (
-              <View
+          </View>
+          <View
+            style={{
+              flex: 1,
+              borderRightWidth: 1,
+              borderColor: currentTheme.disabled,
+              padding: 5,
+              // paddingHorizontal: 10,
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Text>Price: </Text>
+            {item.orderSum ? (
+              <>
+                <Text style={{ color: font, letterSpacing: 0.2 }}>
+                  {item.orderSum}{" "}
+                </Text>
+                {item?.currency === "Dollar" ? (
+                  <FontAwesome name="dollar" color={"#111"} size={14} />
+                ) : item?.currency === "Euro" ? (
+                  <FontAwesome name="euro" color={"#111"} size={14} />
+                ) : (
+                  <Text
+                    style={{
+                      fontWeight: "bold",
+                      color: font,
+                      fontSize: 14,
+                    }}
+                  >
+                    {"\u20BE"}
+                  </Text>
+                )}
+              </>
+            ) : (
+              <Text
                 style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 30,
-                  backgroundColor: currentTheme.background2,
-                  borderRadius: 50,
-                  padding: 5,
-                  paddingHorizontal: 15,
+                  color: font,
+                  fontSize: 14,
                 }}
               >
-                <FontAwesome size={20} name="remove" color="red" />
-                <FontAwesome size={20} name="check" color="green" />
-              </View>
+                N/A
+              </Text>
             )}
-          </TouchableOpacity>
-          <View
-            style={{
-              height: "100%",
-              borderRightWidth: 1,
-              borderColor: currentTheme.disabled,
-              padding: 5,
-              paddingHorizontal: 10,
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <Text style={{ color: font, letterSpacing: 0.3 }}>
-              Date: {item.date}
-            </Text>
-          </View>
-          <View
-            style={{
-              height: "100%",
-              borderRightWidth: 1,
-              borderColor: currentTheme.disabled,
-              padding: 5,
-              paddingHorizontal: 10,
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <Text style={{ color: font, letterSpacing: 0.3 }}>
-              Procedure: {item.orderedProcedure.value}
-            </Text>
-          </View>
-          <View
-            style={{
-              height: "100%",
-              borderRightWidth: 1,
-              borderColor: currentTheme.disabled,
-              padding: 5,
-              paddingHorizontal: 10,
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <Text style={{ color: font, letterSpacing: 0.3 }}>
-              Price: {item.orderSum} {currentUser.currency}
-            </Text>
           </View>
           <View
             style={{
@@ -269,7 +284,7 @@ export const ListItem = ({ item, currentUser, currentTheme, navigation }) => {
                 onPress={
                   item.user?._id
                     ? () =>
-                        navigation.navigate("User", {
+                        navigation.navigate("UserVisit", {
                           user: item.user,
                         })
                     : undefined
@@ -341,15 +356,23 @@ export const ListItem = ({ item, currentUser, currentTheme, navigation }) => {
           </TouchableOpacity>
           <View
             style={{
-              height: "100%",
+              flex: 1,
               padding: 5,
               paddingHorizontal: 10,
               alignItems: "center",
               justifyContent: "center",
+              flexDirection: "row",
             }}
           >
+            <Text style={{ color: font, letterSpacing: 0.3 }}>Ordered At:</Text>
             <Text style={{ color: font, letterSpacing: 0.3 }}>
-              Ordered At: {item.orderAt}
+              {(() => {
+                let formattedDateInTimezone = moment(item.date)
+                  .tz(Localization.timezone)
+                  .format("DD/MM/YYYY - HH:mm");
+
+                return formattedDateInTimezone;
+              })()}
             </Text>
           </View>
         </TouchableOpacity>

@@ -1,59 +1,57 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  ScrollView,
-  TextInput,
-  Pressable,
   Platform,
+  Pressable,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
-import { SearchBar } from "@rneui/themed";
+import { useDispatch, useSelector } from "react-redux";
 import { ProceduresOptions } from "../datas/registerDatas";
-import { useSelector, useDispatch } from "react-redux";
-import { setSearchInput, setSearch } from "../redux/filter";
-import { ListItem, Icon, Button } from "react-native-elements";
-import { Language } from "../context/language";
-import { lightTheme, darkTheme } from "../context/theme";
-import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
+
+// Import necessary Redux actions
+import { setSearch, setSearchInput } from "../redux/filter";
 import { setCleanUp, setRerenderUserList } from "../redux/rerenders";
 
-export const Search = ({ navigation }) => {
-  // const [Search, setSearchInput] = useState("");
+import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
+import { Language } from "../context/language";
+import { darkTheme, lightTheme } from "../context/theme";
+
+export const Search = ({}) => {
+  // Initialize state variables
+  const [qnt, setQnt] = useState(20);
+
+  // Get current language, theme, and search input from Redux state
   const language = Language();
   const proceduresOptions = ProceduresOptions();
-
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
-
   const dispatch = useDispatch();
   const search = useSelector((state) => state.storeFilter.searchInput);
 
-  const [qnt, setQnt] = useState(20);
-
+  // Filter procedures options based on search input
   const filteredProcedures = useMemo(() => {
     return proceduresOptions?.filter((item) =>
       item.label?.toLowerCase().includes(search?.toLowerCase())
     );
   }, [proceduresOptions, search]);
 
+  // Handler for when a user selects a procedure option
   const handleItemPress = useCallback(
     (value) => {
       let opt = proceduresOptions.find((it) => it.value === value?.value);
       let lab = opt.label.split("-");
-      // console.log(value.splite("/"));
       dispatch(setSearchInput(lab[lab?.length - 1]));
       dispatch(setSearch(value?.value?.toLowerCase()));
       dispatch(setCleanUp());
-      // setTimeout(() => {
-      //   navigation.navigate("Feeds");
-      // }, 50);
     },
-    [dispatch]
+    [dispatch, proceduresOptions]
   );
 
   return (
-    <View style={{ width: "100%", alignItems: "center", paddingTop: 10 }}>
+    <View style={{ width: "100%", alignItems: "center", paddingTop: 0 }}>
       <View
         style={{
           width: "95%",
@@ -94,37 +92,8 @@ export const Search = ({ navigation }) => {
           )}
         </Pressable>
       </View>
-      {/* <SearchBar
-        // round={true}
-        showCancel={true}
-        autoFocus
-        // showLoading={true}
-        // lightTheme={true}
-        containerStyle={{
-          height: 45,
-          elevation: 0,
-          flexDirection: "row",
-          justifyContent: "center",
-          alignItems: "center",
-          // paddingLeft: 15,
-          // paddingRight: 15,
-          paddingTop: 0,
-          backgroundColor: currentTheme.background,
-          borderWidth: 0, //no effect
-          shadowColor: "white", //no effect
-          borderBottomColor: "transparent",
-          borderTopColor: "transparent",
-        }}
-        inputContainerStyle={{
-          height: 35,
-          width: "100%",
-          backgroundColor: "rgba(255,255,255,0.02)",
-        }}
-        placeholder={language?.language?.Main?.filter?.typeHere}
-        onChangeText={setSearchInput}
-        value={Search}
-      /> */}
 
+      {/* Procedure options list */}
       <ScrollView
         contentContainerStyle={{ gap: 5, marginTop: 10 }}
         style={{ width: "90%" }}
@@ -153,7 +122,6 @@ export const Search = ({ navigation }) => {
                   search === item.value
                     ? () => handleItemPress("")
                     : () => handleItemPress(item)
-                  //   navigation.navigate("Feeds");
                 }
               >
                 <Text style={{ color: currentTheme.font }}>{item.label}</Text>

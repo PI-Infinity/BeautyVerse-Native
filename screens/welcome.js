@@ -1,28 +1,27 @@
+import { MaterialIcons } from "@expo/vector-icons";
+import React from "react";
 import {
+  Dimensions,
+  Image,
+  Platform,
+  ScrollView,
   StyleSheet,
   Text,
-  View,
-  Pressable,
-  Dimensions,
-  ScrollView,
-  Image,
   TouchableOpacity,
-  Platform,
+  View,
 } from "react-native";
-import React from "react";
-import { useSelector, useDispatch } from "react-redux";
-import { lightTheme, darkTheme } from "../context/theme";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { setLanguage, setTheme } from "../redux/app";
-import { Language } from "../context/language";
-import { MaterialIcons } from "@expo/vector-icons";
-import { CacheableImage } from "../components/cacheableImage";
+import { useSelector } from "react-redux";
 import AnimatedButton from "../components/animatedButton";
+import { Language } from "../context/language";
+import { darkTheme, lightTheme } from "../context/theme";
+
+/**
+ * Welcome screen
+ */
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
 const Welcome = ({ navigation }) => {
-  const dispatch = useDispatch();
   // theme state, from redux
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
@@ -70,7 +69,7 @@ const Welcome = ({ navigation }) => {
             letterSpacing: 1,
           }}
         >
-          verse
+          Verse
         </Text>
       </View>
 
@@ -102,7 +101,7 @@ const Welcome = ({ navigation }) => {
         currentTheme={currentTheme}
         title={language?.language?.Auth?.auth?.authentication}
       />
-      <View style={{ width: "100%", position: "relative", bottom: 15 }}>
+      {/* <View style={{ width: "100%", position: "relative", bottom: 15 }}>
         <Text
           style={[
             styles.sectionTitle,
@@ -230,9 +229,9 @@ const Welcome = ({ navigation }) => {
             {language?.language?.Auth?.auth?.russian}
           </Text>
         </Pressable>
-      </View>
-      <View style={{ width: "90%" }}>
-        <TouchableOpacity
+      </View> */}
+      <View style={{ width: "90%", marginTop: 15 }}>
+        {/* <TouchableOpacity
           activeOpacity={0.5}
           onPress={() => navigation.navigate("Prices", { from: "Welcome" })}
           style={[
@@ -248,7 +247,7 @@ const Welcome = ({ navigation }) => {
             color={currentTheme.pink}
             size={18}
           />
-        </TouchableOpacity>
+        </TouchableOpacity> */}
         <TouchableOpacity
           activeOpacity={0.5}
           onPress={() => navigation.navigate("Terms")}

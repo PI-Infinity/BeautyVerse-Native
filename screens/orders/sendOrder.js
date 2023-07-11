@@ -1,65 +1,80 @@
-import { Calendar } from "../../screens/orders/calendar";
+import { FontAwesome5, MaterialIcons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
+import axios from "axios";
+import moment from "moment";
+import React, { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
+  Alert,
+  Platform,
+  Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   View,
-  ScrollView,
-  Platform,
-  TextInput,
-  KeyboardAvoidingView,
-  TouchableOpacity,
-  Alert,
-  Pressable,
-  Animated,
-  ActivityIndicator,
 } from "react-native";
-import React, { useRef, useState, useEffect } from "react";
-import { useFocusEffect } from "@react-navigation/native";
-import { ProceduresList } from "../../screens/orders/procedures";
-import { useSelector, useDispatch } from "react-redux";
-import axios from "axios";
-import { BackDrop } from "../../components/backDropLoader";
-import { lightTheme, darkTheme } from "../../context/theme";
-import { MaterialIcons, FontAwesome, FontAwesome5 } from "@expo/vector-icons";
 import uuid from "react-native-uuid";
+import { useDispatch, useSelector } from "react-redux";
+import { useSocket } from "../../context/socketContext";
+import { darkTheme, lightTheme } from "../../context/theme";
 import { setRerenderOrders } from "../../redux/rerenders";
-import { useNavigation } from "@react-navigation/native";
-import moment from "moment";
-import * as Localization from "expo-localization";
+import { Calendar } from "../../screens/orders/calendar";
+import { ProceduresList } from "../../screens/orders/procedures";
+
+/**
+ * Send order component to specialist or to salon
+ */
 
 export const SendOrder = ({ route }) => {
+  // loading state
   const [isLoaded, setIsLoaded] = useState(true); // new state variable
+
+  // defines navigation state
   const navigation = useNavigation();
+
+  // define target specialist or salon
   const targetUser = route.params.user;
+
+  // defines redux dispatch
   const dispatch = useDispatch();
+
+  // defines socket server
+  const socket = useSocket();
+
+  // defines theme
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
-  const nextOrderNumber = useSelector(
-    (state) => state.storeOrders.nextOrderNumber
-  );
+
+  // defines current user
   const currentUser = useSelector((state) => state.storeUser.currentUser);
 
+  // defines procedure date
   const [date, setDate] = useState(new Date());
-  console.log(date);
+
+  // defines procedure time
   const [time, setTime] = useState(null);
 
+  // defines procedure
   const [procedure, setProcedure] = useState(null);
-  const [price, setPrice] = useState("");
-  const [currency, setCurrency] = useState(targetUser.currency);
-  const [duration, setDuration] = useState(null);
-  const [user, setUser] = useState({
-    id: "",
-    name: "",
-    phone: "",
-    addationalInfo: "",
-  });
-  const [comment, setComment] = useState("");
 
+  // defines pricedure price
+  const [price, setPrice] = useState("");
+
+  // defines procedure currency
+  const [currency, setCurrency] = useState(targetUser.currency);
+
+  // defines procedure duration
+  const [duration, setDuration] = useState(null);
+
+  // time loader state
   const [timeLoader, setTimeLoader] = useState(false);
 
   /// get orders by date
   const [orders, setOrders] = useState([]);
 
+  /**
+   * Get orders function
+   */
   const GetOrders = async () => {
     setTimeLoader(true);
     try {
@@ -87,9 +102,7 @@ export const SendOrder = ({ route }) => {
     .toLocaleDateString("en-US", {
       weekday: "long",
     })
-    .split(",")[0];
-
-  const [loader, setLoader] = useState(false);
+    ?.split(",")[0];
 
   const [dayOff, setDayOff] = useState(false);
 
@@ -101,7 +114,7 @@ export const SendOrder = ({ route }) => {
   );
   let workingHoursInThisDay;
   if (wDay) {
-    workingHoursInThisDay = wDay.hours.split(" - ");
+    workingHoursInThisDay = wDay.hours?.split(" - ");
   }
 
   let startHour;
@@ -221,7 +234,7 @@ export const SendOrder = ({ route }) => {
             orderedSpecialist: "",
             orderSum: procedure?.price,
             currency: currency,
-            duration: procedure?.duration,
+            duration: procedure?.duration ? procedure.duration : 60,
             date: newDate.toISOString(),
             status: "new",
             comment: "",
@@ -248,6 +261,9 @@ export const SendOrder = ({ route }) => {
             comment: "",
           }
         );
+        socket.emit("updateOrders", {
+          targetId: targetUser?._id,
+        });
         dispatch(setRerenderOrders());
         Alert.alert("The request has been sent successfully!");
         setTimeout(() => {
@@ -258,7 +274,7 @@ export const SendOrder = ({ route }) => {
       }
     }
   };
-  console.log(dayOff);
+
   useEffect(() => {
     setTimeout(() => {
       setIsLoaded(false);
@@ -541,5 +557,3 @@ export const SendOrder = ({ route }) => {
     </>
   );
 };
-
-const styles = StyleSheet.create({});

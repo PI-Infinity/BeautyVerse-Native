@@ -3,6 +3,8 @@ import { Animated, StyleSheet, View } from "react-native";
 import { lightTheme, darkTheme } from "../context/theme";
 import { useSelector } from "react-redux";
 
+// define skelton cards
+
 const LoadingSkeleton = () => {
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;

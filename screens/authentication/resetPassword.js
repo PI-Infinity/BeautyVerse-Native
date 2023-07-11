@@ -1,27 +1,36 @@
-import React, { useState } from "react";
+import React from "react";
 import {
-  View,
+  KeyboardAvoidingView,
+  Pressable,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
-  KeyboardAvoidingView,
-  Pressable,
+  View,
 } from "react-native";
 import Modal from "react-native-modal";
+import { useSelector } from "react-redux";
 import { Language } from "../../context/language";
-import { lightTheme, darkTheme } from "../../context/theme";
-import { useSelector, useDispatch } from "react-redux";
+import { darkTheme, lightTheme } from "../../context/theme";
+
+/**
+ * reset password popup to input email and get link
+ */
 
 const EmailPopup = ({ isVisible, onClose, onSend, setEmail, email }) => {
+  // language context
   const language = Language();
-
+  // theme context
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
 
+  // send function includes some functions from parent components
   const handleSend = () => {
+    // send to email
     onSend(email);
+    // clear email input
     setEmail("");
+    // close popup
     onClose();
   };
 
@@ -102,8 +111,6 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
   },
   input: {
-    // borderWidth: 1,
-    // borderColor: "#ddd",
     borderRadius: 50,
     paddingLeft: 10,
     marginBottom: 15,

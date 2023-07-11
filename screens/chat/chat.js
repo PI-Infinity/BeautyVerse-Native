@@ -1,22 +1,32 @@
-import { StyleSheet, Text, Dimensions, Animated } from "react-native";
-import { Search } from "../../screens/chat/search";
-import { Rooms } from "../../screens/chat/rooms";
-import { AddChat } from "../../screens/chat/addChat";
-import { useSelector, useDispatch } from "react-redux";
-import { useState } from "react";
 import { useNavigation } from "@react-navigation/native";
+import { useState } from "react";
+import { Animated, StyleSheet } from "react-native";
+import { useSelector } from "react-redux";
+import { useSocket } from "../../context/socketContext";
+import { AddChat } from "../../screens/chat/addChat";
+import { Rooms } from "../../screens/chat/rooms";
+import { Search } from "../../screens/chat/search";
 
-const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
+/**
+ * Chat main screen
+ */
 
-export const Chat = ({ socket }) => {
+export const Chat = () => {
+  // define open/hide chat redux stater
   const openAddChat = useSelector((state) => state.storeChat.openAddChat);
+
+  // define navigator
   const navigation = useNavigation();
 
+  // define socket server
+  const socket = useSocket();
+
+  // define search state
   const [search, setSearch] = useState("");
+
   return (
     <Animated.View
       style={{
-        // transform: [{ translateX: slideAnim }],
         flex: 1,
         width: "100%",
         alignItems: "center",
@@ -29,11 +39,4 @@ export const Chat = ({ socket }) => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "yellow",
-    width: "100%",
-    alignItems: "center",
-  },
-});
+const styles = StyleSheet.create({});

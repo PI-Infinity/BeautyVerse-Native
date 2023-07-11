@@ -1,6 +1,10 @@
-import React, { useState } from "react";
-import { View, Text } from "react-native";
 import { Picker } from "@react-native-picker/picker";
+import React from "react";
+import { Text, View } from "react-native";
+
+/**
+ * component is start and end time picker popup
+ */
 
 const TimePickerComponent = ({
   currentTheme,

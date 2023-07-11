@@ -1,40 +1,205 @@
-import {
-  StyleSheet,
-  Text,
-  View,
-  TextInput,
-  Dimensions,
-  TouchableOpacity,
-} from "react-native";
-import React, { useEffect, useState, useRef } from "react";
-import { useSelector, useDispatch } from "react-redux";
-import axios from "axios";
 import { FontAwesome } from "@expo/vector-icons";
+import axios from "axios";
+import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
+import React, { useEffect, useRef, useState } from "react";
 import {
-  setRerenderMessages,
-  setRerederRooms,
-  setRerenderScroll,
-} from "../../redux/chat";
-import { lightTheme, darkTheme } from "../../context/theme";
+  Dimensions,
+  KeyboardAvoidingView,
+  Platform,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import uuid from "react-native-uuid";
+import { useDispatch, useSelector } from "react-redux";
+import { useSocket } from "../../context/socketContext";
+import { darkTheme, lightTheme } from "../../context/theme";
+import { storage } from "../../firebase";
+import { setRerederRooms, setRerenderScroll } from "../../redux/chat";
+import { File } from "../../screens/chat/file";
+
+/**
+ * Room Input component
+ */
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
-export const Input = ({ targetUser, setMessages, socket }) => {
-  const [text, setText] = useState("");
-  const [file, setFile] = useState("");
+export const Input = ({
+  targetUser,
+  setMessages,
+  arrivalMessage,
+  flatListRef,
+}) => {
+  // define socket server
+  const socket = useSocket();
 
+  // define theme
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
 
+  // define redux dispatch
   const dispatch = useDispatch();
 
+  // define file and text input states
+  const [text, setText] = useState("");
+  const [file, setFile] = useState("");
+
+  // define current user
   const currentUser = useSelector((state) => state.storeUser.currentUser);
+
+  // define current chat
   const currentChat = useSelector((state) => state.storeChat.currentChat);
 
-  const SendMessage = async () => {
+  // read message if room open on arrival new message
+  const ReadMessage = async () => {
+    try {
+      if (currentChat.lastSender !== currentUser._id) {
+        await axios.patch(
+          "https://beautyverse.herokuapp.com/api/v1/chats/" + currentChat.room,
+          {
+            status: "read",
+          }
+        );
+      }
+      dispatch(setRerenderScroll());
+      dispatch(setRerederRooms());
+    } catch (error) {
+      console.log(error.response.data.message);
+    }
+  };
+
+  // avoid firs render to read message
+  const isFirstRender = useRef(true);
+  const inputRef = useRef();
+
+  useEffect(() => {
+    inputRef.current?.focus();
+    if (isFirstRender.current) {
+      isFirstRender.current = false; // update the flag after the first render
+      return;
+    }
+    ReadMessage();
+  }, [arrivalMessage]);
+
+  let hght = SCREEN_HEIGHT > 700 ? 100 : 70;
+
+  // define margin bottom dinamically
+  const [mBottom, setMbottom] = useState(0);
+
+  // send file loading
+  const [loading, setLoading] = useState(false);
+
+  // add file
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [blobFile, setBlobFile] = useState(null);
+
+  // cancel uploading
+  const uploadTaskRef = useRef(null);
+
+  const cancelUpload = () => {
+    if (uploadTaskRef.current) {
+      uploadTaskRef.current.cancel();
+    }
+  };
+
+  // convert file to blob
+  async function uriToBlob(uri) {
+    if (Platform.OS === "android" || Platform.OS === "ios") {
+      const response = await fetch(uri);
+      return await response.blob();
+    }
+  }
+
+  useEffect(() => {
+    if (file?.type === "video") {
+      (async () => {
+        const blob = await uriToBlob(file?.uri);
+        setBlobFile(blob);
+        // You can now use the 'blob' for uploading.
+      })();
+    }
+  }, [file]);
+
+  /**
+   * Upload file to cloud and mongoDB
+   */
+
+  async function FileUpload() {
+    setLoading(true);
+    // check file
+    if (file[0] && file[0]?.type !== "video") {
+      let imgId = currentChat?.room + "image" + uuid.v4();
+      let fileRef = ref(storage, `chats/${currentChat.room}/${imgId}/`);
+      const blb = await uriToBlob(file[0].uri);
+
+      if (fileRef) {
+        // add desktop version
+        const snapshot = await uploadBytesResumable(fileRef, blb);
+        const url = await getDownloadURL(snapshot.ref);
+        try {
+          SendMessage(url, "img", imgId);
+          setTimeout(async () => {
+            setFile([]);
+
+            setLoading(false);
+          }, 2000);
+        } catch (error) {
+          console.error(error.response.data.message);
+          setTimeout(async () => {
+            setLoading(false);
+          }, 2000);
+        }
+      }
+    } else if (file && file?.type === "video") {
+      let videoId = currentChat?.room + "video" + uuid.v4();
+
+      let videosRef = ref(storage, `chats/${currentChat?.room}/${videoId}/`);
+
+      const uploadTask = uploadBytesResumable(videosRef, blobFile);
+
+      uploadTask.on(
+        "state_changed",
+        (snapshot) => {
+          const progress =
+            (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          setUploadProgress(progress);
+        },
+        (error) => {
+          console.error(error);
+          setLoading(false);
+        },
+        async () => {
+          const url = await getDownloadURL(uploadTask.snapshot.ref);
+
+          try {
+            SendMessage(url, "video", videoId);
+            setTimeout(async () => {
+              setFile([]);
+
+              setLoading(false);
+            }, 3000);
+          } catch (error) {
+            console.error(error.response.data.message);
+            setTimeout(async () => {
+              setLoading(false);
+            }, 3000);
+          }
+        }
+      );
+    }
+  }
+
+  const videoRef = useRef();
+
+  /**
+   * Send message function
+   */
+
+  const SendMessage = async (url, format, fileId) => {
     try {
       setText("");
-      setFile("");
+      setFile([]);
       await setMessages((prev) => [
         ...prev,
         {
@@ -42,19 +207,31 @@ export const Input = ({ targetUser, setMessages, socket }) => {
           senderId: currentUser._id,
           receiverId: targetUser.id,
           text: text,
-          file: file,
+          file: {
+            url: url,
+            type: format,
+            height: format === "img" ? file[0].height : file.height,
+            width: format === "img" ? file[0].width : file.width,
+            id: fileId,
+          },
           sentAt: new Date().toISOString(),
         },
       ]);
       dispatch(setRerenderScroll());
-      socket.current.emit("sendMessage", {
+      socket.emit("sendMessage", {
         room: currentChat.room,
         senderId: currentUser._id,
         senderName: currentUser.name,
         senderCover: currentUser.cover,
         receiverId: targetUser.id,
         text: text,
-        file: file,
+        file: {
+          url: url,
+          type: format,
+          height: format === "img" ? file[0].height : file.height,
+          width: format === "img" ? file[0].width : file.width,
+          id: fileId,
+        },
       });
       await axios.post(
         "https://beautyverse.herokuapp.com/api/v1/chats/messages",
@@ -63,14 +240,20 @@ export const Input = ({ targetUser, setMessages, socket }) => {
           senderId: currentUser._id,
           receiverId: targetUser.id,
           text: text,
-          file: file,
+          file: {
+            url: url,
+            type: format,
+            height: format === "img" ? file[0].height : file.height,
+            width: format === "img" ? file[0].width : file.width,
+            id: fileId,
+          },
           sentAt: new Date(),
         }
       );
       await axios.patch(
         "https://beautyverse.herokuapp.com/api/v1/chats/" + currentChat.room,
         {
-          lastMessage: text,
+          lastMessage: text?.length > 0 ? text : "File...",
           lastMessageCreatedAt: new Date(),
           lastSender: currentUser._id,
           status: "unread",
@@ -82,90 +265,84 @@ export const Input = ({ targetUser, setMessages, socket }) => {
           hideFor: "",
         }
       );
-      dispatch(setRerenderMessages());
       dispatch(setRerederRooms());
     } catch (error) {
       console.log(error.response.data.message);
     }
   };
 
-  // delete message
-  const DeleteMessage = async () => {
-    try {
-      await axios.get(
-        "https://beautyverse.herokuapp.com/api/v1/chats/messages"
-      );
-    } catch (error) {
-      console.log(error.response.data.message);
-    }
-  };
-
-  // read message
-  const ReadMessage = async () => {
-    try {
-      if (currentChat.lastSender !== currentUser._id) {
-        await axios.patch(
-          "https://beautyverse.herokuapp.com/api/v1/chats/" + currentChat.room,
-          {
-            status: "read",
-          }
-        );
-      }
-    } catch (error) {
-      console.log(error.response.data.message);
-    }
-  };
-
   return (
-    <View
-      style={{
-        width: SCREEN_WIDTH,
-        height: 65,
-        paddingHorizontal: SCREEN_WIDTH / 8,
-        paddingBottom: 8,
-        backgroundColor: currentTheme.background2,
-        borderTopWidth: 1,
-        borderColor: currentTheme.line,
-        alignItems: "center",
-        justifyContent: "center",
-        flexDirection: "row",
-      }}
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? hght : 300}
     >
-      <TextInput
-        placeholder="Type something.."
-        placeholderTextColor={currentTheme.disabled}
-        onChangeText={setText}
-        autoFocus
-        onFocus={ReadMessage}
-        value={text}
-        multiline
-        onSubmitEditing={() => {
-          if (text?.length) {
-            SendMessage();
-          } else {
-            console.log("no message");
-          }
-        }}
-        // autoofcus
+      <View
         style={{
-          // height: "100%",
-          width: "100%",
-          color: "#e5e5e5",
+          width: SCREEN_WIDTH,
+          minHeight: 65,
+          paddingHorizontal: SCREEN_WIDTH / 15,
+          // marginBottom: Platform.OS === "ios" ? 95 : 105,
+          // paddingBottom: 8,
+          marginBottom: mBottom,
+          backgroundColor: currentTheme.background,
+          borderTopWidth: 1,
+          borderColor: currentTheme.line,
+          alignItems: "center",
+          justifyContent: "space-between",
+          flexDirection: "row",
         }}
-      />
-      <FontAwesome
-        name="image"
-        size={18}
-        color="#e5e5e5"
-        style={{ marginRight: 15 }}
-      />
-      <TouchableOpacity
-        onPress={text?.length > 0 ? SendMessage : undefined}
-        activeOpacity={0.3}
       >
-        <FontAwesome name="send" size={20} color={currentTheme.pink} />
-      </TouchableOpacity>
-    </View>
+        <TextInput
+          placeholder="Type something.."
+          placeholderTextColor={currentTheme.disabled}
+          onChangeText={setText}
+          value={text}
+          onFocus={() => {
+            setMbottom(0);
+            flatListRef.current.scrollToEnd({ animated: true });
+          }}
+          onBlur={() => setMbottom(100)}
+          multiline
+          style={{
+            flex: 1.6,
+            color: "#e5e5e5",
+          }}
+          ref={inputRef}
+        />
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            marginRight: 30,
+          }}
+        >
+          <File
+            flatListRef={flatListRef}
+            loading={loading}
+            setLoading={setLoading}
+            videoRef={videoRef}
+            file={file}
+            setFile={setFile}
+            uploadProgress={uploadProgress}
+            setUploadProgress={setUploadProgress}
+            cancelUpload={cancelUpload}
+          />
+        </View>
+        <TouchableOpacity
+          onPress={
+            text?.length > 0 && file?.length < 1
+              ? () => SendMessage("")
+              : file !== []
+              ? () => FileUpload()
+              : undefined
+          }
+          activeOpacity={0.3}
+          style={{ position: "absolute", right: 25 }}
+        >
+          <FontAwesome name="send" size={20} color={currentTheme.pink} />
+        </TouchableOpacity>
+      </View>
+    </KeyboardAvoidingView>
   );
 };
 

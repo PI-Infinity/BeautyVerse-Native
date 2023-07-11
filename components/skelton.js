@@ -3,10 +3,16 @@ import { Animated, StyleSheet, View } from "react-native";
 import { lightTheme, darkTheme } from "../context/theme";
 import { useSelector } from "react-redux";
 
+/**
+ * Skelton component
+ */
+
 const LoadingSkeleton = () => {
+  // define theme
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
 
+  // define animation
   const animatedValue = useState(new Animated.Value(0))[0];
 
   useEffect(() => {

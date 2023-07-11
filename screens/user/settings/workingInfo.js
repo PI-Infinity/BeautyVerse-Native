@@ -1,46 +1,58 @@
+import { FontAwesome5, MaterialIcons } from "@expo/vector-icons";
+import axios from "axios";
 import React, { useState } from "react";
 import {
-  View,
+  Alert,
+  Dimensions,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
-  Dimensions,
-  Alert,
-  Pressable,
   Vibration,
-  ScrollView,
-  Platform,
-  Picker,
+  View,
 } from "react-native";
-import { useSelector, useDispatch } from "react-redux";
-import axios from "axios";
+import { useDispatch, useSelector } from "react-redux";
+import TimePickerComponent from "../../../components/startEndTimePicker";
+import { Language } from "../../../context/language";
+import { darkTheme, lightTheme } from "../../../context/theme";
+import { workingDaysOptions } from "../../../datas/registerDatas";
 import { setRerenderCurrentUser } from "../../../redux/rerenders";
 import { setCurrentUser } from "../../../redux/user";
-import { ListItem, Icon, Button } from "react-native-elements";
-import { Language } from "../../../context/language";
 import { Currency } from "../../../screens/user/settings/currency";
-import { lightTheme, darkTheme } from "../../../context/theme";
-import { MaterialIcons, FontAwesome5 } from "@expo/vector-icons";
-import { workingDaysOptions } from "../../../datas/registerDatas";
-import TimePickerComponent from "../../../components/startEndTimePicker";
 
-const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
+/**
+ * Working info screen in user settings
+ */
+
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 export const WorkingInfo = () => {
+  // language state
   const language = Language();
+
+  // define redux dispatch
+  const dispatch = useDispatch();
+
+  // define theme
+  const theme = useSelector((state) => state.storeApp.theme);
+  const currentTheme = theme ? darkTheme : lightTheme;
+
+  // define language
+  const lang = useSelector((state) => state.storeApp.language);
+
+  // define current user
+  const currentUser = useSelector((state) => state.storeUser.currentUser);
+
+  // define some states
   const [selectedOptions, setSelectedOptions] = useState([]);
   const [startHour, setStartHour] = useState("10:00");
   const [endHour, setEndHour] = useState("20:00");
   const [add, setAdd] = useState(false);
-  const dispatch = useDispatch();
 
-  const theme = useSelector((state) => state.storeApp.theme);
-  const currentTheme = theme ? darkTheme : lightTheme;
-
-  const lang = useSelector((state) => state.storeApp.language);
-  const currentUser = useSelector((state) => state.storeUser.currentUser);
-
+  // on item press function
   const handleOptionPress = (option) => {
     if (option?.hours) {
       let definedHours = option?.hours?.split(" - ");
@@ -64,7 +76,7 @@ export const WorkingInfo = () => {
     }
   };
 
-  // add service to firebase
+  // add service to db
   const AddWorkingDay = async (v) => {
     var val = currentUser?.workingDays?.find((item) => item.value === v);
     if (!v) {
@@ -76,13 +88,13 @@ export const WorkingInfo = () => {
         );
       } else {
         try {
-          await dispatch(
+          dispatch(
             setCurrentUser({
               ...currentUser,
               workingDays: [...currentUser.workingDays, { value: v }],
             })
           );
-          const response = await axios.post(
+          await axios.post(
             `https://beautyverse.herokuapp.com/api/v1/users/${currentUser?._id}/workingdays`,
             {
               value: v,
@@ -96,12 +108,12 @@ export const WorkingInfo = () => {
     }
   };
 
+  // add working hours function
   const AddWorkingDayHours = async (itemId, itemValue, indx) => {
     let workingHours = startHour + " - " + endHour;
     try {
       if (!workingHours || startHour === "" || endHour === "") {
         setSelectedOptions([]);
-        setWorkingHours("");
       } else {
         const newHours = {
           ...currentUser,
@@ -129,7 +141,7 @@ export const WorkingInfo = () => {
     }
   };
 
-  // delete service
+  // delete procedure
   const Deleting = async (itemId, val) => {
     try {
       dispatch(

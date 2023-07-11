@@ -1,132 +1,186 @@
-import { useState, useEffect, useRef } from "react";
-import {
-  Platform,
-  View,
-  Text,
-  Dimensions,
-  Pressable,
-  StyleSheet,
-  TouchableOpacity,
-  ScrollView,
-  Animated,
-  TextInput,
-  KeyboardAvoidingView,
-  Vibration,
-  FlatList,
-  Keyboard,
-  KeyboardEvent,
-  Alert,
-  ActivityIndicator,
-} from "react-native";
-import { FontAwesome, MaterialCommunityIcons } from "@expo/vector-icons";
-import { useSelector, useDispatch } from "react-redux";
-import axios from "axios";
-import {
-  setAddStarRerenderFromScrollGallery,
-  setRemoveStarRerenderFromScrollGallery,
-  setAddReviewQntRerenderFromScrollGallery,
-  setRemoveReviewQntRerenderFromScrollGallery,
-} from "../../redux/rerenders";
-import { setActiveFeedFromScrollGallery } from "../../redux/actions";
-import uuid from "react-native-uuid";
-import GetTimesAgo from "../../functions/getTimesAgo";
-import { Language } from "../../context/language";
-import { MaterialIcons } from "@expo/vector-icons";
-import { CacheableImage } from "../../components/cacheableImage";
-import ZoomableImage from "../../components/zoomableImage";
-import { CacheableVideo } from "../../components/cacheableVideo";
-import SmoothModal from "../../screens/user/editPostPopup";
-import { setVideoVolume } from "../../redux/feed";
+import { Entypo, FontAwesome } from "@expo/vector-icons";
 import Slider from "@react-native-community/slider";
-import { lightTheme, darkTheme } from "../../context/theme";
-import { TopSection } from "../../components/feedCard/topSection";
+import { useIsFocused } from "@react-navigation/native";
+import axios from "axios";
+import * as Haptics from "expo-haptics";
+import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  ActivityIndicator,
+  Alert,
+  Animated,
+  Dimensions,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  Vibration,
+  View,
+} from "react-native";
+import uuid from "react-native-uuid";
+import { useDispatch, useSelector } from "react-redux";
+import AlertMessage from "../../components/alertMessage";
+import { CacheableImage } from "../../components/cacheableImage";
+import { CacheableVideo } from "../../components/cacheableVideo";
 import { BottomSection } from "../../components/feedCard/bottomSection";
 import { Post } from "../../components/feedCard/post";
-import { useIsFocused } from "@react-navigation/native";
-import { Entypo } from "@expo/vector-icons";
+import { TopSection } from "../../components/feedCard/topSection";
+import ZoomableImage from "../../components/zoomableImage";
+import { Language } from "../../context/language";
+import { useSocket } from "../../context/socketContext";
+import { darkTheme, lightTheme } from "../../context/theme";
+import GetTimesAgo from "../../functions/getTimesAgo";
+import { setActiveFeedFromScrollGallery } from "../../redux/actions";
+import { setSendReport } from "../../redux/alerts";
+import { setVideoVolume } from "../../redux/feed";
+import {
+  setAddReviewQntRerenderFromScrollGallery,
+  setAddStarRerenderFromScrollGallery,
+  setRemoveReviewQntRerenderFromScrollGallery,
+  setRemoveStarRerenderFromScrollGallery,
+} from "../../redux/rerenders";
+import SmoothModal from "../../screens/user/editPostPopup";
 
-const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
+/**
+ * User feeds scrolling gallery
+ * Includes 2 components: User Feeds and Feed Item bellow ScrollGallery
+ */
+
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 export const ScrollGallery = ({ route, navigation }) => {
+  // define screen is focused or not
   const isFocused = useIsFocused();
+
+  // define props from route
   const props = route.params;
+
+  // define feeds list
+  const [scrolableFeeds, setScrollableFeeds] = useState([]);
+
+  useEffect(() => {
+    setScrollableFeeds(props.scrolableFeeds);
+  }, []);
+
+  // define feed page for adding new feeds on scrolling bottoms
+  const [page, setPage] = useState(1);
+
+  // define when new feeds loads
+  const [loadNewFeeds, setLoadNewFeeds] = useState(false);
+
+  // add new feeds function
+  async function AddFeedObjs() {
+    setLoadNewFeeds(true);
+    try {
+      const response = await axios.get(
+        `https://beautyverse.herokuapp.com/api/v1/users/${props.user?._id}/feeds/native?page=${page}&check=${props.user?._id}`
+      );
+      setScrollableFeeds((prev) => {
+        const newFeeds = response.data.data?.feeds;
+        if (newFeeds) {
+          const uniqueNewFeeds = newFeeds.filter(
+            (newFeed) => !prev.some((prevFeed) => prevFeed._id === newFeed._id)
+          );
+          return [...prev, ...uniqueNewFeeds];
+        } else {
+          return [...prev];
+        }
+      });
+
+      setTimeout(() => {
+        setLoadNewFeeds(false);
+      }, 10);
+    } catch (error) {
+      console.log(error.response.data.message);
+    }
+  }
+
+  // run add feeds (avoid on screen load first render)
+  const addFeedsFirstRenderAvoid = useRef(true);
+
+  useEffect(() => {
+    if (addFeedsFirstRenderAvoid.current) {
+      addFeedsFirstRenderAvoid.current = false;
+      return;
+    }
+    AddFeedObjs();
+  }, [page]);
+
+  // define language context
   const language = Language();
+  // define redux dispatch
   const dispatch = useDispatch();
+
+  // define theme
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
+
+  // define current user
   const currentUser = useSelector((state) => state.storeUser.currentUser);
 
-  // get displayed video index
-  const [currentIndex, setCurrentIndex] = useState(0);
+  /**
+   * define feeds map
+   */
 
-  const onViewableItemsChangedRef = useRef(({ viewableItems, changed }) => {
-    if (viewableItems.length > 0) {
-      const topVisibleItemIndex = viewableItems[0].index;
-      setCurrentIndex(topVisibleItemIndex);
-    }
-  });
-
-  const viewabilityConfig = {
-    itemVisiblePercentThreshold: 70, // at least 70% of the item should be visible
-  };
-
-  // // define video volume
-  // const [volume, setVolume] = useState(true);
-
-  const renderItem = ({ item, index }) => (
-    <FeedItem
-      key={index}
-      user={props.user}
-      x={index}
-      feed={item}
-      language={language}
-      currentUser={currentUser}
-      navigation={navigation}
-      setFeeds={props.setFeeds}
-      feeds={props.feeds}
-      currentIndex={currentIndex}
-      isFocused={isFocused}
-      scrolableFeeds={props.scrolableFeeds}
-      // volume={volume}
-      // setVolume={setVolume}
-    />
+  const FeedItems = useMemo(
+    () =>
+      scrolableFeeds.map((item, index) => {
+        return (
+          <FeedItem
+            key={index}
+            user={props.user}
+            x={index}
+            feed={item}
+            language={language}
+            currentUser={currentUser}
+            navigation={navigation}
+            currentIndex={0}
+            isFocused={isFocused}
+          />
+        );
+      }),
+    [scrolableFeeds, language, currentUser, navigation, isFocused]
   );
+
+  // send report
+  const sendReport = useSelector((state) => state.storeAlerts.sendReport);
+
+  const handleScroll = (event) => {
+    const offsetY = event.nativeEvent.contentOffset.y;
+    const contentHeight = event.nativeEvent.contentSize.height;
+    const layoutHeight = event.nativeEvent.layoutMeasurement.height;
+
+    if (props.feedsLength > scrolableFeeds.length) {
+      if (offsetY + layoutHeight >= contentHeight - 20) {
+        if (!loadNewFeeds) {
+          setPage(page + 1);
+        }
+      }
+    }
+  };
 
   return (
     <View>
-      <FlatList
-        data={props.scrolableFeeds}
-        renderItem={renderItem}
-        keyExtractor={(item, index) => index.toString()}
-        onViewableItemsChanged={onViewableItemsChangedRef.current}
-        viewabilityConfig={viewabilityConfig}
+      <AlertMessage
+        isVisible={sendReport}
+        onClose={() => dispatch(setSendReport(false))}
+        type="success"
+        text="The Report sent succesfully!"
+      />
+      <ScrollView
         contentContainerStyle={{ paddingBottom: 200 }}
         showsVerticalScrollIndicator={false}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
         bounces={Platform.OS === "ios" ? false : undefined}
         overScrollMode={Platform.OS === "ios" ? "never" : "always"}
-      />
-      {props.feedsLengthCurrent > 7 && (
-        <Pressable
-          onPress={
-            props.feedsLength > props.feedsLengthCurrent
-              ? () => props.AddFeeds(props.user?._id, props.page + 1)
-              : props.ReduceFeeds
-          }
-          style={{
-            padding: 10,
-            borderRadius: 5,
-            backgroundColor: currentTheme.background2,
-            width: "100%",
-            alignItems: "center",
-          }}
-        >
-          <Text style={{ color: "orange" }}>
-            {props.feedsLength > props.feedsLengthCurrent
-              ? "Load More"
-              : "Load Less"}
-          </Text>
-        </Pressable>
-      )}
+      >
+        {FeedItems}
+        {loadNewFeeds ? (
+          <ActivityIndicator size="small" color={currentTheme.pink} />
+        ) : null}
+      </ScrollView>
     </View>
   );
 };
@@ -234,15 +288,29 @@ const styles = StyleSheet.create({
   },
 });
 
+/**
+ * Feed Item of user feeds scroll gallery
+ */
+
 const FeedItem = (props) => {
+  // define redux dispatch
   const dispatch = useDispatch();
+
+  // define socket server
+  const socket = useSocket();
+
+  // define theme context
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
+
+  // define current user
   const currentUser = useSelector((state) => state.storeUser.currentUser);
+
+  // define language
   const lang = useSelector((state) => state.storeApp.language);
 
   /**
-   *  // add stars to feeds
+   *  add stars to feeds
    */
   const [starsLength, setStarsLength] = useState(props?.feed?.starsLength);
   const [checkIfStared, setCheckifStared] = useState(
@@ -250,6 +318,8 @@ const FeedItem = (props) => {
   );
 
   const SetStar = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+
     try {
       setStarsLength((prev) => prev + 1);
       setCheckifStared(true);
@@ -274,6 +344,9 @@ const FeedItem = (props) => {
             feed: `/api/v1/users/${props.user?._id}/feeds/${props.feed._id}`,
           }
         );
+        socket.emit("updateUser", {
+          targetId: props.user?._id,
+        });
       }
       setTimeout(() => {
         dispatch(setAddStarRerenderFromScrollGallery());
@@ -284,11 +357,12 @@ const FeedItem = (props) => {
   };
 
   /**
-   *  // remove stars from feeds
+   *  remove stars from feeds
    */
   const RemoveStar = async () => {
     setStarsLength((prev) => prev - 1);
     setCheckifStared(false);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
     dispatch(setActiveFeedFromScrollGallery(props.feed._id));
     try {
@@ -304,9 +378,8 @@ const FeedItem = (props) => {
   };
 
   /**
-   *  // getReviews
+   *  getReviews
    */
-  const reviewsListRef = useRef(true);
   const [reviewsList, setReviewsList] = useState([]);
   const [reviewLength, setReviewLength] = useState(null);
   const [reviewsPage, setReviewsPage] = useState(1);
@@ -364,7 +437,7 @@ const FeedItem = (props) => {
   };
 
   /**
-   *  // add new review
+   *  // add new reviews
    */
   const [reviewInput, setReviewInput] = useState("");
 
@@ -410,6 +483,9 @@ const FeedItem = (props) => {
           }
         );
       }
+      socket.emit("updateUser", {
+        targetId: props.user?._id,
+      });
     } catch (error) {
       console.log(error.response.data.message);
     }
@@ -454,7 +530,6 @@ const FeedItem = (props) => {
   const [openReviews, setOpenReviews] = useState(true);
 
   // fade in
-
   const fadeAnim = useRef(new Animated.Value(0)).current; // Initial value for opacity: 0
 
   useEffect(() => {
@@ -465,24 +540,17 @@ const FeedItem = (props) => {
     }).start();
   }, [fadeAnim]);
 
-  // open post
+  // define open post or hide
   const [numLines, setNumLines] = useState(3);
 
-  // define file sizes;
-
-  let width = SCREEN_WIDTH;
-  let addationalSize = props.feed.fileHeight - SCREEN_WIDTH;
-  let inPercent = (addationalSize / props.feed.fileHeight) * 100;
-  let height = props.feed.fileWidth - (props.feed.fileWidth / 100) * inPercent;
-
-  //open feed options
-
+  // define post text
   const [post, setPost] = useState("");
 
   useEffect(() => {
     setPost(props?.feed?.post);
   }, []);
 
+  //open feed options
   const [feedOption, setFeedOption] = useState(false);
 
   // define video volume
@@ -501,10 +569,7 @@ const FeedItem = (props) => {
       setCurrentPosition(playbackStatus.positionMillis);
     }
   };
-  // change video time with slider
-  const onSlidingStart = () => {
-    setIsSliding(true);
-  };
+
   const onSliderValueChange = async (value) => {
     if (videoRef.current && !isNaN(value) && value >= 0) {
       try {
@@ -527,8 +592,6 @@ const FeedItem = (props) => {
         ? props.feed.fileHeight
         : props.feed.fileWidth;
 
-    let wdth = SCREEN_WIDTH;
-
     let percented = originalWidth / SCREEN_WIDTH;
 
     hght = originalHeight / percented;
@@ -536,58 +599,25 @@ const FeedItem = (props) => {
     let originalHeight = props.feed.fileHeight;
     let originalWidth = props.feed.fileWidth;
 
-    let wdth = SCREEN_WIDTH;
-
     let percented = originalWidth / SCREEN_WIDTH;
     hght = originalHeight / percented;
   }
 
+  // format video tiemline
   const formatTime = (timeInMillis) => {
-    const milliseconds = Math.floor(timeInMillis % 1000);
     const seconds = Math.floor((timeInMillis / 1000) % 60);
     const minutes = Math.floor((timeInMillis / (1000 * 60)) % 60);
 
-    const formattedMilliseconds =
-      milliseconds < 100 ? `0${milliseconds}` : `${milliseconds}`;
     const formattedSeconds = seconds < 10 ? `0${seconds}` : `${seconds}`;
     const formattedMinutes = minutes < 10 ? `0${minutes}` : `${minutes}`;
 
     return `${formattedMinutes}:${formattedSeconds}`;
   };
 
-  const useKeyboard = () => {
-    const [keyboardHeight, setKeyboardHeight] = useState(0);
-    useEffect(() => {
-      function onKeyboardDidShow(e: KeyboardEvent) {
-        setKeyboardHeight(e.endCoordinates.height);
-      }
-
-      function onKeyboardDidHide() {
-        setKeyboardHeight(0);
-      }
-
-      const showSubscription = Keyboard.addListener(
-        "keyboardDidShow",
-        onKeyboardDidShow
-      );
-      const hideSubscription = Keyboard.addListener(
-        "keyboardDidHide",
-        onKeyboardDidHide
-      );
-
-      return () => {
-        showSubscription.remove();
-        hideSubscription.remove();
-      };
-    }, []);
-
-    return keyboardHeight;
-  };
-
-  const KeyboardHeight = useKeyboard();
-
+  // define input height
   const [inputHeight, setInputHeight] = useState(35);
 
+  // load video indicator loader
   const [loadVideo, setLoadVideo] = useState(true);
 
   return (
@@ -616,9 +646,7 @@ const FeedItem = (props) => {
             navigation={props.navigation}
           />
         )}
-        {/* <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-      > */}
+
         {props?.feed?.fileFormat === "img" && (
           <View
             style={{
@@ -706,7 +734,6 @@ const FeedItem = (props) => {
             maxHeight: 640,
             overflow: "hidden",
             justifyContent: "center",
-            // backgroundColor: currentTheme.background2,
           }}
         >
           {props?.feed?.images?.length > 1 && (
@@ -716,7 +743,7 @@ const FeedItem = (props) => {
                 zIndex: 120,
                 bottom: 15,
                 right: 15,
-                // backgroundColor: "rgba(255,255,255,0.7)",
+
                 borderRadius: 50,
               }}
             >
@@ -820,7 +847,6 @@ const FeedItem = (props) => {
                 justifyContent: "center",
                 position: "absolute",
                 bottom: 0,
-                // backgroundColor: "red",
               }}
             >
               <View
@@ -851,7 +877,7 @@ const FeedItem = (props) => {
                   style={{
                     flex: 1,
                     height: 5,
-                    // backgroundColor: "black",
+
                     padding: 15,
                   }}
                   minimumValue={0}
@@ -866,10 +892,8 @@ const FeedItem = (props) => {
               <View
                 style={{
                   width: "100%",
-                  // backgroundColor: "rgba(255,255,255,0.1)",
+
                   borderRadius: 50,
-                  // borderColor: "rgba(248, 102, 177, 0.3)",
-                  // borderWidth: 1,
                 }}
               >
                 <BottomSection
@@ -908,8 +932,6 @@ const FeedItem = (props) => {
               style={{
                 width: "100%",
                 borderRadius: 50,
-                // borderColor: "rgba(248, 102, 177, 0.3)",
-                // borderWidth: 1,
               }}
             >
               <BottomSection
@@ -952,7 +974,6 @@ const FeedItem = (props) => {
               styles.addReview,
               {
                 backgroundColor: currentTheme.background,
-                // marginBottom: KeyboardHeight,
               },
             ]}
           >
@@ -984,16 +1005,9 @@ const FeedItem = (props) => {
           </View>
         )}
         {openReviews && (
-          <Pressable
-            style={styles.reviewsList}
-            // onPress={() => setOpenReviews(false)}
-          >
+          <Pressable style={styles.reviewsList}>
             {reviewsList?.length > 0 ? (
               reviewsList?.map((item, index) => {
-                // const currentReviewTime = GetTimesAgo(
-                //   new Date(item?.createdAt).getTime()
-                // );
-                // const reviewTime = GetActionTime(currentReviewTime);
                 return (
                   <ReviewItem
                     key={index}
@@ -1016,13 +1030,19 @@ const FeedItem = (props) => {
             )}
             {reviewLength > 10 && (
               <Pressable
-                style={{ backgroundColor: currentTheme.background2 }}
+                style={{
+                  backgroundColor: currentTheme.background2,
+                  width: "100%",
+                  alignItems: "center",
+                }}
                 onPress={
                   reviewsList?.length < reviewLength
-                    ? () => AddNewReviews(reviewsPage + 1)
+                    ? () => {
+                        AddNewReviews(reviewsPage + 1);
+                        setReviewsPage(reviewsPage + 1);
+                      }
                     : () => ReduceReviews()
                 }
-                style={{ width: "100%", alignItems: "center" }}
               >
                 <Text style={{ color: "orange" }}>
                   {reviewsList?.length < reviewLength
@@ -1033,7 +1053,6 @@ const FeedItem = (props) => {
             )}
           </Pressable>
         )}
-        {/* </KeyboardAvoidingView> */}
       </Animated.View>
     </>
   );

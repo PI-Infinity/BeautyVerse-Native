@@ -1,19 +1,26 @@
-import { View, Text, StyleSheet, Dimensions, Pressable } from "react-native";
-import React from "react";
-import { Language } from "../../context/language";
-import { lightTheme, darkTheme } from "../../context/theme";
-import { useSelector, useDispatch } from "react-redux";
-import { workingDaysOptions } from "../../datas/registerDatas";
 import { Ionicons } from "@expo/vector-icons";
+import React from "react";
+import { Dimensions, Pressable, StyleSheet, Text, View } from "react-native";
+import { useSelector } from "react-redux";
+import { Language } from "../../context/language";
+import { darkTheme, lightTheme } from "../../context/theme";
+import { workingDaysOptions } from "../../datas/registerDatas";
 
-const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
+/**
+ * Working info component in user screen
+ */
+
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 export const WorkingInfo = ({ targetUser, navigation }) => {
+  // define some context
   const language = Language();
-  const currentUser = useSelector((state) => state.storeUser.currentUser);
-  const lang = useSelector((state) => state.storeApp.language);
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
+
+  // define some states
+  const currentUser = useSelector((state) => state.storeUser.currentUser);
+  const lang = useSelector((state) => state.storeApp.language);
 
   return (
     <View style={{ width: SCREEN_WIDTH, alignItems: "center", marginTop: 15 }}>
@@ -124,56 +131,53 @@ export const WorkingInfo = ({ targetUser, navigation }) => {
           )}
         </>
       )}
-      <Text
-        style={{
-          marginVertical: 15,
-          color: currentTheme.font,
-          fontWeight: "bold",
-          marginTop: 25,
-          letterSpacing: 0.3,
-        }}
-      >
-        Experience
-      </Text>
-      {targetUser?.experience?.length > 0 ? (
-        <View
-          style={{
-            width: "90%",
-            backgroundColor: currentTheme.background2,
-            padding: 10,
-            borderRadius: 10,
-          }}
-        >
+      {(targetUser?.experience?.length > 0 ||
+        targetUser._id === currentUser._id) && (
+        <>
           <Text
             style={{
+              marginVertical: 15,
               color: currentTheme.font,
-              lineHeight: 22,
-              letterSpacing: 0.2,
+              fontWeight: "bold",
+              marginTop: 25,
+              letterSpacing: 0.3,
             }}
           >
-            {targetUser?.experience}
+            Experience
           </Text>
-        </View>
-      ) : (
-        <>
-          {targetUser._id === currentUser._id ? (
-            <Pressable
-              onPress={() => navigation.navigate("Working info")}
+          {targetUser?.experience?.length > 0 && (
+            <View
               style={{
-                width: "30%",
-                height: 35,
+                width: "90%",
+                backgroundColor: currentTheme.background2,
+                padding: 10,
                 borderRadius: 10,
-                alignItems: "center",
-                justifyContent: "center",
               }}
             >
-              <Ionicons name="add-circle" color={currentTheme.pink} size={30} />
-            </Pressable>
-          ) : (
-            <View>
-              <Text style={{ color: currentTheme.disabled }}>Not found</Text>
+              <Text
+                style={{
+                  color: currentTheme.font,
+                  lineHeight: 22,
+                  letterSpacing: 0.2,
+                }}
+              >
+                {targetUser?.experience}
+              </Text>
             </View>
           )}
+
+          <Pressable
+            onPress={() => navigation.navigate("Working info")}
+            style={{
+              width: "30%",
+              height: 35,
+              borderRadius: 10,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Ionicons name="add-circle" color={currentTheme.pink} size={30} />
+          </Pressable>
         </>
       )}
     </View>

@@ -4,6 +4,10 @@ import { StyleSheet, Dimensions } from "react-native";
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
 import { Language } from "../context/language";
 
+/**
+ * Address autocomplete component
+ */
+
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 const GoogleAutocomplete = ({ address, setAddress, currentTheme }) => {

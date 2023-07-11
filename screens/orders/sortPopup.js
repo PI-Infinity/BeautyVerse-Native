@@ -1,27 +1,60 @@
 import React, { useState } from "react";
 import {
-  View,
+  Dimensions,
+  StyleSheet,
   Text,
   TouchableOpacity,
-  StyleSheet,
-  Dimensions,
+  View,
 } from "react-native";
-import { useSelector, useDispatch } from "react-redux";
+import Modal from "react-native-modal";
+import { useDispatch, useSelector } from "react-redux";
 import { setStatusFilter } from "../../redux/orders";
 import { setStatusFilterSentOrders } from "../../redux/sentOrders";
-import Modal from "react-native-modal";
-import { FontAwesome } from "@expo/vector-icons";
 
-const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
+/**
+ * orders status Sort popup
+ */
 
-export const SortPopup = ({ currentTheme, from }) => {
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
+
+export const SortPopup = ({ currentTheme, from, setPage }) => {
+  // redux dispatch
   const dispatch = useDispatch();
-  const filter = useSelector((state) => state.storeOrders.statusFilter);
+
+  // filtered result
+  const fOrders = useSelector((state) => state.storeOrders.statusFilter);
+
+  // recieved orders totals by status
+  const allRecieved = useSelector((state) => state.storeOrders.totalResult);
   const newOrders = useSelector((state) => state.storeOrders.new);
+  const pendingRecieved = useSelector((state) => state.storeOrders.pending);
+  const completedRecieved = useSelector((state) => state.storeOrders.completed);
+  const activeRecieved = useSelector((state) => state.storeOrders.active);
+  const rejectedRecieved = useSelector((state) => state.storeOrders.rejected);
+  const canceledRecieved = useSelector((state) => state.storeOrders.canceled);
 
-  const [isPickerVisible, setPickerVisibility] = useState(false);
-
+  // sent orders totals by status
+  const allSent = useSelector((state) => state.storeSentOrders.totalResult);
   const newSentOrders = useSelector((state) => state.storeSentOrders.new);
+  const pendingSent = useSelector((state) => state.storeSentOrders.pending);
+  const completedSent = useSelector((state) => state.storeSentOrders.completed);
+  const activeSent = useSelector((state) => state.storeSentOrders.active);
+  const rejectedSent = useSelector((state) => state.storeSentOrders.rejected);
+  const canceledSent = useSelector((state) => state.storeSentOrders.canceled);
+  const fSentOrders = useSelector(
+    (state) => state.storeSentOrders.statusFilter
+  );
+
+  // defines filter where comes from
+  let filter;
+  if (from === "orders") {
+    filter = fOrders;
+  } else {
+    filter = fSentOrders;
+  }
+
+  // picker open/hide state
+  const [isPickerVisible, setPickerVisibility] = useState(false);
 
   const items = [
     { label: "All", value: "" },
@@ -38,16 +71,35 @@ export const SortPopup = ({ currentTheme, from }) => {
   };
 
   const handleSelect = (value) => {
+    setPage(1);
     if (from === "orders") {
       dispatch(setStatusFilter(value));
     } else {
+      console.log(value);
       dispatch(setStatusFilterSentOrders(value));
     }
     setPickerVisibility(false);
   };
-  const closePicker = () => {
-    handleSelect();
-  };
+
+  // defines some styles
+  let bg;
+  let font;
+  if (filter === "New") {
+    bg = "green";
+    font = "#ccc";
+  } else if (filter === "Pending") {
+    bg = "orange";
+    font = "#111";
+  } else if (filter === "canceled" || filter === "Rejected") {
+    bg = currentTheme.disabled;
+    font = "#ccc";
+  } else if (filter === "Active") {
+    bg = currentTheme.pink;
+    font = "#111";
+  } else {
+    bg = currentTheme.disabled;
+    font = "#ccc";
+  }
 
   return (
     <View
@@ -63,14 +115,16 @@ export const SortPopup = ({ currentTheme, from }) => {
           width: "100%",
           alignItems: "center",
           flexDirection: "row",
-          // justifyContent: "space-between",
+
           paddingHorizontal: 15,
         }}
       >
         <TouchableOpacity
           onPress={openPicker}
           style={{
-            backgroundColor: currentTheme.background2,
+            padding: 5,
+            borderWidth: 1.5,
+            borderColor: bg,
             width: "100%",
             borderRadius: 50,
             // padding: 5,
@@ -84,35 +138,17 @@ export const SortPopup = ({ currentTheme, from }) => {
             style={{
               color: currentTheme.font,
               letterSpacing: 0.3,
+              fontWeight: "bold",
             }}
           >
             {filter ? filter : "All"}{" "}
-            <FontAwesome name="unsorted" size={18} color={currentTheme.pink} />
           </Text>
-          {((from === "orders" && newOrders > 0) ||
-            (from === "sentOrders" && newSentOrders > 0)) && (
-            <View
-              style={{
-                height: 14,
-                minWidth: 14,
-                backgroundColor: "green",
-                alignItems: "center",
-                justifyContent: "center",
-                borderRadius: 50,
-              }}
-            >
-              <Text style={{ fontSize: 10, color: "#f1f1f1" }}>
-                {from === "orders" ? newOrders : newSentOrders}
-              </Text>
-            </View>
-          )}
         </TouchableOpacity>
       </View>
       <Modal
         isVisible={isPickerVisible} // Set this to a boolean state to control the visibility of the modal
         onBackdropPress={() => setPickerVisibility(false)} // Handle backdrop press event
         style={{
-          // justifyContent: "center",
           alignItems: "center",
           width: SCREEN_WIDTH - 40,
           marginRight: 15,
@@ -143,7 +179,6 @@ export const SortPopup = ({ currentTheme, from }) => {
                   color: filter === item.value ? "#ccc" : currentTheme.font,
                   alignItems: "center",
                   flexDirection: "row",
-                  justifyContent: "center",
                 },
               ]}
               onPress={() => handleSelect(item.label)}
@@ -169,7 +204,7 @@ export const SortPopup = ({ currentTheme, from }) => {
               >
                 {item.label}
               </Text>
-              {item.value === "new" && (newOrders > 0 || newSentOrders > 0) && (
+              {item.value === "new" && (
                 <View
                   style={{
                     width: "auto",
@@ -188,6 +223,145 @@ export const SortPopup = ({ currentTheme, from }) => {
                       ? newOrders
                       : from === "sentOrders"
                       ? newSentOrders
+                      : null}
+                  </Text>
+                </View>
+              )}
+              {item.value === "active" && (
+                <View
+                  style={{
+                    width: "auto",
+                    minWidth: 16,
+                    height: 16,
+                    backgroundColor: currentTheme.background2,
+                    borderRadius: 50,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    position: "absolute",
+                    right: 10,
+                  }}
+                >
+                  <Text style={{ color: "#fff", fontSize: 12 }}>
+                    {from === "orders"
+                      ? activeRecieved
+                      : from === "sentOrders"
+                      ? activeSent
+                      : null}
+                  </Text>
+                </View>
+              )}
+              {item.value === "rejected" && (
+                <View
+                  style={{
+                    width: "auto",
+                    minWidth: 16,
+                    height: 16,
+                    backgroundColor: currentTheme.background2,
+                    borderRadius: 50,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    position: "absolute",
+                    right: 10,
+                  }}
+                >
+                  <Text style={{ color: "#fff", fontSize: 12 }}>
+                    {from === "orders"
+                      ? rejectedRecieved
+                      : from === "sentOrders"
+                      ? rejectedSent
+                      : null}
+                  </Text>
+                </View>
+              )}
+              {item.value === "completed" && (
+                <View
+                  style={{
+                    width: "auto",
+                    minWidth: 16,
+                    height: 16,
+                    backgroundColor: currentTheme.background2,
+                    borderRadius: 50,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    position: "absolute",
+                    right: 10,
+                  }}
+                >
+                  <Text style={{ color: "#fff", fontSize: 12 }}>
+                    {from === "orders"
+                      ? completedRecieved
+                      : from === "sentOrders"
+                      ? completedSent
+                      : null}
+                  </Text>
+                </View>
+              )}
+              {item.value === "" && (
+                <View
+                  style={{
+                    width: "auto",
+                    minWidth: 16,
+                    height: 16,
+                    backgroundColor: currentTheme.background2,
+                    borderRadius: 50,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    position: "absolute",
+                    right: 10,
+                  }}
+                >
+                  <Text style={{ color: "#fff", fontSize: 12 }}>
+                    {from === "orders"
+                      ? allRecieved
+                      : from === "sentOrders"
+                      ? allSent
+                      : null}
+                  </Text>
+                </View>
+              )}
+              {item.value === "pending" && (
+                <View
+                  style={{
+                    width: "auto",
+                    minWidth: 16,
+                    height: 16,
+                    backgroundColor: currentTheme.background2,
+                    borderRadius: 50,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    position: "absolute",
+                    right: 10,
+                  }}
+                >
+                  <Text style={{ color: "#fff", fontSize: 12 }}>
+                    {from === "orders"
+                      ? pendingRecieved
+                      : from === "sentOrders"
+                      ? pendingSent
+                      : null}
+                  </Text>
+                </View>
+              )}
+
+              {item.value === "canceled" && (
+                <View
+                  style={{
+                    width: "auto",
+                    minWidth: 16,
+                    height: 16,
+                    backgroundColor: currentTheme.background2,
+                    borderRadius: 50,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    position: "absolute",
+                    right: 10,
+                  }}
+                >
+                  <Text style={{ color: "#fff", fontSize: 12 }}>
+                    {from === "orders"
+                      ? canceledRecieved
+                      : from === "sentOrders"
+                      ? canceledSent
                       : null}
                   </Text>
                 </View>
@@ -212,6 +386,7 @@ const styles = StyleSheet.create({
   item: {
     width: "100%",
     padding: 10,
+    paddingHorizontal: 15,
     borderRadius: 50,
   },
   itemText: {

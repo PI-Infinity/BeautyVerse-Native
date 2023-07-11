@@ -1,19 +1,20 @@
-import React, { useState } from "react";
-import { View, Text, Pressable, TextInput } from "react-native";
-import { SearchBar } from "@rneui/themed";
-import { Language } from "../context/language";
 import { FontAwesome } from "@expo/vector-icons";
-import { useSelector, useDispatch } from "react-redux";
-import { setSearchInput, setSearch } from "../redux/filter";
+import React from "react";
+import { Pressable, TextInput, View } from "react-native";
+import { useDispatch, useSelector } from "react-redux";
+import { Language } from "../context/language";
+import { setSearch, setSearchInput } from "../redux/filter";
+
+/**
+ * Search universal component
+ */
 
 export const Search = ({ navigation, currentTheme }) => {
   const language = Language();
   const dispatch = useDispatch();
-  // const [search, setSearchInput] = useState("");
+
   const search = useSelector((state) => state.storeFilter.searchInput);
-  // const updateSearch = (search) => {
-  //   setSearchInput(search);
-  // };
+
   return (
     <Pressable style={{ width: "100%", alignItems: "center" }}>
       <View
@@ -21,7 +22,7 @@ export const Search = ({ navigation, currentTheme }) => {
           width: "95%",
           backgroundColor: currentTheme.background2,
           borderWidth: 1.5,
-          borderColor: currentTheme.pink,
+          borderColor: currentTheme.line,
           borderRadius: 10,
           flexDirection: "row",
           alignItems: "center",
@@ -29,7 +30,7 @@ export const Search = ({ navigation, currentTheme }) => {
           paddingHorizontal: 10,
         }}
       >
-        <FontAwesome name="search" size={20} color={currentTheme.font} />
+        <FontAwesome name="search" size={20} color={currentTheme.pink} />
         <TextInput
           placeholder={language?.language?.Main?.filter?.typeHere}
           placeholderTextColor={currentTheme.disabled}
@@ -38,7 +39,7 @@ export const Search = ({ navigation, currentTheme }) => {
             padding: 7.5,
             color: currentTheme.font,
             borderRadius: 50,
-            letterSpacing: 0.5,
+            letterSpacing: 0.3,
           }}
           onFocus={() => navigation.navigate("Search")}
           showSoftInputOnFocus={false}

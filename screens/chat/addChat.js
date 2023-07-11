@@ -1,47 +1,62 @@
+import { useNavigation } from "@react-navigation/native";
+import axios from "axios";
+import React, { useEffect, useRef, useState } from "react";
 import {
-  StyleSheet,
-  Text,
-  View,
-  TouchableOpacity,
-  Modal,
-  TextInput,
-  ScrollView,
-  Image,
-  Dimensions,
-  Alert,
-  Animated,
   // PanResponder,
   ActivityIndicator,
+  Alert,
+  Animated,
+  Dimensions,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
-import React, { useState, useEffect, useRef } from "react";
-import { useSelector, useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { CacheableImage } from "../../components/cacheableImage";
+import { darkTheme, lightTheme } from "../../context/theme";
 import {
-  setOpenAddChat,
   setCurrentChat,
+  setOpenAddChat,
   setRerederRooms,
 } from "../../redux/chat";
-import axios from "axios";
 import { Search } from "../../screens/chat/search";
-import { CacheableImage } from "../../components/cacheableImage";
-import { useNavigation } from "@react-navigation/native";
-import { lightTheme, darkTheme } from "../../context/theme";
+
+/**
+ * Add new chat component in chat.
+ * defines 2 components (list, item)
+ * item bellow
+ */
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
 export const AddChat = ({}) => {
+  // defines navigation
   const navigation = useNavigation();
+
+  // defines redux dispatch
   const dispatch = useDispatch();
-  const [search, setSearch] = useState("");
 
-  const [loading, setLoading] = useState(true);
-
+  // defines theme
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
 
+  // defines serch state
+  const [search, setSearch] = useState("");
+
+  // defines loading state
+  const [loading, setLoading] = useState(true);
+
+  // defines followings list, where new chat user choise from
   const [followings, setFollowings] = useState([]);
 
+  // defines current user
   const currentUser = useSelector((state) => state.storeUser.currentUser);
 
+  /**
+   * Gett followings
+   */
   useEffect(() => {
     async function GetAudience(userId) {
       try {
@@ -62,8 +77,12 @@ export const AddChat = ({}) => {
     }
   }, [currentUser?._id]);
 
-  // get chat room
-  const GetChatRoom = async (member2) => {
+  /* 
+    get chat room function 
+  */
+
+  const GetChatRoom = async (member2, userObj) => {
+    // creatue new chat object
     let newChat = {
       room: currentUser?._id + member2.member2Id,
       members: {
@@ -74,11 +93,15 @@ export const AddChat = ({}) => {
       },
       lastMessage: "",
       lastSender: "",
+      status: "read",
     };
     try {
+      // navigate to room passed new chat and user in route
       navigation.navigate("Room", {
         newChat,
+        user: userObj,
       });
+      // add new chat in mongoDB
       const response = await axios.post(
         "https://beautyverse.herokuapp.com/api/v1/chats/",
         {
@@ -89,18 +112,17 @@ export const AddChat = ({}) => {
           },
           lastMessage: "",
           lastSender: "",
+          status: "read",
         }
       );
+      // define new chat in redux
       dispatch(setCurrentChat(response.data.data.chat));
+      // rerender rooms
       dispatch(setRerederRooms());
+      // close add chat component
       dispatch(setOpenAddChat(false));
     } catch (error) {
       if (error.response) {
-        // The request was made and the server responded with a status code
-        // that falls out of the range of 2xx
-        console.log(error.response.data);
-        console.log(error.response.status);
-        console.log(error.response.headers);
         Alert.alert(
           error.response.data
             ? error.response.data.message
@@ -119,83 +141,8 @@ export const AddChat = ({}) => {
     }
   };
 
-  const RenderItem = ({ item }) => (
-    <TouchableOpacity
-      style={[
-        styles.userItem,
-        { borderWidth: 1, borderColor: currentTheme.line },
-      ]}
-      onPress={() =>
-        GetChatRoom({
-          member2Id: item._id,
-          member2Name: item.name,
-          member2Cover: item.cover,
-        })
-      }
-    >
-      <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-        {item.cover?.length > 10 && (
-          <CacheableImage
-            style={{
-              height: 40,
-              width: 40,
-              borderRadius: 50,
-              resizeMode: "cover",
-            }}
-            source={{ uri: item.cover }}
-            manipulationOptions={[
-              { resize: { width: 40, height: 40 } },
-              { rotate: 90 },
-            ]}
-          />
-        )}
-        <Text
-          style={{
-            fontSize: 14,
-            fontWeight: "bold",
-            color: "#e5e5e5",
-            letterSpacing: 0.2,
-          }}
-        >
-          {item?.name}
-        </Text>
-      </View>
-      <Text
-        style={{
-          fontSize: 14,
-          color: currentTheme.disabled,
-          letterSpacing: 0.2,
-          paddingRight: 8,
-        }}
-      >
-        {item.type === "beautycenter"
-          ? "Beauty Salon"
-          : item.type === "specialist"
-          ? "Specialist"
-          : item?.type}
-      </Text>
-    </TouchableOpacity>
-  );
-
+  // animation for add chat component
   const translateY = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
-
-  // const panResponder = useRef(
-  //   PanResponder.create({
-  //     onStartShouldSetPanResponder: () => true,
-  //     onPanResponderMove: (_, gestureState) => {
-  //       if (gestureState.dy > 0) {
-  //         translateY.setValue(gestureState.dy);
-  //       }
-  //     },
-  //     onPanResponderRelease: (_, gestureState) => {
-  //       if (gestureState.dy > 100) {
-  //         closeAddChat();
-  //       } else {
-  //         openAddChat();
-  //       }
-  //     },
-  //   })
-  // ).current;
 
   const openAddChat = () => {
     Animated.timing(translateY, {
@@ -205,25 +152,13 @@ export const AddChat = ({}) => {
     }).start();
   };
 
-  const closeAddChat = () => {
-    Animated.timing(translateY, {
-      toValue: SCREEN_HEIGHT,
-      duration: 300,
-      useNativeDriver: true,
-    }).start();
-  };
-
   useEffect(() => {
     openAddChat();
-
     return () => translateY.stopAnimation(); // Stop the animation on unmount
   }, []);
 
-  // ... your existing components ...
-
   return (
     <Animated.View
-      // {...panResponder.panHandlers}
       style={[
         styles.container,
         {
@@ -272,7 +207,14 @@ export const AddChat = ({}) => {
             ) : (
               <>
                 {followings?.map((item, index) => {
-                  return <RenderItem key={index} item={item} />;
+                  return (
+                    <RenderItem
+                      key={index}
+                      item={item}
+                      GetChatRoom={GetChatRoom}
+                      currentTheme={currentTheme}
+                    />
+                  );
                 })}
               </>
             )}
@@ -320,3 +262,88 @@ const styles = StyleSheet.create({
     borderRadius: 50,
   },
 });
+
+/**
+ * Following items
+ */
+
+const RenderItem = ({ item, GetChatRoom, currentTheme }) => {
+  // user object state
+  const [userObj, setUserObj] = useState(null);
+
+  // get user object from db
+  const GetUser = async () => {
+    try {
+      const response = await axios.get(
+        `https://beautyverse.herokuapp.com/api/v1/users/${item?._id}`
+      );
+      setUserObj(response.data.data.user);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  useEffect(() => {
+    GetUser();
+  }, []);
+
+  return (
+    <TouchableOpacity
+      style={[
+        styles.userItem,
+        { borderWidth: 1, borderColor: currentTheme.line },
+      ]}
+      onPress={() =>
+        GetChatRoom(
+          {
+            member2Id: item._id,
+            member2Name: item.name,
+            member2Cover: item.cover,
+          },
+          userObj
+        )
+      }
+    >
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+        {item.cover?.length > 10 && (
+          <CacheableImage
+            style={{
+              height: 40,
+              width: 40,
+              borderRadius: 50,
+              resizeMode: "cover",
+            }}
+            source={{ uri: item.cover }}
+            manipulationOptions={[
+              { resize: { width: 40, height: 40 } },
+              { rotate: 90 },
+            ]}
+          />
+        )}
+        <Text
+          style={{
+            fontSize: 14,
+            fontWeight: "bold",
+            color: "#e5e5e5",
+            letterSpacing: 0.2,
+          }}
+        >
+          {item?.name}
+        </Text>
+      </View>
+      <Text
+        style={{
+          fontSize: 14,
+          color: currentTheme.disabled,
+          letterSpacing: 0.2,
+          paddingRight: 8,
+        }}
+      >
+        {item.type === "beautycenter"
+          ? "Beauty Salon"
+          : item.type === "specialist"
+          ? "Specialist"
+          : item?.type}
+      </Text>
+    </TouchableOpacity>
+  );
+};

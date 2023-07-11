@@ -109,7 +109,7 @@ export function AuthStack({ route }) {
           },
         }}
       />
-      {/** register screen, where user choices reguster type */}
+      {/** register screen, where users choices register types */}
       <Stack.Screen
         name="Register"
         component={Register}
@@ -184,7 +184,8 @@ export function AuthStack({ route }) {
           },
         }}
       />
-      <Stack.Screen
+      {/** prices screen, navigated from welcome screen */}
+      {/* <Stack.Screen
         name="Prices"
         component={Prices}
         options={({ route }) => ({
@@ -207,7 +208,8 @@ export function AuthStack({ route }) {
             backgroundColor: currentTheme.background,
           },
         })}
-      />
+      /> */}
+      {/** terms and rules, navigated from welcome screen */}
       <Stack.Screen
         name="Terms"
         component={Terms}
@@ -232,6 +234,7 @@ export function AuthStack({ route }) {
           },
         })}
       />
+      {/** Privacy policy, navigated from welcome screen */}
       <Stack.Screen
         name="Privacy"
         component={Privacy}
@@ -256,6 +259,7 @@ export function AuthStack({ route }) {
           },
         })}
       />
+      {/** question and answers screen, navigated from welcome screen */}
       <Stack.Screen
         name="QA"
         component={QA}
@@ -280,6 +284,7 @@ export function AuthStack({ route }) {
           },
         })}
       />
+      {/** how beautyverse works screen, navigated from welcome screen */}
       <Stack.Screen
         name="Usage"
         component={Usage}

@@ -1,37 +1,43 @@
-import { useEffect } from "react";
 import {
-  createStackNavigator,
   CardStyleInterpolators,
+  createStackNavigator,
 } from "@react-navigation/stack";
-
-import { View, Text, TouchableOpacity } from "react-native";
-import { Filter } from "../screens/filter";
-import { Search } from "../screens/search";
-import { useSelector, useDispatch } from "react-redux";
+import { useEffect } from "react";
+import { Text, TouchableOpacity, View } from "react-native";
+import { useDispatch, useSelector } from "react-redux";
+import { Language } from "../context/language";
+import { darkTheme, lightTheme } from "../context/theme";
 import {
-  setSearch,
-  setFilter,
-  setSpecialists,
-  setSalons,
   setCity,
   setDistrict,
+  setFilter,
   setFilterBadgeSum,
+  setSalons,
+  setSearch,
+  setSpecialists,
 } from "../redux/filter";
 import { setCleanUp } from "../redux/rerenders";
-import { Language } from "../context/language";
-import { lightTheme, darkTheme } from "../context/theme";
+import { Filter } from "../screens/filter";
+import { Search } from "../screens/search";
+
+/* 
+  Create filter stack navigator
+*/
 
 const Stack = createStackNavigator();
 
-export function FilterStack({ route, navigation }) {
+export function FilterStack() {
+  // redux toolkit dispatch
   const dispatch = useDispatch();
+
   // theme state
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
-  // language
+
+  // language context
   const language = Language();
-  const lang = useSelector((state) => state.storeApp.language);
-  // define signed filter length
+
+  // define active filter's length
   const filter = useSelector((state) => state.storeFilter.filter);
   let filterBadge;
   if (filter !== "") {
@@ -79,7 +85,7 @@ export function FilterStack({ route, navigation }) {
   } else {
     objectBadge = 0;
   }
-  // sum of choiced variants of filter and create badge
+  // total of active variants of filter and creating total of badge
   const sum =
     filterBadge +
     cityBadge +

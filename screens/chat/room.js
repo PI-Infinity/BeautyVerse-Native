@@ -1,44 +1,48 @@
 // screens/ChatRoomScreen.js
-import React, { useEffect, useState } from "react";
-import {
-  View,
-  Text,
-  Alert,
-  ScrollView,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ActivityIndicator,
-} from "react-native";
 import axios from "axios";
-import { useSelector, useDispatch } from "react-redux";
-import { Messages } from "../../screens/chat/messages";
+import React, { useEffect, useRef, useState } from "react";
+import { ActivityIndicator, Alert, View } from "react-native";
+import { useDispatch, useSelector } from "react-redux";
+import { setRerenderScroll, updateRoom } from "../../redux/chat";
 import { Input } from "../../screens/chat/input";
-import {
-  setRerederRooms,
-  setRerenderScroll,
-  setChatUser,
-} from "../../redux/chat";
-// import { LogBox } from "react-native";
-import { useNavigation } from "@react-navigation/native";
-import { lightTheme, darkTheme } from "../../context/theme";
-import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import { Messages } from "../../screens/chat/messages";
+import { useIsFocused, useNavigation } from "@react-navigation/native";
+import { useSocket } from "../../context/socketContext";
+import { darkTheme, lightTheme } from "../../context/theme";
 
-// LogBox.ignoreLogs([
-//   "Sending 'onAnimatedValueUpdate' with no listeners registered",
-// ]);
+/**
+ * Chat room
+ */
 
-export const Room = ({ route, socket }) => {
+export const Room = ({ route }) => {
+  // defines socket server
+  const socket = useSocket();
+
+  // defines redux dispatch
   const dispatch = useDispatch();
-  const [loading, setLoading] = useState(true);
+
+  // defines navigation
   const navigation = useNavigation();
+
+  // defines theme
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
 
+  // defines loading state
+  const [loading, setLoading] = useState(true);
+
+  // defines current chat
   const currentChat = useSelector((state) => state.storeChat.currentChat);
+
+  // getting screen height passed as route from parent screen
+  const { screenHeight } = route.params;
+
+  // rerender messages redux state
   const rerenderMessages = useSelector(
     (state) => state.storeChat.rerenderMessages
   );
+
+  // define current user
   const currentUser = useSelector((state) => state.storeUser.currentUser);
 
   // define target member
@@ -57,26 +61,31 @@ export const Room = ({ route, socket }) => {
     };
   }
 
-  const [arrivalMessage, setArrivalMessage] = useState(null);
+  // defines messages list
   const [messages, setMessages] = useState([]);
+  // defins messages length
   const [messagesLength, setMessagesLength] = useState([]);
+  // defines pages for backend to get messages on scrolling
   const [page, setPage] = useState(1);
 
+  /**
+   * Get messages function
+   */
   useEffect(() => {
     const GetMessages = async () => {
       const response = await axios.get(
         "https://beautyverse.herokuapp.com/api/v1/chats/messages/" +
           currentChat.room +
-          "?page=" +
-          page
+          "?page=1"
       );
       setMessagesLength(response.data.length);
-      setMessages((prev) => {
-        const newChats = response.data.data.chats.filter(
-          (newChat) => !prev.some((prevChat) => prevChat._id === newChat._id)
-        );
-        return [...newChats, ...prev];
-      });
+      setMessages(response.data.data.chats);
+      setTimeout(() => {
+        setLoading(false);
+        setTimeout(() => {
+          dispatch(setRerenderScroll());
+        }, 300);
+      }, 200);
     };
     try {
       if (currentChat) {
@@ -85,32 +94,92 @@ export const Room = ({ route, socket }) => {
     } catch (error) {
       Alert.alert(error.response.data.message);
     }
-  }, [rerenderMessages, page]);
+  }, [rerenderMessages, currentChat?.room]);
 
-  useEffect(() => {
-    socket.current.on("getMessage", (data) => {
-      setArrivalMessage({
-        sender: data.senderId,
-        receiverId: data.receiverId,
-        text: data.text,
-        sentAt: new Date(),
+  // load more messages state
+  const [loadingMore, setLoadingMore] = useState(false);
+
+  /**
+   * Add old messages on scroll to top
+   */
+  const AddMessages = async () => {
+    setLoadingMore(true);
+    try {
+      const response = await axios.get(
+        "https://beautyverse.herokuapp.com/api/v1/chats/messages/" +
+          currentChat.room +
+          "?page=" +
+          page
+      );
+      setMessagesLength(response.data.length);
+      setMessages((prev) => {
+        const newMessages = response.data.data.chats;
+        return newMessages.reduce((acc, curr) => {
+          const existingMsgIndex = acc.findIndex((msg) => msg._id === curr._id);
+          if (existingMsgIndex !== -1) {
+            // Message already exists, merge the data
+            const mergedMsgs = { ...acc[existingMsgIndex], ...curr };
+            return [
+              ...acc.slice(0, existingMsgIndex),
+              mergedMsgs,
+              ...acc.slice(existingMsgIndex + 1),
+            ];
+          } else {
+            // Message doesn't exist, add to the start of the array
+            return [curr, ...acc];
+          }
+        }, prev);
       });
-    });
-  }, []);
+      setLoadingMore(false);
+    } catch (error) {
+      console.log(error.response.data.message);
+    }
+  };
 
   useEffect(() => {
-    const Adding = async () => {
-      arrivalMessage &&
-        (currentChat?.members.member1 === arrivalMessage?.sender ||
-          currentChat?.members.member2 === arrivalMessage?.sender) &&
-        (await setMessages((prev) => [...prev, arrivalMessage]));
-      setTimeout(() => {
-        dispatch(setRerenderScroll());
-        setLoading(false);
-      }, 500);
-    };
-    Adding();
-  }, [arrivalMessage, currentChat]);
+    AddMessages();
+  }, [page]);
+
+  // defines when screen focused
+  const isFocused = useIsFocused();
+
+  /**
+   * Getting new message on real time used socket io
+   */
+  useEffect(() => {
+    socket.on("getMessage", (data) => {
+      const Adding = async () => {
+        data &&
+          (currentChat?.members.member1 === data?.senderId ||
+            currentChat?.members.member2 === data?.senderId) &&
+          setMessages((prev) => [
+            ...prev,
+            {
+              sender: data.senderId,
+              receiverId: data.receiverId,
+              text: data.text,
+              sentAt: new Date(),
+              file: data.file?.url ? data.file : "",
+            },
+          ]);
+        dispatch(
+          updateRoom({
+            roomId: data.room,
+            lastMessageCreatedAt: new Date().toISOString(),
+            lastSender: data.senderId,
+            lastMessage: data.text,
+            status: isFocused ? "read" : "unread",
+            file: data.file?.url ? data.file : "",
+          })
+        );
+      };
+      Adding();
+      dispatch(setRerenderScroll());
+    });
+  }, [isFocused]);
+
+  // messages scroll ref
+  const flatListRef = useRef(null);
 
   return (
     <>
@@ -126,18 +195,14 @@ export const Room = ({ route, socket }) => {
           <ActivityIndicator color={currentTheme.pink} size="large" />
         </View>
       ) : (
-        <KeyboardAwareScrollView
-          contentContainerStyle={{
-            flex: 1,
+        <View
+          style={{
             width: "100%",
             justifyContent: "space-between",
             alignItems: "center",
             zIndex: 100,
-            // paddingBottom: Platform.OS === "ios" ? 70 : 0, //Conditional paddingBottom
+            height: screenHeight,
           }}
-          extraScrollHeight={40}
-          // behavior={Platform.OS === "ios" ? "padding" : "height"} //Conditional behavior
-          // keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0} //Conditional keyboardVerticalOffset
         >
           <Messages
             messages={messages}
@@ -145,15 +210,17 @@ export const Room = ({ route, socket }) => {
             setMessages={setMessages}
             setPage={setPage}
             navigation={navigation}
+            AddMessages={AddMessages}
+            loading={loadingMore}
+            setLoading={setLoadingMore}
+            flatListRef={flatListRef}
           />
-          <View style={{ position: "absolute", bottom: 0 }}>
-            <Input
-              targetUser={targetChatMember}
-              setMessages={setMessages}
-              socket={socket}
-            />
-          </View>
-        </KeyboardAwareScrollView>
+          <Input
+            targetUser={targetChatMember}
+            setMessages={setMessages}
+            flatListRef={flatListRef}
+          />
+        </View>
       )}
     </>
   );

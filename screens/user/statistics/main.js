@@ -1,26 +1,36 @@
+import { MaterialIcons } from "@expo/vector-icons";
+import React, { useEffect, useState } from "react";
 import {
+  Dimensions,
   StyleSheet,
   Text,
-  View,
   TouchableOpacity,
-  Dimensions,
+  View,
 } from "react-native";
-import React, { useState, useEffect } from "react";
-import axios from "axios";
 import { useSelector } from "react-redux";
-import { lightTheme, darkTheme } from "../../../context/theme";
-import { MaterialIcons } from "@expo/vector-icons";
+import { darkTheme, lightTheme } from "../../../context/theme";
 
-const { height: hght, width: SCREEN_WIDTH } = Dimensions.get("window");
+/**
+ * Define statistics component in user screen
+ */
+
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 export const Statistics = ({ navigation }) => {
-  const [statistics, setStatistics] = useState([]);
+  // define current user
   const currentUser = useSelector((state) => state.storeUser.currentUser);
+
+  // define theme
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
+
+  // define statistics state
+  const [statistics, setStatistics] = useState([]);
+
+  // get statistics from backend
   useEffect(() => {
     async function GetStats() {
-      const response = await fetch(
+      await fetch(
         `https://beautyverse.herokuapp.com/api/v1/users/${currentUser?._id}/statistics`
       )
         .then((response) => response.json())

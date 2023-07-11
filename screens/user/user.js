@@ -1,43 +1,85 @@
-import { useState, useRef, useEffect } from "react";
 import {
-  View,
-  Text,
-  FlatList,
-  TouchableOpacity,
-  Image,
-  Pressable,
-  StyleSheet,
-  UIManager,
-  LayoutAnimation,
-  Platform,
-  ScrollView,
-  Animated,
+  AntDesign,
+  FontAwesome,
+  FontAwesome5,
+  MaterialIcons,
+} from "@expo/vector-icons";
+import { useRoute } from "@react-navigation/native";
+import axios from "axios";
+import * as Haptics from "expo-haptics";
+import { useEffect, useRef, useState } from "react";
+import {
   ActivityIndicator,
+  Alert,
+  Animated,
+  Dimensions,
+  FlatList,
+  Platform,
+  Pressable,
   RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
-import { useSelector } from "react-redux";
-import { Feeds } from "../../screens/user/feeds";
-import { Contact } from "../../screens/user/contact";
-import { ProceduresList } from "../../screens/user/procedures";
-import { WorkingInfo } from "../../screens/user/workingInfo";
-import { Audience } from "../../screens/user/audience";
-import { Statistics } from "../../screens/user/statistics/main";
-import { useNavigation, useRoute } from "@react-navigation/native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useDispatch, useSelector } from "react-redux";
+import { CacheableImage } from "../../components/cacheableImage";
 import InputFile from "../../components/coverInput";
 import InputCoverAndroid from "../../components/coverInputAndroid";
 import { Language } from "../../context/language";
-import axios from "axios";
-import { CacheableImage } from "../../components/cacheableImage";
-import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
-import { lightTheme, darkTheme } from "../../context/theme";
-import { Circle } from "../../components/skeltons";
+import { darkTheme, lightTheme } from "../../context/theme";
+import {
+  setCurrentChat,
+  setRerederRooms,
+  setRerenderScroll,
+  setRooms,
+} from "../../redux/chat";
+import { Audience } from "../../screens/user/audience";
+import { Contact } from "../../screens/user/contact";
+import { Feeds } from "../../screens/user/feeds";
+import { ProceduresList } from "../../screens/user/procedures";
+import { Statistics } from "../../screens/user/statistics/main";
+import { WorkingInfo } from "../../screens/user/workingInfo";
+
+/**
+ * User Profile Screen
+ */
+
+const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
 export const User = ({ navigation, user, variant }) => {
   // Initialize language for multi-language support
   const language = Language();
-
+  const dispatch = useDispatch();
   // Get current route for navigation
   const route = useRoute();
+
+  // State for followerDefined
+  const [followerDefined, setFollowerDefined] = useState("");
+  const [loadingFollowerDefined, setLoadingFollowerDefined] = useState(true);
+
+  // useEffect to check follower
+  useEffect(() => {
+    setLoadingFollowerDefined(true);
+    async function checkFollower() {
+      const response = await fetch(
+        `https://beautyverse.herokuapp.com/api/v1/users/${targetUser?._id}/followers/${currentUser?._id}/check/`
+      )
+        .then((response) => response.json())
+        .then(async (data) => {
+          setFollowerDefined(data.data?.follower);
+          setLoadingFollowerDefined(false);
+        })
+        .catch((error) => {
+          console.log(error.response.data.message);
+        });
+    }
+    if (targetUser?._id) {
+      checkFollower();
+    }
+  }, [targetUser?._id]);
 
   // Select theme from global Redux state (dark or light theme)
   const theme = useSelector((state) => state.storeApp.theme);
@@ -58,9 +100,6 @@ export const User = ({ navigation, user, variant }) => {
 
   // State for refresh control
   const [refresh, setRefresh] = useState(false);
-
-  // Get userParams from route parameters
-  const userParams = route.params;
 
   // Determine target user either from route parameters or currentUser
   const targetUser = route.params?.user || currentUser;
@@ -142,7 +181,7 @@ export const User = ({ navigation, user, variant }) => {
       icon: (
         <MaterialIcons
           name="dynamic-feed"
-          color={active === 0 ? currentTheme.background : currentTheme.disabled}
+          color={active === 0 ? currentTheme.pink : currentTheme.disabled}
           size={18}
         />
       ),
@@ -153,7 +192,7 @@ export const User = ({ navigation, user, variant }) => {
       icon: (
         <MaterialIcons
           name="contacts"
-          color={active === 1 ? currentTheme.background : currentTheme.disabled}
+          color={active === 1 ? currentTheme.pink : currentTheme.disabled}
           size={16}
         />
       ),
@@ -164,7 +203,7 @@ export const User = ({ navigation, user, variant }) => {
       icon: (
         <MaterialIcons
           name="format-list-bulleted"
-          color={active === 2 ? currentTheme.background : currentTheme.disabled}
+          color={active === 2 ? currentTheme.pink : currentTheme.disabled}
           size={16}
         />
       ),
@@ -175,7 +214,7 @@ export const User = ({ navigation, user, variant }) => {
       icon: (
         <MaterialIcons
           name="info-outline"
-          color={active === 3 ? currentTheme.background : currentTheme.disabled}
+          color={active === 3 ? currentTheme.pink : currentTheme.disabled}
           size={16}
         />
       ),
@@ -186,7 +225,7 @@ export const User = ({ navigation, user, variant }) => {
       icon: (
         <MaterialIcons
           name="bar-chart"
-          color={active === 4 ? currentTheme.background : currentTheme.disabled}
+          color={active === 4 ? currentTheme.pink : currentTheme.disabled}
           size={16}
         />
       ),
@@ -197,7 +236,7 @@ export const User = ({ navigation, user, variant }) => {
       icon: (
         <MaterialIcons
           name="supervised-user-circle"
-          color={active === 5 ? currentTheme.background : currentTheme.disabled}
+          color={active === 5 ? currentTheme.pink : currentTheme.disabled}
           size={16}
         />
       ),
@@ -208,31 +247,11 @@ export const User = ({ navigation, user, variant }) => {
    * //
    */
 
-  // State for followerDefined
-  const [followerDefined, setFollowerDefined] = useState("");
   const [render, setRender] = useState(false);
-
-  // useEffect to check follower
-  useEffect(() => {
-    async function checkFollower() {
-      const response = await fetch(
-        `https://beautyverse.herokuapp.com/api/v1/users/${targetUser?._id}/followers/${currentUser?._id}/check/`
-      )
-        .then((response) => response.json())
-        .then(async (data) => {
-          setFollowerDefined(data.data?.follower);
-        })
-        .catch((error) => {
-          console.log(error.response.data.message);
-        });
-    }
-    if (targetUser?._id) {
-      checkFollower();
-    }
-  }, [targetUser?._id, render]);
 
   // function to follow user
   const Follow = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     try {
       setFollowerDefined({
         followerId: currentUser?._id,
@@ -276,10 +295,10 @@ export const User = ({ navigation, user, variant }) => {
     } catch (error) {
       console.error(error.response.data.message);
     }
-    setRender(!render);
   };
   // function to unfollow user
   const Unfollow = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     try {
       setFollowerDefined("");
       const url = `https://beautyverse.herokuapp.com/api/v1/users/${currentUser?._id}/followings/${targetUser?._id}`;
@@ -301,14 +320,24 @@ export const User = ({ navigation, user, variant }) => {
     } catch (error) {
       console.error(error.response.data.message);
     }
-    setRender(!render);
   };
+
+  // user feeds page in backend
+  const [page, setPage] = useState(1);
+  const [feedsLength, setFeedsLength] = useState(0);
+  const [feeds, setFeeds] = useState([]);
 
   // Define activeContent based on active state
   let activeContent;
   if (active == 0) {
     activeContent = (
       <Feeds
+        page={page}
+        setPage={setPage}
+        feeds={feeds}
+        setFeeds={setFeeds}
+        feedsLength={feedsLength}
+        setFeedsLength={setFeedsLength}
         targetUser={targetUser}
         scrollViewRef={scrollViewRef}
         navigation={navigation}
@@ -371,244 +400,316 @@ export const User = ({ navigation, user, variant }) => {
     }).start();
   }, []);
 
-  console.log(route.name);
-  // console.log(targetUser._id);
-  // console.log(currentUser._id);
+  // navigate to chat
+  const rooms = useSelector((state) => state.storeChat.rooms);
+
+  let chatDefined =
+    currentUser._id !== targetUser._id &&
+    rooms.find(
+      (r) =>
+        (r.members.member1 === currentUser._id ||
+          r.members.member1 === targetUser._id) &&
+        (r.members.member2 === currentUser._id ||
+          r.members.member2 === targetUser._id)
+    );
+
+  // get chat room
+  const GetNewChatRoom = async () => {
+    let newChat = {
+      room: currentUser?._id + targetUser._id,
+      members: {
+        member1: currentUser._id,
+        member2: targetUser._id,
+        member2Cover: targetUser.cover,
+        member2Name: targetUser.name,
+      },
+      lastMessage: "",
+      lastSender: "",
+      status: "read",
+    };
+    try {
+      navigation.navigate("Room", {
+        newChat,
+        user: targetUser,
+      });
+      const response = await axios.post(
+        "https://beautyverse.herokuapp.com/api/v1/chats/",
+        {
+          room: currentUser?._id + targetUser._id,
+          members: {
+            member1: currentUser._id,
+            member2: targetUser._id,
+          },
+          lastMessage: "",
+          lastSender: "",
+          status: "read",
+        }
+      );
+      dispatch(setCurrentChat(response.data.data.chat));
+      dispatch(setRerederRooms());
+    } catch (error) {
+      if (error.response) {
+        Alert.alert(
+          error.response.data
+            ? error.response.data.message
+            : "An error occurred"
+        );
+      } else if (error.request) {
+        // The request was made but no response was received
+        console.log(error.request);
+        Alert.alert("An error occurred. Please try again.");
+      } else {
+        // Something happened in setting up the request that triggered an Error
+        console.log("Error", error.message);
+        Alert.alert("An error occurred. Please try again.");
+      }
+      console.log(error.config);
+    }
+  };
+
+  const insets = useSafeAreaInsets();
+
+  const screenHeight = SCREEN_HEIGHT - insets.top - insets.bottom;
+
+  // get chat room
+  const GetChatRoom = async () => {
+    const Room = chatDefined;
+    try {
+      dispatch(setCurrentChat(Room));
+      navigation.navigate("Room", {
+        user: targetUser,
+        screenHeight: screenHeight,
+      });
+      if (Room.lastSender !== currentUser._id) {
+        await axios.patch(
+          "https://beautyverse.herokuapp.com/api/v1/chats/" + Room.room,
+          {
+            status: "read",
+          }
+        );
+      }
+      let currentRoomIndex = rooms.findIndex((r) => r._id === Room._id);
+
+      if (currentRoomIndex !== -1) {
+        let newRooms = [...rooms];
+        newRooms[currentRoomIndex] = {
+          ...newRooms[currentRoomIndex],
+          status: "read",
+        };
+        dispatch(setRooms(newRooms));
+      }
+      dispatch(setRerenderScroll());
+    } catch (error) {
+      Alert.alert(error.response.data.message);
+    }
+  };
+
+  const onScroll = (event) => {
+    const offsetY = event.nativeEvent.contentOffset.y;
+    const contentHeight = event.nativeEvent.contentSize.height;
+    const layoutHeight = event.nativeEvent.layoutMeasurement.height;
+
+    if (offsetY + layoutHeight >= contentHeight - 20) {
+      if (feedsLength > feeds.length) {
+        setPage(page + 1);
+      }
+    }
+  };
 
   return (
-    <ScrollView
-      ref={scrollViewRef}
-      showsVerticalScrollIndicator={false}
-      style={{ width: "100%" }}
-      nestedScrollEnabled={true}
-      bounces={Platform.OS === "ios" ? false : undefined}
-      overScrollMode={Platform.OS === "ios" ? "never" : "always"}
-      refreshControl={<RefreshControl tintColor="#ccc" refreshing={refresh} />}
-    >
-      <View style={styles.header}>
-        <View
-          style={{
-            flex: 2,
-            justifyContent: "center",
-          }}
-        >
-          <View style={styles.coverImg}>
-            {route.name === "UserProfile" &&
-              currentUser._id === targetUser._id && (
-                <View
-                  style={{
-                    position: "absolute",
-                    zIndex: 10000,
-                    height: 100,
-                    width: 100,
-                  }}
-                >
-                  {Platform.OS === "ios" ? (
-                    <InputFile
-                      targetUser={targetUser}
-                      onCoverUpdate={handleCoverUpdate}
-                    />
-                  ) : (
-                    <InputCoverAndroid
-                      targetUser={targetUser}
-                      onCoverUpdate={handleCoverUpdate}
-                    />
-                  )}
-                </View>
-              )}
-            {cover?.length > 30 ? (
-              <View
-                style={{
-                  width: 110,
-                  aspectRatio: 0.99,
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                {loading && (
+    <>
+      <ScrollView
+        ref={scrollViewRef}
+        onScroll={onScroll}
+        scrollEventThrottle={16}
+        showsVerticalScrollIndicator={false}
+        style={{ width: "100%" }}
+        nestedScrollEnabled={true}
+        bounces={Platform.OS === "ios" ? false : undefined}
+        overScrollMode={Platform.OS === "ios" ? "never" : "always"}
+        refreshControl={
+          <RefreshControl tintColor="#ccc" refreshing={refresh} />
+        }
+      >
+        <View style={styles.header}>
+          <View
+            style={{
+              flex: 2,
+              justifyContent: "center",
+            }}
+          >
+            <View style={styles.coverImg}>
+              {route.name === "UserProfile" &&
+                currentUser._id === targetUser._id && (
                   <View
                     style={{
                       position: "absolute",
-                      width: 110,
-                      aspectRatio: 0.99,
-                      borderRadius: 50,
-                      // backgroundColor: "rgba(1,1,1,0.5)",g
-                      zIndex: 120,
-                      alignItems: "center",
-                      justifyContent: "center",
-                      opacity: 0.5,
+                      zIndex: 10000,
+                      height: 100,
+                      width: 100,
                     }}
                   >
-                    <ActivityIndicator color={currentTheme.pink} />
+                    {Platform.OS === "ios" ? (
+                      <InputFile
+                        targetUser={targetUser}
+                        onCoverUpdate={handleCoverUpdate}
+                      />
+                    ) : (
+                      <InputCoverAndroid
+                        targetUser={targetUser}
+                        onCoverUpdate={handleCoverUpdate}
+                      />
+                    )}
                   </View>
                 )}
-                <Animated.View
+              {cover?.length > 30 ? (
+                <View
                   style={{
-                    opacity: fadeAnim,
-                    padding: 10,
-                    // backgroundColor: "red",
+                    width: 110,
+                    aspectRatio: 0.99,
+                    alignItems: "center",
+                    justifyContent: "center",
                   }}
                 >
-                  <CacheableImage
+                  {loading && (
+                    <View
+                      style={{
+                        position: "absolute",
+                        width: 110,
+                        aspectRatio: 0.99,
+                        borderRadius: 50,
+                        zIndex: 120,
+                        alignItems: "center",
+                        justifyContent: "center",
+                        opacity: 0.5,
+                      }}
+                    >
+                      <ActivityIndicator color={currentTheme.pink} />
+                    </View>
+                  )}
+                  <Animated.View
                     style={{
-                      width: "100%",
-                      aspectRatio: 1,
-                      resizeMode: "cover",
+                      opacity: fadeAnim,
+                      padding: 10,
                     }}
-                    source={{
-                      uri: cover,
-                    }}
-                    manipulationOptions={[
-                      {
-                        resize: {
-                          width: "100%",
-                          aspectRatio: 1,
-                          resizeMode: "cover",
+                  >
+                    <CacheableImage
+                      style={{
+                        width: "100%",
+                        aspectRatio: 1,
+                        resizeMode: "cover",
+                      }}
+                      source={{
+                        uri: cover,
+                      }}
+                      manipulationOptions={[
+                        {
+                          resize: {
+                            width: "100%",
+                            aspectRatio: 1,
+                            resizeMode: "cover",
+                          },
                         },
-                      },
-                      { rotate: 90 },
-                    ]}
-                    onLoad={() => setLoading(false)}
-                    onError={() => console.log("Error loading image")}
-                  />
-                </Animated.View>
-              </View>
-            ) : (
-              <View
-                style={{
-                  alignItems: "center",
-                  justifyContent: "center",
-                  width: 110,
-                  aspectRatio: 1,
-                  borderWidth: 2,
-                }}
-              >
-                <FontAwesome name="user" size={40} color="#e5e5e5" />
-              </View>
-            )}
+                        { rotate: 90 },
+                      ]}
+                      onLoad={() => setLoading(false)}
+                      onError={() => console.log("Error loading image")}
+                    />
+                  </Animated.View>
+                </View>
+              ) : (
+                <View
+                  style={{
+                    alignItems: "center",
+                    justifyContent: "center",
+                    width: 110,
+                    aspectRatio: 1,
+                    borderWidth: 2,
+                  }}
+                >
+                  <FontAwesome name="user" size={40} color="#e5e5e5" />
+                </View>
+              )}
+            </View>
           </View>
-        </View>
-        <View style={{ flex: 6, justifyContent: "center" }}>
-          <View
-            name="info"
-            style={{
-              gap: 10,
-              marginTop: 10,
-              flexDirection: "row",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
-            <Text
+          <View style={{ flex: 6, justifyContent: "center" }}>
+            <View
+              name="info"
               style={{
-                fontSize: 14,
-                fontWeight: "bold",
-                color: currentTheme.font,
-                letterSpacing: 0.2,
+                gap: 10,
+                marginTop: 10,
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
               }}
             >
-              {targetUser.username ? targetUser.username : userType}
-            </Text>
-            {targetUser._id !== currentUser._id && (
-              <Pressable
-                onPress={followerDefined ? () => Unfollow() : () => Follow()}
-                style={{ padding: 5 }}
-              >
-                <MaterialIcons
-                  name="favorite"
-                  color={followerDefined ? "#F866B1" : currentTheme.disabled}
-                  size={22}
-                />
-              </Pressable>
-            )}
-          </View>
-
-          <Pressable
-            style={{
-              marginTop: 5,
-            }}
-            onPress={changeHeight}
-          >
-            <View>
               <Text
-                multiline
-                numberOfLines={numOfLines}
                 style={{
                   fontSize: 14,
+                  fontWeight: "bold",
                   color: currentTheme.font,
-                  lineHeight: 20,
                   letterSpacing: 0.2,
                 }}
               >
-                {targetUser?.about}
+                {targetUser.username ? targetUser.username : userType}
               </Text>
             </View>
-          </Pressable>
+
+            <Pressable
+              style={{
+                marginTop: 5,
+              }}
+              onPress={changeHeight}
+            >
+              <View>
+                <Text
+                  multiline
+                  numberOfLines={numOfLines}
+                  style={{
+                    fontSize: 14,
+                    color: currentTheme.font,
+                    lineHeight: 20,
+                    letterSpacing: 0.2,
+                  }}
+                >
+                  {targetUser?.about}
+                </Text>
+              </View>
+            </Pressable>
+          </View>
         </View>
-      </View>
-      {/* {targetUser.type !== "user" && ( */}
-      <>
-        <View
-          name="navigator"
-          style={[
-            styles.navigator,
-            {
-              borderBottomColor: currentTheme.background2,
-              borderTopColor: currentTheme.background2,
-            },
-          ]}
-        >
-          <FlatList
-            ref={navigatorRef}
-            data={navigatorItems}
-            horizontal={true}
-            showsHorizontalScrollIndicator={false}
-            bounces={Platform.OS === "ios" ? false : undefined}
-            overScrollMode={Platform.OS === "ios" ? "never" : "always"}
-            renderItem={({ item }) => {
-              if (
-                targetUser.type === "user" &&
-                (item.id === 1 || item.id === 5)
-              ) {
-                return (
-                  <TouchableOpacity
-                    onPress={() => setActive(item?.id)}
-                    style={{
-                      height: 25,
-                      alignItems: "center",
-                      flexDirection: "row",
-                      gap: 5,
-                      margin: 5,
-                      paddingLeft: 15,
-                      paddingRight: 15,
-                      borderRadius: 50,
-                      backgroundColor:
-                        active === item.id ? "#F866B1" : "rgba(0,0,0,0)",
-                    }}
-                  >
-                    {item.icon}
-                    <Text
-                      style={{
-                        letterSpacing: 0.2,
-                        color:
-                          active === item.id
-                            ? currentTheme.background
-                            : currentTheme.disabled,
-                      }}
-                    >
-                      {item?.name}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              } else if (targetUser.type !== "user") {
-                if (item.id === 4 && variant === "visitPage") {
-                  return null;
-                } else {
+
+        <>
+          <View
+            name="navigator"
+            style={[
+              styles.navigator,
+              {
+                borderBottomColor: currentTheme.background2,
+                borderTopColor: currentTheme.background2,
+              },
+            ]}
+          >
+            <FlatList
+              ref={navigatorRef}
+              data={navigatorItems}
+              horizontal={true}
+              showsHorizontalScrollIndicator={false}
+              bounces={Platform.OS === "ios" ? false : undefined}
+              overScrollMode={Platform.OS === "ios" ? "never" : "always"}
+              renderItem={({ item }) => {
+                if (
+                  targetUser.type === "user" &&
+                  (item.id === 1 || item.id === 5)
+                ) {
                   return (
                     <TouchableOpacity
-                      onPress={() => setActive(item?.id)}
+                      onPress={() => {
+                        setActive(item?.id);
+                        setPage(1);
+                      }}
                       style={{
-                        height: 25,
+                        height: 28,
                         alignItems: "center",
                         flexDirection: "row",
                         gap: 5,
@@ -616,16 +717,19 @@ export const User = ({ navigation, user, variant }) => {
                         paddingLeft: 15,
                         paddingRight: 15,
                         borderRadius: 50,
-                        backgroundColor:
+                        backgroundColor: currentTheme.background2,
+                        borderWidth: 1.5,
+                        borderColor:
                           active === item.id ? "#F866B1" : "rgba(0,0,0,0)",
                       }}
                     >
                       {item.icon}
                       <Text
                         style={{
+                          letterSpacing: 0.2,
                           color:
                             active === item.id
-                              ? currentTheme.background
+                              ? currentTheme.pink
                               : currentTheme.disabled,
                         }}
                       >
@@ -633,16 +737,156 @@ export const User = ({ navigation, user, variant }) => {
                       </Text>
                     </TouchableOpacity>
                   );
+                } else if (targetUser.type !== "user") {
+                  if (item.id === 4 && targetUser._id !== currentUser._id) {
+                    return null;
+                  } else {
+                    return (
+                      <TouchableOpacity
+                        onPress={() => {
+                          setActive(item?.id);
+                          setPage(1);
+                        }}
+                        style={{
+                          height: 28,
+                          alignItems: "center",
+                          flexDirection: "row",
+                          gap: 5,
+                          margin: 5,
+                          paddingLeft: 15,
+                          paddingRight: 15,
+                          borderRadius: 50,
+                          borderWidth: 1.5,
+                          borderColor:
+                            active === item.id ? "#F866B1" : "rgba(0,0,0,0)",
+                        }}
+                      >
+                        {item.icon}
+                        <Text
+                          style={{
+                            color:
+                              active === item.id
+                                ? currentTheme.pink
+                                : currentTheme.disabled,
+                          }}
+                        >
+                          {item?.name}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  }
                 }
+              }}
+              keyExtractor={(item) => item?.id}
+            />
+          </View>
+          <View name="content">{activeContent}</View>
+        </>
+
+        {/* )} */}
+      </ScrollView>
+
+      {!loadingFollowerDefined && (
+        <View
+          style={{
+            width: "100%",
+            position: "absolute",
+            right: 15,
+            bottom: 15,
+            gap: 0,
+            zIndex: 100000,
+            alignItems: "flex-end",
+          }}
+        >
+          {targetUser._id !== currentUser._id && (
+            <Pressable
+              onPress={followerDefined ? () => Unfollow() : () => Follow()}
+              style={{
+                padding: 5,
+                paddingVertical: 5,
+                backgroundColor: currentTheme.background2,
+
+                width: 50,
+                height: 50,
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 4,
+                marginVertical: 8,
+                borderRadius: 8,
+                borderWidth: 1.5,
+                borderColor: currentTheme.line,
+                shadowColor: "#000",
+                shadowOffset: {
+                  width: 0,
+                  height: 10, // negative value places shadow on top
+                },
+                shadowOpacity: 0.2,
+                shadowRadius: 10,
+                elevation: 1,
+              }}
+            >
+              {followerDefined ? (
+                <FontAwesome5
+                  size={18}
+                  name="user-check"
+                  color={currentTheme.pink}
+                  style={{ position: "relative", left: 2 }}
+                />
+              ) : (
+                <MaterialIcons
+                  name="person-add-alt-1"
+                  size={24}
+                  color={currentTheme.font}
+                  style={{ position: "relative", left: 2 }}
+                />
+              )}
+              {/* <Text
+                style={{
+                  color: followerDefined ? currentTheme.pink : "#fff",
+                  fontSize: 14,
+                  letterSpacing: 0.3,
+                }}
+              >
+                {followerDefined ? "Following" : "Follow"}
+              </Text> */}
+            </Pressable>
+          )}
+          {targetUser._id !== currentUser._id && (
+            <Pressable
+              onPress={
+                chatDefined ? () => GetChatRoom() : () => GetNewChatRoom()
               }
-            }}
-            keyExtractor={(item) => item?.id}
-          />
+              style={{
+                padding: 5,
+                paddingVertical: 5,
+                backgroundColor: currentTheme.background2,
+                width: 50,
+                height: 50,
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+
+                marginVertical: 8,
+                borderRadius: 8,
+                borderWidth: 1.5,
+                borderColor: currentTheme.line,
+                shadowColor: "#000",
+                shadowOffset: {
+                  width: 0,
+                  height: 10, // negative value places shadow on top
+                },
+                shadowOpacity: 0.2,
+                shadowRadius: 10,
+                elevation: 1,
+              }}
+            >
+              <AntDesign size={24} name="message1" color={currentTheme.font} />
+            </Pressable>
+          )}
         </View>
-        <View name="content">{activeContent}</View>
-      </>
-      {/* )} */}
-    </ScrollView>
+      )}
+    </>
   );
 };
 

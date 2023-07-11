@@ -13,7 +13,11 @@ import { setCity, setDistrict } from "../redux/filter"; // Import the setCity ac
 import { MaterialIcons } from "@expo/vector-icons";
 import { setCleanUp } from "../redux/rerenders";
 
-const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
+/**
+ * Cities component for filter
+ */
+
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 export const Cities = ({ cities, currentTheme }) => {
   const dispatch = useDispatch();

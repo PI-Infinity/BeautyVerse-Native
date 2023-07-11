@@ -23,6 +23,10 @@ const initialState = {
   page: 1,
   new: null,
   active: null,
+  pending: null,
+  rejected: null,
+  completed: null,
+  canceled: null,
 };
 
 export const Orders = createSlice({
@@ -76,6 +80,18 @@ export const Orders = createSlice({
     setActiveOrders: (state, action) => {
       state.active = action.payload;
     },
+    setRejectedOrders: (state, action) => {
+      state.rejected = action.payload;
+    },
+    setCompletedOrders: (state, action) => {
+      state.completed = action.payload;
+    },
+    setPendingOrders: (state, action) => {
+      state.pending = action.payload;
+    },
+    setCanceledOrders: (state, action) => {
+      state.canceled = action.payload;
+    },
   },
 });
 
@@ -93,5 +109,9 @@ export const {
   setPage,
   setNewOrders,
   setActiveOrders,
+  setRejectedOrders,
+  setCompletedOrders,
+  setPendingOrders,
+  setCanceledOrders,
 } = Orders.actions;
 export default Orders.reducer;

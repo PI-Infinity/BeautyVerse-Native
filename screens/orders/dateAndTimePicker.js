@@ -16,20 +16,24 @@ import * as Localization from "expo-localization";
 import { useState, useEffect, useRef } from "react";
 import { lightTheme, darkTheme } from "../../context/theme";
 
-const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
+/**
+ * Date and time picket
+ */
+
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 const CustomDatePicker = ({ from, dateAndTime, setDateAndTime }) => {
-  const dispatch = useDispatch();
+  // defines theme
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
 
+  // defines current user
   const currentUser = useSelector((state) => state.storeUser.currentUser);
 
-  // const define state
+  // cdefines active date
   const dateState = dateAndTime;
 
   const [date, setdate] = useState(new Date(dateState));
-
   useEffect(() => {
     setdate(new Date(dateState));
   }, [dateState]);
@@ -89,11 +93,11 @@ const CustomDatePicker = ({ from, dateAndTime, setDateAndTime }) => {
   ];
 
   const [daysArray, setDaysArray] = useState(
-    Array.from({ length: 31 }, (_, i) => i + 1)
+    Array?.from({ length: 31 }, (_, i) => i + 1)
   );
   const [monthsArray, setMonthsArray] = useState(MONTHS);
   const [yearsArray, setYearsArray] = useState(
-    Array.from({ length: 28 }, (_, i) => i + 2023)
+    Array?.from({ length: 28 }, (_, i) => i + 2023)
   );
 
   const isFirstRender = useRef(true); // add this line
@@ -141,15 +145,15 @@ const CustomDatePicker = ({ from, dateAndTime, setDateAndTime }) => {
     ?.split(",")[0];
   const workingDays = currentUser.workingDays.find(
     (item) =>
-      item.value.toLowerCase() === "everyday" ||
-      item.value.toLowerCase() === "workingdays" ||
-      item.value.toLowerCase() === isToday.toLowerCase()
+      item.value?.toLowerCase() === "everyday" ||
+      item.value?.toLowerCase() === "workingdays" ||
+      item.value?.toLowerCase() === isToday.toLowerCase()
   );
 
   let timePeriod;
   if (
-    workingDays.value.toLowerCase() === "everyday" ||
-    workingDays.value.toLowerCase() === "workingdays"
+    workingDays?.value.toLowerCase() === "everyday" ||
+    workingDays?.value.toLowerCase() === "workingdays"
   ) {
     if (workingDays.hours) {
       timePeriod = workingDays.hours;
@@ -159,8 +163,15 @@ const CustomDatePicker = ({ from, dateAndTime, setDateAndTime }) => {
   }
 
   let splited = timePeriod?.split(" - ");
-  let startHour = splited[0];
-  let endHour = splited[1];
+  let startHour;
+  let endHour;
+  if (splited) {
+    startHour = splited[0];
+    endHour = splited[1];
+  } else {
+    startHour = "01:00";
+    endHour = "00:00";
+  }
 
   // Generate hours array for 24 hours
   const hoursArray = Array.from({ length: 24 }, (_, i) =>
@@ -175,7 +186,6 @@ const CustomDatePicker = ({ from, dateAndTime, setDateAndTime }) => {
   return (
     <View
       style={{
-        // flex: 1,
         justifyContent: "center",
         alignItems: "center",
         width: "100%",
@@ -217,7 +227,7 @@ const CustomDatePicker = ({ from, dateAndTime, setDateAndTime }) => {
             borderRadius: 50,
             padding: 5,
             alignItems: "center",
-            borderWidth: 1,
+            borderWidth: 1.5,
             borderColor: currentTheme.pink,
             marginLeft: "auto",
           }}
@@ -240,9 +250,8 @@ const CustomDatePicker = ({ from, dateAndTime, setDateAndTime }) => {
           alignItems: "center",
           width: SCREEN_WIDTH - 40,
           marginRight: 15,
-        }} // center the modal
+        }}
         animationIn="zoomIn" // animate in with a zoom
-        // animationOut="fadeOut" // animate out with a zoom
         backdropColor="black" // make the backdrop black
         backdropOpacity={0.7}
       >

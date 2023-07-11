@@ -1,19 +1,37 @@
-import { StyleSheet, Text, View, Pressable } from "react-native";
-import React, { useEffect, useState } from "react";
 import { MaterialIcons } from "@expo/vector-icons";
+import * as Haptics from "expo-haptics";
+import React, { useEffect, useState } from "react";
+import { Pressable, Text } from "react-native";
 import { useSelector } from "react-redux";
 
-export const Post = (props) => {
-  const [defLanguage, setDefLanguage] = useState(null);
-  const [txt, setTxt] = useState("");
-  const [active, setActive] = useState(false);
+/**
+ * Post component
+ */
 
+export const Post = (props) => {
+  // define text state
+  const [txt, setTxt] = useState("");
+
+  // define text's language
+  const [defLanguage, setDefLanguage] = useState(null);
+
+  // define current user's active language
   const lang = useSelector((state) => state.storeApp.language);
 
+  // define translate active or not
+  const [active, setActive] = useState(false);
+
+  // if translate active shows translated, if not shows default
   useEffect(() => {
-    setTxt(props.text);
+    if (active) {
+      setTxt(txt);
+    } else {
+      setTxt(props.text);
+    }
     DetectLanguage();
-  }, [props]);
+  }, [props.text]);
+
+  // detect text language
 
   const DetectLanguage = (text) => {
     const API_KEY = "AIzaSyAuSnUmGlptL0E4m4wP-1XzlqL_iv_y3g8";
@@ -42,7 +60,9 @@ export const Post = (props) => {
       });
   };
 
-  const GetLanguages = (x) => {
+  // translate text
+
+  const TranslateText = (x) => {
     const API_KEY = "AIzaSyAuSnUmGlptL0E4m4wP-1XzlqL_iv_y3g8";
 
     let url = `https://translation.googleapis.com/language/translate/v2?q=${x}&target=${lang}&key=${API_KEY}`;
@@ -57,6 +77,7 @@ export const Post = (props) => {
       .then((res) => res.json())
       .then((response) => {
         setTxt(response.data.translations[0].translatedText);
+        setActive(true);
       })
       .catch((error) => {
         console.log("There was an error with the translation request: ", error);
@@ -67,14 +88,13 @@ export const Post = (props) => {
       onPress={
         props.numLines > 3
           ? () => props.setNumLines(3)
-          : () => props.setNumLines(15)
+          : () => props.setNumLines(50)
       }
       style={{
-        // marginTop: 10,
         padding: 5,
+        paddingRight: 20,
         paddingTop: 0,
         paddingBottom: 15,
-        // backgroundColor: "#181818",
         borderRadius: 10,
         width: "auto",
       }}
@@ -88,7 +108,6 @@ export const Post = (props) => {
           letterSpacing: 0.3,
           fontSize: 14,
           lineHeight: 18,
-          // marginHorizontal: 10,
           textShadowColor:
             props.fileFormat === "video"
               ? "rgba(0,0,0,0.2)"
@@ -104,32 +123,42 @@ export const Post = (props) => {
           onPress={
             active
               ? () => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                   setTxt(props.text);
                   setActive(false);
                 }
               : () => {
-                  GetLanguages(props.text);
-                  setActive(true);
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  TranslateText(props.text);
                 }
           }
           style={{
-            position: "absolute",
-            right: 14,
-            padding: 5,
-            top: -5,
+            marginTop: 10,
+            marginLeft: 10,
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 4,
           }}
         >
           <MaterialIcons
             name="g-translate"
-            size={16}
+            size={14}
             color={
               active ? props.currentTheme.pink : props.currentTheme.disabled
             }
           />
+          <Text
+            style={{
+              fontSize: 14,
+              color: active
+                ? props.currentTheme.pink
+                : props.currentTheme.disabled,
+            }}
+          >
+            Translate
+          </Text>
         </Pressable>
       )}
     </Pressable>
   );
 };
-
-const styles = StyleSheet.create({});

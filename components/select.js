@@ -2,6 +2,10 @@ import React, { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { workingDaysOptions } from "../datas/registerDatas";
 
+/**
+ * Select component
+ */
+
 const Select = ({ state, setState, currentTheme }) => {
   const [selectedOptions, setSelectedOptions] = useState([]);
 

@@ -1,54 +1,60 @@
+import { FontAwesome5, MaterialIcons } from "@expo/vector-icons";
+import React, { useEffect, useState } from "react";
 import {
-  View,
-  Text,
+  Platform,
   Pressable,
   ScrollView,
-  TouchableOpacity,
   StyleSheet,
-  Platform,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
-import { useState, useEffect } from "react";
-import React from "react";
-import { VerseCategories } from "../datas/categories";
-import { ListItem, Icon, Button } from "react-native-elements";
-import { useSelector, useDispatch } from "react-redux";
-import { setFilter, setSpecialists, setSalons } from "../redux/filter";
 import { CheckBox } from "react-native-elements";
+import { useDispatch, useSelector } from "react-redux";
 import { Cities } from "../components/cities";
 import { Districts } from "../components/districts";
 import { Search } from "../components/search";
 import { Language } from "../context/language";
-import { lightTheme, darkTheme } from "../context/theme";
-import { FontAwesome5, MaterialIcons, FontAwesome } from "@expo/vector-icons";
+import { darkTheme, lightTheme } from "../context/theme";
+import { VerseCategories } from "../datas/categories";
+import { setFilter, setSalons, setSpecialists } from "../redux/filter";
 import { setCleanUp } from "../redux/rerenders";
 
+/**
+ * FILTER SCREEN component
+ */
+
 export const Filter = ({ navigation }) => {
+  // define some context
   const language = Language();
   const dispatch = useDispatch();
-  const filter = useSelector((state) => state.storeFilter.filter);
-  const lang = useSelector((state) => state.storeApp.language);
 
+  // define theme context
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
 
+  // define language
+  const lang = useSelector((state) => state.storeApp.language);
+
+  // define filter option
+  const filter = useSelector((state) => state.storeFilter.filter);
   const specialists = useSelector((state) => state.storeFilter.specialists);
   const salons = useSelector((state) => state.storeFilter.salons);
   const city = useSelector((state) => state.storeFilter.city);
   const district = useSelector((state) => state.storeFilter.district);
 
+  // define active cities in BeautyVerse
   const [cities, setCities] = useState([]);
 
+  // open cities state
   const [openCities, setOpenCities] = useState(false);
+
+  // get cities from db function
   async function GetCities() {
-    const response = await fetch(
-      `https://beautyverse.herokuapp.com/api/v1/cities`
-    )
+    await fetch(`https://beautyverse.herokuapp.com/api/v1/cities`)
       .then((response) => response.json())
       .then((data) => {
-        setCities([
-          // `${language?.language.Main.filter.city}`,
-          ...data.data.cities,
-        ]);
+        setCities([...data.data.cities]);
       })
       .then(() => {})
       .catch((error) => {
@@ -60,18 +66,17 @@ export const Filter = ({ navigation }) => {
     GetCities();
   }, []);
 
+  // define BeautyVerse's active districts by city
+
   const [districts, setDistricts] = useState([]);
 
   async function GetDistricts() {
-    const response = await fetch(
+    await fetch(
       `https://beautyverse.herokuapp.com/api/v1/districts?city=${city}`
     )
       .then((response) => response.json())
       .then((data) => {
-        setDistricts([
-          // `${language?.language.Main.filter.district}`,
-          ...data.data.districts,
-        ]);
+        setDistricts([...data.data.districts]);
       })
       .then(() => {})
       .catch((error) => {
@@ -85,12 +90,12 @@ export const Filter = ({ navigation }) => {
 
   return (
     <ScrollView
-      contentContainerStyle={{ gap: 5, alignItems: "center", paddingTop: 10 }}
+      contentContainerStyle={{ gap: 5, alignItems: "center", paddingTop: 0 }}
       showsVerticalScrollIndicator={false}
       bounces={Platform.OS === "ios" ? false : undefined}
       overScrollMode={Platform.OS === "ios" ? "never" : "always"}
     >
-      <View style={{ marginBottom: 10, width: "100%" }}>
+      <View style={{ marginBottom: 5, width: "100%" }}>
         <Search navigation={navigation} currentTheme={currentTheme} />
       </View>
       {VerseCategories?.map((item, index) => {

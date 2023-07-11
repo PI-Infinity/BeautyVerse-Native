@@ -1,37 +1,42 @@
+import { Entypo, FontAwesome, Fontisto } from "@expo/vector-icons";
+import { useNavigation, useRoute } from "@react-navigation/native";
+import React, { useState } from "react";
 import {
+  Dimensions,
+  Pressable,
   StyleSheet,
   Text,
-  View,
-  Pressable,
-  Dimensions,
   TouchableOpacity,
+  View,
 } from "react-native";
-import React, { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { CacheableImage } from "../../components/cacheableImage";
-import { FontAwesome } from "@expo/vector-icons";
-import { MaterialIcons } from "@expo/vector-icons";
-import { Entypo } from "@expo/vector-icons";
-import { Fontisto } from "@expo/vector-icons";
-import GetTimesAgo from "../../functions/getTimesAgo";
-import { useSelector, useDispatch } from "react-redux";
-import { useRoute } from "@react-navigation/native";
 import { Reports } from "../../components/feedCard/reports";
+import GetTimesAgo from "../../functions/getTimesAgo";
 import { setSendReport } from "../../redux/alerts";
-import { useIsFocused, useNavigation } from "@react-navigation/native";
 
-const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
+/**
+ * Top section of feed card
+ */
+
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 export const TopSection = (props) => {
+  // define redux dispatch
   const dispatch = useDispatch();
+  // define navigation
   const navigation = useNavigation();
+  // define route
+  const route = useRoute();
+  // define current user
+  const currentUser = useSelector((state) => state.storeUser.currentUser);
+
+  // capitalize first letter for texts
   function capitalizeFirstLetter(string) {
     return string?.charAt(0).toUpperCase() + string?.slice(1);
   }
 
-  const route = useRoute();
-
-  const currentUser = useSelector((state) => state.storeUser.currentUser);
-
+  // capitalize user type
   const t = capitalizeFirstLetter(props?.user.type);
 
   let type;
@@ -47,6 +52,7 @@ export const TopSection = (props) => {
     type = props.language?.language?.Auth?.auth?.beautySalon;
   }
 
+  // define current post time
   const currentPostTime = GetTimesAgo(new Date(props.createdAt).getTime());
 
   let definedTime;
@@ -91,24 +97,23 @@ export const TopSection = (props) => {
           width: "100%",
         }}
       >
-        <View style={[styles.coverContainer, { borderColor: "#ccc" }]}>
+        <View
+          style={[
+            styles.coverContainer,
+            { borderColor: props.currentTheme.pink },
+          ]}
+        >
           {props.user?.cover?.length > 0 ? (
             <TouchableOpacity
-              activeOpacity={0.3}
-              onPress={
-                !props.notifications
-                  ? () =>
-                      navigation.navigate(
-                        route.name === "Feeds" ? "User" : "UserVisit",
-                        {
-                          user: props.user,
-                        }
-                      )
-                  : undefined
+              activeOpacity={route.name === "Feeds" ? 0.8 : 1}
+              onPress={() =>
+                navigation.navigate("UserVisit", {
+                  user: props.user,
+                })
               }
               style={{
-                width: 42,
-                height: 42,
+                width: 40,
+                height: 40,
                 overflow: "hidden",
                 alignItems: "center",
                 justifyContent: "center",
@@ -146,14 +151,11 @@ export const TopSection = (props) => {
                 justifyContent: "center",
               }}
               onPress={
-                !props.notifications
+                route.name === "Feeds"
                   ? () =>
-                      navigation.navigate(
-                        route.name === "Feeds" ? "User" : "UserVisit",
-                        {
-                          user: props.user,
-                        }
-                      )
+                      navigation.navigate("User", {
+                        user: props.user,
+                      })
                   : undefined
               }
             >
@@ -167,45 +169,45 @@ export const TopSection = (props) => {
             width: SCREEN_WIDTH - 90,
           }}
         >
-          <TouchableOpacity
-            activeOpacity={0.5}
+          <View
             style={{
               flexDirection: "row",
               gap: 7.5,
               alignItems: "center",
               // marginBottom: 2,
             }}
-            onPress={
-              !props.notifications
-                ? () =>
-                    navigation.navigate(
-                      route.name === "Feeds" ? "User" : "UserVisit",
-                      {
-                        user: props.user,
-                      }
-                    )
-                : undefined
-            }
           >
-            <Text
-              style={[
-                styles.name,
-                {
-                  color:
-                    props.fileFormat === "video"
-                      ? "#f7f7f7"
-                      : props.currentTheme.font,
-                  textShadowColor:
-                    props.fileFormat === "video"
-                      ? "rgba(0,0,0,0.2)"
-                      : "rgba(0,0,0,0)",
-                  textShadowOffset: { width: -0.5, height: 0.5 },
-                  textShadowRadius: 0.5,
-                },
-              ]}
+            <TouchableOpacity
+              activeOpacity={route.name === "Feeds" ? 0.8 : 1}
+              onPress={
+                route.name === "Feeds"
+                  ? () =>
+                      navigation.navigate("User", {
+                        user: props.user,
+                      })
+                  : undefined
+              }
             >
-              {props.user?.name}
-            </Text>
+              <Text
+                style={[
+                  styles.name,
+                  {
+                    color:
+                      props.fileFormat === "video"
+                        ? "#f7f7f7"
+                        : props.currentTheme.font,
+                    textShadowColor:
+                      props.fileFormat === "video"
+                        ? "rgba(0,0,0,0.2)"
+                        : "rgba(0,0,0,0)",
+                    textShadowOffset: { width: -0.5, height: 0.5 },
+                    textShadowRadius: 0.5,
+                  },
+                ]}
+              >
+                {props.user?.name}
+              </Text>
+            </TouchableOpacity>
             <Text
               style={{
                 fontSize: 10,
@@ -283,28 +285,50 @@ export const TopSection = (props) => {
             >
               ✦
             </Text>
-
-            <Pressable
-              style={{
-                position: "absolute",
-                right: 0,
-                padding: 10,
-                paddingRight: 5,
-                zIndex: 1000,
-              }}
-              onPress={
-                route.name === "UserScrollGallery" || route.name === "UserFeed"
-                  ? props?.DotsFunction
-                  : () => setOpenReports(!openReports)
-              }
-            >
-              <Entypo
-                name="dots-three-horizontal"
-                size={18}
-                color={props.currentTheme.font}
-              />
-            </Pressable>
-          </TouchableOpacity>
+            {route.name === "Feeds" && currentUser._id !== props.user._id ? (
+              <Pressable
+                style={{
+                  position: "absolute",
+                  right: 0,
+                  padding: 10,
+                  paddingRight: 5,
+                  zIndex: 1000,
+                }}
+                onPress={
+                  props.user._id === currentUser._id && route.name !== "Feeds"
+                    ? props?.DotsFunction
+                    : () => setOpenReports(!openReports)
+                }
+              >
+                <Entypo
+                  name="dots-three-horizontal"
+                  size={18}
+                  color={props.currentTheme.font}
+                />
+              </Pressable>
+            ) : route.name !== "Feeds" ? (
+              <Pressable
+                style={{
+                  position: "absolute",
+                  right: 0,
+                  padding: 10,
+                  paddingRight: 5,
+                  zIndex: 1000,
+                }}
+                onPress={
+                  props.user._id === currentUser._id && route.name !== "Feeds"
+                    ? props?.DotsFunction
+                    : () => setOpenReports(!openReports)
+                }
+              >
+                <Entypo
+                  name="dots-three-horizontal"
+                  size={18}
+                  color={props.currentTheme.font}
+                />
+              </Pressable>
+            ) : undefined}
+          </View>
 
           <View style={{ flexDirection: "row", gap: 5, alignItems: "center" }}>
             <Text
@@ -354,7 +378,7 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     overflow: "hidden",
     zIndex: 100,
-    borderWidth: 1,
+    borderWidth: 1.5,
     alignItems: "center",
     justifyContent: "center",
   },

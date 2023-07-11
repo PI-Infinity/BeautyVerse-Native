@@ -3,6 +3,8 @@ import { Animated, StyleSheet, View } from "react-native";
 import { lightTheme, darkTheme } from "../context/theme";
 import { useSelector } from "react-redux";
 
+// define skelotns
+
 export const Circle = () => {
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;

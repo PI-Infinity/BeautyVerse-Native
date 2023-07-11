@@ -1,53 +1,51 @@
-import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import {
-  View,
-  Text,
-  Dimensions,
-  Pressable,
-  Image,
-  StyleSheet,
-  FlatList,
+  Feather,
+  FontAwesome,
+  MaterialCommunityIcons,
+  MaterialIcons,
+} from "@expo/vector-icons";
+import { useEffect, useRef, useState } from "react";
+import {
   Animated,
+  Dimensions,
+  StyleSheet,
+  Text,
   TouchableOpacity,
-  Platform,
+  View,
 } from "react-native";
-import { FontAwesome } from "@expo/vector-icons";
-import { Entypo } from "@expo/vector-icons";
-import { useSelector, useDispatch } from "react-redux";
-import axios from "axios";
-import { Skeleton } from "@rneui/themed";
-import GetTimesAgo from "../functions/getTimesAgo";
-import { useNavigation } from "@react-navigation/native";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { Feather } from "@expo/vector-icons";
-import { Language } from "../context/language";
+import { useDispatch, useSelector } from "react-redux";
 import { CacheableImage } from "../components/cacheableImage";
-import { MaterialIcons } from "@expo/vector-icons";
-import { lightTheme, darkTheme } from "../context/theme";
-import { LinearGradient } from "expo-linear-gradient";
+import { Language } from "../context/language";
+import { darkTheme, lightTheme } from "../context/theme";
 
-const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
+/**
+ * Profile card component in cards screen
+ */
+
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 export const Card = (props) => {
+  // define navigation
   const navigation = props.navigation;
-  const language = Language();
-  const dispatch = useDispatch();
-  const [page, setPage] = useState(1);
 
+  // define language
+  const language = Language();
+  // define language state
+  const lang = useSelector((state) => state.storeApp.language);
+
+  // define theme
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
 
+  // define loading
   const [loading, setLoading] = useState(false);
 
-  const lang = useSelector((state) => state.storeApp.language);
-
-  const currentUser = useSelector((state) => state.storeUser.currentUser);
-  // capitalize first letters
-
+  // capitalize first letters function
   function capitalizeFirstLetter(string) {
     return string?.charAt(0).toUpperCase() + string?.slice(1);
   }
 
+  // capitalize and define user's type
   const t = capitalizeFirstLetter(props?.user.type);
 
   let type;
@@ -64,12 +62,12 @@ export const Card = (props) => {
   }
 
   /**
-   * Define start total
+   * Define stars total
    */
   const [stars, setStars] = useState([]);
 
   async function GetStars() {
-    const response = await fetch(
+    await fetch(
       `https://beautyverse.herokuapp.com/api/v1/users/${props?.user._id}/stars`
     )
       .then((response) => response.json())
@@ -86,7 +84,6 @@ export const Card = (props) => {
   }, []);
 
   // fade in
-
   const fadeAnim = useRef(new Animated.Value(0)).current; // Initial value for opacity: 0
 
   useEffect(() => {
@@ -101,7 +98,7 @@ export const Card = (props) => {
     <>
       {loading ? (
         <View
-          style={[styles.container, { borderColor: currentTheme.lin }]}
+          style={[styles.container, { borderColor: currentTheme.line }]}
         ></View>
       ) : (
         <View style={[styles.container, { borderColor: currentTheme.line }]}>
@@ -125,7 +122,7 @@ export const Card = (props) => {
           </View>
 
           <TouchableOpacity
-            activeOpacity={0.5}
+            activeOpacity={0.9}
             onPress={() => navigation.navigate("User", { user: props.user })}
           >
             <Animated.View styles={{ opacity: fadeAnim }}>
@@ -205,6 +202,9 @@ export const Card = (props) => {
               {
                 justifyContent: "center",
                 shadowColor: "#000",
+                borderTopWidth: 1,
+                borderBottomWidth: 1,
+                borderColor: currentTheme.line,
                 shadowOffset: {
                   width: 0,
                   height: 1, // negative value places shadow on top
@@ -267,8 +267,8 @@ export const Card = (props) => {
 
 const styles = StyleSheet.create({
   container: {
-    width: "50%",
-    height: 365,
+    width: SCREEN_WIDTH / 2,
+    height: SCREEN_WIDTH / 2 + 150,
     // backgroundColor: "rgba(255,255,255,0.01)",
     // margin: 5,
     // borderRadius: 5,
@@ -314,7 +314,7 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.1,
     shadowRadius: 2,
-    borderRadius: 50,
+    // borderRadius: 50,
   },
   stars: {
     fontSize: 14,

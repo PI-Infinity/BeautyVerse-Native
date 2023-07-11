@@ -1,32 +1,42 @@
+import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import {
-  createStackNavigator,
   CardStyleInterpolators,
+  createStackNavigator,
 } from "@react-navigation/stack";
-import { View, Dimensions, Pressable, TouchableOpacity } from "react-native";
-import { Feeds } from "../screens/feeds";
-import { ScrollGallery } from "../screens/user/scrollGallery";
-import { User } from "../screens/user/user";
-import { Text } from "react-native";
-import { MaterialIcons, FontAwesome } from "@expo/vector-icons";
-import { Language } from "../context/language";
-import { lightTheme, darkTheme } from "../context/theme";
+import {
+  Dimensions,
+  Pressable,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { useSelector } from "react-redux";
+import { CacheableImage } from "../components/cacheableImage";
+import { Language } from "../context/language";
+import { darkTheme, lightTheme } from "../context/theme";
+import { Room } from "../screens/chat/room";
+import { FeedItem } from "../screens/feedScreen";
+import { Feeds } from "../screens/feeds";
 import { SendOrder } from "../screens/orders/sendOrder";
 import { SentOrders } from "../screens/sentOrders/sentOrders";
-
-const Stack = createStackNavigator();
+import { ScrollGallery } from "../screens/user/scrollGallery";
+import { User } from "../screens/user/user";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
-// specific component for user page, passed some props into component
+/* 
+  feeds screen stack navigator
+*/
+const Stack = createStackNavigator();
 
 export function FeedsStack({ route, navigation }) {
-  // language and theme imports
-  const language = Language();
+  // ltheme context
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
 
+  // current user state
   const currentUser = useSelector((state) => state.storeUser.currentUser);
+
   return (
     <Stack.Navigator
       initialRouteName="Feeds"
@@ -91,7 +101,7 @@ export function FeedsStack({ route, navigation }) {
                   letterSpacing: 1,
                 }}
               >
-                verse
+                Verse
               </Text>
             </View>
           ),
@@ -100,7 +110,7 @@ export function FeedsStack({ route, navigation }) {
       {/** user screen in feeds, visit page, that component gettings props "visitPage", so from this component only can to visit page, current user can't modify any data from there  */}
       <Stack.Screen
         name="User"
-        component={User}
+        children={() => <User navigation={navigation} />}
         options={({ route }) => ({
           headerBackTitleVisible: false,
           headerTitleAlign: "center",
@@ -154,10 +164,8 @@ export function FeedsStack({ route, navigation }) {
               );
             }
           },
-
           headerStyle: {
             backgroundColor: currentTheme.background,
-
             elevation: 0,
             shadowOpacity: 0,
             borderBottomWidth: 0,
@@ -175,7 +183,7 @@ export function FeedsStack({ route, navigation }) {
       />
       <Stack.Screen
         name="UserVisit"
-        component={User}
+        children={() => <User navigation={navigation} />}
         options={({ route }) => ({
           headerBackTitleVisible: false,
           headerTitleAlign: "center",
@@ -333,6 +341,98 @@ export function FeedsStack({ route, navigation }) {
               <MaterialIcons name="verified" size={14} color="#F866B1" />
             </View>
           ),
+        })}
+      />
+      <Stack.Screen
+        name="UserFeed"
+        component={FeedItem}
+        options={({ route }) => ({
+          headerBackTitleVisible: false,
+          title: "Feed",
+          headerStyle: {
+            backgroundColor: currentTheme.background,
+
+            elevation: 0,
+            shadowOpacity: 0,
+            borderBottomWidth: 0,
+          },
+          headerTintColor: currentTheme.font,
+          headerTitleStyle: {
+            fontWeight: "bold",
+            fontSize: 18,
+            letterSpacing: 0.5,
+          },
+          cardStyle: {
+            backgroundColor: currentTheme.background,
+          },
+        })}
+      />
+      <Stack.Screen
+        name="Room"
+        component={Room}
+        options={({ navigation, route }) => ({
+          headerBackTitleVisible: false,
+          headerStyle: {
+            backgroundColor: currentTheme.background,
+
+            elevation: 0,
+            shadowOpacity: 0,
+            borderBottomWidth: 0,
+          },
+          headerTitle: (props) => {
+            return (
+              <Pressable
+                onPress={() =>
+                  navigation.navigate("UserVisit", {
+                    user: route.params.user,
+                  })
+                }
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 10,
+                  justifyContent: "center",
+                  width: SCREEN_WIDTH - 150,
+                }}
+              >
+                {route.params.user?.cover?.length > 0 && (
+                  <CacheableImage
+                    source={{ uri: route.params.user?.cover }}
+                    style={{
+                      height: 30,
+                      width: 30,
+                      borderRadius: 50,
+                      resizeMode: "cover",
+                    }}
+                    manipulationOptions={[
+                      { resize: { width: 30, height: 30 } },
+                      { rotate: 90 },
+                    ]}
+                  />
+                )}
+
+                <Text
+                  style={{
+                    fontSize: 18,
+                    letterSpacing: 0.5,
+                    color: currentTheme.font,
+                    fontWeight: "bold",
+                  }}
+                >
+                  {route.params.user?.name}
+                </Text>
+              </Pressable>
+            );
+          },
+          headerTintColor: currentTheme.font,
+          headerTitleStyle: {
+            fontWeight: "bold",
+            letterSpacing: 0.5,
+            fontSize: 18,
+          },
+          cardStyle: {
+            backgroundColor: currentTheme.background,
+          },
         })}
       />
     </Stack.Navigator>

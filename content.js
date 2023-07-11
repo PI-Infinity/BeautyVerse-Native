@@ -9,16 +9,18 @@ import { setLoading, setMachineId, setTheme, setLanguage } from "./redux/app";
 import { setCurrentUser } from "./redux/user";
 import { io } from "socket.io-client";
 import { lightTheme, darkTheme } from "./context/theme";
-import SafeAreaViewRN from "react-native";
-import { SafeAreaView as SafeAreaViewContext } from "react-native-safe-area-context";
-import { setRerenderNotifcations } from "./redux/rerenders";
-
-const SafeAreaView =
-  Platform.OS === "android" ? SafeAreaViewContext : SafeAreaViewRN.SafeAreaView;
+import {
+  setRerenderCurrentUser,
+  setRerenderNotifcations,
+} from "./redux/rerenders";
+import { SocketContext } from "./context/socketContext";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
+/* main content component of app */
+
 const Content = () => {
+  // define dispatch to send data to redux toolkit
   const dispatch = useDispatch();
 
   // Get the loading state from the app's Redux store
@@ -62,22 +64,15 @@ const Content = () => {
   const socket = useRef();
 
   useEffect(() => {
-    // Connect to the server's socket.io instance
     socket.current = io("https://beautyverse.herokuapp.com");
   }, []);
 
-  // avoid first loading, connect only when user is defined
-  const socketRef = useRef(true);
-
   useEffect(() => {
-    if (socketRef.current) {
-      // Skip the first render to prevent the addUser event from being emitted before the current user is set
-      socketRef.current = false;
-      return;
-    }
-    // Emit the addUser event to the server's socket.io instance
+    // Emit the addUser event to the server's socket.io instances
     socket.current.emit("addUser", currentUser?._id);
-    socket.current.on("getUsers", (users) => {});
+    socket.current.on("getUsers", (users) => {
+      // console.log(users);
+    });
   }, [currentUser]);
 
   /**
@@ -102,7 +97,7 @@ const Content = () => {
     GetUser();
   }, [rerenderCurrentUser]);
 
-  // after getting current user from localstorage, get user data from data base
+  // after getting current user from localstorage, get user data from mongoDB
   useEffect(() => {
     const GetUser = async () => {
       try {
@@ -111,7 +106,7 @@ const Content = () => {
           `https://beautyverse.herokuapp.com/api/v1/users/${currUser?._id}`
         );
         // Set the current user in the user's Redux store
-        await dispatch(setCurrentUser(response.data.data.user));
+        dispatch(setCurrentUser(response.data.data.user));
         dispatch(setRerenderNotifcations());
         setTimeout(() => {
           dispatch(setLoading(false));
@@ -128,6 +123,13 @@ const Content = () => {
       GetUser();
     }
   }, [currUser]);
+
+  // rerender current user after some real time updates (notifications in this moment)
+  useEffect(() => {
+    socket.current.on("userUpdate", () => {
+      dispatch(setRerenderCurrentUser());
+    });
+  }, []);
 
   /**
    * Define machine unique id
@@ -180,7 +182,7 @@ const Content = () => {
         >
           <Text style={[styles.loadingText, { color: "#F866B1" }]}>Beauty</Text>
           <Text style={[styles.loadingText, { color: currentTheme.font }]}>
-            verse
+            Verse
           </Text>
         </View>
       )}
@@ -190,7 +192,13 @@ const Content = () => {
       />
       {
         // Render the navigation stack based on whether there is a current user or not
-        currentUser ? <BottomTabNavigator socket={socket} /> : <AuthStack />
+        currentUser ? (
+          <SocketContext.Provider value={socket.current}>
+            <BottomTabNavigator />
+          </SocketContext.Provider>
+        ) : (
+          <AuthStack />
+        )
       }
     </>
   );
@@ -204,7 +212,6 @@ const styles = StyleSheet.create({
   loading: {
     flex: 1,
     position: "absolute",
-    backgroundColor: "#111",
     zIndex: 100000,
     width: SCREEN_WIDTH,
     height: SCREEN_HEIGHT,
@@ -215,7 +222,6 @@ const styles = StyleSheet.create({
   loadingText: {
     fontSize: 28,
     fontWeight: "bold",
-    color: "#fff",
     letterSpacing: 1,
   },
 });

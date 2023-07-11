@@ -18,7 +18,11 @@ import * as Localization from "expo-localization";
 import { useState, useEffect, useRef } from "react";
 import { lightTheme, darkTheme } from "../../context/theme";
 
-const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
+/**
+ * Only date picker
+ */
+
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 const CustomDatePicker = ({ from, targetUser }) => {
   const dispatch = useDispatch();
@@ -177,8 +181,10 @@ const CustomDatePicker = ({ from, targetUser }) => {
             borderRadius: 50,
             padding: 5,
             alignItems: "center",
-            borderWidth: 1,
-            borderColor: currentTheme.pink,
+            borderWidth: 1.5,
+            borderColor: dateState.active
+              ? currentTheme.pink
+              : currentTheme.disabled,
             marginLeft: "auto",
           }}
         >

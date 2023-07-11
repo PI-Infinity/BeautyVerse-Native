@@ -1,28 +1,30 @@
-import React, { useState, useEffect } from "react";
+import { MaterialIcons } from "@expo/vector-icons";
+import axios from "axios";
+import { deleteObject, listAll, ref } from "firebase/storage";
+import React, { useEffect, useState } from "react";
 import {
   Modal,
+  Platform,
+  StyleSheet,
+  Text,
+  TextInput,
   TouchableOpacity,
   View,
-  Text,
-  StyleSheet,
-  TextInput,
-  Platform,
 } from "react-native";
-import axios from "axios";
-import { useSelector, useDispatch } from "react-redux";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import { useDispatch, useSelector } from "react-redux";
+import { BackDrop } from "../../components/backDropLoader";
+import { darkTheme, lightTheme } from "../../context/theme";
+import { storage } from "../../firebase";
 import {
   setCleanUp,
-  setRerenderUserFeed,
   setRerenderUserFeeds,
-  setRerenderCurrentUser,
   setRerenderUserList,
 } from "../../redux/rerenders";
-import { lightTheme, darkTheme } from "../../context/theme";
-import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
-import { MaterialIcons } from "@expo/vector-icons";
-import { ref, listAll, deleteObject } from "firebase/storage";
-import { storage } from "../../firebase";
-import { BackDrop } from "../../components/backDropLoader";
+
+/**
+ * Edit post popup component
+ */
 
 const SmoothModal = ({
   visible,
@@ -35,28 +37,37 @@ const SmoothModal = ({
   setPost,
   navigation,
 }) => {
+  // define text state
   const [text, setText] = useState("");
+
+  // define redux dispatch
   const dispatch = useDispatch();
+
+  // define theme state
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
 
+  // define current user
   const currentUser = useSelector((state) => state.storeUser.currentUser);
 
   useEffect(() => {
     setText(post);
   }, []);
 
+  // on save function
   const handleSave = () => {
     onSave(text);
     setText("");
     UpdatePost();
   };
 
+  // on cancel functions
   const handleCancel = () => {
     onClose();
     setText("");
   };
 
+  // update post
   const UpdatePost = async () => {
     try {
       setPost(text);
@@ -74,12 +85,14 @@ const SmoothModal = ({
     }
   };
 
+  // loading state
   const [loading, setLoading] = useState(false);
 
+  /**
+   * Delete post
+   */
   const Deleting = async () => {
     setLoading(true);
-
-    const values = [];
 
     // Create a reference to the file to delete
     let fileRef;
@@ -89,15 +102,14 @@ const SmoothModal = ({
       fileRef = ref(storage, `images/${currentUser?._id}/feeds/${itemName}`);
     }
 
-    // remove feed
+    // remove feed from DB
     const url = `https://beautyverse.herokuapp.com/api/v1/users/${currentUser?._id}/feeds/${itemId}`;
-    const response = await fetch(url, { method: "DELETE" })
+    await fetch(url, { method: "DELETE" })
       .then((response) => response.json())
       .then(async (data) => {
-        // Delete the file
+        // Delete the file from cloud
         if (fileFormat === "video") {
           deleteObject(fileRef).then(() => {
-            console.log("delete video running..");
             handleCancel();
             setTimeout(() => {
               dispatch(setRerenderUserFeeds());

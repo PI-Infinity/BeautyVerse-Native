@@ -1,16 +1,18 @@
-import React, { useState } from "react";
-import { View, Text, TouchableOpacity, Image, StyleSheet } from "react-native";
-import * as ImagePicker from "expo-image-picker";
-import * as DocumentPicker from "expo-document-picker";
-import { ResizeAndCompressImage } from "../functions/compressImg";
-import * as ImageManipulator from "expo-image-manipulator";
-import * as FileSystem from "expo-file-system";
-import { BackDrop } from "../components/backDropLoader";
-import { setRerenderCurrentUser, setCleanUp } from "../redux/rerenders";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { storage } from "../firebase";
-import { useSelector, useDispatch } from "react-redux";
 import axios from "axios";
+import * as FileSystem from "expo-file-system";
+import * as ImageManipulator from "expo-image-manipulator";
+import * as ImagePicker from "expo-image-picker";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import React, { useState } from "react";
+import { StyleSheet, TouchableOpacity, View } from "react-native";
+import { useDispatch } from "react-redux";
+import { BackDrop } from "../components/backDropLoader";
+import { storage } from "../firebase";
+import { setCleanUp, setRerenderCurrentUser } from "../redux/rerenders";
+
+/**
+ * input cover image component on ios
+ */
 
 async function readImageData(uri) {
   try {

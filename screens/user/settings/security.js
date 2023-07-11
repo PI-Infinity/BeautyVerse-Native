@@ -1,36 +1,39 @@
-import React, { useState, useEffect } from "react";
+import { MaterialIcons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import axios from "axios";
+import { deleteObject, listAll, ref } from "firebase/storage";
+import React, { useState } from "react";
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  Switch,
-  ScrollView,
-  Pressable,
-  Dimensions,
-  TextInput,
   Alert,
+  Dimensions,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
   Vibration,
+  View,
 } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
-import axios from "axios";
-import { ListItem, Icon, Button } from "react-native-elements";
-import { Language } from "../../../context/language";
 import DeleteUserPopup from "../../../components/confirmDialog";
-import { setRerenderCurrentUser } from "../../../redux/rerenders";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { MaterialIcons } from "@expo/vector-icons";
-import { ref, listAll, deleteObject } from "firebase/storage";
+import { Language } from "../../../context/language";
+import { darkTheme, lightTheme } from "../../../context/theme";
 import { storage } from "../../../firebase";
-import { lightTheme, darkTheme } from "../../../context/theme";
-import { setCurrentUser } from "../../../redux/user";
 import { setLoading } from "../../../redux/app";
+import { setCurrentUser } from "../../../redux/user";
 
-const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
+/**
+ * Define security screen in settings
+ */
+
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 export const Security = () => {
+  // define language
   const language = Language();
+  // define dispatch
   const dispatch = useDispatch();
+
+  // define passwords states
   const [oldPassword, setOldPassword] = React.useState("");
   const [newPassword, setNewPassword] = React.useState("");
   const [confirmPassword, setConfirmPassword] = React.useState("");
@@ -41,14 +44,19 @@ export const Security = () => {
 
   const [openChangePassword, setOpenChangePassword] = useState(true);
 
+  // define current user
   const currentUser = useSelector((state) => state.storeUser.currentUser);
 
+  // define theme
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
 
+  /**
+   * password change function
+   *  */
   const Changing = async () => {
     try {
-      const response = await axios.patch(
+      await axios.patch(
         "https://beautyverse.herokuapp.com/api/v1/changePassword/" +
           currentUser._id,
         {
@@ -75,8 +83,12 @@ export const Security = () => {
     }
   };
 
-  // open remove account confirm popup
+  // open remove account confirm popup state
   const [openDelete, setOpenDelete] = useState(false);
+
+  /**
+   * Delete account function
+   */
 
   const Delete = async () => {
     let videofileRef = ref(storage, `videos/${currentUser?._id}/`);
@@ -268,7 +280,6 @@ export const Security = () => {
       )}
       {openChangePassword ? (
         <TouchableOpacity
-          style={{ padding: 5, paddingLeft: 0 }}
           activeOpacity={0.5}
           style={{
             backgroundColor: currentTheme.background2,
@@ -332,5 +343,3 @@ export const Security = () => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({});

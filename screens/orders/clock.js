@@ -2,6 +2,11 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet } from "react-native";
 
+/**
+ *
+ * @returns Clock component
+ */
+
 const Clock = () => {
   const [time, setTime] = useState(new Date());
 

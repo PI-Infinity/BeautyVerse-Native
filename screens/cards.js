@@ -1,22 +1,24 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import axios from "axios";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  StyleSheet,
   Dimensions,
   FlatList,
-  View,
   RefreshControl,
+  StyleSheet,
   Text,
-  Platform,
-  ActivityIndicator,
+  View,
 } from "react-native";
-import { useSelector, useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { Card } from "../components/profileCard";
-import { setLoading } from "../redux/app";
-import axios from "axios";
-import { lightTheme, darkTheme } from "../context/theme";
 import LoadingSkeleton from "../components/skeltonCards";
+import { darkTheme, lightTheme } from "../context/theme";
+import { setLoading } from "../redux/app";
 
-const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
+/**
+ * Cards Screen component
+ */
+
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 export const Cards = ({ navigation }) => {
   // Using Redux dispatch hook
@@ -197,10 +199,6 @@ export const Cards = ({ navigation }) => {
       setRefresh(false);
     }, 500);
   }, []);
-
-  // States for handling the opening of a card
-  const [openCard, setOpenCard] = useState(false);
-  const [openedCardObj, setOpenCardObj] = useState({});
 
   return (
     <View style={{ flex: 1 }}>

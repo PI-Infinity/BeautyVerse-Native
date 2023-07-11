@@ -1,27 +1,30 @@
 {
   "expo": {
-    "name": "Beautyverse",
+    "name": "BeautyVerse",
     "slug": "beautyverse-app",
-    "version": "1.0.0",
+    "owner": "beautyverse",
+    "description": "Everything about Beauty and Care",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
+    "scheme": "beautyverse",
     "splash": {
-      "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#050505"
     },
     "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.beautyverse.beautyverseapp"
+      "bundleIdentifier": "com.beautyverse.beautyverseapp",
+      "buildNumber": "1.0.15"
     },
     "android": {
       "package": "com.beautyverse.beautyverseapp",
       "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#050505"
       }
     },
     "web": {

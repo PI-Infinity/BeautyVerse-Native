@@ -1,16 +1,18 @@
-import React, { useState, useEffect } from "react";
-import {
-  View,
-  TextInput,
-  Text,
-  TouchableOpacity,
-  ScrollView,
-  StyleSheet,
-  Alert,
-} from "react-native";
-import { ListItem, Icon, Button } from "react-native-elements";
-import Collapsible from "react-native-collapsible";
 import { Entypo, MaterialIcons } from "@expo/vector-icons";
+import React, { useEffect, useState } from "react";
+import {
+  Alert,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import Collapsible from "react-native-collapsible";
+
+/**
+ * autocomplete filter shows search variants when searching
+ */
 
 const Autocomplete = ({ data, setState, currentTheme }) => {
   const [search, setSearch] = useState("");

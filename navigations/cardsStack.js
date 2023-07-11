@@ -1,26 +1,40 @@
+import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import {
-  createStackNavigator,
   CardStyleInterpolators,
+  createStackNavigator,
 } from "@react-navigation/stack";
+import {
+  Dimensions,
+  Platform,
+  Pressable,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { useSelector } from "react-redux";
-import { View, Dimensions, Platform, TouchableOpacity } from "react-native";
-import { ScrollGallery } from "../screens/user/scrollGallery";
-import { User } from "../screens/user/user";
-import { Text } from "react-native";
+import { CacheableImage } from "../components/cacheableImage";
+import { darkTheme, lightTheme } from "../context/theme";
 import { Cards } from "../screens/cards";
-import { MaterialIcons, FontAwesome } from "@expo/vector-icons";
-import { lightTheme, darkTheme } from "../context/theme";
+import { Room } from "../screens/chat/room";
+import { FeedItem } from "../screens/feedScreen";
 import { SendOrder } from "../screens/orders/sendOrder";
 import { SentOrders } from "../screens/sentOrders/sentOrders";
+import { ScrollGallery } from "../screens/user/scrollGallery";
+import { User } from "../screens/user/user";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 const Stack = createStackNavigator();
 
-export function CardsStack({ route }) {
+/* Card's screen stack navigator */
+
+export function CardsStack() {
+  // define current user redux state
   const currentUser = useSelector((state) => state.storeUser.currentUser);
+
   // theme state
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
+
   return (
     <Stack.Navigator
       screenOptions={{
@@ -60,10 +74,8 @@ export function CardsStack({ route }) {
               style={{
                 flexDirection: "row",
                 alignItems: "center",
-                marginBottom: Platform.OS !== "android" ? 5 : 0,
-                flex: 1,
-                width: SCREEN_WIDTH - 80,
                 justifyContent: "center",
+                marginBottom: Platform.OS !== "android" ? 5 : 0,
               }}
             >
               <Text
@@ -84,7 +96,7 @@ export function CardsStack({ route }) {
                   letterSpacing: 1,
                 }}
               >
-                verse
+                Verse
               </Text>
             </View>
           ),
@@ -240,6 +252,7 @@ export function CardsStack({ route }) {
           },
         })}
       />
+      {/* sent order screen */}
       <Stack.Screen
         name="Send Order"
         component={SendOrder}
@@ -293,6 +306,100 @@ export function CardsStack({ route }) {
         options={({ route }) => ({
           headerBackTitleVisible: false,
           title: "Feeds",
+          headerStyle: {
+            backgroundColor: currentTheme.background,
+
+            elevation: 0,
+            shadowOpacity: 0,
+            borderBottomWidth: 0,
+          },
+          headerTintColor: currentTheme.font,
+          headerTitleStyle: {
+            fontWeight: "bold",
+            fontSize: 18,
+            letterSpacing: 0.5,
+          },
+          cardStyle: {
+            backgroundColor: currentTheme.background,
+          },
+        })}
+      />
+      <Stack.Screen
+        name="Room"
+        component={Room}
+        // initialParams={{ screenHeight }}
+        options={({ navigation, route }) => ({
+          headerBackTitleVisible: false,
+          // title: "name",
+          headerStyle: {
+            backgroundColor: currentTheme.background,
+
+            elevation: 0,
+            shadowOpacity: 0,
+            borderBottomWidth: 0,
+          },
+          headerTitle: (props) => {
+            return (
+              <Pressable
+                onPress={() =>
+                  navigation.navigate("UserVisit", {
+                    user: route.params.user,
+                  })
+                }
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 10,
+                  justifyContent: "center",
+                  width: SCREEN_WIDTH - 150,
+                }}
+              >
+                {route.params.user?.cover?.length > 0 && (
+                  <CacheableImage
+                    source={{ uri: route.params.user?.cover }}
+                    style={{
+                      height: 30,
+                      width: 30,
+                      borderRadius: 50,
+                      resizeMode: "cover",
+                    }}
+                    manipulationOptions={[
+                      { resize: { width: 30, height: 30 } },
+                      { rotate: 90 },
+                    ]}
+                  />
+                )}
+
+                <Text
+                  style={{
+                    fontSize: 18,
+                    letterSpacing: 0.5,
+                    color: currentTheme.font,
+                    fontWeight: "bold",
+                  }}
+                >
+                  {route.params.user?.name}
+                </Text>
+              </Pressable>
+            );
+          },
+          headerTintColor: currentTheme.font,
+          headerTitleStyle: {
+            fontWeight: "bold",
+            letterSpacing: 0.5,
+            fontSize: 18,
+          },
+          cardStyle: {
+            backgroundColor: currentTheme.background,
+          },
+        })}
+      />
+      <Stack.Screen
+        name="UserFeed"
+        component={FeedItem}
+        options={({ route }) => ({
+          headerBackTitleVisible: false,
+          title: "Feed",
           headerStyle: {
             backgroundColor: currentTheme.background,
 

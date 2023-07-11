@@ -1,45 +1,60 @@
-import { useState } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  Switch,
-  ScrollView,
-  Pressable,
-  Dimensions,
-  Platform,
-} from "react-native";
-import Collapsible from "react-native-collapsible";
 import { MaterialIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { setRerenderCurrentUser } from "../../../redux/rerenders";
-import { setLanguage, setTheme, setLoading } from "../../../redux/app";
-import { useDispatch, useSelector } from "react-redux";
-import { Security } from "../../../screens/user/settings/security";
 import axios from "axios";
-import { setCurrentUser } from "../../../redux/user";
+import { useState } from "react";
+import {
+  Dimensions,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import Collapsible from "react-native-collapsible";
+import { useDispatch, useSelector } from "react-redux";
 import { Language } from "../../../context/language";
-import { lightTheme, darkTheme } from "../../../context/theme";
+import { darkTheme, lightTheme } from "../../../context/theme";
+import { setLanguage, setLoading } from "../../../redux/app";
+import { setRerenderCurrentUser } from "../../../redux/rerenders";
+import { setCurrentUser } from "../../../redux/user";
+import { Security } from "../../../screens/user/settings/security";
 
-const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
+/**
+ * Settings screen in user
+ */
+
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 export const Settings = ({ navigation }) => {
+  // define language
   const language = Language();
+
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [status, setStatus] = useState(true);
 
   const dispatch = useDispatch();
 
+  // define some open states
   const [openTeam, setOpenTeam] = useState(true);
   const [openSecurity, setOpenSecurity] = useState(true);
   const [openLanguages, setOpenLanguages] = useState(true);
 
+  // define current user
   const currentUser = useSelector((state) => state.storeUser.currentUser);
+
+  // define active language
   const activeLanguage = useSelector((state) => state.storeApp.language);
+
+  // define theme
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
 
+  /**
+   * Logout function
+   */
   const Logout = async () => {
     dispatch(setLoading(true));
     await AsyncStorage.removeItem("Beautyverse:currentUser");
@@ -47,10 +62,13 @@ export const Settings = ({ navigation }) => {
     dispatch(setRerenderCurrentUser());
   };
 
+  /**
+   * change user active in feeds and cards or not
+   */
   const ControlActivity = async () => {
     try {
       dispatch(setCurrentUser({ ...currentUser, active: !currentUser.active }));
-      const response = await axios.patch(
+      await axios.patch(
         `https://beautyverse.herokuapp.com/api/v1/users/${currentUser?._id}`,
         {
           active: !currentUser?.active,
@@ -61,6 +79,7 @@ export const Settings = ({ navigation }) => {
     }
   };
 
+  // define new sent orders
   const newSentOrders = useSelector((state) => state.storeSentOrders.new);
 
   return (
@@ -324,7 +343,7 @@ export const Settings = ({ navigation }) => {
           </Pressable>
         </View>
       </Collapsible>
-      {currentUser.type !== "user" && (
+      {/* {currentUser.type !== "user" && (
         <View
           style={[
             styles.item,
@@ -334,8 +353,8 @@ export const Settings = ({ navigation }) => {
               marginBottom: 10,
             },
           ]}
-        >
-          <View style={{ alignItems: "center", gap: 7, flexDirection: "row" }}>
+        > */}
+      {/* <View style={{ alignItems: "center", gap: 7, flexDirection: "row" }}>
             <MaterialIcons
               name="verified"
               size={16}
@@ -353,9 +372,9 @@ export const Settings = ({ navigation }) => {
             >
               {language?.language?.User?.userPage?.verification}
             </Text>
-          </View>
+          </View> */}
 
-          <Pressable
+      {/* <Pressable
             onPress={() => navigation.navigate("Prices", { from: "Settings" })}
             style={{
               alignItems: "center",
@@ -377,11 +396,10 @@ export const Settings = ({ navigation }) => {
                 ? "Cancel"
                 : "Activation"}
             </Text>
-            {/* <MaterialIcons name="attach-money" size={18} color={currentTheme.pink} /> */}
-          </Pressable>
-        </View>
-      )}
-      <View style={[styles.item, { backgroundColor: "rgba(0,0,0,0)" }]}>
+          </Pressable> */}
+      {/* </View>
+      )} */}
+      {/* <View style={[styles.item, { backgroundColor: "rgba(0,0,0,0)" }]}>
         <Text
           style={[
             styles.sectionTitle,
@@ -397,8 +415,8 @@ export const Settings = ({ navigation }) => {
           onValueChange={() => setNotificationsEnabled(!notificationsEnabled)}
           style={styles.switch}
         />
-      </View>
-      <View style={[styles.item, { backgroundColor: "rgba(0,0,0,0)" }]}>
+      </View> */}
+      {/* <View style={[styles.item, { backgroundColor: "rgba(0,0,0,0)" }]}>
         <Text
           style={[
             styles.sectionTitle,
@@ -420,9 +438,14 @@ export const Settings = ({ navigation }) => {
           }}
           style={styles.switch}
         />
-      </View>
+      </View> */}
       {currentUser?.type !== "user" && (
-        <View style={[styles.item, { backgroundColor: "rgba(0,0,0,0)" }]}>
+        <View
+          style={[
+            styles.item,
+            { backgroundColor: "rgba(0,0,0,0)", marginBottom: 15 },
+          ]}
+        >
           <Text
             style={[
               styles.sectionTitle,
@@ -440,7 +463,7 @@ export const Settings = ({ navigation }) => {
           />
         </View>
       )}
-      {currentUser?.type !== "user" && (
+      {/* {currentUser?.type !== "user" && (
         <TouchableOpacity
           activeOpacity={0.5}
           onPress={() => navigation.navigate("Prices", { from: "Settings" })}
@@ -463,7 +486,7 @@ export const Settings = ({ navigation }) => {
             size={18}
           />
         </TouchableOpacity>
-      )}
+      )} */}
       <TouchableOpacity
         activeOpacity={0.5}
         onPress={() => navigation.navigate("Terms")}

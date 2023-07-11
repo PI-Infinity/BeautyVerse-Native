@@ -1,45 +1,38 @@
+import { FontAwesome } from "@expo/vector-icons";
+import axios from "axios";
 import React, { useState } from "react";
 import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
   Dimensions,
-  Alert,
-  Pressable,
-  Vibration,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
-import { useSelector, useDispatch } from "react-redux";
-import axios from "axios";
+import { useDispatch, useSelector } from "react-redux";
+import { Language } from "../../../context/language";
 import { setRerenderCurrentUser } from "../../../redux/rerenders";
 import { setCurrentUser } from "../../../redux/user";
-import { ListItem, Icon, Button } from "react-native-elements";
-import { Language } from "../../../context/language";
-import { FontAwesome } from "@expo/vector-icons";
 
-const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
+// currency component in user working info
+
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 export const Currency = ({ currentTheme }) => {
+  // define language
   const language = Language();
-  const [selectedOptions, setSelectedOptions] = useState([]);
-  const [workingHours, setWorkingHours] = useState("");
-  const [add, setAdd] = useState(false);
+  // define redux dispatch
   const dispatch = useDispatch();
 
+  // define current user
   const currentUser = useSelector((state) => state.storeUser.currentUser);
 
-  const handleOptionPress = (option) => {
-    if (selectedOptions.includes(option.value)) {
-      setSelectedOptions(
-        selectedOptions.filter((selected) => selected !== option.value)
-      );
-    } else {
-      setSelectedOptions([...selectedOptions, option.value]);
-    }
-  };
+  // define selected currency
+  const [selectedOptions, setSelectedOptions] = useState([]);
 
-  // add service to firebase
+  // define ope/hide state
+  const [add, setAdd] = useState(false);
+
+  // add currency to DB
   const AddCurrency = async (curr) => {
     try {
       setAdd((prevState) => !prevState);
@@ -49,7 +42,7 @@ export const Currency = ({ currentTheme }) => {
           currency: curr,
         })
       );
-      const response = await axios.patch(
+      await axios.patch(
         "https://beautyverse.herokuapp.com/api/v1/users/" + currentUser._id,
         {
           currency: curr,
@@ -136,7 +129,6 @@ export const Currency = ({ currentTheme }) => {
             >
               {"\u20BE"}
             </Text>
-            {/* <FontAwesome name="gel" color={currentTheme.pink} size={16} /> */}
           </TouchableOpacity>
         </View>
       )}
@@ -171,7 +163,6 @@ export const Currency = ({ currentTheme }) => {
               </Text>
             )}
           </Text>
-          {/* <FontAwesome name="gel" color={currentTheme.pink} size={16} /> */}
         </TouchableOpacity>
       )}
     </View>

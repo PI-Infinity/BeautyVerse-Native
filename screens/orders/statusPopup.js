@@ -1,14 +1,18 @@
 import React, { useState } from "react";
 import {
-  View,
+  Dimensions,
+  StyleSheet,
   Text,
   TouchableOpacity,
-  StyleSheet,
-  Dimensions,
+  View,
 } from "react-native";
 import Modal from "react-native-modal";
 
-const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
+/**
+ * Status popup for order item
+ */
+
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 export const StatusPopup = ({
   currentTheme,
@@ -150,13 +154,6 @@ export const StatusPopup = ({
 };
 
 const styles = StyleSheet.create({
-  container: {
-    // padding: 15,
-    // width: 190,
-    // borderRadius: 10,
-    // backgroundColor: "red",
-    // gap: 5,
-  },
   item: {
     width: "100%",
     padding: 10,

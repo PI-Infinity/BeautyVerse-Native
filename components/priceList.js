@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { Modal, View, Button, Text, TextInput } from "react-native";
 
+// price list component
+
 const PricePickerPopup = ({
   isVisible,
   closeModal,

@@ -1,71 +1,106 @@
+import { FontAwesome, MaterialCommunityIcons } from "@expo/vector-icons";
+import axios from "axios";
+import React, { useEffect, useState } from "react";
 import {
-  StyleSheet,
-  Text,
-  View,
-  ScrollView,
-  TouchableOpacity,
-  Pressable,
-  Platform,
   ActivityIndicator,
-  RefreshControl,
   Dimensions,
   FlatList,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
-import React, { useState, useEffect } from "react";
-import { CacheableImage } from "../../components/cacheableImage";
-import { useSelector, useDispatch } from "react-redux";
-import { lightTheme, darkTheme } from "../../context/theme";
-import { Entypo } from "@expo/vector-icons";
-import { FontAwesome } from "@expo/vector-icons";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useDispatch, useSelector } from "react-redux";
+import { darkTheme, lightTheme } from "../../context/theme";
+import {
+  addOrders,
+  reduceOrders,
+  setActiveOrders,
+  setCanceledOrders,
+  setCompletedOrders,
+  setFilterResult,
+  setLoader,
+  setNewOrders,
+  setPendingOrders,
+  setRejectedOrders,
+  setTotalResult,
+} from "../../redux/orders";
 import { Card } from "../../screens/orders/cardItem";
+import DatePicker from "../../screens/orders/datePicker";
 import { ListItem } from "../../screens/orders/listItem";
 import { SortPopup } from "../../screens/orders/sortPopup";
-import { BackDrop } from "../../components/backDropLoader";
-import { setDate } from "../../redux/orders";
-import {
-  setOrders,
-  addOrders,
-  setLoader,
-  setTotalResult,
-  setFilterResult,
-  setNewOrders,
-  setActiveOrders,
-  setPage,
-  reduceOrders,
-} from "../../redux/orders";
-import axios from "axios";
-import DatePicker from "../../screens/orders/datePicker";
 
-const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
+/**
+ * Defines orders list
+ */
+
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 export const Orders = ({ navigation }) => {
+  // defines theme
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
+
+  // defines loading state
   const [isLoaded, setIsLoaded] = useState(true); // new state variable
+
+  // defines redux dispatch
   const dispatch = useDispatch();
+
+  // defines current user
   const currentUser = useSelector((state) => state.storeUser.currentUser);
 
-  const orders = useSelector((state) => state.storeOrders.orders);
+  // defines orders list
+  const ORDERS = useSelector((state) => state.storeOrders.orders);
+  // defines orders state
+  const [orders, setOrders] = useState([]);
+  // defines list sort direction
+  const [sortDirection, setSortDirection] = useState("desc");
+  // defines page for backend to add more orders
+  const [page, setPage] = useState(1); // Use 'asc' for ascending, 'desc' for descending
 
-  const totalResult = useSelector((state) => state.storeOrders.totalResult);
+  // sorting function
+  const sortOrders = (direction) => {
+    let sortedOrders;
+    if (direction === "desc") {
+      sortedOrders = [...ORDERS].sort(
+        (a, b) => new Date(a.date) - new Date(b.date)
+      );
+    } else {
+      sortedOrders = [...ORDERS].sort(
+        (a, b) => new Date(b.date) - new Date(a.date)
+      );
+    }
+
+    setOrders(sortedOrders);
+  };
+
+  useEffect(() => {
+    sortOrders(sortDirection);
+  }, [sortDirection, ORDERS]);
+
+  // defines filter result
   const filterResult = useSelector((state) => state.storeOrders.filterResult);
-
+  // defines status filter value
   const statusFilter = useSelector((state) => state.storeOrders.statusFilter);
+  // defines filter date
   const date = useSelector((state) => state.storeOrders.date);
+  // defines when order created
   const createdAt = useSelector((state) => state.storeOrders.createdAt);
+  // defines procedure
   const procedure = useSelector((state) => state.storeOrders.procedure);
 
-  // const page = useSelector((state) => state.storeOrders.page);
-  const [page, setPage] = useState(1);
-
+  // defines loader
   const loader = useSelector((state) => state.storeOrders.loader);
-  const rerenderOrders = useSelector(
-    (state) => state.storeRerenders.rerenderOrders
-  );
 
+  // defines bottom loader when adding new orders
   const [bottomLoader, setBottomLoader] = useState(false);
 
+  /**
+   * Load more orders
+   */
   const loadMoreOrders = async () => {
     // Increment the page number in the state
     setPage(page + 1);
@@ -86,7 +121,12 @@ export const Orders = ({ navigation }) => {
       dispatch(setTotalResult(response.data.totalResult));
       dispatch(setFilterResult(response.data.filterResult));
       dispatch(setNewOrders(response.data.new));
+      dispatch(setPendingOrders(response.data.pending));
       dispatch(setActiveOrders(response.data.active));
+      dispatch(setCompletedOrders(response.data.completed));
+      dispatch(setRejectedOrders(response.data.rejected));
+      dispatch(setCanceledOrders(response.data.canceled));
+
       setTimeout(() => {
         setBottomLoader(false);
       }, 100);
@@ -94,11 +134,6 @@ export const Orders = ({ navigation }) => {
       console.log(error.response.data.message);
     }
   };
-
-  /**
-   * sort
-   */
-  const [openSortPopup, setOpenSortPopup] = useState(false);
 
   /**
    * view of list (list or cards)
@@ -114,6 +149,7 @@ export const Orders = ({ navigation }) => {
         currentTheme={currentTheme}
         navigation={navigation}
         setLoader={setLoader}
+        setPage={setPage}
       />
     ) : (
       <ListItem
@@ -122,6 +158,7 @@ export const Orders = ({ navigation }) => {
         currentTheme={currentTheme}
         navigation={navigation}
         setLoader={setLoader}
+        setPage={setPage}
       />
     );
   };
@@ -226,28 +263,26 @@ export const Orders = ({ navigation }) => {
               </Text>
             </View>
             <View style={{ flex: 1, alignItems: "center" }}>
-              <SortPopup currentTheme={currentTheme} from="orders" />
+              <SortPopup
+                currentTheme={currentTheme}
+                setPage={setPage}
+                from="orders"
+                setOrders={setOrders}
+              />
             </View>
-            <View style={{ flex: 1 }}>
+            <View
+              style={{
+                flex: 1,
+                flexDirection: "row",
+                gap: 15,
+                justifyContent: "flex-end",
+                marginRight: 5,
+              }}
+            >
               <TouchableOpacity
                 onPress={() => setView(!view)}
                 activeOpacity={0.3}
-                style={{
-                  flex: 1,
-                  justifyContent: "flex-end",
-                  flexDirection: "row",
-                  gap: 5,
-                  alignItems: "center",
-                }}
               >
-                <Text
-                  style={{
-                    color: currentTheme.font,
-                    letterSpacing: 0.3,
-                  }}
-                >
-                  View:{" "}
-                </Text>
                 <View
                   style={{
                     width: 20,
@@ -266,6 +301,24 @@ export const Orders = ({ navigation }) => {
                     />
                   )}
                 </View>
+              </TouchableOpacity>
+              <TouchableOpacity
+                activeOpacity={0.3}
+                onPress={
+                  sortDirection === "asc"
+                    ? () => setSortDirection("desc")
+                    : () => setSortDirection("asc")
+                }
+              >
+                <MaterialCommunityIcons
+                  name={
+                    sortDirection === "asc"
+                      ? "sort-calendar-ascending"
+                      : "sort-calendar-descending"
+                  }
+                  size={18}
+                  color="#ccc"
+                />
               </TouchableOpacity>
             </View>
           </View>

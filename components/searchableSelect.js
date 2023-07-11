@@ -13,15 +13,15 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { useSelector, useDispatch } from "react-redux";
 import { Language } from "../context/language";
 
+/**
+ * Select component with search
+ */
+
 const SearchableSelect = ({ data, onItemSelected, currentTheme }) => {
   const language = Language();
   const [search, setSearch] = useState("");
-  // const [filteredData, setFilteredData] = useState();
-  // const [list, setList] = useState(false);
 
   const [text, setText] = useState("");
-
-  const lang = useSelector((state) => state.storeApp.language);
 
   const handleItemPress = (item) => {
     setText(item.label);

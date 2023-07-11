@@ -1,7 +1,9 @@
 import React, { useEffect, useRef } from "react";
-import { Animated } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
-import { TouchableOpacity, Text } from "react-native";
+import { Animated, Text, TouchableOpacity } from "react-native";
+
+/**
+ * animated button component
+ */
 
 export default function AnimatedButton({ navigation, currentTheme, title }) {
   const animation = useRef(new Animated.Value(0)).current;

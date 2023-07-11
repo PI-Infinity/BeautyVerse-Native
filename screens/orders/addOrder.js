@@ -1,44 +1,47 @@
-import {
-  StyleSheet,
-  Text,
-  View,
-  ScrollView,
-  Platform,
-  TextInput,
-  KeyboardAvoidingView,
-  TouchableOpacity,
-  Alert,
-  Animated,
-  ActivityIndicator,
-} from "react-native";
-import React, { useRef } from "react";
-import DateAndTimePicker from "../../screens/orders/dateAndTimePicker";
-import { ProceduresList } from "../../screens/orders/procedures";
-import { useSelector, useDispatch } from "react-redux";
-import { useState, useEffect } from "react";
+import { FontAwesome, FontAwesome5, MaterialIcons } from "@expo/vector-icons";
 import axios from "axios";
-import uuid from "react-native-uuid";
-import { setOrders } from "../../redux/orders";
-import { setRerenderOrders } from "../../redux/rerenders";
-import { BackDrop } from "../../components/backDropLoader";
-import { lightTheme, darkTheme } from "../../context/theme";
-import { MaterialIcons, FontAwesome, FontAwesome5 } from "@expo/vector-icons";
-import ProcedureDurationPicker from "../../components/durationList";
+import * as Localization from "expo-localization";
 import moment from "moment";
 import "moment-timezone";
-import * as Localization from "expo-localization";
+import React, { useEffect, useRef, useState } from "react";
+import {
+  ActivityIndicator,
+  Alert,
+  Animated,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import uuid from "react-native-uuid";
+import { useDispatch, useSelector } from "react-redux";
+import { BackDrop } from "../../components/backDropLoader";
+import ProcedureDurationPicker from "../../components/durationList";
+import { darkTheme, lightTheme } from "../../context/theme";
+import { setRerenderOrders } from "../../redux/rerenders";
+import DateAndTimePicker from "../../screens/orders/dateAndTimePicker";
+import { ProceduresList } from "../../screens/orders/procedures";
+
+/**
+ * Add new order manualy from OMS
+ */
 
 export const AddOrder = ({ route, navigation }) => {
+  // defines redux dispatch
   const dispatch = useDispatch();
-  const [isLoaded, setIsLoaded] = useState(true); // new state variable
+
+  // defines theme state
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
 
-  const orders = useSelector((state) => state.storeOrders.orders);
-  const nextOrderNumber = useSelector(
-    (state) => state.storeOrders.nextOrderNumber
-  );
+  // defines loading state
+  const [isLoaded, setIsLoaded] = useState(true); // new state variable
 
+  // defines current user
   const currentUser = useSelector((state) => state.storeUser.currentUser);
 
   // If you have a date object and want to convert it to a specific timezone:
@@ -49,24 +52,36 @@ export const AddOrder = ({ route, navigation }) => {
     .tz(Localization.timezone)
     .format("YYYY-MM-DDTHH:mm:ss.SSS[Z]");
 
+  // define date and time
   const [dateAndTime, setDateAndTime] = useState(formattedDateInTimezone);
 
+  /**
+   * states to create order
+   */
+  // defines procedure
   const [procedure, setProcedure] = useState(null);
+  // defines procedure price
   const [price, setPrice] = useState("");
+  // defines currency
   const [currency, setCurrency] = useState(currentUser.currency);
+  // defines procedure duration
   const [duration, setDuration] = useState(null);
+  // defines client
   const [user, setUser] = useState({
     id: "",
     name: "",
     phone: "",
     addationalInfo: "",
   });
+  // defines comment
   const [comment, setComment] = useState("");
 
+  // defines loader
   const [loader, setLoader] = useState(false);
 
-  const [page, setPage] = useState(1);
-
+  /**
+   * Add order to db
+   */
   const AddOrderToDb = async () => {
     if (
       procedure &&
@@ -112,6 +127,7 @@ export const AddOrder = ({ route, navigation }) => {
   // open duration popup
   const [visible, setVisible] = useState(false);
 
+  // animation
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const showDurationModal = () => {
     setVisible(true);
@@ -122,10 +138,12 @@ export const AddOrder = ({ route, navigation }) => {
     }).start();
   };
 
+  // edit procedure
   const EditProcedure = (val) => {
     setDuration(val.duration);
   };
 
+  // finish loading
   useEffect(() => {
     setTimeout(() => {
       setIsLoaded(false);
@@ -501,5 +519,3 @@ export const AddOrder = ({ route, navigation }) => {
     </>
   );
 };
-
-const styles = StyleSheet.create({});

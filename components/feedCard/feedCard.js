@@ -1,59 +1,119 @@
-import { useState, useEffect, useRef } from "react";
-import {
-  View,
-  Dimensions,
-  Pressable,
-  StyleSheet,
-  Animated,
-  Platform,
-  ScrollView,
-  ActivityIndicator,
-} from "react-native";
-import { useSelector, useDispatch } from "react-redux";
-import axios from "axios";
-import { Language } from "../../context/language";
 import { Entypo } from "@expo/vector-icons";
-import ZoomableImage from "../../components/zoomableImage";
+import axios from "axios";
+import * as Haptics from "expo-haptics";
+import { useEffect, useRef, useState } from "react";
+import {
+  ActivityIndicator,
+  Animated,
+  Dimensions,
+  Platform,
+  Pressable,
+  ScrollView,
+  View,
+} from "react-native";
+import { useDispatch, useSelector } from "react-redux";
 import { CacheableVideo } from "../../components/cacheableVideo";
-import { setVideoVolume } from "../../redux/feed";
-import { lightTheme, darkTheme } from "../../context/theme";
-import { TopSection } from "../../components/feedCard/topSection";
 import { BottomSection } from "../../components/feedCard/bottomSection";
 import { Post } from "../../components/feedCard/post";
+import { TopSection } from "../../components/feedCard/topSection";
+import ZoomableImage from "../../components/zoomableImage";
+import { Language } from "../../context/language";
+import { useSocket } from "../../context/socketContext";
+import { darkTheme, lightTheme } from "../../context/theme";
+import feed, { setVideoVolume } from "../../redux/feed";
+
+/**
+ * Feed Item in feeds screen
+ */
+const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
 export const Feed = (props) => {
-  const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } =
-    Dimensions.get("window");
+  // define device type tablet or mobile
+  let aspectRatio = SCREEN_HEIGHT / SCREEN_WIDTH;
+  let isTablet = aspectRatio < 1.6;
+  let definedDevice;
+  if (isTablet) {
+    definedDevice = "tablet";
+    console.log("ipad"); // The device is a tablet
+  } else {
+    definedDevice = "mobile";
+  }
 
+  // define theme context
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
+
+  // define navigation
   const navigation = props.navigation;
+
+  // define language
   const language = Language();
+
+  // define socket server
+  const socket = useSocket();
+
+  // define redux dispatch
   const dispatch = useDispatch();
-  const [feedObj, setFeedObj] = useState([]);
-  const [page, setPage] = useState(1);
 
-  const [loadVideo, setLoadVideo] = useState(true);
+  /**
+   * define current user with last feed object
+   * */
+  const [feedObject, setFeedObject] = useState(null);
 
+  useEffect(() => {
+    setFeedObject(props.user.feed);
+  }, []);
+
+  /**
+   * in Feeds object is defined user with 5 feeds.
+   * when navigate to user's feeds this state will send there for mapping
+   */
+  const [userFeeds, setUserFeeds] = useState([]);
+
+  // define all feeds length
+  const [feedsLength, setFeedsLength] = useState(null);
+  //Get user feeds
+  async function GetUserFeeds() {
+    try {
+      const response = await axios.get(
+        `https://beautyverse.herokuapp.com/api/v1/users/${
+          props.user?._id
+        }/feeds/native?page=${1}&check=${currentUser?._id}`
+      );
+      setUserFeeds(response.data.data.feeds);
+      setFeedsLength(response.data.result);
+    } catch (error) {
+      console.log(error.response.data.message);
+    }
+  }
+
+  // define cleanup state from redux
+
+  const cleanUp = useSelector((state) => state.storeRerenders.cleanUp);
+
+  useEffect(() => {
+    if (feedObject) {
+      GetUserFeeds();
+    }
+  }, [feedObject, cleanUp]);
+
+  // define current user state from redux
   const currentUser = useSelector((state) => state.storeUser.currentUser);
+  // define language state from redux
   const lang = useSelector((state) => state.storeApp.language);
 
-  const addStarRerender = useSelector(
-    (state) => state.storeRerenders.addStarRerender
-  );
-  const removeStarRerender = useSelector(
-    (state) => state.storeRerenders.removeStarRerender
-  );
-  const addReviewQntRerender = useSelector(
-    (state) => state.storeRerenders.addReviewQntRerender
-  );
-  const removeReviewQntRerender = useSelector(
-    (state) => state.storeRerenders.removeReviewQntRerender
-  );
-
+  // define active feec by index
   const [activeFeed, setActiveFeed] = useState(0);
+
+  // define scrollX ref
   const scrollX = useRef(new Animated.Value(0)).current;
-  const flatListRef = useRef(null);
+
+  /**
+   * when video displayed the video starts
+   *  */
+  const [loadVideo, setLoadVideo] = useState(true);
+
+  // when scrolling defines active feed and plays video if displayed part of it
 
   useEffect(() => {
     const listener = scrollX.addListener(({ value }) => {
@@ -67,11 +127,13 @@ export const Feed = (props) => {
   }, [scrollX]);
 
   /**
-   * add and remove stars from opened feed actions
+   * user actions: stars, comments
    */
 
-  async function AddStar(currentPage) {
-    setFeedObj((prevFeeds) => {
+  // add and remove stars from feed screen useState
+
+  async function AddStar() {
+    setUserFeeds((prevFeeds) => {
       const updatedFeeds = [...prevFeeds];
       updatedFeeds[activeFeed] = {
         ...updatedFeeds[activeFeed],
@@ -83,7 +145,7 @@ export const Feed = (props) => {
   }
 
   const RemoveStarFromState = () => {
-    setFeedObj((prevFeeds) => {
+    setUserFeeds((prevFeeds) => {
       const updatedFeeds = [...prevFeeds];
       updatedFeeds[activeFeed] = {
         ...updatedFeeds[activeFeed],
@@ -95,9 +157,10 @@ export const Feed = (props) => {
   };
 
   /**
-   * add and remove stars from scrollable gallery feed actions
+   * add and remove stars from user feeds screen
    */
 
+  // define rerenders from redux
   const activeFeedFromScrollGallery = useSelector(
     (state) => state.storeActions.activeFeedFromScrollGallery
   );
@@ -108,8 +171,9 @@ export const Feed = (props) => {
     (state) => state.storeRerenders.removeStarRerenderFromScrollGallery
   );
 
+  // define functions
   async function AddStarFromScrollGallery() {
-    setFeedObj((prev) => {
+    setUserFeeds((prev) => {
       return prev.map((item) => {
         if (item._id === activeFeedFromScrollGallery) {
           return {
@@ -134,7 +198,7 @@ export const Feed = (props) => {
   //////////////////
 
   const RemoveStarFromScrollGallery = () => {
-    setFeedObj((prev) => {
+    setUserFeeds((prev) => {
       return prev.map((item) => {
         if (item._id === activeFeedFromScrollGallery) {
           return {
@@ -156,12 +220,16 @@ export const Feed = (props) => {
     RemoveStarFromScrollGallery();
   }, [removeStarRerenderFromScrollGallery]);
 
-  // set star
+  /*
+  
+  set star main function 
+  */
   const SetStar = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     try {
       AddStar();
       await axios.post(
-        `https://beautyverse.herokuapp.com/api/v1/users/${props.user?._id}/feeds/${feedObj[activeFeed]?._id}/stars`,
+        `https://beautyverse.herokuapp.com/api/v1/users/${props.user?._id}/feeds/${userFeeds[activeFeed]?._id}/stars`,
         {
           staredBy: currentUser?._id,
           createdAt: new Date(),
@@ -176,22 +244,28 @@ export const Feed = (props) => {
             date: new Date(),
             type: "star",
             status: "unread",
-            feed: `/api/v1/users/${props.user?._id}/feeds/${feedObj[activeFeed]?._id}`,
+            feed: `/api/v1/users/${props.user?._id}/feeds/${userFeeds[activeFeed]?._id}`,
           }
         );
+        socket.emit("updateUser", {
+          targetId: props.user?._id,
+        });
       }
     } catch (error) {
       console.error(error.response.data.message);
     }
   };
 
-  // remove star
+  /**
+   * Remove start main function
+   */
   const RemoveStar = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     try {
       RemoveStarFromState();
 
-      const url = `https://beautyverse.herokuapp.com/api/v1/users/${props.user?._id}/feeds/${feedObj[activeFeed]?._id}/stars/${currentUser?._id}`;
-      const response = await fetch(url, { method: "DELETE" })
+      const url = `https://beautyverse.herokuapp.com/api/v1/users/${props.user?._id}/feeds/${userFeeds[activeFeed]?._id}/stars/${currentUser?._id}`;
+      await fetch(url, { method: "DELETE" })
         .then((response) => response.json())
 
         .catch((error) => {
@@ -202,9 +276,7 @@ export const Feed = (props) => {
     }
   };
 
-  /**
-   *  // change reviews quantity from scroll gallery
-   */
+  // change comments quantity from scroll gallery
 
   const addReviewQntRerenderFromScrollGallery = useSelector(
     (state) => state.storeRerenders.addReviewQntRerenderFromScrollGallery
@@ -214,7 +286,7 @@ export const Feed = (props) => {
   );
 
   async function AddReviewFromScrollGallery(currentPage) {
-    setFeedObj((prev) => {
+    setUserFeeds((prev) => {
       return prev.map((item) => {
         if (item._id === activeFeedFromScrollGallery) {
           return {
@@ -238,7 +310,7 @@ export const Feed = (props) => {
   // remove review
 
   const RemoveReviewScrollGallery = () => {
-    setFeedObj((prev) => {
+    setUserFeeds((prev) => {
       return prev.map((item) => {
         if (item._id === activeFeedFromScrollGallery) {
           return {
@@ -259,90 +331,44 @@ export const Feed = (props) => {
     RemoveReviewScrollGallery();
   }, [removeReviewQntRerenderFromScrollGallery]);
 
-  // get feeds
-  async function GetFeedObj(currentPage) {
-    try {
-      const response = await axios.get(
-        `https://beautyverse.herokuapp.com/api/v1/users/${
-          props.user?._id
-        }/feeds/native?page=${1}&check=${currentUser?._id}`
-      );
-      setFeedObj(response.data.data.feeds);
-    } catch (error) {
-      console.log(error.response.data.message);
-    }
-  }
+  /**
+   * Post
+   */
 
-  const rerenderUserFeed = useSelector(
-    (state) => state.storeRerenders.rerenderUserFeed
-  );
-  const feedsRef = useRef(true);
-
-  // open post
+  // open/hide post
   const [numLines, setNumLines] = useState(3);
 
   // define video volume
   const volume = useSelector((state) => state.storeFeed.videoVolume);
 
   // pause and resume video
-  const [videoDuration, setVideoDuration] = useState(0);
-  const [currentPosition, setCurrentPosition] = useState(0);
   const videoRef = useRef(null);
 
-  const onPlaybackStatusUpdate = (playbackStatus) => {
-    if (playbackStatus.durationMillis) {
-      setVideoDuration(playbackStatus.durationMillis);
-    }
-    if (playbackStatus.positionMillis) {
-      setCurrentPosition(playbackStatus.positionMillis);
-    }
-  };
-  // change video time with slider
-
-  const onSliderValueChange = async (value) => {
-    if (videoRef.current && !isNaN(value) && value >= 0) {
-      try {
-        await videoRef.current.setPositionAsync(value);
-      } catch (error) {
-        console.error("Error setting video position:", error);
-      }
-    }
-  };
-
+  /**
+   * Define file sizes
+   */
   // define file height
   let hght;
-  if (props.user.feed?.video) {
+  if (feedObject?.video) {
     let originalHeight =
-      props.user.feed.fileWidth >= props.user.feed.fileHeight
-        ? props.user.feed.fileWidth
-        : props.user.feed.fileHeight;
+      feedObject.fileWidth >= feedObject.fileHeight
+        ? feedObject.fileWidth
+        : feedObject.fileHeight;
     let originalWidth =
-      props.user.feed.fileWidth >= props.user.feed.fileHeight
-        ? props.user.feed.fileHeight
-        : props.user.feed.fileWidth;
-
-    let wdth = SCREEN_WIDTH;
+      feedObject.fileWidth >= feedObject.fileHeight
+        ? feedObject.fileHeight
+        : feedObject.fileWidth;
 
     let percented = originalWidth / SCREEN_WIDTH;
 
     hght = originalHeight / percented;
-  } else if (props.user.feed?.images[0]) {
-    let originalHeight = props.user.feed.fileHeight;
-    let originalWidth = props.user.feed.fileWidth;
-
-    let wdth = SCREEN_WIDTH;
+  } else if (feedObject?.images[0]) {
+    let originalHeight = feedObject.fileHeight;
+    let originalWidth = feedObject.fileWidth;
 
     let percented = originalWidth / SCREEN_WIDTH;
     hght = originalHeight / percented;
   }
-
-  const cleanUp = useSelector((state) => state.storeRerenders.cleanUp);
-
-  useEffect(() => {
-    if (hght) {
-      GetFeedObj(page);
-    }
-  }, [cleanUp]);
 
   return (
     <Animated.View
@@ -351,7 +377,7 @@ export const Feed = (props) => {
         backgroundColor: currentTheme.background,
       }}
     >
-      {props.user.feed?.fileFormat === "img" && (
+      {feedObject?.fileFormat === "img" && (
         <View
           style={{
             height: 70,
@@ -370,41 +396,45 @@ export const Feed = (props) => {
             navigation={navigation}
             lang={lang}
             language={language}
-            createdAt={props.user.feed.createdAt}
-            fileFormat={props.user.feed?.fileFormat}
+            createdAt={feedObject.createdAt}
+            fileFormat={feedObject?.fileFormat}
           />
         </View>
       )}
-      {props.user?.feed?.post && props.user.feed?.fileFormat === "img" && (
+      {feedObject?.post && feedObject?.fileFormat === "img" && (
         <View style={{ paddingLeft: 10 }}>
           <Post
             currentTheme={currentTheme}
             numLines={numLines}
             setNumLines={setNumLines}
-            fileFormat={props.user?.feed?.fileFormat}
-            text={props.user?.feed.post}
+            fileFormat={feedObject?.fileFormat}
+            text={feedObject.post}
           />
         </View>
       )}
       <View
         name="main-section"
         style={{
-          height: hght > 640 ? 640 : hght,
-          maxHeight: 640,
+          height:
+            hght > 640 && definedDevice === "mobile"
+              ? 640
+              : hght > 640 && definedDevice !== "mobile"
+              ? 900
+              : hght,
+          maxHeight: definedDevice === "mobile" ? 640 : 900,
           overflow: "hidden",
           justifyContent: "center",
+          alignItems: "center",
           width: SCREEN_WIDTH,
-          // backgroundColor: currentTheme.background2,
         }}
       >
-        {props.user.feed?.images?.length > 1 && (
+        {feedObject?.images?.length > 1 && (
           <View
             style={{
               position: "absolute",
               zIndex: 120,
               bottom: 15,
               right: 15,
-              // backgroundColor: "rgba(255,255,255,0.7)",
               borderRadius: 50,
             }}
           >
@@ -421,7 +451,7 @@ export const Feed = (props) => {
             />
           </View>
         )}
-        {props.user.feed?.fileFormat === "video" && (
+        {feedObject?.fileFormat === "video" && (
           <View
             style={{
               paddingHorizontal: 10,
@@ -438,23 +468,23 @@ export const Feed = (props) => {
               navigation={navigation}
               lang={lang}
               language={language}
-              createdAt={props.user.feed.createdAt}
-              fileFormat={props.user.feed?.fileFormat}
+              createdAt={feedObject.createdAt}
+              fileFormat={feedObject?.fileFormat}
             />
             <View style={{ marginTop: 10 }}>
-              {props.user?.feed?.post && (
+              {feedObject?.post && (
                 <Post
                   currentTheme={currentTheme}
                   numLines={numLines}
                   setNumLines={setNumLines}
-                  text={props.user?.feed?.post}
-                  fileFormat={props.user.feed?.fileFormat}
+                  text={feedObject?.post}
+                  fileFormat={feedObject?.fileFormat}
                 />
               )}
             </View>
           </View>
         )}
-        {props.user.feed?.fileFormat === "video" ? (
+        {feedObject?.fileFormat === "video" ? (
           <>
             {loadVideo && (
               <View
@@ -470,31 +500,28 @@ export const Feed = (props) => {
                 <ActivityIndicator color={currentTheme.pink} size="large" />
               </View>
             )}
+
             <CacheableVideo
               videoRef={videoRef}
-              onLongPress={
-                props.from !== "notifications"
-                  ? () => {
-                      navigation.navigate("ScrollGallery", {
-                        user: props.user,
-                        scrolableFeeds: feedObj,
-                        feedsLength: props.feeds?.length,
-                        page: props.page,
-                      });
-                    }
-                  : undefined
+              onLongPress={() =>
+                navigation.navigate("ScrollGallery", {
+                  user: props.user,
+                  scrolableFeeds: userFeeds,
+                  feedsLength: feedsLength,
+                  page: props.page,
+                })
               }
               delayLongPress={80}
               style={{
+                width: SCREEN_WIDTH,
                 height:
-                  props.user.feed.fileHeight > props.user.feed.fileWidth
+                  feedObject.fileHeight > feedObject.fileWidth
                     ? hght
-                    : props.user.feed.fileWidth,
+                    : feedObject.fileWidth,
               }}
               source={{
-                uri: props.user.feed.video,
+                uri: feedObject.video,
               }}
-              onPlaybackStatusUpdate={onPlaybackStatusUpdate}
               rate={1.0}
               volume={1.0}
               isMuted={volume ? true : false}
@@ -522,50 +549,59 @@ export const Feed = (props) => {
             nestedScrollEnabled
             bounces={Platform.OS === "ios" ? false : undefined}
             overScrollMode={Platform.OS === "ios" ? "never" : "always"}
-            // style={{ backgroundColor: "red" }}
             contentContainerStyle={{
-              height: hght > 640 ? 640 : hght,
-              maxHeight: 640,
-              width: SCREEN_WIDTH * (props.user.feed?.images?.length || 1),
+              overflow: "hidden",
+              alignItems: "center",
             }}
           >
-            {props.user.feed?.images?.map((itm, x) => {
+            {feedObject?.images?.map((itm, x) => {
               return (
                 <Pressable
                   key={x}
-                  onLongPress={
-                    props.from !== "notifications"
-                      ? () => {
-                          navigation.navigate("ScrollGallery", {
-                            user: props.user,
-                            scrolableFeeds: feedObj,
-                            feedsLength: props.feeds?.length,
-                            page: props.page,
-                          });
-                          dispatch(setVideoVolume(true));
-                        }
-                      : undefined
-                  }
+                  style={{
+                    height:
+                      hght > 640 && definedDevice === "mobile"
+                        ? 640
+                        : hght > 640 && definedDevice !== "mobile"
+                        ? 900
+                        : hght,
+                    maxHeight: definedDevice === "mobile" ? 642 : 900,
+                    width: SCREEN_WIDTH,
+                    overflow: "hidden",
+                  }}
+                  onLongPress={() => {
+                    navigation.navigate("ScrollGallery", {
+                      user: props.user,
+                      scrolableFeeds: userFeeds,
+                      feedsLength: feedsLength,
+                      page: props.page,
+                    });
+                    dispatch(setVideoVolume(true));
+                  }}
                   delayLongPress={80}
                 >
                   <ZoomableImage
                     style={{
-                      height: hght > 642 ? 642 : hght + 2,
-                      maxHeight: 642,
+                      height:
+                        hght > 640 && definedDevice === "mobile"
+                          ? 642
+                          : hght > 640 && definedDevice !== "mobile"
+                          ? 902
+                          : hght + 2,
+                      maxHeight: definedDevice === "mobile" ? 642 : 900,
                       width: SCREEN_WIDTH,
                       zIndex: 100,
-                      resizeMode: hght > 642 ? "cover" : "contain",
+                      resizeMode: hght > 640 ? "cover" : "contain",
                     }}
                     source={{
                       uri: itm.url,
                     }}
                     onLoad={() =>
                       setTimeout(() => {
-                        GetFeedObj(page);
                         if (props.setLoading) {
                           props.setLoading(false);
                         }
-                      }, 1000)
+                      }, 500)
                     }
                   />
                 </Pressable>
@@ -574,7 +610,7 @@ export const Feed = (props) => {
           </ScrollView>
         )}
 
-        {props.user.feed?.fileFormat === "video" && (
+        {feedObject?.fileFormat === "video" && (
           <Pressable
             onPress={(event) => event.stopPropagation()}
             name="bottom-section"
@@ -585,33 +621,28 @@ export const Feed = (props) => {
               justifyContent: "center",
               position: "absolute",
               bottom: 0,
-              // backgroundColor: "red",
             }}
           >
-            {props.from !== "notifications" && (
-              <BottomSection
-                notifications={props.from ? true : false}
-                navigation={props.navigation}
-                language={language}
-                currentTheme={currentTheme}
-                RemoveStar={RemoveStar}
-                SetStar={SetStar}
-                feedObj={feedObj}
-                activeFeed={activeFeed}
-                user={props.user}
-                feed={feedObj[activeFeed]}
-                setVideoVolume={setVideoVolume}
-                volume={volume}
-                reviewsLength={feedObj[activeFeed]?.reviewsLength}
-                checkIfStared={feedObj[activeFeed]?.checkIfStared}
-                starsLength={feedObj[activeFeed]?.starsLength}
-                GetFeedObj={GetFeedObj}
-              />
-            )}
+            <BottomSection
+              notifications={props.from ? true : false}
+              navigation={props.navigation}
+              language={language}
+              currentTheme={currentTheme}
+              RemoveStar={RemoveStar}
+              SetStar={SetStar}
+              activeFeed={activeFeed}
+              user={props.user}
+              feed={userFeeds[activeFeed]}
+              setVideoVolume={setVideoVolume}
+              volume={volume}
+              reviewsLength={userFeeds[activeFeed]?.reviewsLength}
+              checkIfStared={userFeeds[activeFeed]?.checkIfStared}
+              starsLength={userFeeds[activeFeed]?.starsLength}
+            />
           </Pressable>
         )}
       </View>
-      {props.user.feed?.fileFormat === "img" && (
+      {feedObject?.fileFormat === "img" && (
         <Pressable
           onPress={(event) => event.stopPropagation()}
           name="bottom-section"
@@ -637,14 +668,13 @@ export const Feed = (props) => {
                 currentTheme={currentTheme}
                 RemoveStar={RemoveStar}
                 SetStar={SetStar}
-                feedObj={feedObj}
                 activeFeed={activeFeed}
                 user={props.user}
-                feed={feedObj[activeFeed]}
-                reviewsLength={feedObj[activeFeed]?.reviewsLength}
-                checkIfStared={feedObj[activeFeed]?.checkIfStared}
-                starsLength={feedObj[activeFeed]?.starsLength}
-                GetFeedObj={GetFeedObj}
+                feed={userFeeds[activeFeed]}
+                reviewsLength={userFeeds[activeFeed]?.reviewsLength}
+                checkIfStared={userFeeds[activeFeed]?.checkIfStared}
+                starsLength={userFeeds[activeFeed]?.starsLength}
+                GetUserFeeds={GetUserFeeds}
               />
             )}
           </View>
@@ -653,36 +683,10 @@ export const Feed = (props) => {
 
       <View
         style={{
-          height: 5,
+          height: 1,
           backgroundColor: currentTheme.divider,
         }}
       />
     </Animated.View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: { backgroundColor: "green", overflow: "hidden" },
-  topSection: {
-    // flexDirection: "colum",
-    gap: 10,
-    alignItems: "center",
-    paddingHorizontal: 5,
-    paddingVertical: 5,
-    height: 70,
-    // backgroundColor: "#222",
-    zIndex: 100,
-  },
-
-  info: {
-    // gap: 5,
-    // flexDirection: "row",
-    width: "100%",
-    // justifyContent: "center",
-    // alignItems: "center",
-    // height: "100%",
-  },
-  duration: {
-    fontSize: 12,
-  },
-});

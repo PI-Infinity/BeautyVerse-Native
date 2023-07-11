@@ -1,19 +1,23 @@
 // DeleteFeedPopup.js
-import React, { useState, useEffect } from "react";
+import axios from "axios";
+import React, { useEffect, useState } from "react";
 import {
   Animated,
   Easing,
-  TouchableOpacity,
-  Text,
-  View,
   Modal,
-  StyleSheet,
-  ScrollView,
   Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
-import { lightTheme, darkTheme } from "../../context/theme";
 import { useSelector } from "react-redux";
-import axios from "axios";
+import { darkTheme, lightTheme } from "../../context/theme";
+
+/**
+ * Reports component which opens on press 3 dots top of the feed card
+ */
 
 export const Reports = ({
   isVisible,
@@ -22,11 +26,17 @@ export const Reports = ({
   contentOwner,
   contentId,
 }) => {
+  // define animation state
   const [animation] = useState(new Animated.Value(0));
+
+  // define theme state
   const theme = useSelector((state) => state.storeApp.theme);
-  const currentUser = useSelector((state) => state.storeUser.currentUser);
   const currentTheme = theme ? darkTheme : lightTheme;
 
+  // define current user state
+  const currentUser = useSelector((state) => state.storeUser.currentUser);
+
+  // define which report is active
   const [active, setActive] = useState(null);
 
   // send report
@@ -41,6 +51,8 @@ export const Reports = ({
       console.log(error.response.data.message);
     }
   };
+
+  // open and hide reports component
 
   useEffect(() => {
     if (isVisible) {

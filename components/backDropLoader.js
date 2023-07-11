@@ -1,14 +1,9 @@
-import React, { useState } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  ActivityIndicator,
-  StyleSheet,
-  Modal,
-} from "react-native";
-import { lightTheme, darkTheme } from "../context/theme";
-import { useSelector, useDispatch } from "react-redux";
+import React from "react";
+import { ActivityIndicator, Modal, StyleSheet, View } from "react-native";
+import { useSelector } from "react-redux";
+import { darkTheme, lightTheme } from "../context/theme";
+
+// sticky loader with overlay background
 
 export const BackDrop = ({ loading, setLoading }) => {
   const toggleLoader = () => {

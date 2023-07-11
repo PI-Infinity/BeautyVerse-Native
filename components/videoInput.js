@@ -1,21 +1,21 @@
-import React, { useState, useRef } from "react";
+import { MaterialIcons } from "@expo/vector-icons";
+import * as ImagePicker from "expo-image-picker";
+import React, { useRef } from "react";
 import {
-  View,
+  Dimensions,
+  StyleSheet,
   Text,
   TouchableOpacity,
-  StyleSheet,
-  Dimensions,
+  View,
 } from "react-native";
-import * as ImagePicker from "expo-image-picker";
-import { Video } from "expo-av";
-import { Language } from "../context/language";
-import { BackDrop } from "../components/backDropLoader";
-import { UploaderPercentage } from "../components/uploaderPercentage";
 
-const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
+/**
+ *  Video input component
+ */
 
-const InputVideo = ({ file, setFile, currentTheme }) => {
-  const language = Language();
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
+
+const InputVideo = ({ title, setFile, currentTheme, from }) => {
   const videoRef = useRef();
 
   const pickVideo = async () => {
@@ -43,9 +43,23 @@ const InputVideo = ({ file, setFile, currentTheme }) => {
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity onPress={pickVideo} style={styles.button}>
+      <TouchableOpacity
+        onPress={pickVideo}
+        style={{
+          flexDirection: "row",
+          justifyContent: "center",
+          alignItems: "center",
+          gap: 10,
+          paddingHorizontal: from === "chat" ? 0 : 15,
+        }}
+      >
+        <MaterialIcons
+          name="video-library"
+          size={20}
+          color={currentTheme.font}
+        />
         <Text style={[styles.buttonText, { color: currentTheme.font }]}>
-          {language?.language?.User?.addFeed?.selectVideo}
+          {title}
         </Text>
       </TouchableOpacity>
     </View>

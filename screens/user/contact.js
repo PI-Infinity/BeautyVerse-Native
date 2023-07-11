@@ -1,30 +1,44 @@
 import {
+  Entypo,
+  FontAwesome,
+  MaterialCommunityIcons,
+  MaterialIcons,
+} from "@expo/vector-icons";
+import React, { useRef, useState } from "react";
+import {
+  Dimensions,
+  Linking,
   StyleSheet,
   Text,
-  View,
-  Linking,
   TouchableOpacity,
-  Dimensions,
+  View,
 } from "react-native";
-import React, { useState, useRef } from "react";
-import { FontAwesome } from "@expo/vector-icons";
-import { Entypo } from "@expo/vector-icons";
+import { useSelector } from "react-redux";
 import Map from "../../components/map";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { MaterialIcons } from "@expo/vector-icons";
-import { lightTheme, darkTheme } from "../../context/theme";
-import { useSelector, useDispatch } from "react-redux";
+import { darkTheme, lightTheme } from "../../context/theme";
 
-const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
+/**
+ * Contact component in user screen
+ */
+
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
+
 export const Contact = ({ targetUser }) => {
+  // define theme
   const theme = useSelector((state) => state.storeApp.theme);
+
+  // define current user
   const currentTheme = theme ? darkTheme : lightTheme;
+
+  // define link to can be press
   const handleLinkPress = (url) => {
     Linking.openURL(url);
   };
 
+  // define displayed address
   const [activeAddress, setActiveAddress] = useState(0);
 
+  // define map view ref
   const mapViewRef = useRef(null);
 
   return (
@@ -251,7 +265,7 @@ export const Contact = ({ targetUser }) => {
             style={{
               color: currentTheme.font,
               fontSize: 16,
-
+              letterSpacing: 0.3,
               fontWeight: "bold",
             }}
           >
@@ -263,12 +277,12 @@ export const Contact = ({ targetUser }) => {
             style={{
               color: currentTheme.font,
               fontWeight: "bold",
-              letterSpacing: 0.2,
+              letterSpacing: 0.3,
             }}
           >
             Country:{" "}
           </Text>
-          <Text style={{ color: currentTheme.font }}>
+          <Text style={{ color: currentTheme.font, letterSpacing: 0.3 }}>
             {targetUser.address[activeAddress].country}
           </Text>
         </View>
@@ -277,12 +291,12 @@ export const Contact = ({ targetUser }) => {
             style={{
               color: currentTheme.font,
               fontWeight: "bold",
-              letterSpacing: 0.2,
+              letterSpacing: 0.3,
             }}
           >
             Region:{" "}
           </Text>
-          <Text style={{ color: currentTheme.font }}>
+          <Text style={{ color: currentTheme.font, letterSpacing: 0.3 }}>
             {targetUser.address[activeAddress].region}
           </Text>
         </View>
@@ -291,12 +305,12 @@ export const Contact = ({ targetUser }) => {
             style={{
               color: currentTheme.font,
               fontWeight: "bold",
-              letterSpacing: 0.2,
+              letterSpacing: 0.3,
             }}
           >
             City:{" "}
           </Text>
-          <Text style={{ color: currentTheme.font }}>
+          <Text style={{ color: currentTheme.font, letterSpacing: 0.3 }}>
             {targetUser.address[activeAddress]?.city?.replace("'", "")}
           </Text>
         </View>
@@ -306,12 +320,12 @@ export const Contact = ({ targetUser }) => {
               style={{
                 color: currentTheme.font,
                 fontWeight: "bold",
-                letterSpacing: 0.2,
+                letterSpacing: 0.3,
               }}
             >
               District:{" "}
             </Text>
-            <Text style={{ color: currentTheme.font }}>
+            <Text style={{ color: currentTheme.font, letterSpacing: 0.3 }}>
               {targetUser.address[activeAddress]?.district}
             </Text>
           </View>
@@ -322,12 +336,12 @@ export const Contact = ({ targetUser }) => {
               style={{
                 color: currentTheme.font,
                 fontWeight: "bold",
-                letterSpacing: 0.2,
+                letterSpacing: 0.3,
               }}
             >
               Street:{" "}
             </Text>
-            <Text style={{ color: currentTheme.font }}>
+            <Text style={{ color: currentTheme.font, letterSpacing: 0.3 }}>
               {targetUser.address[activeAddress]?.street}
             </Text>
           </View>
@@ -338,12 +352,12 @@ export const Contact = ({ targetUser }) => {
               style={{
                 color: currentTheme.font,
                 fontWeight: "bold",
-                letterSpacing: 0.2,
+                letterSpacing: 0.3,
               }}
             >
               Number:{" "}
             </Text>
-            <Text style={{ color: currentTheme.font }}>
+            <Text style={{ color: currentTheme.font, letterSpacing: 0.3 }}>
               {targetUser.address[activeAddress]?.number}
             </Text>
           </View>
@@ -438,5 +452,6 @@ const styles = StyleSheet.create({
   },
   value: {
     fontSize: 14,
+    letterSpacing: 0.3,
   },
 });

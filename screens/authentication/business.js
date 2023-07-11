@@ -1,44 +1,54 @@
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  StyleSheet,
-  KeyboardAvoidingView,
-  Dimensions,
-  Alert,
-  Platform,
-} from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import axios from "axios";
 import React, { useState } from "react";
+import {
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { useDispatch, useSelector } from "react-redux";
 import SelectAutocomplete from "../../components/autocomplete";
 import Select from "../../components/select";
-import { useSelector, useDispatch } from "react-redux";
+import { Language } from "../../context/language";
+import { darkTheme, lightTheme } from "../../context/theme";
 import { ProceduresOptions } from "../../datas/registerDatas";
 import { setRerenderCurrentUser } from "../../redux/rerenders";
-import axios from "axios";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Language } from "../../context/language";
-import { lightTheme, darkTheme } from "../../context/theme";
 
-const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
+/*
+  Business register screen for specialists and beauty salons, to complete registere process
+*/
 
-const Business = ({ navigation }) => {
+const Business = () => {
+  // defined procedure list
   const proceduresOptions = ProceduresOptions();
+  // theme context
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
-
+  // language context
   const language = Language();
+  // redux toolkit dispatch
   const dispatch = useDispatch();
 
+  // procedures state
   const [procedures, setProcedures] = useState([]);
+  // working days state
   const [wd, setWd] = useState([]);
 
+  // current user state which defined in prev auth screens
   const currentUser = useSelector((state) => state.storeAuth.currentUser);
 
+  /**
+   * this function completes register process for specialists and salons
+   */
   const FillUp = async (e) => {
     try {
       if (procedures?.length > 0) {
-        // Signup user
+        // Signup user and add procedures and working infos
         const response = await axios.patch(
           "https://beautyverse.herokuapp.com/api/v1/users/" + currentUser?._id,
           {
@@ -50,12 +60,13 @@ const Business = ({ navigation }) => {
             }),
           }
         );
+        // complete register, save user info in async storage
         await AsyncStorage.setItem(
           "Beautyverse:currentUser",
           JSON.stringify(response.data.data.updatedUser)
         );
+        // reload current user to navigate main content screen
         dispatch(setRerenderCurrentUser());
-        // navigation.navigate(`/users/${currentUser?._id}`);
       } else {
         Alert.alert(language?.language?.Auth?.auth?.pleaseInput);
       }
@@ -85,7 +96,7 @@ const Business = ({ navigation }) => {
         >
           Select procedures:
         </Text>
-        {/* <View style={styles.itemContainer}>
+        <View style={styles.itemContainer}>
           <Text style={[styles.itemTitle, { color: currentTheme.font }]}>
             {" "}
             {language?.language?.Auth?.auth?.procedures}
@@ -97,7 +108,7 @@ const Business = ({ navigation }) => {
             setState={setProcedures}
             currentTheme={currentTheme}
           />
-        </View> */}
+        </View>
         <View style={styles.itemContainer}>
           <Text style={[styles.itemTitle, { color: currentTheme.font }]}>
             {" "}
@@ -123,15 +134,12 @@ export default Business;
 
 const styles = StyleSheet.create({
   container: {
-    // height: SCREEN_HEIGHT,
     width: "100%",
-    // gap: 20,
     alignItems: "center",
     paddingBottom: 60,
   },
   title: {
     fontSize: 24,
-    color: "#fff",
     marginBottom: 20,
     fontWeight: "bold",
     textAlign: "center",
@@ -139,7 +147,6 @@ const styles = StyleSheet.create({
   itemContainer: { gap: 10, width: "100%", alignItems: "center" },
   itemTitle: {
     fontSize: 14,
-    color: "#fff",
     fontWeight: "bold",
   },
   button: {
@@ -151,7 +158,6 @@ const styles = StyleSheet.create({
     borderRadius: 50,
   },
   buttonText: {
-    color: "#fff",
     textAlign: "center",
     fontWeight: "bold",
   },

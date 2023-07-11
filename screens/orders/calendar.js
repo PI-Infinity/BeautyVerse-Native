@@ -1,21 +1,22 @@
+import { MaterialIcons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
+import React, { useEffect, useState } from "react";
 import {
+  Dimensions,
   StyleSheet,
   Text,
-  View,
-  Dimensions,
-  Button,
-  ScrollView,
   TouchableOpacity,
+  View,
 } from "react-native";
-import React, { useState, useEffect } from "react";
-import { Language } from "../../context/language";
-import { lightTheme, darkTheme } from "../../context/theme";
 import { useSelector } from "react-redux";
-import { useNavigation } from "@react-navigation/native";
-import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
-import { workingDaysOptions } from "../../datas/registerDatas";
+import { Language } from "../../context/language";
+import { darkTheme, lightTheme } from "../../context/theme";
 
-const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
+/**
+ * Calendar
+ */
+
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 const monthNames = [
   "January",
@@ -38,7 +39,6 @@ const getDaysInMonth = (month, year) => new Date(year, month, 0).getDate();
 
 export const Calendar = ({ date, setDate, targetUser, setTime }) => {
   const navigation = useNavigation();
-  const language = Language();
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
 

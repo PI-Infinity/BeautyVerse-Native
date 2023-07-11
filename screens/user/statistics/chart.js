@@ -1,19 +1,34 @@
+import React, { useState } from "react";
 import {
+  ScrollView,
   StyleSheet,
   Text,
-  View,
-  ScrollView,
   TouchableOpacity,
+  View,
 } from "react-native";
-import React, { useState } from "react";
 import { useSelector } from "react-redux";
-import { lightTheme, darkTheme } from "../../../context/theme";
+import { darkTheme, lightTheme } from "../../../context/theme";
+
+/**
+ * Define statistic's chart component in user screen
+ */
 
 const Charts = ({ route }) => {
+  // define theme
   const theme = useSelector((state) => state.storeApp.theme);
+
+  // define current user
   const currentTheme = theme ? darkTheme : lightTheme;
+
+  // define statistics data
   const data = route.params;
+
+  // define active chart
   const [activeChart, setActiveChart] = useState(0);
+
+  /**
+   * Define chart
+   */
 
   let chart;
   if (activeChart === 0) {

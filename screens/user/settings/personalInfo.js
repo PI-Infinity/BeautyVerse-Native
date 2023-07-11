@@ -1,38 +1,49 @@
+import axios from "axios";
 import React, { useState } from "react";
 import {
-  View,
+  Alert,
+  Dimensions,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Switch,
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
-  Dimensions,
-  Alert,
-  Switch,
-  ScrollView,
-  KeyboardAvoidingView,
-  Platform,
+  View,
 } from "react-native";
-import { useSelector, useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { Language } from "../../../context/language";
+import { darkTheme, lightTheme } from "../../../context/theme";
 import { setRerenderCurrentUser } from "../../../redux/rerenders";
 import { setCurrentUser } from "../../../redux/user";
-import axios from "axios";
-import CountryCodePicker from "../../../components/countryCodes";
-import { Language } from "../../../context/language";
-import { lightTheme, darkTheme } from "../../../context/theme";
 
-const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
+/**
+ * Personal info screen in settings
+ */
 
-export const PersonalInfo = ({ user, onSave }) => {
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
+
+export const PersonalInfo = () => {
+  // define language
   const language = Language();
+
+  // define redux dispatch
   const dispatch = useDispatch();
 
+  // define theme
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
 
+  // define current user
   const currentUser = useSelector((state) => state.storeUser.currentUser);
+
+  // define editing mode
   const [isEditing, setIsEditing] = useState(false);
   const [editableUser, setEditableUser] = useState({ ...currentUser });
 
+  // define function on save
   const handleSave = async () => {
     const User = {
       ...currentUser,
@@ -78,10 +89,11 @@ export const PersonalInfo = ({ user, onSave }) => {
     }
   };
 
+  // capitalize first letter of texts
   function capitalizeFirstLetter(string) {
     return string?.charAt(0).toUpperCase() + string?.slice(1);
   }
-
+  // capitalize user type
   const type = capitalizeFirstLetter(currentUser?.type);
 
   return (

@@ -13,6 +13,12 @@ import { lightTheme, darkTheme } from "../../context/theme";
 import axios from "axios";
 import { ProceduresOptions } from "../../datas/registerDatas";
 
+/**
+ *
+ *
+ * @returns Clock
+ */
+
 export const DateScreen = ({ route }) => {
   const dispatch = useDispatch();
   const theme = useSelector((state) => state.storeApp.theme);

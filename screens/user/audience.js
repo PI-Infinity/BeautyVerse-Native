@@ -1,19 +1,21 @@
+import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
+import React, { useEffect, useState } from "react";
 import {
-  View,
-  Text,
   ActivityIndicator,
   Dimensions,
-  Image,
   Pressable,
+  Text,
+  View,
 } from "react-native";
-import React, { useState, useEffect } from "react";
-import axios from "axios";
-import { useSelector, useDispatch } from "react-redux";
 import Collapsible from "react-native-collapsible";
-import { AudienceList } from "../../screens/user/audienceList";
-import { MaterialIcons, FontAwesome } from "@expo/vector-icons";
+import { useSelector } from "react-redux";
 import { CacheableImage } from "../../components/cacheableImage";
-import { lightTheme, darkTheme } from "../../context/theme";
+import { darkTheme, lightTheme } from "../../context/theme";
+import { AudienceList } from "../../screens/user/audienceList";
+
+/**
+ * audience component in user screen
+ */
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -23,22 +25,34 @@ export const Audience = ({
   renderCheck,
   setRenderCheck,
 }) => {
+  // define theme
   const theme = useSelector((state) => state.storeApp.theme);
+
+  // define current user
   const currentTheme = theme ? darkTheme : lightTheme;
 
+  // define loading state
   const [loading, setLoading] = React.useState(true);
 
+  // define followers and followings states
   const [followers, setFollowers] = useState([]);
   const [followings, setFollowings] = useState([]);
 
+  // define open/hide followers list states
   const [openFollowers, setOpenFollowers] = useState(true);
   const [openFollowings, setOpenFollowings] = useState(true);
 
+  // define addational render state
   const [render, setRender] = useState(false);
 
+  /**
+   * Get Audience
+   */
+
+  // get followings
   useEffect(() => {
     async function GetAudience(userId) {
-      const response = await fetch(
+      await fetch(
         `https://beautyverse.herokuapp.com/api/v1/users/${targetUser?._id}/followings`
       )
         .then((response) => response.json())
@@ -56,9 +70,12 @@ export const Audience = ({
       GetAudience();
     }
   }, [targetUser?._id, render]);
+
+  // get followers
+
   useEffect(() => {
     async function GetAudience(userId) {
-      const response = await fetch(
+      await fetch(
         `https://beautyverse.herokuapp.com/api/v1/users/${targetUser?._id}/followers`
       )
         .then((response) => response.json())
@@ -160,9 +177,18 @@ export const Audience = ({
                 }
               })}
             </View>
-            <Text style={{ color: currentTheme.font, letterSpacing: 0.2 }}>
-              {"+" + followers.length > 3 && followers.length - 3}
-            </Text>
+            {followers.length > 3 && (
+              <Text
+                style={{
+                  color: currentTheme.font,
+                  letterSpacing: 0.2,
+                  position: "relative",
+                  right: 5,
+                }}
+              >
+                +{followers.length - 3}
+              </Text>
+            )}
             <MaterialIcons
               name={openFollowers ? "arrow-drop-up" : "arrow-drop-down"}
               color={currentTheme.pink}
@@ -192,7 +218,7 @@ export const Audience = ({
               borderColor: currentTheme.background2,
               alignItems: "center",
               flexDirection: "row",
-              gap: 20,
+              gap: 15,
             }}
             onPress={() => setOpenFollowings(!openFollowings)}
           >
@@ -201,7 +227,7 @@ export const Audience = ({
             </Text>
             <View style={{ flexDirection: "row", gap: -10 }}>
               {followings.list?.map((item, index) => {
-                if (index < 4) {
+                if (index < 3) {
                   return (
                     <Pressable
                       key={index}
@@ -246,9 +272,18 @@ export const Audience = ({
                 }
               })}
             </View>
-            <Text style={{ color: currentTheme.font, letterSpacing: 0.2 }}>
-              {"+" + followings.length > 3 && followings.length - 3}
-            </Text>
+            {followings.length > 3 && (
+              <Text
+                style={{
+                  color: currentTheme.font,
+                  letterSpacing: 0.2,
+                  position: "relative",
+                  right: 5,
+                }}
+              >
+                +{followings.length - 3}
+              </Text>
+            )}
             <MaterialIcons
               name={openFollowings ? "arrow-drop-up" : "arrow-drop-down"}
               color={currentTheme.pink}

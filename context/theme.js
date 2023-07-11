@@ -10,7 +10,7 @@ export const darkTheme = {
   shadow: "rgba(0,0,0,0.2)",
   disabled: "#777",
   line: "rgba(255,255,255,0.05)",
-  divider: "#000",
+  divider: "#151515",
 };
 export const lightTheme = {
   background: "#d5d2db",

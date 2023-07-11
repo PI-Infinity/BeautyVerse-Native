@@ -1,80 +1,71 @@
+import { FontAwesome } from "@expo/vector-icons";
+import axios from "axios";
+import { Video } from "expo-av";
+import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
+  Dimensions,
+  Image,
+  Platform,
+  ScrollView,
   StyleSheet,
   Text,
-  View,
   TextInput,
-  ScrollView,
-  Image,
   TouchableOpacity,
-  Dimensions,
-  Platform,
+  View,
 } from "react-native";
-import React, { useState, useCallback, useRef, useEffect } from "react";
-import { useSelector, useDispatch } from "react-redux";
 import DocumentPicker from "react-native-document-picker";
+import uuid from "react-native-uuid";
+import { useDispatch, useSelector } from "react-redux";
+import { BackDrop } from "../../components/backDropLoader";
+import { CacheableImage } from "../../components/cacheableImage";
 import FileInput from "../../components/fileInput";
 import ImagePickerExample from "../../components/fileInputAndroid";
-import InputVideo from "../../components/videoInput";
-import { MaterialIcons } from "@expo/vector-icons";
-import uuid from "react-native-uuid";
-import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
-import { storage } from "../../firebase";
-import axios from "axios";
 import { UploaderPercentage } from "../../components/uploaderPercentage";
-import { BackDrop } from "../../components/backDropLoader";
-import { setCleanUp, setRerenderUserFeeds } from "../../redux/rerenders";
+import InputVideo from "../../components/videoInput";
 import { Language } from "../../context/language";
-import { CacheableImage } from "../../components/cacheableImage";
-import { Video } from "expo-av";
-import * as FileSystem from "expo-file-system";
-import base64js from "base64-js";
-import { FontAwesome } from "@expo/vector-icons";
-import { lightTheme, darkTheme } from "../../context/theme";
+import { darkTheme, lightTheme } from "../../context/theme";
+import { storage } from "../../firebase";
+import { setRerenderUserFeeds } from "../../redux/rerenders";
 
-const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
+/**
+ * Add new feed screen
+ */
+
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
+
 export const AddFeed = ({ navigation }) => {
+  // define language
   const language = Language();
+
+  // define current user
   const currentUser = useSelector((state) => state.storeUser.currentUser);
 
+  // define theme
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
 
+  // define redux dispatch
   const dispatch = useDispatch();
 
+  // define loading state
   const [loading, setLoading] = useState(false);
 
+  // define feed text state
   const [postText, setPostText] = useState("");
 
-  const pickDocument = useCallback(async () => {
-    try {
-      const result = await DocumentPicker.pick({
-        type: [DocumentPicker.types.allFiles],
-      });
-      Alert.alert(
-        "File Selected",
-        `Name: ${result.name}\nType: ${result.type}\nURI: ${result.uri}\nSize: ${result.size}`
-      );
-    } catch (err) {
-      if (DocumentPicker.isCancel(err)) {
-        // User cancelled the picker
-      } else {
-        throw err;
-      }
-    }
-  }, []);
+  /**
+   * Add file
+   */
 
-  // add file
+  // upload porgress state
   const [uploadProgress, setUploadProgress] = useState(0);
+  // picked file state
   const [file, setFile] = useState([]);
+  // blob file converting state
   const [blobFile, setBlobFile] = useState(null);
 
-  const uploadTaskRef = useRef(null);
-
-  const cancelUpload = () => {
-    if (uploadTaskRef.current) {
-      uploadTaskRef.current.cancel();
-    }
-  };
+  // convert file to blob
 
   async function uriToBlob(uri) {
     if (Platform.OS === "android" || Platform.OS === "ios") {
@@ -93,12 +84,21 @@ export const AddFeed = ({ navigation }) => {
     }
   }, [file]);
 
-  // add feed in firebase
-  const [urls, setUrls] = useState([]);
+  // cancel uploading
+  const uploadTaskRef = useRef(null);
+
+  const cancelUpload = () => {
+    if (uploadTaskRef.current) {
+      uploadTaskRef.current.cancel();
+    }
+  };
+
+  /**
+   * File upload function
+   */
 
   async function FileUpload() {
     setLoading(true);
-    //create id
 
     const AddFileInCloud = async (index, folder, uri) => {
       let imgId = currentUser.name + uuid.v4();
@@ -107,7 +107,6 @@ export const AddFeed = ({ navigation }) => {
         `images/${currentUser?._id}/feeds/${folder}/${imgId}/`
       );
       const blb = await uriToBlob(uri);
-      // const blb = await fetch(file[index]?.base64).then((res) => res.blob());
 
       if (fileRef) {
         // add desktop version
@@ -126,8 +125,6 @@ export const AddFeed = ({ navigation }) => {
       );
 
       Promise.all(uploadPromises).then(async (uploadedUrls) => {
-        setUrls((prevUrls) => [...prevUrls, ...uploadedUrls]);
-
         try {
           const newFeed = {
             images: uploadedUrls,
@@ -250,8 +247,6 @@ export const AddFeed = ({ navigation }) => {
   } else if (file[0]) {
     let originalHeight = file[0]?.height;
     let originalWidth = file[0]?.width;
-
-    let wdth = SCREEN_WIDTH;
 
     let percented = originalWidth / SCREEN_WIDTH;
     hght = originalHeight / percented;
@@ -378,8 +373,7 @@ export const AddFeed = ({ navigation }) => {
               flexDirection: "row",
               gap: 15,
               backgroundColor: currentTheme.background2,
-              // paddingHorizontal: 15,
-              // paddingVertical: 7,
+
               borderRadius: 50,
             }}
           >
@@ -390,12 +384,14 @@ export const AddFeed = ({ navigation }) => {
                   file={file}
                   currentTheme={currentTheme}
                   language={language}
+                  title={language?.language?.User?.addFeed?.selectImage}
                 />
               ) : (
                 <FileInput
                   file={file}
                   setFile={setFile}
                   currentTheme={currentTheme}
+                  title={language?.language?.User?.addFeed?.selectImage}
                 />
               )}
             </View>
@@ -422,15 +418,11 @@ export const AddFeed = ({ navigation }) => {
                 paddingVertical: 7.5,
               }}
             >
-              <MaterialIcons
-                name="video-library"
-                size={20}
-                color={currentTheme.font}
-              />
               <InputVideo
                 file={file}
                 setFile={setFile}
                 currentTheme={currentTheme}
+                title={language?.language?.User?.addFeed?.selectVideo}
               />
             </View>
           </View>
@@ -452,7 +444,7 @@ export const AddFeed = ({ navigation }) => {
             maxHeight: 640,
             overflow: "hidden",
             width: SCREEN_WIDTH,
-            // backgroundColor: currentTheme.background2,
+
             justifyContent: "center",
           }}
         >
@@ -501,11 +493,10 @@ export const AddFeed = ({ navigation }) => {
                     styles.preview2,
                     {
                       height: file?.height > file?.width ? hght : file?.width,
-                      // maxHeight: 640,
+
                       width: SCREEN_WIDTH,
                     },
                   ]}
-                  // onPlaybackStatusUpdate={(status) => console.log(status)}
                 />
               )}
             </>
@@ -538,7 +529,6 @@ export const AddFeed = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  // container: { flex: 1 },
   preview: {
     marginBottom: 10,
     borderRadius: 5,

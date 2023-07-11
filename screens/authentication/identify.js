@@ -1,56 +1,61 @@
+import { MaterialIcons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import axios from "axios";
 import { useState } from "react";
 import {
-  View,
+  KeyboardAvoidingView,
+  Platform,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  Alert,
-  Platform,
-  KeyboardAvoidingView,
-  TouchableWithoutFeedback,
-  Keyboard,
-  ScrollView,
-  Dimensions,
+  View,
 } from "react-native";
-import { setRerenderCurrentUser } from "../../redux/rerenders";
-import { useSelector, useDispatch } from "react-redux";
-import { setCurrentUser } from "../../redux/auth";
+import { useDispatch, useSelector } from "react-redux";
+import AlertMessage from "../../components/alertMessage";
 import VerifyCodePopup from "../../components/inputPopup";
 import GoogleAutocomplete from "../../components/mapAutocomplete";
-import axios from "axios";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { MaterialIcons } from "@expo/vector-icons";
 import { Language } from "../../context/language";
-import { lightTheme, darkTheme } from "../../context/theme";
-import CountryCodePicker from "../../components/countryCodePicker";
-import AlertMessage from "../../components/alertMessage";
-
-const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
+import { darkTheme, lightTheme } from "../../context/theme";
+import { setCurrentUser } from "../../redux/auth";
+import { setRerenderCurrentUser } from "../../redux/rerenders";
 
 const Identify = ({ navigation }) => {
+  // redux toolkit dispatch
   const dispatch = useDispatch();
+  //language context
   const language = Language();
-  const [name, setName] = useState("");
-  const type = useSelector((state) => state.storeAuth.userType);
-  const [email, setEmail] = useState("");
-  const [address, setAddress] = useState({});
 
+  // theme redux state and context
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
 
+  // identify states
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [address, setAddress] = useState({});
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
+  // type redux state already defined in register screen
+  const type = useSelector((state) => state.storeAuth.userType);
+
+  // show password states
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  // verify email
+
+  // verify email states
   const [verify, setVerify] = useState(false);
   const [code, setCode] = useState("");
 
   // alert message
   const [alert, setAlert] = useState({ active: false, text: "", type: "" });
+
+  /**
+   * email verify function after succesfully register
+   * Veryify function verifes email by 6 random numbers
+   */
 
   async function Verify() {
     try {
@@ -61,19 +66,25 @@ const Identify = ({ navigation }) => {
           code: code,
         }
       );
-
+      // get user info after register
       const newUser = response.data.data.newUser;
 
       if (newUser?.type === "user") {
+        // if user type is "user", save info in asyncstorage, rerender user info and get all data from db
         await AsyncStorage.setItem(
           "Beautyverse:currentUser",
           JSON.stringify(newUser)
         );
+        // after rerender system navigates to main content
         dispatch(setRerenderCurrentUser());
       } else {
+        // if user type isnt "user", save user info in redux for after using in business register screen
         dispatch(setCurrentUser(newUser));
+        // navigate to register screen
         navigation.navigate("Business");
+        // close verifying popup
         setVerify(false);
+        // clear input states
         setEmail("");
         setPassword("");
         setConfirmPassword("");
@@ -82,6 +93,7 @@ const Identify = ({ navigation }) => {
         setName("");
       }
     } catch (err) {
+      // error handlers
       setAlert({
         active: true,
         text: err.response.data.message,
@@ -97,54 +109,53 @@ const Identify = ({ navigation }) => {
 
   const Register = async (e) => {
     if (phone?.includes("+")) {
+      // if hone includes country code continue, if not alert error
       try {
         // Signup user
-        const response = await axios.post(
-          "https://beautyverse.herokuapp.com/api/v1/signup",
-          {
-            name: name,
-            type: type,
-            email: email,
-            phone: phone,
-            password: password,
-            confirmPassword: confirmPassword,
-            cover: "",
-            address: {
-              country: address.country,
-              region: address.region,
-              city: address.city,
-              district: address.district,
-              street: address.street,
-              number: address.number,
-              latitude: address.latitude,
-              longitude: address.longitude,
+        await axios.post("https://beautyverse.herokuapp.com/api/v1/signup", {
+          name: name,
+          type: type,
+          email: email,
+          phone: phone,
+          password: password,
+          confirmPassword: confirmPassword,
+          cover: "",
+          address: {
+            country: address.country,
+            region: address.region,
+            city: address.city,
+            district: address.district,
+            street: address.street,
+            number: address.number,
+            latitude: address.latitude,
+            longitude: address.longitude,
+          },
+          media: {
+            facebook: "",
+            instagram: "",
+            tiktok: "",
+            youtube: "",
+            telegram: false,
+            whatsapp: false,
+          },
+          experience: "",
+          orders: [],
+          subscription: { status: "active" },
+          notifications: [
+            {
+              senderId: "Beautyverse",
+              text: "Welcome Beautyverse",
+              date: new Date(),
+              type: "welcome",
+              status: "unread",
+              feed: "",
             },
-            media: {
-              facebook: "",
-              instagram: "",
-              tiktok: "",
-              youtube: "",
-              telegram: false,
-              whatsapp: false,
-            },
-            experience: "",
-            orders: [],
-            subscription: { status: "inactive" },
-            notifications: [
-              {
-                senderId: "Beautyverse",
-                text: "Welcome Beautyverse",
-                // text: `${language?.language.Auth.auth.successRegister}`,
-                date: new Date(),
-                type: "welcome",
-                status: "unread",
-                feed: "",
-              },
-            ],
-          }
-        );
-        await setVerify(true);
+          ],
+        });
+        // after send data to db, open email verify popup
+        setVerify(true);
       } catch (err) {
+        // error handlers
         console.log(err.response.data.message);
         setAlert({
           active: true,
@@ -153,6 +164,7 @@ const Identify = ({ navigation }) => {
         });
       }
     } else {
+      // error if iphone number without country code
       setAlert({
         active: true,
         text: "Invalid phone number! Please include your country code at the beginning. An example of a correct format is +995 555 555 555.",
@@ -201,7 +213,6 @@ const Identify = ({ navigation }) => {
               style={[
                 styles.input,
                 {
-                  // backgroundColor: currentTheme.background2,
                   color: currentTheme.font,
                   borderColor: currentTheme.line,
                 },
@@ -230,7 +241,6 @@ const Identify = ({ navigation }) => {
               style={[
                 styles.input,
                 {
-                  // backgroundColor: currentTheme.background2,
                   color: currentTheme.font,
                   borderColor: currentTheme.line,
                 },
@@ -238,7 +248,6 @@ const Identify = ({ navigation }) => {
               onChangeText={(text) => setEmail(text)}
             />
           </View>
-          {/* <CountryCodePicker /> */}
           <View style={[styles.itemContainer, { marginTop: 0 }]}>
             <Text style={[styles.itemTitle, { color: currentTheme.font }]}>
               {language?.language?.Auth?.auth?.phone}
@@ -250,7 +259,6 @@ const Identify = ({ navigation }) => {
               style={[
                 styles.input,
                 {
-                  // backgroundColor: currentTheme.background2,
                   color: currentTheme.font,
                   borderColor: currentTheme.line,
                 },
@@ -278,7 +286,6 @@ const Identify = ({ navigation }) => {
                   [
                     styles.input,
                     {
-                      // backgroundColor: currentTheme.background2,
                       borderColor: currentTheme.line,
                       color: currentTheme.font,
                     },
@@ -331,7 +338,6 @@ const Identify = ({ navigation }) => {
                   [
                     styles.input,
                     {
-                      // backgroundColor: currentTheme.background2,
                       borderColor: currentTheme.line,
                       color: currentTheme.font,
                     },
