@@ -14,6 +14,8 @@ import {
   setRerenderNotifcations,
 } from "./redux/rerenders";
 import { SocketContext } from "./context/socketContext";
+import { Update } from "./screens/update";
+import Constants from "expo-constants";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -33,6 +35,22 @@ const Content = () => {
   const rerenderCurrentUser = useSelector(
     (state) => state.storeRerenders.rerenderCurrentUser
   );
+
+  // define app version
+  const currentVersion = Constants.manifest.version;
+  const [appVersion, setAppVersion] = useState(null);
+
+  useEffect(() => {
+    const DefineAppVersion = async () => {
+      try {
+        const response = await axios.get("http://192.168.0.105:5000/version");
+        setAppVersion(response.data);
+      } catch (error) {
+        console.log(error.response);
+      }
+    };
+    DefineAppVersion();
+  }, []);
 
   // get theme and language values saved in async storage, if nulls give them true asa dark them, en for english language
   useEffect(() => {
@@ -106,7 +124,11 @@ const Content = () => {
           `https://beautyverse.herokuapp.com/api/v1/users/${currUser?._id}`
         );
         // Set the current user in the user's Redux store
-        dispatch(setCurrentUser(response.data.data.user));
+        if (response.data.data.user) {
+          dispatch(setCurrentUser(response.data.data.user));
+        } else {
+          AsyncStorage.removeItem("Beautyverse:currentUser");
+        }
         dispatch(setRerenderNotifcations());
         setTimeout(() => {
           dispatch(setLoading(false));
@@ -175,6 +197,9 @@ const Content = () => {
 
   return (
     <>
+      {currentVersion !== appVersion && (
+        <Update currentVersion={currentVersion} appVersion={appVersion} />
+      )}
       {loading && (
         // Show a loading screen if the app is still loading
         <View

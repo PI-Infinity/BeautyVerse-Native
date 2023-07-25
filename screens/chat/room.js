@@ -3,7 +3,11 @@ import axios from "axios";
 import React, { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Alert, View } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
-import { setRerenderScroll, updateRoom } from "../../redux/chat";
+import {
+  setRerederRooms,
+  setRerenderScroll,
+  updateRoom,
+} from "../../redux/chat";
 import { Input } from "../../screens/chat/input";
 import { Messages } from "../../screens/chat/messages";
 import { useIsFocused, useNavigation } from "@react-navigation/native";
@@ -63,6 +67,7 @@ export const Room = ({ route }) => {
 
   // defines messages list
   const [messages, setMessages] = useState([]);
+
   // defins messages length
   const [messagesLength, setMessagesLength] = useState([]);
   // defines pages for backend to get messages on scrolling
@@ -78,17 +83,24 @@ export const Room = ({ route }) => {
           currentChat.room +
           "?page=1"
       );
-      setMessagesLength(response.data.length);
-      setMessages(response.data.data.chats);
-      setTimeout(() => {
-        setLoading(false);
+      if (response && response.data) {
+        // handle the response
+        setMessagesLength(response.data.length);
+        setMessages(response.data.data.chats);
         setTimeout(() => {
-          dispatch(setRerenderScroll());
-        }, 300);
-      }, 200);
+          setLoading(false);
+          setTimeout(() => {
+            dispatch(setRerenderScroll());
+          }, 300);
+        }, 200);
+      } else {
+        console.error(
+          "The response or the data from the server was undefined."
+        );
+      }
     };
     try {
-      if (currentChat) {
+      if (currentChat?.room) {
         GetMessages();
       }
     } catch (error) {
@@ -136,7 +148,12 @@ export const Room = ({ route }) => {
     }
   };
 
+  const avoidFirstRender = useRef(true);
   useEffect(() => {
+    if (avoidFirstRender.current) {
+      avoidFirstRender.current === false;
+      return;
+    }
     AddMessages();
   }, [page]);
 
@@ -155,23 +172,29 @@ export const Room = ({ route }) => {
           setMessages((prev) => [
             ...prev,
             {
-              sender: data.senderId,
+              messageUniqueId: data.messageUniqueId,
+              senderId: data.senderId,
               receiverId: data.receiverId,
               text: data.text,
               sentAt: new Date(),
               file: data.file?.url ? data.file : "",
+              status: data.status,
             },
           ]);
-        dispatch(
-          updateRoom({
-            roomId: data.room,
-            lastMessageCreatedAt: new Date().toISOString(),
-            lastSender: data.senderId,
-            lastMessage: data.text,
-            status: isFocused ? "read" : "unread",
-            file: data.file?.url ? data.file : "",
-          })
-        );
+        // dispatch(
+        //   updateRoom({
+        //     roomId: data.room,
+        //     lastMessageCreatedAt: new Date().toISOString(),
+        //     lastSender: data.senderId,
+        //     lastMessage: data.text,
+        //     lastMessageSeen: "false",
+        //     status: isFocused ? "read" : "unread",
+        //     file: data.file?.url ? data.file : "",
+        //   })
+        // );
+        // setTimeout(() => {
+        //   dispatch(setRerederRooms());
+        // }, 1000);
       };
       Adding();
       dispatch(setRerenderScroll());

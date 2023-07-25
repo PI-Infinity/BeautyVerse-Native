@@ -9,7 +9,8 @@ const initialState = {
   feedsResult: 0,
   // result shows total of result of cards
   cardsResult: 0,
-  machindeId: null,
+  machineId: null,
+  zoomToTop: false,
 };
 
 export const App = createSlice({
@@ -38,6 +39,9 @@ export const App = createSlice({
     setMachineId: (state, action) => {
       state.machineId = action.payload;
     },
+    setZoomToTop: (state, action) => {
+      state.zoomToTop = !state.zoomToTop;
+    },
   },
 });
 
@@ -49,5 +53,6 @@ export const {
   setMachineId,
   setFeedsResult,
   setCardsResult,
+  setZoomToTop,
 } = App.actions;
 export default App.reducer;

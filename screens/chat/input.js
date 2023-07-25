@@ -16,7 +16,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useSocket } from "../../context/socketContext";
 import { darkTheme, lightTheme } from "../../context/theme";
 import { storage } from "../../firebase";
-import { setRerederRooms, setRerenderScroll } from "../../redux/chat";
+import { setRooms, setRerenderScroll, setRerederRooms } from "../../redux/chat";
 import { File } from "../../screens/chat/file";
 
 /**
@@ -51,23 +51,30 @@ export const Input = ({
   // define current chat
   const currentChat = useSelector((state) => state.storeChat.currentChat);
 
-  // read message if room open on arrival new message
-  const ReadMessage = async () => {
-    try {
-      if (currentChat.lastSender !== currentUser._id) {
-        await axios.patch(
-          "https://beautyverse.herokuapp.com/api/v1/chats/" + currentChat.room,
-          {
-            status: "read",
-          }
-        );
-      }
-      dispatch(setRerenderScroll());
-      dispatch(setRerederRooms());
-    } catch (error) {
-      console.log(error.response.data.message);
-    }
-  };
+  // chats
+  const rooms = useSelector((state) => state.storeChat.rooms);
+
+  // // read message if room open on arrival new message
+  // const ReadMessage = async () => {
+  //   try {
+  //     if (currentChat.lastSender !== currentUser._id) {
+  //       await axios.patch(
+  //         "https://beautyverse.herokuapp.com/api/v1/chats/" + currentChat.room,
+  //         {
+  //           status: "read",
+  //           lastMessageSeen: "seen",
+  //         }
+  //       );
+  //     }
+  //     socket.emit("updateChat", {
+  //       targetId: targetUser.id,
+  //     });
+  //     dispatch(setRerenderScroll());
+  //     dispatch(setRerederRooms());
+  //   } catch (error) {
+  //     console.log(error.response.data.message);
+  //   }
+  // };
 
   // avoid firs render to read message
   const isFirstRender = useRef(true);
@@ -79,7 +86,7 @@ export const Input = ({
       isFirstRender.current = false; // update the flag after the first render
       return;
     }
-    ReadMessage();
+    // ReadMessage();
   }, [arrivalMessage]);
 
   let hght = SCREEN_HEIGHT > 700 ? 100 : 70;
@@ -200,9 +207,11 @@ export const Input = ({
     try {
       setText("");
       setFile([]);
+      const msgId = uuid.v4();
       await setMessages((prev) => [
         ...prev,
         {
+          messageUniqueId: msgId,
           room: currentChat.room,
           senderId: currentUser._id,
           receiverId: targetUser.id,
@@ -214,11 +223,33 @@ export const Input = ({
             width: format === "img" ? file[0].width : file.width,
             id: fileId,
           },
-          sentAt: new Date().toISOString(),
+          sentAt: new Date(),
+          status: "unread",
         },
       ]);
+
       dispatch(setRerenderScroll());
+      await axios.post(
+        "https://beautyverse.herokuapp.com/api/v1/chats/messages",
+        {
+          messageUniqueId: msgId,
+          room: currentChat.room,
+          senderId: currentUser._id,
+          receiverId: targetUser.id,
+          text: text,
+          file: {
+            url: url,
+            type: format,
+            height: format === "img" ? file[0].height : file.height,
+            width: format === "img" ? file[0].width : file.width,
+            id: fileId,
+          },
+          sentAt: new Date(),
+          status: "unread",
+        }
+      );
       socket.emit("sendMessage", {
+        messageUniqueId: msgId,
         room: currentChat.room,
         senderId: currentUser._id,
         senderName: currentUser.name,
@@ -232,39 +263,29 @@ export const Input = ({
           width: format === "img" ? file[0].width : file.width,
           id: fileId,
         },
+        status: "unread",
       });
-      await axios.post(
-        "https://beautyverse.herokuapp.com/api/v1/chats/messages",
-        {
-          room: currentChat.room,
-          senderId: currentUser._id,
-          receiverId: targetUser.id,
-          text: text,
-          file: {
-            url: url,
-            type: format,
-            height: format === "img" ? file[0].height : file.height,
-            width: format === "img" ? file[0].width : file.width,
-            id: fileId,
-          },
-          sentAt: new Date(),
-        }
-      );
+      let updatedRoomObj = {
+        lastMessage: text?.length > 0 ? text : "File...",
+        lastMessageCreatedAt: new Date().toISOString(),
+        lastMessageSeen: "unread",
+        lastSender: currentUser._id,
+        status: "unread",
+        hideFor: "",
+      };
       await axios.patch(
         "https://beautyverse.herokuapp.com/api/v1/chats/" + currentChat.room,
         {
-          lastMessage: text?.length > 0 ? text : "File...",
-          lastMessageCreatedAt: new Date(),
-          lastSender: currentUser._id,
-          status: "unread",
+          ...updatedRoomObj,
         }
       );
-      await axios.patch(
-        "https://beautyverse.herokuapp.com/api/v1/chats/" + currentChat.room,
-        {
-          hideFor: "",
-        }
-      );
+
+      // update chats for target user
+      socket.emit("updateChat", {
+        targetId: targetUser.id,
+      });
+
+      // update current user chats state
       dispatch(setRerederRooms());
     } catch (error) {
       console.log(error.response.data.message);

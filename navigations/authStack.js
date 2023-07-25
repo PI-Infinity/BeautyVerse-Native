@@ -5,8 +5,8 @@ import {
 import { View, Text, Dimensions } from "react-native";
 import Welcome from "../screens/welcome";
 import { Login } from "../screens/authentication/login";
-import Register from "../screens/authentication/register";
-import Identify from "../screens/authentication/identify";
+import { Type } from "../screens/authentication/type";
+// import Identify from "../screens/authentication/identify";
 import Business from "../screens/authentication/business";
 import { Prices } from "../screens/prices";
 import { useSelector } from "react-redux";
@@ -16,6 +16,11 @@ import { Terms } from "../screens/user/terms";
 import { QA } from "../screens/user/QA";
 import { Privacy } from "../screens/user/privacy";
 import { Usage } from "../screens/user/usage";
+import { Identify } from "../screens/authentication/identify";
+import { PersonalInfo } from "../screens/authentication/personalInfo";
+// import { Info } from "../screens/authentication/info";
+import { SuccessRegister } from "../screens/authentication/SuccessRegister";
+import { Accept } from "../screens/authentication/accept";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -111,10 +116,10 @@ export function AuthStack({ route }) {
       />
       {/** register screen, where users choices register types */}
       <Stack.Screen
-        name="Register"
-        component={Register}
+        name="Type"
+        component={Type}
         options={{
-          title: language?.language?.Auth?.auth?.register,
+          title: "Choice Type",
           headerBackTitleVisible: false,
           headerStyle: {
             backgroundColor: currentTheme.background,
@@ -134,7 +139,6 @@ export function AuthStack({ route }) {
           },
         }}
       />
-      {/** identify screen, main register  */}
       <Stack.Screen
         name="Identify"
         component={Identify}
@@ -159,6 +163,104 @@ export function AuthStack({ route }) {
           },
         }}
       />
+      <Stack.Screen
+        name="PersonalInfo"
+        component={PersonalInfo}
+        options={{
+          title: "Personal Info",
+          headerBackTitleVisible: false,
+          headerStyle: {
+            backgroundColor: currentTheme.background,
+
+            elevation: 0,
+            shadowOpacity: 0,
+            borderBottomWidth: 0,
+          },
+          headerTintColor: currentTheme.font,
+          headerTitleStyle: {
+            fontWeight: "bold",
+            fontSize: 18,
+            letterSpacing: 0.5,
+          },
+          cardStyle: {
+            backgroundColor: currentTheme.background,
+          },
+        }}
+      />
+      {/* */}
+      <Stack.Screen
+        name="Accept"
+        component={Accept}
+        options={{
+          title: "Accept Rules",
+          headerBackTitleVisible: false,
+          headerStyle: {
+            backgroundColor: currentTheme.background,
+
+            elevation: 0,
+            shadowOpacity: 0,
+            borderBottomWidth: 0,
+          },
+          headerTintColor: currentTheme.font,
+          headerTitleStyle: {
+            fontWeight: "bold",
+            fontSize: 18,
+            letterSpacing: 0.5,
+          },
+          cardStyle: {
+            backgroundColor: currentTheme.background,
+          },
+        }}
+      />
+      {/** identify screen, main register  */}
+      <Stack.Screen
+        name="SuccessRegister"
+        component={SuccessRegister}
+        options={{
+          title: "Congretulation!",
+          headerBackTitleVisible: false,
+          headerStyle: {
+            backgroundColor: currentTheme.background,
+
+            elevation: 0,
+            shadowOpacity: 0,
+            borderBottomWidth: 0,
+          },
+          headerTintColor: currentTheme.font,
+          headerTitleStyle: {
+            fontWeight: "bold",
+            fontSize: 18,
+            letterSpacing: 0.5,
+          },
+          cardStyle: {
+            backgroundColor: currentTheme.background,
+          },
+        }}
+      />
+      {/* <Stack.Screen
+        name="Identify"
+        component={Identify}
+        options={{
+          title: language?.language?.Auth?.auth?.identify,
+          headerBackTitleVisible: false,
+          headerStyle: {
+            backgroundColor: currentTheme.background,
+
+            elevation: 0,
+            shadowOpacity: 0,
+            borderBottomWidth: 0,
+          },
+          headerTintColor: currentTheme.font,
+          headerTitleStyle: {
+            fontWeight: "bold",
+            fontSize: 18,
+            letterSpacing: 0.5,
+          },
+          cardStyle: {
+            backgroundColor: currentTheme.background,
+          },
+        }}
+      /> */}
       {/** business register screen, if user specialist or beauty salon */}
       <Stack.Screen
         name="Business"

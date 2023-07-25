@@ -9,7 +9,6 @@ import {
   Platform,
   Pressable,
   ScrollView,
-  StyleSheet,
   Text,
   View,
 } from "react-native";
@@ -104,17 +103,23 @@ export const SendOrder = ({ route }) => {
     })
     ?.split(",")[0];
 
-  const [dayOff, setDayOff] = useState(false);
-
   const wDay = targetUser?.workingDays.find(
     (item) =>
       item.value.toLowerCase() === "everyday" ||
       item.value.toLowerCase() === "workingdays" ||
       item.value.toLowerCase() === isToday.toLowerCase()
   );
+
   let workingHoursInThisDay;
+
   if (wDay) {
-    workingHoursInThisDay = wDay.hours?.split(" - ");
+    if (wDay.hours) {
+      workingHoursInThisDay = wDay.hours?.split(" - ");
+    } else {
+      workingHoursInThisDay = ["10:00", "21:00"];
+    }
+  } else {
+    workingHoursInThisDay = ["10:00", "21:00"];
   }
 
   let startHour;
@@ -122,13 +127,15 @@ export const SendOrder = ({ route }) => {
   if (workingHoursInThisDay) {
     startHour = workingHoursInThisDay[0];
     endHour = workingHoursInThisDay[1];
-  } else {
-    startHour = "00:00";
-    endHour = "00:00";
   }
 
   // define procedure time
-  const procedureTime = procedure?.duration;
+  let procedureTime;
+  if (procedure?.duration) {
+    procedureTime = procedure.duration;
+  } else {
+    procedureTime = 60;
+  }
 
   // Assuming orders is defined elsewhere in your code and each order has a `date` (a timestamp) and `duration` (in minutes)
   let activeHours = orders?.map((order, index) => {
@@ -163,7 +170,30 @@ export const SendOrder = ({ route }) => {
   }
 
   // Generate a list of times, each 15 minutes apart
-  let timeList = generateTimeList(parseInt(startHour), parseInt(endHour), 15);
+  let tmlst = generateTimeList(parseInt(startHour), parseInt(endHour), 15);
+  var currentTime = new Date().getHours() * 60 + new Date().getMinutes(); // Convert current time to minutes
+
+  // Filter out the times that are less than the current time
+  let timeList;
+  if (
+    isToday ===
+    new Date()
+      .toLocaleDateString("en-US", {
+        weekday: "long",
+      })
+      ?.split(",")[0]
+  ) {
+    timeList = tmlst.filter((time) => {
+      var [hours, minutes] = time.split(":"); // Split the time string into hours and minutes
+      var totalMinutes = hours * 60 + Number(minutes); // Convert time to minutes
+
+      return totalMinutes >= currentTime; // Keep the time if it's not less than the current time
+    });
+  } else {
+    timeList = tmlst;
+  }
+
+  console.log(timeList);
 
   let result = timeList.map((time) => {
     // Check if the time is within any active hour plus its duration
@@ -376,7 +406,6 @@ export const SendOrder = ({ route }) => {
               date={date}
               targetUser={targetUser}
               setTime={setTime}
-              setDayOff={setDayOff}
             />
           </View>
           <View

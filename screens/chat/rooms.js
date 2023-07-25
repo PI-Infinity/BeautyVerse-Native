@@ -1,4 +1,4 @@
-import { FontAwesome } from "@expo/vector-icons";
+import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import axios from "axios";
 import React, { useEffect, useState } from "react";
 import {
@@ -45,117 +45,99 @@ export const Rooms = ({ navigation, search }) => {
   // defines current user
   const currentUser = useSelector((state) => state.storeUser.currentUser);
 
-  // defines theme state
-  const theme = useSelector((state) => state.storeApp.theme);
-  const currentTheme = theme ? darkTheme : lightTheme;
-
   // defines rooms list
   const rooms = useSelector((state) => state.storeChat.rooms);
 
-  // real time rooms update
-  useEffect(() => {
-    socket.on("chatUpdate", (data) => {
-      dispatch(setRerederRooms());
-    });
-  }, []);
+  // // real time rooms update
+  // useEffect(() => {
+  //   socket.on("chatUpdate", (data) => {
+  //     console.log("rerender chats");
+  //     // dispatch(setRerederRooms());
+  //   });
+  // }, []);
 
   return (
-    <>
-      {loading ? (
+    <ScrollView
+      showsVerticalScrollIndicator={false}
+      contentContainerStyle={{ marginTop: 0 }}
+    >
+      {rooms?.length > 0 ? (
+        rooms &&
+        [...rooms]
+          .sort(
+            (a, b) =>
+              new Date(b.lastMessageCreatedAt) -
+              new Date(a.lastMessageCreatedAt)
+          )
+          ?.filter((item) => {
+            let targetChatMember;
+            if (item?.members.member1 === currentUser._id) {
+              targetChatMember = {
+                id: item?.members.member2,
+                name: item?.members.member2Name,
+                cover: item?.members.member2Cover,
+              };
+            } else {
+              targetChatMember = {
+                id: item?.members.member1,
+                name: item?.members.member1Name,
+                cover: item?.members.member1Cover,
+              };
+            }
+            return targetChatMember?.name
+              ?.toLowerCase()
+              .includes(search.toLowerCase());
+          })
+          ?.map((item, index) => {
+            // define target member
+            let targetChatMember;
+            if (item?.members.member1 === currentUser._id) {
+              targetChatMember = {
+                id: item?.members.member2,
+                name: item?.members.member2Name,
+                cover: item?.members.member2Cover,
+              };
+            } else {
+              targetChatMember = {
+                id: item?.members.member1,
+                name: item?.members.member1Name,
+                cover: item?.members.member1Cover,
+              };
+            }
+            if (item.lastMessage !== "") {
+              if (item.hideFor !== currentUser._id) {
+                return (
+                  <RoomItem
+                    key={item.room}
+                    targetChatMember={targetChatMember}
+                    item={item}
+                    navigation={navigation}
+                    socket={socket}
+                  />
+                );
+              }
+            }
+          })
+      ) : (
         <View
           style={{
             flex: 1,
-            height: SCREEN_HEIGHT,
             alignItems: "center",
             justifyContent: "center",
+            height: SCREEN_HEIGHT / 1.4,
           }}
         >
-          <ActivityIndicator size="large" color={currentTheme.pink} />
+          <Text
+            style={{
+              letterSpacing: 0.3,
+              color: "rgba(255,255,255,0.3)",
+            }}
+          >
+            No chats found
+          </Text>
         </View>
-      ) : (
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ marginTop: 0 }}
-        >
-          {rooms?.length > 0 ? (
-            rooms &&
-            [...rooms]
-              .sort(
-                (a, b) =>
-                  new Date(b.lastMessageCreatedAt) -
-                  new Date(a.lastMessageCreatedAt)
-              )
-              ?.filter((item) => {
-                let targetChatMember;
-                if (item?.members.member1 === currentUser._id) {
-                  targetChatMember = {
-                    id: item?.members.member2,
-                    name: item?.members.member2Name,
-                    cover: item?.members.member2Cover,
-                  };
-                } else {
-                  targetChatMember = {
-                    id: item?.members.member1,
-                    name: item?.members.member1Name,
-                    cover: item?.members.member1Cover,
-                  };
-                }
-                return targetChatMember?.name
-                  ?.toLowerCase()
-                  .includes(search.toLowerCase());
-              })
-              ?.map((item, index) => {
-                // define target member
-                let targetChatMember;
-                if (item?.members.member1 === currentUser._id) {
-                  targetChatMember = {
-                    id: item?.members.member2,
-                    name: item?.members.member2Name,
-                    cover: item?.members.member2Cover,
-                  };
-                } else {
-                  targetChatMember = {
-                    id: item?.members.member1,
-                    name: item?.members.member1Name,
-                    cover: item?.members.member1Cover,
-                  };
-                }
-                if (item.lastMessage !== "") {
-                  if (item.hideFor !== currentUser._id) {
-                    return (
-                      <RoomItem
-                        key={index}
-                        targetChatMember={targetChatMember}
-                        item={item}
-                        navigation={navigation}
-                        socket={socket}
-                      />
-                    );
-                  }
-                }
-              })
-          ) : (
-            <View
-              style={{
-                flex: 1,
-                alignItems: "center",
-                justifyContent: "center",
-                height: SCREEN_HEIGHT / 1.4,
-              }}
-            >
-              <Text
-                style={{
-                  letterSpacing: 0.3,
-                  color: "rgba(255,255,255,0.3)",
-                }}
-              >
-                No chats found
-              </Text>
-            </View>
-          )}
-        </ScrollView>
       )}
-    </>
+    </ScrollView>
   );
 };
 
@@ -175,9 +157,15 @@ const RoomItem = ({ targetChatMember, item, navigation, socket }) => {
 
   // defines current user
   const currentUser = useSelector((state) => state.storeUser.currentUser);
+  // console.log("seen: " + item?.lastMessageSeen + " - " + currentUser.name);
+  // console.log("rooms: " + rooms?.length + " - " + currentUser.name);
 
   // defines user object
   const [userObj, setUserObj] = useState(null);
+
+  // defines theme state
+  const theme = useSelector((state) => state.storeApp.theme);
+  const currentTheme = theme ? darkTheme : lightTheme;
 
   // Get user info from db
   const GetUser = async () => {
@@ -207,6 +195,7 @@ const RoomItem = ({ targetChatMember, item, navigation, socket }) => {
           "https://beautyverse.herokuapp.com/api/v1/chats/" + Room.room,
           {
             status: "read",
+            lastMessageSeen: "seen",
           }
         );
       }
@@ -217,6 +206,7 @@ const RoomItem = ({ targetChatMember, item, navigation, socket }) => {
         newRooms[currentRoomIndex] = {
           ...newRooms[currentRoomIndex],
           status: "read",
+          lastMessageSeen: "seen",
         };
         dispatch(setRooms(newRooms));
       }
@@ -241,12 +231,16 @@ const RoomItem = ({ targetChatMember, item, navigation, socket }) => {
             "/" +
             currentUser._id
         );
+        // update chats for target user
+        socket.emit("updateChat", {
+          targetId: targetChatMember?.id,
+        });
       } else {
         await axios.patch(
           "https://beautyverse.herokuapp.com/api/v1/chats/" + ch.room,
           {
             status: "read",
-            lastMessage: "User has deleted own messages..",
+            lastMessage: "User has removed own messages...",
             hideFor: currentUser._id,
           }
         );
@@ -256,8 +250,9 @@ const RoomItem = ({ targetChatMember, item, navigation, socket }) => {
             "/" +
             currentUser._id
         );
+        // update chats for target user
         socket.emit("updateChat", {
-          targetId: targetChatMember.id,
+          targetId: targetChatMember?.id,
         });
       }
     } catch (error) {
@@ -371,7 +366,7 @@ const RoomItem = ({ targetChatMember, item, navigation, socket }) => {
           style={{
             flex: 6,
             paddingLeft: 0,
-            gap: 3,
+            gap: 4,
             height: 45,
             paddingTop: 5,
             overflow: "hidden",
@@ -394,7 +389,16 @@ const RoomItem = ({ targetChatMember, item, navigation, socket }) => {
             {item.lastMessage}
           </Text>
         </View>
-        <View style={{ flex: 1.5, height: "100%", justifyContent: "center" }}>
+        <View
+          style={{
+            flex: 1.5,
+            height: "100%",
+            justifyContent: "center",
+            alignItems: "center",
+            gap: 5,
+            marginRight: 4,
+          }}
+        >
           <Text
             style={{
               letterSpacing: 0.3,
@@ -404,6 +408,19 @@ const RoomItem = ({ targetChatMember, item, navigation, socket }) => {
           >
             {definedTime}
           </Text>
+          {item.lastSender === currentUser._id ? (
+            <MaterialIcons
+              name="done-all"
+              size={14}
+              color={
+                item?.lastMessageSeen === "unread"
+                  ? currentTheme.disabled
+                  : currentTheme.pink
+              }
+            />
+          ) : (
+            <Text style={{ fontSize: 14 }}></Text>
+          )}
         </View>
       </Pressable>
     </>

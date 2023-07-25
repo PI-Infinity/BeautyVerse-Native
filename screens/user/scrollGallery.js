@@ -173,8 +173,8 @@ export const ScrollGallery = ({ route, navigation }) => {
         showsVerticalScrollIndicator={false}
         onScroll={handleScroll}
         scrollEventThrottle={16}
-        bounces={Platform.OS === "ios" ? false : undefined}
-        overScrollMode={Platform.OS === "ios" ? "never" : "always"}
+        // bounces={Platform.OS === "ios" ? false : undefined}
+        // overScrollMode={Platform.OS === "ios" ? "never" : "always"}
       >
         {FeedItems}
         {loadNewFeeds ? (

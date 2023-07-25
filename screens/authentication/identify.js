@@ -10,6 +10,7 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  Alert,
 } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 import AlertMessage from "../../components/alertMessage";
@@ -19,8 +20,9 @@ import { Language } from "../../context/language";
 import { darkTheme, lightTheme } from "../../context/theme";
 import { setCurrentUser } from "../../redux/auth";
 import { setRerenderCurrentUser } from "../../redux/rerenders";
+import { BackDrop } from "../../components/backDropLoader";
 
-const Identify = ({ navigation }) => {
+export const Identify = ({ navigation }) => {
   // redux toolkit dispatch
   const dispatch = useDispatch();
   //language context
@@ -31,10 +33,7 @@ const Identify = ({ navigation }) => {
   const currentTheme = theme ? darkTheme : lightTheme;
 
   // identify states
-  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [address, setAddress] = useState({});
-  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
@@ -48,115 +47,134 @@ const Identify = ({ navigation }) => {
   // verify email states
   const [verify, setVerify] = useState(false);
   const [code, setCode] = useState("");
+  const [codeInput, setCodeInput] = useState("");
+
+  const [loading, setLoading] = useState(false);
 
   // alert message
   const [alert, setAlert] = useState({ active: false, text: "", type: "" });
 
   /**
-   * email verify function after succesfully register
-   * Veryify function verifes email by 6 random numbers
+   * Send verify email
    */
 
-  async function Verify() {
-    try {
-      const response = await axios.post(
-        "https://beautyverse.herokuapp.com/api/v1/verifyEmail",
-        {
-          email: email,
-          code: code,
-        }
-      );
-      // get user info after register
-      const newUser = response.data.data.newUser;
-
-      if (newUser?.type === "user") {
-        // if user type is "user", save info in asyncstorage, rerender user info and get all data from db
-        await AsyncStorage.setItem(
-          "Beautyverse:currentUser",
-          JSON.stringify(newUser)
-        );
-        // after rerender system navigates to main content
-        dispatch(setRerenderCurrentUser());
-      } else {
-        // if user type isnt "user", save user info in redux for after using in business register screen
-        dispatch(setCurrentUser(newUser));
-        // navigate to register screen
-        navigation.navigate("Business");
-        // close verifying popup
-        setVerify(false);
-        // clear input states
-        setEmail("");
-        setPassword("");
-        setConfirmPassword("");
-        setAddress("");
-        setPhone("");
-        setName("");
-      }
-    } catch (err) {
-      // error handlers
-      setAlert({
+  const SendEmail = async () => {
+    if (
+      email?.length < 1 ||
+      password?.length < 1 ||
+      confirmPassword?.length < 1
+    ) {
+      return setAlert({
         active: true,
-        text: err.response.data.message,
+        text: "Please input fields!",
         type: "error",
       });
-      console.log(err.response.data.message.toString());
     }
-  }
+    if (!email?.includes("@") || email?.length < 6 || email?.length > 40) {
+      return setAlert({
+        active: true,
+        text: "Please input vaild email!",
+        type: "error",
+      });
+    }
+
+    let reg = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w\w+)+$/;
+    if (reg.test(email) === false) {
+      return setAlert({
+        active: true,
+        text: "An email is not vaild!",
+        type: "error",
+      });
+    }
+
+    if (password?.length < 8 || password?.length > 40) {
+      return setAlert({
+        active: true,
+        text: "Password should be min 8 and max 40 symbols!",
+        type: "error",
+      });
+    }
+    if (password !== confirmPassword) {
+      return setAlert({
+        active: true,
+        text: "Password and confirm password must be same!",
+        type: "error",
+      });
+    }
+    try {
+      const response = await axios.post(
+        "https://beautyverse.herokuapp.com/api/v1/sendVerifyEmail",
+        {
+          email: email,
+        }
+      );
+      if (response.data.user) {
+        dispatch(setCurrentUser(response.data.user));
+      }
+      setCode(response.data.code);
+      setVerify(true);
+    } catch (error) {
+      setAlert({
+        active: true,
+        text: error.response.data.message,
+        type: "error",
+      });
+    }
+  };
 
   /**
    * Registration
    */
 
   const Register = async (e) => {
-    if (phone?.includes("+")) {
-      // if hone includes country code continue, if not alert error
+    setLoading(true);
+    // console.log(code);
+    // if hone includes country code continue, if not alert error
+    if (code === codeInput) {
       try {
         // Signup user
-        await axios.post("https://beautyverse.herokuapp.com/api/v1/signup", {
-          name: name,
-          type: type,
-          email: email,
-          phone: phone,
-          password: password,
-          confirmPassword: confirmPassword,
-          cover: "",
-          address: {
-            country: address.country,
-            region: address.region,
-            city: address.city,
-            district: address.district,
-            street: address.street,
-            number: address.number,
-            latitude: address.latitude,
-            longitude: address.longitude,
-          },
-          media: {
-            facebook: "",
-            instagram: "",
-            tiktok: "",
-            youtube: "",
-            telegram: false,
-            whatsapp: false,
-          },
-          experience: "",
-          orders: [],
-          subscription: { status: "active" },
-          notifications: [
-            {
-              senderId: "Beautyverse",
-              text: "Welcome Beautyverse",
-              date: new Date(),
-              type: "welcome",
-              status: "unread",
-              feed: "",
+        const response = await axios.post(
+          "https://beautyverse.herokuapp.com/api/v1/signup",
+          {
+            name: "",
+            type: "user",
+            email: email,
+            phone: "",
+            password: password,
+            confirmPassword: confirmPassword,
+            cover: "",
+            address: {},
+            media: {
+              facebook: "",
+              instagram: "",
+              tiktok: "",
+              youtube: "",
+              telegram: false,
+              whatsapp: false,
             },
-          ],
-        });
+            experience: "",
+            orders: [],
+            subscription: { status: "active" },
+            notifications: [],
+            active: false,
+            registerStage: "identify",
+          }
+        );
         // after send data to db, open email verify popup
-        setVerify(true);
+        setVerify(false);
+        dispatch(setCurrentUser(response.data.newUser));
+        setCode("");
+        setCodeInput("");
+        navigation.navigate("SuccessRegister");
+        setTimeout(() => {
+          setLoading(false);
+        }, 1000);
       } catch (err) {
+        setCode("");
+        setCodeInput("");
+        setLoading(false);
         // error handlers
-        console.log(err.response.data.message);
+        console.log(err.response);
         setAlert({
           active: true,
           text: err.response.data.message,
@@ -164,12 +182,7 @@ const Identify = ({ navigation }) => {
         });
       }
     } else {
-      // error if iphone number without country code
-      setAlert({
-        active: true,
-        text: "Invalid phone number! Please include your country code at the beginning. An example of a correct format is +995 555 555 555.",
-        type: "error",
-      });
+      Alert.alert("Wrong verification code!");
     }
   };
   return (
@@ -177,16 +190,16 @@ const Identify = ({ navigation }) => {
       <View style={{ position: "absolute" }}>
         {verify && (
           <VerifyCodePopup
-            code={code}
-            setCode={setCode}
-            setFunction={Verify}
+            code={codeInput}
+            setCode={setCodeInput}
+            setFunction={Register}
             open={verify}
             setOpen={setVerify}
             registerMessages={true}
           />
         )}
       </View>
-
+      <BackDrop loading={loading} setLoading={setLoading} />
       <KeyboardAvoidingView
         style={styles.keyboardAvoidingContainer}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -201,35 +214,6 @@ const Identify = ({ navigation }) => {
           />
         </View>
         <View style={styles.container}>
-          <View style={{ position: "absolute", zIndex: 20000 }}></View>
-          <View style={styles.itemContainer}>
-            <Text style={[styles.itemTitle, { color: currentTheme.font }]}>
-              {language?.language?.Auth?.auth?.name}
-            </Text>
-            <TextInput
-              placeholder="Your or Business name"
-              placeholderTextColor={currentTheme.disabled}
-              value={name}
-              style={[
-                styles.input,
-                {
-                  color: currentTheme.font,
-                  borderColor: currentTheme.line,
-                },
-              ]}
-              onChangeText={(text) => setName(text)}
-            />
-          </View>
-          <View style={styles.itemContainer}>
-            <Text style={[styles.itemTitle, { color: currentTheme.font }]}>
-              {language?.language?.Auth?.auth?.address}
-            </Text>
-            <GoogleAutocomplete
-              address={address}
-              setAddress={setAddress}
-              currentTheme={currentTheme}
-            />
-          </View>
           <View style={styles.itemContainer}>
             <Text style={[styles.itemTitle, { color: currentTheme.font }]}>
               {language?.language?.Auth?.auth?.email}
@@ -248,24 +232,7 @@ const Identify = ({ navigation }) => {
               onChangeText={(text) => setEmail(text)}
             />
           </View>
-          <View style={[styles.itemContainer, { marginTop: 0 }]}>
-            <Text style={[styles.itemTitle, { color: currentTheme.font }]}>
-              {language?.language?.Auth?.auth?.phone}
-            </Text>
-            <TextInput
-              placeholder="ex: +000000000"
-              placeholderTextColor={currentTheme.disabled}
-              value={phone}
-              style={[
-                styles.input,
-                {
-                  color: currentTheme.font,
-                  borderColor: currentTheme.line,
-                },
-              ]}
-              onChangeText={(text) => setPhone(text)}
-            />
-          </View>
+
           <View style={styles.itemContainer}>
             <Text style={[styles.itemTitle, { color: currentTheme.font }]}>
               {language?.language?.Auth?.auth?.password}
@@ -369,13 +336,34 @@ const Identify = ({ navigation }) => {
               </TouchableOpacity>
             </View>
           </View>
-          <TouchableOpacity style={styles.button} onPress={Register}>
-            <Text style={styles.buttonText}>
-              {type === "user"
-                ? language?.language?.Auth?.auth?.register
-                : language?.language?.Auth?.auth?.next}
-            </Text>
+          <TouchableOpacity style={styles.button} onPress={SendEmail}>
+            <Text style={styles.buttonText}>Register</Text>
           </TouchableOpacity>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 5,
+              marginTop: 10,
+            }}
+          >
+            <Text style={[styles.loginQuestion, { color: currentTheme.font }]}>
+              {language?.language?.Auth?.auth?.havea}
+            </Text>
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => navigation.navigate("Login")}
+            >
+              <Text
+                style={[
+                  styles.login,
+                  { color: currentTheme.pink, fontWeight: "bold" },
+                ]}
+              >
+                {language?.language?.Auth?.auth?.login}
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </KeyboardAvoidingView>
     </>
@@ -439,5 +427,3 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
 });
-
-export default Identify;

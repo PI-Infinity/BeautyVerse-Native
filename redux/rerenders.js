@@ -17,6 +17,10 @@ const initialState = {
   rerenderNotifications: false,
 
   rerenderOrders: false,
+
+  // refreshes
+  feedRefreshControl: false,
+  cardRefreshControl: false,
 };
 
 export const Rerenders = createSlice({
@@ -64,6 +68,12 @@ export const Rerenders = createSlice({
     setRerenderOrders: (state, action) => {
       state.rerenderOrders = !state.rerenderOrders;
     },
+    setFeedRefreshControl: (state, action) => {
+      state.feedRefreshControl = action.payload;
+    },
+    setCardRefreshControl: (state, action) => {
+      state.cardRefreshControl = action.payload;
+    },
   },
 });
 
@@ -80,5 +90,7 @@ export const {
   setRemoveReviewQntRerenderFromScrollGallery,
   setRerenderNotifcations,
   setRerenderOrders,
+  setFeedRefreshControl,
+  setCardRefreshControl,
 } = Rerenders.actions;
 export default Rerenders.reducer;

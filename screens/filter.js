@@ -147,20 +147,12 @@ export const Filter = ({ navigation }) => {
           </TouchableOpacity>
         );
       })}
-      <View
-        style={{
-          height: 1,
-          width: "95%",
-          backgroundColor: currentTheme.pink,
-          opacity: 0.2,
-          marginTop: 10,
-        }}
-      ></View>
+
       <View
         style={{
           width: "100%",
           paddingHorizontal: 30,
-          paddingVertical: 10,
+          paddingVertical: 20,
           paddingBottom: 15,
           alignItems: "center",
           flexDirection: "row",
@@ -259,14 +251,6 @@ export const Filter = ({ navigation }) => {
           )}
         </View>
       </View>
-      <View
-        style={{
-          height: 1,
-          width: "95%",
-          backgroundColor: currentTheme.pink,
-          opacity: 0.2,
-        }}
-      ></View>
 
       <View
         style={{

@@ -4,7 +4,7 @@
     "slug": "beautyverse-app",
     "owner": "beautyverse",
     "description": "Everything about Beauty and Care",
-    "version": "1.0.1",
+    "version": "1.0.4",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -17,7 +17,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.beautyverse.beautyverseapp",
-      "buildNumber": "1.0.15"
+      "buildNumber": "1.0.22"
     },
     "android": {
       "package": "com.beautyverse.beautyverseapp",

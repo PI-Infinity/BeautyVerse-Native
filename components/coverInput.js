@@ -27,8 +27,7 @@ async function readImageData(uri) {
   }
 }
 
-const InputFile = ({ targetUser, onCoverUpdate }) => {
-  const [resizedImg, setResizedImg] = useState(null);
+const InputFile = ({ targetUser, setOpenPopup }) => {
   const [file, setFile] = useState(null);
 
   const dispatch = useDispatch();
@@ -129,6 +128,10 @@ const InputFile = ({ targetUser, onCoverUpdate }) => {
     <View style={styles.container}>
       <BackDrop loading={loading} setLoading={setLoading} />
       <TouchableOpacity
+        onLongPress={
+          targetUser.cover?.length > 0 ? () => setOpenPopup(true) : undefined
+        }
+        delayLongPress={200}
         onPress={selectImage}
         style={styles.button}
       ></TouchableOpacity>

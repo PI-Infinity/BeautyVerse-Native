@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { View } from "react-native";
+import React, { useRef } from "react";
+import { View, Animated } from "react-native";
 import { StyleSheet, Dimensions } from "react-native";
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
 import { Language } from "../context/language";
@@ -12,24 +12,32 @@ const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 const GoogleAutocomplete = ({ address, setAddress, currentTheme }) => {
   const language = Language();
-  const [h, setH] = useState(45);
+  const heightAnim = useRef(new Animated.Value(45)).current; // Initial height for animated value
 
   const handleChangeText = (text) => {
-    if (text.length > 1) {
-      setH(150);
-    } else {
-      setH(45);
-    }
+    Animated.timing(heightAnim, {
+      toValue: text.length > 1 ? 350 : 45,
+      duration: 200, // Duration of the animation
+      useNativeDriver: false, // Add this line
+    }).start();
+  };
+  const handleChangeText2 = (text) => {
+    Animated.timing(heightAnim, {
+      toValue: 45,
+      duration: 200, // Duration of the animation
+      useNativeDriver: false, // Add this line
+    }).start();
   };
 
   const styles = StyleSheet.create({
     container: {
-      width: SCREEN_WIDTH * 0.8,
+      width: SCREEN_WIDTH * 0.9,
+      height: 200,
+
       // height: 100,
     },
     listView: {
       borderRadius: 5,
-      backgroundColor: currentTheme.background2, // Add this line
     },
     // textInputContainer: {
     //   borderTopWidth: 0,
@@ -60,7 +68,7 @@ const GoogleAutocomplete = ({ address, setAddress, currentTheme }) => {
     description: {
       // Add this block
       color: "#111",
-      fontWeight: "bold",
+      fontWeight: "normal",
     },
     textInputClearButton: {
       tintColor: "red",
@@ -68,7 +76,7 @@ const GoogleAutocomplete = ({ address, setAddress, currentTheme }) => {
   });
 
   return (
-    <View style={{ zIndex: 20000, height: h }}>
+    <Animated.View style={{ zIndex: 20000, height: heightAnim }}>
       <GooglePlacesAutocomplete
         placeholder="Your location"
         minLength={2}
@@ -98,7 +106,7 @@ const GoogleAutocomplete = ({ address, setAddress, currentTheme }) => {
           )?.long_name;
           const latitude = details.geometry.location.lat;
           const longitude = details.geometry.location.lng;
-          setH(45);
+          handleChangeText2();
           setAddress({
             country,
             region,
@@ -127,7 +135,7 @@ const GoogleAutocomplete = ({ address, setAddress, currentTheme }) => {
         //   useOnPlatform: "web",
         // }}
       />
-    </View>
+    </Animated.View>
   );
 };
 

@@ -37,7 +37,7 @@ export const User = createSlice({
 
       if (state.currentUser.procedures) {
         state.currentUser.procedures = state.currentUser.procedures.filter(
-          (procedure) => procedure._id !== procedureId
+          (procedure) => procedure.value !== procedureId
         );
       }
     },

@@ -55,14 +55,9 @@ export const Feed = (props) => {
   // define redux dispatch
   const dispatch = useDispatch();
 
-  /**
-   * define current user with last feed object
-   * */
-  const [feedObject, setFeedObject] = useState(null);
+  // define cleanup state from redux
 
-  useEffect(() => {
-    setFeedObject(props.user.feed);
-  }, []);
+  const cleanUp = useSelector((state) => state.storeRerenders.cleanUp);
 
   /**
    * in Feeds object is defined user with 5 feeds.
@@ -87,15 +82,11 @@ export const Feed = (props) => {
     }
   }
 
-  // define cleanup state from redux
-
-  const cleanUp = useSelector((state) => state.storeRerenders.cleanUp);
-
   useEffect(() => {
-    if (feedObject) {
+    if (props.user.feed) {
       GetUserFeeds();
     }
-  }, [feedObject, cleanUp]);
+  }, [props.user.feed, cleanUp]);
 
   // define current user state from redux
   const currentUser = useSelector((state) => state.storeUser.currentUser);
@@ -349,22 +340,22 @@ export const Feed = (props) => {
    */
   // define file height
   let hght;
-  if (feedObject?.video) {
+  if (props.user.feed?.video) {
     let originalHeight =
-      feedObject.fileWidth >= feedObject.fileHeight
-        ? feedObject.fileWidth
-        : feedObject.fileHeight;
+      props.user.feed.fileWidth >= props.user.feed.fileHeight
+        ? props.user.feed.fileWidth
+        : props.user.feed.fileHeight;
     let originalWidth =
-      feedObject.fileWidth >= feedObject.fileHeight
-        ? feedObject.fileHeight
-        : feedObject.fileWidth;
+      props.user.feed.fileWidth >= props.user.feed.fileHeight
+        ? props.user.feed.fileHeight
+        : props.user.feed.fileWidth;
 
     let percented = originalWidth / SCREEN_WIDTH;
 
     hght = originalHeight / percented;
-  } else if (feedObject?.images[0]) {
-    let originalHeight = feedObject.fileHeight;
-    let originalWidth = feedObject.fileWidth;
+  } else if (props.user.feed?.images[0]) {
+    let originalHeight = props.user.feed.fileHeight;
+    let originalWidth = props.user.feed.fileWidth;
 
     let percented = originalWidth / SCREEN_WIDTH;
     hght = originalHeight / percented;
@@ -377,7 +368,7 @@ export const Feed = (props) => {
         backgroundColor: currentTheme.background,
       }}
     >
-      {feedObject?.fileFormat === "img" && (
+      {props.user.feed?.fileFormat === "img" && (
         <View
           style={{
             height: 70,
@@ -396,19 +387,19 @@ export const Feed = (props) => {
             navigation={navigation}
             lang={lang}
             language={language}
-            createdAt={feedObject.createdAt}
-            fileFormat={feedObject?.fileFormat}
+            createdAt={props.user.feed.createdAt}
+            fileFormat={props.user.feed?.fileFormat}
           />
         </View>
       )}
-      {feedObject?.post && feedObject?.fileFormat === "img" && (
+      {props.user.feed?.post && props.user.feed?.fileFormat === "img" && (
         <View style={{ paddingLeft: 10 }}>
           <Post
             currentTheme={currentTheme}
             numLines={numLines}
             setNumLines={setNumLines}
-            fileFormat={feedObject?.fileFormat}
-            text={feedObject.post}
+            fileFormat={props.user.feed?.fileFormat}
+            text={props.user.feed.post}
           />
         </View>
       )}
@@ -428,7 +419,7 @@ export const Feed = (props) => {
           width: SCREEN_WIDTH,
         }}
       >
-        {feedObject?.images?.length > 1 && (
+        {props.user.feed?.images?.length > 1 && (
           <View
             style={{
               position: "absolute",
@@ -451,14 +442,15 @@ export const Feed = (props) => {
             />
           </View>
         )}
-        {feedObject?.fileFormat === "video" && (
+        {props.user.feed?.fileFormat === "video" && (
           <View
             style={{
-              paddingHorizontal: 10,
-              paddingVertical: 10,
               position: "absolute",
               top: 0,
               zIndex: 120,
+              paddingHorizontal: 15,
+              paddingVertical: 10,
+              width: "100%",
             }}
           >
             <TopSection
@@ -468,23 +460,23 @@ export const Feed = (props) => {
               navigation={navigation}
               lang={lang}
               language={language}
-              createdAt={feedObject.createdAt}
-              fileFormat={feedObject?.fileFormat}
+              createdAt={props.user.feed.createdAt}
+              fileFormat={props.user.feed?.fileFormat}
             />
             <View style={{ marginTop: 10 }}>
-              {feedObject?.post && (
+              {props.user.feed?.post && (
                 <Post
                   currentTheme={currentTheme}
                   numLines={numLines}
                   setNumLines={setNumLines}
-                  text={feedObject?.post}
-                  fileFormat={feedObject?.fileFormat}
+                  text={props.user.feed?.post}
+                  fileFormat={props.user.feed?.fileFormat}
                 />
               )}
             </View>
           </View>
         )}
-        {feedObject?.fileFormat === "video" ? (
+        {props.user.feed?.fileFormat === "video" ? (
           <>
             {loadVideo && (
               <View
@@ -515,12 +507,12 @@ export const Feed = (props) => {
               style={{
                 width: SCREEN_WIDTH,
                 height:
-                  feedObject.fileHeight > feedObject.fileWidth
+                  props.user.feed.fileHeight > props.user.feed.fileWidth
                     ? hght
-                    : feedObject.fileWidth,
+                    : props.user.feed.fileWidth,
               }}
               source={{
-                uri: feedObject.video,
+                uri: props.user.feed.video,
               }}
               rate={1.0}
               volume={1.0}
@@ -554,7 +546,7 @@ export const Feed = (props) => {
               alignItems: "center",
             }}
           >
-            {feedObject?.images?.map((itm, x) => {
+            {props.user.feed.images?.map((itm, x) => {
               return (
                 <Pressable
                   key={x}
@@ -581,6 +573,7 @@ export const Feed = (props) => {
                   delayLongPress={80}
                 >
                   <ZoomableImage
+                    key={itm.url}
                     style={{
                       height:
                         hght > 640 && definedDevice === "mobile"
@@ -595,6 +588,7 @@ export const Feed = (props) => {
                     }}
                     source={{
                       uri: itm.url,
+                      cache: "reload",
                     }}
                     onLoad={() =>
                       setTimeout(() => {
@@ -610,7 +604,7 @@ export const Feed = (props) => {
           </ScrollView>
         )}
 
-        {feedObject?.fileFormat === "video" && (
+        {props.user.feed?.fileFormat === "video" && (
           <Pressable
             onPress={(event) => event.stopPropagation()}
             name="bottom-section"
@@ -623,26 +617,30 @@ export const Feed = (props) => {
               bottom: 0,
             }}
           >
-            <BottomSection
-              notifications={props.from ? true : false}
-              navigation={props.navigation}
-              language={language}
-              currentTheme={currentTheme}
-              RemoveStar={RemoveStar}
-              SetStar={SetStar}
-              activeFeed={activeFeed}
-              user={props.user}
-              feed={userFeeds[activeFeed]}
-              setVideoVolume={setVideoVolume}
-              volume={volume}
-              reviewsLength={userFeeds[activeFeed]?.reviewsLength}
-              checkIfStared={userFeeds[activeFeed]?.checkIfStared}
-              starsLength={userFeeds[activeFeed]?.starsLength}
-            />
+            {props.from !== "notifications" && (
+              <BottomSection
+                notifications={props.from ? true : false}
+                navigation={props.navigation}
+                language={language}
+                currentTheme={currentTheme}
+                RemoveStar={RemoveStar}
+                SetStar={SetStar}
+                activeFeed={activeFeed}
+                user={props.user}
+                feed={userFeeds[activeFeed]}
+                setVideoVolume={setVideoVolume}
+                volume={volume}
+                reviewsLength={userFeeds[activeFeed]?.reviewsLength}
+                checkIfStared={userFeeds[activeFeed]?.checkIfStared}
+                starsLength={userFeeds[activeFeed]?.starsLength}
+                from="FeedCard"
+                GetUserFeeds={GetUserFeeds}
+              />
+            )}
           </Pressable>
         )}
       </View>
-      {feedObject?.fileFormat === "img" && (
+      {props.user.feed?.fileFormat === "img" && (
         <Pressable
           onPress={(event) => event.stopPropagation()}
           name="bottom-section"
@@ -675,6 +673,7 @@ export const Feed = (props) => {
                 checkIfStared={userFeeds[activeFeed]?.checkIfStared}
                 starsLength={userFeeds[activeFeed]?.starsLength}
                 GetUserFeeds={GetUserFeeds}
+                from="FeedCard"
               />
             )}
           </View>

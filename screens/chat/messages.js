@@ -1,9 +1,10 @@
 // screens/ChatRoomScreen.js
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, ScrollView, View } from "react-native";
+import { ActivityIndicator, ScrollView, View, Text } from "react-native";
 import { useSelector } from "react-redux";
 import { darkTheme, lightTheme } from "../../context/theme";
 import { Message } from "../../screens/chat/message";
+import { useSocket } from "../../context/socketContext";
 
 /**
  * Messages list in room
@@ -16,6 +17,7 @@ export const Messages = ({
   loading,
   messagesLength,
   flatListRef,
+  setMessages,
 }) => {
   // defines current user
   const currentUser = useSelector((state) => state.storeUser.currentUser);
@@ -23,13 +25,7 @@ export const Messages = ({
   // defines rerender scroll state
   const rerenderScroll = useSelector((state) => state.storeChat.rerenderScroll);
 
-  // defines messages datas
-  const [messagesData, setMessagesData] = useState([]);
-
-  useEffect(() => {
-    setMessagesData(messages);
-  }, [messages]);
-
+  const socket = useSocket();
   // on navigate scrolls to bottom
   useEffect(() => {
     setTimeout(() => {
@@ -41,7 +37,7 @@ export const Messages = ({
   const handleScroll = (event) => {
     const y = event.nativeEvent.contentOffset.y;
     if (!loading && y < -80) {
-      if (messagesLength > messagesData?.length) {
+      if (messagesLength > messages?.length) {
         setPage((prevPage) => prevPage + 1);
       }
     }
@@ -74,7 +70,7 @@ export const Messages = ({
           <ActivityIndicator size="small" color={currentTheme.pink} />
         </View>
       )}
-      {messagesData?.map((item, index, arr) => {
+      {messages?.map((item, index, arr) => {
         let prevMessage = index - 1;
         let nextMessage = index + 1;
         if (
@@ -84,12 +80,12 @@ export const Messages = ({
           return (
             <Message
               key={index}
-              {...item}
-              setMessages={setMessagesData}
-              messages={messagesData}
+              data={item}
+              messages={messages}
               prevMessage={arr[prevMessage] && arr[prevMessage]}
               nextMessage={arr[nextMessage] && arr[nextMessage]}
               navigation={navigation}
+              setMessages={setMessages}
             />
           );
         }

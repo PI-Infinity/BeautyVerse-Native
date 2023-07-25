@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect, memo } from "react";
 import {
   View,
   TextInput,
@@ -17,32 +17,13 @@ import { Language } from "../context/language";
  * Select component with search
  */
 
-const SearchableSelect = ({ data, onItemSelected, currentTheme }) => {
+const SearchableSelect = ({ data, onItemSelected, currentTheme, Deleting }) => {
   const language = Language();
   const [search, setSearch] = useState("");
 
   const [text, setText] = useState("");
 
-  const handleItemPress = (item) => {
-    setText(item.label);
-    onItemSelected(item.value);
-    setSearch("");
-  };
-
-  const RenderItem = ({ item }) => (
-    <TouchableOpacity onPress={() => handleItemPress(item)} style={styles.item}>
-      <Text
-        style={[
-          styles.itemText,
-          {
-            color: currentTheme.font,
-          },
-        ]}
-      >
-        {item.label}
-      </Text>
-    </TouchableOpacity>
-  );
+  const currentUser = useSelector((state) => state.storeUser.currentUser);
 
   const Listed = () => {
     return (
@@ -50,17 +31,30 @@ const SearchableSelect = ({ data, onItemSelected, currentTheme }) => {
         bounces={Platform.OS === "ios" ? false : undefined}
         overScrollMode={Platform.OS === "ios" ? "never" : "always"}
         style={{
-          height: 200,
+          height: "100%",
           backgroundColor: currentTheme.background2,
           borderRadius: 10,
         }}
       >
         {data
+          .filter((item) => {
+            const hyphenCount = (item.value.match(/-/g) || []).length;
+            return item.value && hyphenCount > 1;
+          })
           ?.filter((item) =>
             item.label.toLowerCase().includes(text.toLowerCase())
           )
           .map((item, index) => {
-            return <RenderItem key={index} item={item} />;
+            return (
+              <RenderItem
+                key={index}
+                item={item}
+                currentTheme={currentTheme}
+                currentUser={currentUser}
+                onItemSelected={onItemSelected}
+                Deleting={Deleting}
+              />
+            );
           })}
       </ScrollView>
     );
@@ -87,6 +81,7 @@ const SearchableSelect = ({ data, onItemSelected, currentTheme }) => {
           style={{
             color: currentTheme.font,
             backgroundColor: currentTheme.background2,
+            width: "100%",
           }}
           onChangeText={(text) => setText(text)}
           value={text}
@@ -127,3 +122,40 @@ const styles = StyleSheet.create({
 });
 
 export default SearchableSelect;
+
+const RenderItem = React.memo(
+  ({ item, currentUser, currentTheme, onItemSelected, Deleting }) => {
+    const handleItemPress = (item) => {
+      if (
+        currentUser.procedures.some(
+          (procedure) => procedure.value === item.value
+        )
+      ) {
+        Deleting(item.value);
+      } else {
+        onItemSelected(item.value);
+      }
+    };
+    return (
+      <TouchableOpacity
+        onPress={() => handleItemPress(item)}
+        style={styles.item}
+      >
+        <Text
+          style={[
+            styles.itemText,
+            {
+              color: currentUser.procedures.some(
+                (procedure) => procedure.value === item.value
+              )
+                ? currentTheme.pink
+                : currentTheme.font,
+            },
+          ]}
+        >
+          {item.label}
+        </Text>
+      </TouchableOpacity>
+    );
+  }
+);

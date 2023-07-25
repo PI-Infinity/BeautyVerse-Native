@@ -21,6 +21,7 @@ import { SendOrder } from "../screens/orders/sendOrder";
 import { SentOrders } from "../screens/sentOrders/sentOrders";
 import { ScrollGallery } from "../screens/user/scrollGallery";
 import { User } from "../screens/user/user";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -29,7 +30,7 @@ const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 */
 const Stack = createStackNavigator();
 
-export function FeedsStack({ route, navigation }) {
+export function FeedsStack({ navigation, setScrollY }) {
   // ltheme context
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
@@ -37,6 +38,11 @@ export function FeedsStack({ route, navigation }) {
   // current user state
   const currentUser = useSelector((state) => state.storeUser.currentUser);
 
+  const insets = useSafeAreaInsets();
+  const screenHeight = SCREEN_HEIGHT - insets.top - insets.bottom;
+
+  // define current chat
+  const currentChat = useSelector((state) => state.storeChat.currentChat);
   return (
     <Stack.Navigator
       initialRouteName="Feeds"
@@ -49,7 +55,9 @@ export function FeedsStack({ route, navigation }) {
       {/** main feed list screen  */}
       <Stack.Screen
         name="Feeds"
-        component={Feeds}
+        children={() => (
+          <Feeds navigation={navigation} setScrollY={setScrollY} />
+        )}
         options={{
           headerStyle: {
             backgroundColor: currentTheme.background,
@@ -369,6 +377,7 @@ export function FeedsStack({ route, navigation }) {
       />
       <Stack.Screen
         name="Room"
+        initialParams={{ screenHeight }}
         component={Room}
         options={({ navigation, route }) => ({
           headerBackTitleVisible: false,
@@ -395,7 +404,7 @@ export function FeedsStack({ route, navigation }) {
                   width: SCREEN_WIDTH - 150,
                 }}
               >
-                {route.params.user?.cover?.length > 0 && (
+                {route.params.user && (
                   <CacheableImage
                     source={{ uri: route.params.user?.cover }}
                     style={{

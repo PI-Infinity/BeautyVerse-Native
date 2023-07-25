@@ -16,20 +16,24 @@ const Select = ({ state, setState, currentTheme }) => {
       setSelectedOptions(newSelectedOptions);
       setState((prev) => prev.filter((item) => item !== option.value));
     } else {
-      // If the option is not selected, add it to the array
-      const newSelectedOptions = [...selectedOptions, option];
-      setSelectedOptions(newSelectedOptions);
-      setState((prev) => {
-        if (!prev.includes(option.value)) {
-          return [...prev, option.value];
-        } else {
-          // return the existing state without changes because the item is already in the array
-          return prev;
-        }
-      });
+      // If the option is "everyDay" or "workingDays", remove all other options
+      if (option.value === "everyDay" || option.value === "workingDays") {
+        setSelectedOptions([option]);
+        setState([option.value]);
+      } else {
+        // If any other option is selected, remove "everyDay" and "workingDays" from the selection
+        const newSelectedOptions = selectedOptions.filter(
+          (o) => o.value !== "everyDay" && o.value !== "workingDays"
+        );
+        setSelectedOptions([...newSelectedOptions, option]);
+        setState((prev) =>
+          prev
+            .filter((item) => item !== "everyDay" && item !== "workingDays")
+            .concat(option.value)
+        );
+      }
     }
   };
-
   return (
     <View style={styles.container}>
       {workingDaysOptions.map((option, index) => (

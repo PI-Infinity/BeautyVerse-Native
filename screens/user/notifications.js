@@ -9,7 +9,6 @@ import {
   Platform,
   Pressable,
   ScrollView,
-  StyleSheet,
   Text,
   TouchableOpacity,
   Vibration,
@@ -19,6 +18,7 @@ import { useSelector } from "react-redux";
 import { Language } from "../../context/language";
 import { darkTheme, lightTheme } from "../../context/theme";
 import GetTimesAgo from "../../functions/getTimesAgo";
+import { setRerenderCurrentUser } from "../../redux/rerenders";
 
 /**
  * this file includes 2 components (list and item)
@@ -62,7 +62,7 @@ export const Notifications = ({
           return item;
         });
       });
-      const response = await axios.patch(
+      await axios.patch(
         `https://beautyverse.herokuapp.com/api/v1/users/${currentUser?._id}/notifications/${id}`,
         {
           status: "read",

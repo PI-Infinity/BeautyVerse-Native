@@ -28,6 +28,7 @@ const InputPopup = (props) => {
 
   const handleCancel = () => {
     props.setOpen(false);
+    props.setCode("");
   };
 
   return (
@@ -56,21 +57,10 @@ const InputPopup = (props) => {
                     },
                   ]}
                 >
-                  {language?.language?.Auth?.auth?.successRegister}
+                  Verification code has been sent to email!
                 </Text>
               )}
-              <Text
-                style={[
-                  styles.modalText,
-                  {
-                    fontSize: 16,
-                    color: currentTheme.font,
-                    letterSpacing: 0.3,
-                  },
-                ]}
-              >
-                Verification code has been sent to email!
-              </Text>
+
               <TextInput
                 style={[
                   styles.input,
@@ -79,6 +69,7 @@ const InputPopup = (props) => {
                     color: currentTheme.font,
                   },
                 ]}
+                autoFocus
                 onChangeText={(text) => props.setCode(text)}
                 value={props.code}
                 placeholder={language?.language?.Auth?.auth?.verificationCode}
@@ -105,9 +96,7 @@ const InputPopup = (props) => {
                   ]}
                   onPress={handleSend}
                 >
-                  <Text style={styles.buttonText}>
-                    {language?.language?.Auth?.auth?.send}
-                  </Text>
+                  <Text style={styles.buttonText}>Verify</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -136,6 +125,7 @@ const styles = StyleSheet.create({
     padding: 20,
     alignItems: "center",
     width: "80%",
+    marginTop: 100,
   },
   modalText: {
     marginBottom: 15,

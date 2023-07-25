@@ -23,7 +23,7 @@ PODS:
   - EXJSONUtils (0.5.1)
   - EXManifests (0.5.2):
     - EXJSONUtils
-  - EXNotifications (0.20.1):
+  - EXNotifications (0.18.1):
     - ExpoModulesCore
   - Expo (48.0.19):
     - ExpoModulesCore
@@ -31,7 +31,7 @@ PODS:
     - ExpoModulesCore
   - ExpoCrypto (12.2.2):
     - ExpoModulesCore
-  - ExpoDevice (5.4.0):
+  - ExpoDevice (5.2.1):
     - ExpoModulesCore
   - ExpoHaptics (12.2.1):
     - ExpoModulesCore
@@ -440,7 +440,7 @@ PODS:
     - React-Core
   - RNLocalize (3.0.0):
     - React-Core
-  - RNScreens (3.22.0):
+  - RNScreens (3.20.0):
     - React-Core
     - React-RCTImage
   - RNVectorIcons (9.2.0):
@@ -695,11 +695,11 @@ SPEC CHECKSUMS:
   EXImageLoader: fd053169a8ee932dd83bf1fe5487a50c26d27c2b
   EXJSONUtils: 48b1e764ac35160e6f54d21ab60d7d9501f3e473
   EXManifests: 500666d48e8dd7ca5a482c9e729e4a7a6c34081b
-  EXNotifications: 09394cbd7165f9a4a00a53328aa09bf874bae717
+  EXNotifications: dd628737af60fc8cc62dccebacd326b0fbbc0dcb
   Expo: 8448e3a2aa1b295f029c81551e1ab6d986517fdb
   ExpoClipboard: 9b87df0ad145e3aa841614fab6aea54b7a604850
   ExpoCrypto: 9105610a09cd6290b900bd82fc5d190e489125a3
-  ExpoDevice: 1c1b0c9cad96c292c1de73948649cfd654b2b3c0
+  ExpoDevice: e0bebf68f978b3d353377ce42e73c20c0a070215
   ExpoHaptics: 5156bc5160d8e04c170dd6e645a71154951a2ad9
   ExpoImageManipulator: 85ab87e9641b9d83108f8d603e0418c12fc19e2d
   ExpoImagePicker: 270dea232b3a072d981dd564e2cafc63a864edb1
@@ -756,7 +756,7 @@ SPEC CHECKSUMS:
   RNDateTimePicker: 00247f26c34683c80be94207f488f6f13448586e
   RNGestureHandler: 071d7a9ad81e8b83fe7663b303d132406a7d8f39
   RNLocalize: 5944c97d2fe8150913a51ddd5eab4e23a82bd80d
-  RNScreens: 68fd1060f57dd1023880bf4c05d74784b5392789
+  RNScreens: 218801c16a2782546d30bd2026bb625c0302d70f
   RNVectorIcons: fcc2f6cb32f5735b586e66d14103a74ce6ad61f8
   Yoga: 065f0b74dba4832d6e328238de46eb72c5de9556
 

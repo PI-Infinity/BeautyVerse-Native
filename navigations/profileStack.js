@@ -42,6 +42,8 @@ import Charts from "../screens/user/statistics/chart";
 import { Terms } from "../screens/user/terms";
 import { Usage } from "../screens/user/usage";
 import { User } from "../screens/user/user";
+import { AddNewAddress } from "../screens/user/settings/addNewAddress";
+import { AddNewProcedures } from "../screens/user/settings/addNewProcedures";
 
 /**
  * Create user profile stack, where include all main configs
@@ -140,70 +142,75 @@ export function ProfileStack({
             <View style={{ flexDirection: "row", alignItems: "center" }}>
               {/* add feed icon in header of screen */}
               {currentUser.type !== "user" && (
-                <Pressable
-                  onPress={() => navigation.navigate("AddFeed")}
-                  style={{ marginRight: 12, padding: 5, paddingRight: 0 }}
-                >
-                  <MaterialIcons
-                    name="add-box"
-                    size={22}
-                    color={currentTheme.pink}
-                  />
-                </Pressable>
-              )}
-
-              <Pressable
-                acitveOpacity={0.3}
-                style={{
-                  marginRight: 10,
-                  marginLeft: 4,
-                  flexDirection: "row",
-                  opacity: 1,
-                  alignItems: "center",
-                  backgroundColor: currentTheme.line,
-                  borderRadius: 50,
-                  padding: 5,
-                  paddingVertical: 2.5,
-                }}
-                onPress={() => navigation.navigate("Orders")}
-              >
-                {newOrders > 0 && (
-                  <View
-                    style={{
-                      width: "auto",
-                      minWidth: 13,
-                      height: 13,
-                      backgroundColor: currentTheme.pink,
-                      borderRadius: 50,
-                      alignItems: "center",
-                      justifyContent: "center",
-                      position: "absolute",
-                      zIndex: 2,
-                      right: -2,
-                      top: -2,
-                    }}
+                <>
+                  <Pressable
+                    onPress={() => navigation.navigate("AddFeed")}
+                    style={{ marginRight: 12, padding: 5, paddingRight: 0 }}
                   >
-                    <Text style={{ color: "#fff", fontSize: 10 }}>
-                      {newOrders}
-                    </Text>
-                  </View>
-                )}
-                <Entypo name="list" size={24} color={currentTheme.disabled} />
-                <Text
-                  style={{
-                    color:
-                      currentUser.subscription.status === "active"
-                        ? currentTheme.pink
-                        : currentTheme.disabled,
-                    fontWeight: "bold",
-                    letterSpacing: -2,
-                    fontSize: 16,
-                  }}
-                >
-                  OMS
-                </Text>
-              </Pressable>
+                    <MaterialIcons
+                      name="add-box"
+                      size={22}
+                      color={currentTheme.pink}
+                    />
+                  </Pressable>
 
+                  <Pressable
+                    acitveOpacity={0.3}
+                    style={{
+                      marginRight: 10,
+                      marginLeft: 4,
+                      flexDirection: "row",
+                      opacity: 1,
+                      alignItems: "center",
+                      backgroundColor: currentTheme.line,
+                      borderRadius: 50,
+                      padding: 5,
+                      paddingVertical: 2.5,
+                    }}
+                    onPress={() => navigation.navigate("Orders")}
+                  >
+                    {newOrders > 0 && (
+                      <View
+                        style={{
+                          width: "auto",
+                          minWidth: 13,
+                          height: 13,
+                          backgroundColor: currentTheme.pink,
+                          borderRadius: 50,
+                          alignItems: "center",
+                          justifyContent: "center",
+                          position: "absolute",
+                          zIndex: 2,
+                          right: -2,
+                          top: -2,
+                        }}
+                      >
+                        <Text style={{ color: "#fff", fontSize: 10 }}>
+                          {newOrders}
+                        </Text>
+                      </View>
+                    )}
+                    <Entypo
+                      name="list"
+                      size={24}
+                      color={currentTheme.disabled}
+                    />
+                    <Text
+                      style={{
+                        color:
+                          currentUser.subscription.status === "active"
+                            ? currentTheme.pink
+                            : currentTheme.disabled,
+                        fontWeight: "bold",
+                        letterSpacing: -1,
+                        fontSize: 16,
+                      }}
+                    >
+                      BMS
+                    </Text>
+                  </Pressable>
+                </>
+              )}
               <View>
                 {unreadNotifications > 0 && (
                   <View
@@ -460,7 +467,7 @@ export function ProfileStack({
         children={() => <Orders navigation={navigation} />}
         options={({ navigation }) => ({
           headerBackTitleVisible: false,
-          title: "Order Managment",
+          title: "Booking Managment",
           headerStyle: {
             backgroundColor: currentTheme.background,
             elevation: 0,
@@ -678,6 +685,25 @@ export function ProfileStack({
           cardStyle: {
             backgroundColor: currentTheme.background,
           },
+          headerRight: () => (
+            <View
+              style={{ flexDirection: "row", gap: 10, alignItems: "center" }}
+            >
+              <TouchableOpacity
+                acitveOpacity={0.3}
+                style={{ marginRight: 15 }}
+                onPress={() => navigation.navigate("AddNewProcedures")}
+              >
+                <MaterialIcons
+                  style={{
+                    color: currentTheme.pink,
+                  }}
+                  name="add"
+                  size={24}
+                />
+              </TouchableOpacity>
+            </View>
+          ),
         })}
       />
       {/* edit working info screen */}
@@ -712,6 +738,75 @@ export function ProfileStack({
         options={({ route }) => ({
           headerBackTitleVisible: false,
           title: language?.language?.User?.userPage?.addresses,
+          headerStyle: {
+            backgroundColor: currentTheme.background,
+
+            elevation: 0,
+            shadowOpacity: 0,
+            borderBottomWidth: 0,
+          },
+          headerTintColor: currentTheme.font,
+          headerTitleStyle: {
+            fontWeight: "bold",
+            fontSize: 18,
+            letterSpacing: 0.5,
+          },
+          cardStyle: {
+            backgroundColor: currentTheme.background,
+          },
+          headerRight: () => (
+            <View
+              style={{ flexDirection: "row", gap: 10, alignItems: "center" }}
+            >
+              <TouchableOpacity
+                acitveOpacity={0.3}
+                style={{ marginRight: 15 }}
+                onPress={() => navigation.navigate("AddNewAddress")}
+              >
+                <MaterialIcons
+                  style={{
+                    color: currentTheme.pink,
+                  }}
+                  name="add"
+                  size={24}
+                />
+              </TouchableOpacity>
+            </View>
+          ),
+        })}
+      />
+      {/* edit addresses screen */}
+      <Stack.Screen
+        name="AddNewAddress"
+        component={AddNewAddress}
+        options={({ route }) => ({
+          headerBackTitleVisible: false,
+          title: "Add new address",
+          headerStyle: {
+            backgroundColor: currentTheme.background,
+
+            elevation: 0,
+            shadowOpacity: 0,
+            borderBottomWidth: 0,
+          },
+          headerTintColor: currentTheme.font,
+          headerTitleStyle: {
+            fontWeight: "bold",
+            fontSize: 18,
+            letterSpacing: 0.5,
+          },
+          cardStyle: {
+            backgroundColor: currentTheme.background,
+          },
+        })}
+      />
+      {/* add procedures screen */}
+      <Stack.Screen
+        name="AddNewProcedures"
+        component={AddNewProcedures}
+        options={({ route }) => ({
+          headerBackTitleVisible: false,
+          title: "Add new procedures",
           headerStyle: {
             backgroundColor: currentTheme.background,
 

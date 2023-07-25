@@ -129,6 +129,7 @@ export const Card = (props) => {
               {props.user.cover?.length > 0 ? (
                 <View style={{ width: "100%", aspectRatio: 1 }}>
                   <CacheableImage
+                    key={props.user?.cover}
                     style={{
                       width: "100%",
                       aspectRatio: 0.99,

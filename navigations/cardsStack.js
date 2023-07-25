@@ -21,19 +21,23 @@ import { SendOrder } from "../screens/orders/sendOrder";
 import { SentOrders } from "../screens/sentOrders/sentOrders";
 import { ScrollGallery } from "../screens/user/scrollGallery";
 import { User } from "../screens/user/user";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
+const { width: SCREEN_WIDTH, SCREEN_HEIGHT } = Dimensions.get("window");
 const Stack = createStackNavigator();
 
 /* Card's screen stack navigator */
 
-export function CardsStack() {
+export function CardsStack({ navigation, setScrollY }) {
   // define current user redux state
   const currentUser = useSelector((state) => state.storeUser.currentUser);
 
   // theme state
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
+
+  const insets = useSafeAreaInsets();
+  const screenHeight = SCREEN_HEIGHT - insets.top - insets.bottom;
 
   return (
     <Stack.Navigator
@@ -45,7 +49,9 @@ export function CardsStack() {
       {/** main card list screen  */}
       <Stack.Screen
         name="cards"
-        component={Cards}
+        children={() => (
+          <Cards navigation={navigation} setScrollY={setScrollY} />
+        )}
         options={{
           headerStyle: {
             backgroundColor: currentTheme.background,
@@ -327,7 +333,7 @@ export function CardsStack() {
       <Stack.Screen
         name="Room"
         component={Room}
-        // initialParams={{ screenHeight }}
+        initialParams={{ screenHeight }}
         options={({ navigation, route }) => ({
           headerBackTitleVisible: false,
           // title: "name",

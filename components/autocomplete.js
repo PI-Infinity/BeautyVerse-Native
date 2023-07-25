@@ -90,7 +90,7 @@ const Autocomplete = ({ data, setState, currentTheme }) => {
           onChangeText={handleSearch}
           placeholder="Search procedure..."
           placeholderTextColor={currentTheme.disabled}
-          onFocus={() => setHide(false)}
+          // onFocus={() => setHide(false)}
         />
         {search?.length > 0 && (
           <MaterialIcons
@@ -103,20 +103,20 @@ const Autocomplete = ({ data, setState, currentTheme }) => {
         )}
       </View>
 
+      <TouchableOpacity
+        onPress={() => setHide(!hide)}
+        style={{
+          flex: 1,
+          alignItems: "center",
+          backgroundColor: "rgba(255,255,255,0.03)",
+          borderRadius: 50,
+          padding: 2.5,
+        }}
+      >
+        <Entypo name="select-arrows" color="#F866B1" size={20} />
+      </TouchableOpacity>
       <Collapsible collapsed={hide}>
         <View style={styles.scrollView}>
-          <TouchableOpacity
-            onPress={() => setHide(true)}
-            style={{
-              flex: 1,
-              alignItems: "center",
-              backgroundColor: "rgba(255,255,255,0.03)",
-              borderRadius: 50,
-              padding: 2.5,
-            }}
-          >
-            <Entypo name="select-arrows" color="#F866B1" size={20} />
-          </TouchableOpacity>
           {filteredData
             .filter((item) => {
               const hyphenCount = (item.value.match(/-/g) || []).length;

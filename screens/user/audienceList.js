@@ -7,8 +7,10 @@ import {
   Vibration,
   View,
 } from "react-native";
-import { useSelector } from "react-redux";
 import { CacheableImage } from "../../components/cacheableImage";
+import { FontAwesome } from "@expo/vector-icons";
+import { darkTheme, lightTheme } from "../../context/theme";
+import { useSelector } from "react-redux";
 
 /**
  * Audience list component in user screen audience section
@@ -30,6 +32,12 @@ export const AudienceList = ({
   function capitalizeFirstLetter(string) {
     return string?.charAt(0).toUpperCase() + string?.slice(1);
   }
+
+  // define theme
+  const theme = useSelector((state) => state.storeApp.theme);
+
+  // define current user
+  const currentTheme = theme ? darkTheme : lightTheme;
 
   /**
    * Unfollow user
@@ -73,7 +81,7 @@ export const AudienceList = ({
               alignItems: "center",
               gap: 15,
               borderRadius: 5,
-              backgroundColor: "rgba(255,255,255,0.03)",
+              backgroundColor: currentTheme.background2,
               width: (SCREEN_WIDTH / 100) * 80,
               padding: 10,
               paddingHorizontal: 15,
@@ -95,14 +103,33 @@ export const AudienceList = ({
             <View
               style={{ flexDirection: "row", alignItems: "center", gap: 15 }}
             >
-              <CacheableImage
-                source={{ uri: item.cover }}
-                style={{ width: 40, height: 40, borderRadius: 50 }}
-                manipulationOptions={[
-                  { resize: { width: 40, height: 40 } },
-                  { rotate: 90 },
-                ]}
-              />
+              {item?.cover ? (
+                <CacheableImage
+                  source={{ uri: item.cover }}
+                  style={{ width: 40, height: 40, borderRadius: 50 }}
+                  manipulationOptions={[
+                    { resize: { width: 40, height: 40 } },
+                    { rotate: 90 },
+                  ]}
+                />
+              ) : (
+                <View
+                  style={{
+                    alignItems: "center",
+                    justifyContent: "center",
+                    width: 40,
+                    height: 40,
+                    backgroundColor: currentTheme.disabled,
+                    borderRadius: 50,
+                  }}
+                >
+                  <FontAwesome
+                    name="user"
+                    size={22}
+                    color={currentTheme.font}
+                  />
+                </View>
+              )}
 
               <Text
                 style={{

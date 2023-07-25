@@ -9,11 +9,13 @@ import {
   Text,
   TouchableOpacity,
   View,
+  Pressable,
 } from "react-native";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import AnimatedButton from "../components/animatedButton";
 import { Language } from "../context/language";
 import { darkTheme, lightTheme } from "../context/theme";
+import { setLanguage } from "../redux/app";
 
 /**
  * Welcome screen
@@ -22,6 +24,9 @@ import { darkTheme, lightTheme } from "../context/theme";
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
 const Welcome = ({ navigation }) => {
+  // defines redux dispatch
+  const dispatch = useDispatch();
+
   // theme state, from redux
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
@@ -156,8 +161,15 @@ const Welcome = ({ navigation }) => {
             )}
           </Pressable>
         </View>
-      </View>
-      <View style={{ width: "100%", alignItems: "center", gap: 8 }}>
+      </View> */}
+      <View
+        style={{
+          width: "100%",
+          alignItems: "center",
+          gap: 8,
+          marginBottom: 50,
+        }}
+      >
         <Text
           style={[
             styles.sectionTitle,
@@ -173,63 +185,72 @@ const Welcome = ({ navigation }) => {
           style={[
             styles.languageBtn,
             {
-              backgroundColor:
-                activeLanguage === "en"
-                  ? currentTheme.pink
-                  : currentTheme.background2,
+              borderWidth: 1.5,
+              borderColor: currentTheme.line,
+              flexDirection: "row",
+              justifyContent: "space-between",
             },
           ]}
           onPress={() => dispatch(setLanguage("en"))}
         >
           <Text
             style={{
-              color: activeLanguage === "en" ? "#e5e5e5" : currentTheme.font,
+              color: currentTheme.font,
             }}
           >
             {language?.language?.Auth?.auth?.english}
           </Text>
+          {activeLanguage === "en" && (
+            <MaterialIcons name="done" size={20} color={currentTheme.pink} />
+          )}
         </Pressable>
         <Pressable
           style={[
             styles.languageBtn,
             {
-              backgroundColor:
-                activeLanguage === "ka"
-                  ? currentTheme.pink
-                  : currentTheme.background2,
+              borderWidth: 1.5,
+              borderColor: currentTheme.line,
+              flexDirection: "row",
+              justifyContent: "space-between",
             },
           ]}
           onPress={() => dispatch(setLanguage("ka"))}
         >
           <Text
             style={{
-              color: activeLanguage === "ka" ? "#e5e5e5" : currentTheme.font,
+              color: currentTheme.font,
             }}
           >
             {language?.language?.Auth?.auth?.georgian}
           </Text>
+          {activeLanguage === "ka" && (
+            <MaterialIcons name="done" size={20} color={currentTheme.pink} />
+          )}
         </Pressable>
         <Pressable
           style={[
             styles.languageBtn,
             {
-              backgroundColor:
-                activeLanguage === "ru"
-                  ? currentTheme.pink
-                  : currentTheme.background2,
+              borderWidth: 1.5,
+              borderColor: currentTheme.line,
+              flexDirection: "row",
+              justifyContent: "space-between",
             },
           ]}
           onPress={() => dispatch(setLanguage("ru"))}
         >
           <Text
             style={{
-              color: activeLanguage === "ru" ? "#e5e5e5" : currentTheme.font,
+              color: currentTheme.font,
             }}
           >
             {language?.language?.Auth?.auth?.russian}
           </Text>
+          {activeLanguage === "ru" && (
+            <MaterialIcons name="done" size={20} color={currentTheme.pink} />
+          )}
         </Pressable>
-      </View> */}
+      </View>
       <View style={{ width: "90%", marginTop: 15 }}>
         {/* <TouchableOpacity
           activeOpacity={0.5}

@@ -33,7 +33,7 @@ const PricePickerPopup = ({
         >
           <Text style={{ color: currentTheme.font }}>Enter a price:</Text>
           <TextInput
-            placeholder={oldPrice?.toString()}
+            placeholder={oldPrice ? oldPrice?.toString() : "eg: 50"}
             placeholderTextColor="gray"
             style={{
               color: currentTheme.font,
@@ -43,6 +43,7 @@ const PricePickerPopup = ({
               borderRadius: 50,
               borderWidth: 1,
               borderColor: currentTheme.line,
+              backgroundColor: currentTheme.line,
             }}
             onChangeText={(text) => setSelectedValue(text)}
             value={selectedValue?.toString()}

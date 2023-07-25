@@ -33,7 +33,6 @@ const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 const Stack = createStackNavigator();
 
 export function ChatStack({ navigation }) {
-  const language = Language();
   const currentUser = useSelector((state) => state.storeUser.currentUser);
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
@@ -44,19 +43,7 @@ export function ChatStack({ navigation }) {
 
   const insets = useSafeAreaInsets();
 
-  // const [keyboardHeight, setKeyboardHeight] = useState(0);
-
-  // useEffect(() => {
-  //   const GetHeight = async () => {
-  //     let kHeight = await AsyncStorage.getItem("Beautyverse:keyboardHeight");
-  //     setKeyboardHeight(JSON.parse(kHeight));
-  //   };
-  //   GetHeight();
-  // }, []);
-
   const screenHeight = SCREEN_HEIGHT - insets.top - insets.bottom;
-
-  // user obj
 
   return (
     <Stack.Navigator
@@ -128,7 +115,7 @@ export function ChatStack({ navigation }) {
                   width: SCREEN_WIDTH - 150,
                 }}
               >
-                {route.params.user?.cover?.length > 0 && (
+                {route.params.user?.cover?.length > 0 ? (
                   <CacheableImage
                     source={{ uri: route.params.user?.cover }}
                     style={{
@@ -142,6 +129,19 @@ export function ChatStack({ navigation }) {
                       { rotate: 90 },
                     ]}
                   />
+                ) : (
+                  <View
+                    style={{
+                      width: 45,
+                      height: 45,
+                      borderRadius: 50,
+                      alignItems: "center",
+                      justifyContent: "center",
+                      backgroundColor: currentTheme.line,
+                    }}
+                  >
+                    <FontAwesome name="user" size={24} color="#e5e5e5" />
+                  </View>
                 )}
 
                 <Text

@@ -5,7 +5,14 @@ import * as Localization from "expo-localization";
 import moment from "moment";
 import "moment-timezone";
 import { useEffect, useState } from "react";
-import { Linking, Text, TouchableOpacity, Vibration, View } from "react-native";
+import {
+  Linking,
+  Text,
+  TouchableOpacity,
+  Vibration,
+  View,
+  Dimensions,
+} from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 import { CacheableImage } from "../../components/cacheableImage";
 import DeleteConfirm from "../../components/confirmDialog";
@@ -14,10 +21,19 @@ import { ProceduresOptions } from "../../datas/registerDatas";
 import { setRerenderOrders } from "../../redux/rerenders";
 import ItemDateAndTimePicker from "../../screens/orders/itemDateAndTimePicker";
 import { StatusPopup } from "../../screens/orders/statusPopup";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import {
+  setRooms,
+  setCurrentChat,
+  setRerederRooms,
+  setRerenderScroll,
+} from "../../redux/chat";
 
 /**
  * Card item for sent orders
  */
+
+const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 export const Card = ({
   item,
@@ -184,6 +200,111 @@ export const Card = ({
     font = "#ccc";
   }
 
+  // navigate to chat
+  const rooms = useSelector((state) => state.storeChat.rooms);
+
+  let chatDefined =
+    currentUser._id !== item.user?._id &&
+    rooms.find(
+      (r) =>
+        (r.members.member1 === currentUser._id ||
+          r.members.member1 === item.user?._id) &&
+        (r.members.member2 === currentUser._id ||
+          r.members.member2 === item.user?._id)
+    );
+
+  // get chat room
+  const GetNewChatRoom = async () => {
+    let newChat = {
+      room: currentUser?._id + item.user?._id,
+      members: {
+        member1: currentUser._id,
+        member2: item.user?._id,
+        member2Cover: item.user?.cover,
+        member2Name: item.user?.name,
+      },
+      lastMessage: "",
+      lastSender: "",
+      status: "read",
+    };
+    try {
+      navigation.navigate("Room", {
+        newChat,
+        user: item.user,
+      });
+      const response = await axios.post(
+        "https://beautyverse.herokuapp.com/api/v1/chats/",
+        {
+          room: currentUser?._id + item.user?._id,
+          members: {
+            member1: currentUser._id,
+            member2: item.user?._id,
+          },
+          lastMessage: "",
+          lastSender: "",
+          status: "read",
+        }
+      );
+      dispatch(setCurrentChat(response.data.data.chat));
+      dispatch(setRerederRooms());
+    } catch (error) {
+      if (error.response) {
+        Alert.alert(
+          error.response.data
+            ? error.response.data.message
+            : "An error occurred"
+        );
+      } else if (error.request) {
+        // The request was made but no response was received
+        console.log(error.request);
+        Alert.alert("An error occurred. Please try again.");
+      } else {
+        // Something happened in setting up the request that triggered an Error
+        console.log("Error", error.message);
+        Alert.alert("An error occurred. Please try again.");
+      }
+      console.log(error.config);
+    }
+  };
+
+  const insets = useSafeAreaInsets();
+
+  const screenHeight = SCREEN_HEIGHT - insets.top - insets.bottom;
+
+  // get chat room
+  const GetChatRoom = async () => {
+    const Room = chatDefined;
+    try {
+      dispatch(setCurrentChat(Room));
+      navigation.navigate("Room", {
+        user: item?.user,
+        screenHeight: screenHeight,
+      });
+      if (Room.lastSender !== currentUser._id) {
+        await axios.patch(
+          "https://beautyverse.herokuapp.com/api/v1/chats/" + Room.room,
+          {
+            status: "read",
+          }
+        );
+      }
+      let currentRoomIndex = rooms.findIndex((r) => r._id === Room._id);
+
+      if (currentRoomIndex !== -1) {
+        let newRooms = [...rooms];
+        newRooms[currentRoomIndex] = {
+          ...newRooms[currentRoomIndex],
+          status: "read",
+        };
+        dispatch(setRooms(newRooms));
+      }
+      dispatch(setRerenderScroll());
+    } catch (error) {
+      console.log(error);
+      Alert.alert(error.response.data.message);
+    }
+  };
+
   return (
     <>
       {openDeleteDialog && (
@@ -215,8 +336,6 @@ export const Card = ({
       >
         <View
           style={{
-            borderWidth: 1,
-            borderColor: currentTheme.line,
             padding: 5,
             paddingHorizontal: 0,
             borderRadius: 50,
@@ -254,14 +373,16 @@ export const Card = ({
               </Text>
             </View>
           )}
-          <StatusPopup
-            currentTheme={currentTheme}
-            selectedItem={selectedItem}
-            setSelectedItem={setSelectedItem}
-            setOpenStatusOption={setOpenStatusOption}
-            UpdateOrder={UpdateOrder}
-            Delete={DeleteOrder}
-          />
+          {!editRequest && (
+            <StatusPopup
+              currentTheme={currentTheme}
+              selectedItem={selectedItem}
+              setSelectedItem={setSelectedItem}
+              setOpenStatusOption={setOpenStatusOption}
+              UpdateOrder={UpdateOrder}
+              Delete={DeleteOrder}
+            />
+          )}
         </View>
         <View
           style={{
@@ -473,14 +594,6 @@ export const Card = ({
                     alignItems: "center",
                     justifyContent: "center",
                   }}
-                  // onPress={
-                  //   props.from !== "scrollGallery"
-                  //     ? () =>
-                  //         props.navigation.navigate("User", {
-                  //           user: props.user,
-                  //         })
-                  //     : undefined
-                  // }
                 >
                   <FontAwesome name="user" size={24} color={font} />
                 </TouchableOpacity>
@@ -495,6 +608,9 @@ export const Card = ({
               <TouchableOpacity
                 style={{ padding: 5, paddingHorizontal: 10 }}
                 activeOpacity={0.3}
+                onPress={
+                  chatDefined ? () => GetChatRoom() : () => GetNewChatRoom()
+                }
               >
                 <MaterialCommunityIcons
                   name="chat-processing"

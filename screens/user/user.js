@@ -42,6 +42,13 @@ import { Feeds } from "../../screens/user/feeds";
 import { ProceduresList } from "../../screens/user/procedures";
 import { Statistics } from "../../screens/user/statistics/main";
 import { WorkingInfo } from "../../screens/user/workingInfo";
+import {
+  setRerenderCurrentUser,
+  setRerenderNotifcations,
+} from "../../redux/rerenders";
+import { setRerenderOrders } from "../../redux/rerenders";
+import { Image } from "@rneui/base";
+import ConfirmPopup from "../../components/confirmDialog";
 
 /**
  * User Profile Screen
@@ -125,8 +132,9 @@ export const User = ({ navigation, user, variant }) => {
 
   // useEffect for setting cover image
   useEffect(() => {
-    setCover(targetUser.cover + `?rand=${Math.random()}`);
-  }, [currentUser, rerenderCurrentUser, route]);
+    setLoading(true);
+    // setCover(targetUser.cover + `?rand=${Math.random()}`);
+  }, [targetUser?.cover]);
 
   // Function to handle cover updates
   const handleCoverUpdate = (newCover) => {
@@ -420,34 +428,30 @@ export const User = ({ navigation, user, variant }) => {
       members: {
         member1: currentUser._id,
         member2: targetUser._id,
-        member2Cover: targetUser.cover,
-        member2Name: targetUser.name,
       },
-      lastMessage: "",
       lastSender: "",
+      lastMessage: "",
+      lastMessageSeen: "",
       status: "read",
     };
     try {
-      navigation.navigate("Room", {
-        newChat,
-        user: targetUser,
-      });
+      navigation.navigate("Room", { user: targetUser });
       const response = await axios.post(
         "https://beautyverse.herokuapp.com/api/v1/chats/",
         {
-          room: currentUser?._id + targetUser._id,
-          members: {
-            member1: currentUser._id,
-            member2: targetUser._id,
-          },
-          lastMessage: "",
-          lastSender: "",
-          status: "read",
+          ...newChat,
         }
       );
-      dispatch(setCurrentChat(response.data.data.chat));
-      dispatch(setRerederRooms());
+      if (response && response.data) {
+        // handle the response
+        dispatch(setCurrentChat(response.data.data.chat));
+      } else {
+        console.error(
+          "The response or the data from the server was undefined."
+        );
+      }
     } catch (error) {
+      console.log("error");
       if (error.response) {
         Alert.alert(
           error.response.data
@@ -469,17 +473,12 @@ export const User = ({ navigation, user, variant }) => {
 
   const insets = useSafeAreaInsets();
 
-  const screenHeight = SCREEN_HEIGHT - insets.top - insets.bottom;
-
   // get chat room
   const GetChatRoom = async () => {
     const Room = chatDefined;
     try {
       dispatch(setCurrentChat(Room));
-      navigation.navigate("Room", {
-        user: targetUser,
-        screenHeight: screenHeight,
-      });
+      navigation.navigate("Room", { user: targetUser });
       if (Room.lastSender !== currentUser._id) {
         await axios.patch(
           "https://beautyverse.herokuapp.com/api/v1/chats/" + Room.room,
@@ -509,26 +508,86 @@ export const User = ({ navigation, user, variant }) => {
     const contentHeight = event.nativeEvent.contentSize.height;
     const layoutHeight = event.nativeEvent.layoutMeasurement.height;
 
-    if (offsetY + layoutHeight >= contentHeight - 20) {
-      if (feedsLength > feeds.length) {
-        setPage(page + 1);
-      }
+    const isBottom = offsetY + layoutHeight >= contentHeight - 200;
+    const canLoadMore = feedsLength > feeds.length;
+
+    if (isBottom && canLoadMore) {
+      AddFeeds(page + 1);
+      console.log("Reached the bottom. New page:", page + 1);
+    }
+  };
+
+  /**
+   *  // add new feeds to feeds, when scrolling bottom
+   */
+
+  async function AddFeeds(p) {
+    try {
+      const response = await axios.get(
+        `https://beautyverse.herokuapp.com/api/v1/users/${targetUser._id}/feeds/native?page=${p}&limit=8`
+      );
+      setFeeds((prev) => {
+        const newFeeds = response.data.data?.feeds;
+        if (newFeeds) {
+          const uniqueNewFeeds = newFeeds.filter(
+            (newFeed) => !prev.some((prevFeed) => prevFeed._id === newFeed._id)
+          );
+
+          return [...prev, ...uniqueNewFeeds];
+        } else {
+          return [...prev];
+        }
+      });
+    } catch (error) {
+      console.log(error.response.data.message);
+    }
+  }
+
+  // delete cover configs
+  const [openPopup, setOpenPopup] = useState(false);
+
+  // remove cover
+  const RemoveCover = async () => {
+    try {
+      await axios.patch(
+        `https://beautyverse.herokuapp.com/api/v1/users/${targetUser?._id}`,
+        {
+          cover: "",
+        }
+      );
+      dispatch(setRerenderCurrentUser());
+    } catch (error) {
+      console.log(error);
     }
   };
 
   return (
     <>
+      <ConfirmPopup
+        isVisible={openPopup}
+        onClose={() => setOpenPopup(false)}
+        onDelete={RemoveCover}
+        title="Are you sure to want delete Cover image?"
+        cancel="Cancel"
+        delet="Delete"
+      />
       <ScrollView
         ref={scrollViewRef}
         onScroll={onScroll}
         scrollEventThrottle={16}
         showsVerticalScrollIndicator={false}
         style={{ width: "100%" }}
-        nestedScrollEnabled={true}
-        bounces={Platform.OS === "ios" ? false : undefined}
         overScrollMode={Platform.OS === "ios" ? "never" : "always"}
         refreshControl={
-          <RefreshControl tintColor="#ccc" refreshing={refresh} />
+          <RefreshControl
+            tintColor="#ccc"
+            refreshing={refresh}
+            size="small"
+            onRefresh={() => {
+              dispatch(setRerenderOrders());
+              dispatch(setRerenderCurrentUser());
+            }}
+          />
         }
       >
         <View style={styles.header}>
@@ -552,7 +611,7 @@ export const User = ({ navigation, user, variant }) => {
                     {Platform.OS === "ios" ? (
                       <InputFile
                         targetUser={targetUser}
-                        onCoverUpdate={handleCoverUpdate}
+                        setOpenPopup={setOpenPopup}
                       />
                     ) : (
                       <InputCoverAndroid
@@ -562,7 +621,7 @@ export const User = ({ navigation, user, variant }) => {
                     )}
                   </View>
                 )}
-              {cover?.length > 30 ? (
+              {targetUser?.cover?.length > 30 ? (
                 <View
                   style={{
                     width: 110,
@@ -594,13 +653,14 @@ export const User = ({ navigation, user, variant }) => {
                     }}
                   >
                     <CacheableImage
+                      key={targetUser?.cover}
                       style={{
                         width: "100%",
                         aspectRatio: 1,
                         resizeMode: "cover",
                       }}
                       source={{
-                        uri: cover,
+                        uri: targetUser?.cover,
                       }}
                       manipulationOptions={[
                         {
@@ -671,6 +731,7 @@ export const User = ({ navigation, user, variant }) => {
                     lineHeight: 20,
                     letterSpacing: 0.2,
                   }}
+                  ellipsizeMode="tail"
                 >
                   {targetUser?.about}
                 </Text>
@@ -841,15 +902,6 @@ export const User = ({ navigation, user, variant }) => {
                   style={{ position: "relative", left: 2 }}
                 />
               )}
-              {/* <Text
-                style={{
-                  color: followerDefined ? currentTheme.pink : "#fff",
-                  fontSize: 14,
-                  letterSpacing: 0.3,
-                }}
-              >
-                {followerDefined ? "Following" : "Follow"}
-              </Text> */}
             </Pressable>
           )}
           {targetUser._id !== currentUser._id && (

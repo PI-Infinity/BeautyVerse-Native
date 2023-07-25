@@ -11,7 +11,7 @@ import { MaterialIcons, FontAwesome, Entypo } from "@expo/vector-icons";
   in this screen user choice type of user and navigates to identify screen
 */
 
-const Register = ({ navigation }) => {
+export const Type = ({ navigation }) => {
   //language context
   const language = Language();
   // redux tpplkit dispatch
@@ -22,55 +22,78 @@ const Register = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <Text
-        style={{
-          fontSize: 16,
-          fontWeight: "bold",
-          color: currentTheme.font,
-          marginBottom: 20,
-          letterSpacing: 0.3,
-        }}
-      >
-        Choice type:
-      </Text>
       <TouchableOpacity
+        activeOpacity={0.9}
         style={[
           styles.box,
           { backgroundColor: currentTheme.background2, gap: 10 },
         ]}
         onPress={() => {
           dispatch(setType("user"));
-          navigation.navigate("Identify");
+          navigation.navigate("Accept");
         }}
       >
         <FontAwesome name="user" size={24} color={currentTheme.pink} />
         <Text style={[styles.boxText, { color: currentTheme.font }]}>
           {language?.language?.Auth?.auth?.user}
         </Text>
+        <Text
+          style={[
+            styles.boxText,
+            {
+              color: currentTheme.font,
+              textAlign: "center",
+              fontWeight: "normal",
+              color: currentTheme.disabled,
+              lineHeight: 20,
+              fontSize: 14,
+            },
+          ]}
+        >
+          Simple user, to find services, book them and comunicate with beauty
+          experts and businesses!
+        </Text>
       </TouchableOpacity>
       <TouchableOpacity
+        activeOpacity={0.9}
         style={[
           styles.box,
           { backgroundColor: currentTheme.background2, gap: 10 },
         ]}
         onPress={() => {
           dispatch(setType("specialist"));
-          navigation.navigate("Identify");
+          navigation.navigate("Business");
         }}
       >
         <Entypo name="brush" size={22} color={currentTheme.pink} />
         <Text style={[styles.boxText, { color: currentTheme.font }]}>
           {language?.language?.Auth?.auth?.specialist}
         </Text>
+        <Text
+          style={[
+            styles.boxText,
+            {
+              color: currentTheme.font,
+              textAlign: "center",
+              fontWeight: "normal",
+              color: currentTheme.disabled,
+              lineHeight: 20,
+              fontSize: 14,
+            },
+          ]}
+        >
+          Specialist profile, to book & recieve services!
+        </Text>
       </TouchableOpacity>
       <TouchableOpacity
+        activeOpacity={0.9}
         style={[
           styles.box,
           { backgroundColor: currentTheme.background2, gap: 10 },
         ]}
         onPress={() => {
           dispatch(setType("beautyCenter"));
-          navigation.navigate("Identify");
+          navigation.navigate("Business");
         }}
       >
         <MaterialIcons
@@ -81,24 +104,22 @@ const Register = ({ navigation }) => {
         <Text style={[styles.boxText, { color: currentTheme.font }]}>
           {language?.language?.Auth?.auth?.beautySalon}
         </Text>
-      </TouchableOpacity>
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          gap: 5,
-          marginTop: 10,
-        }}
-      >
-        <Text style={[styles.loginQuestion, { color: currentTheme.font }]}>
-          {language?.language?.Auth?.auth?.havea}
+        <Text
+          style={[
+            styles.boxText,
+            {
+              color: currentTheme.font,
+              textAlign: "center",
+              fontWeight: "normal",
+              color: currentTheme.disabled,
+              lineHeight: 20,
+              fontSize: 14,
+            },
+          ]}
+        >
+          Phisycal beauty enviroment!
         </Text>
-        <TouchableOpacity onPress={() => navigation.navigate("Login")}>
-          <Text style={[styles.login, { color: currentTheme.pink }]}>
-            {language?.language?.Auth?.auth?.login}
-          </Text>
-        </TouchableOpacity>
-      </View>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -113,9 +134,8 @@ const styles = StyleSheet.create({
   },
   box: {
     width: "80%",
-    height: 120,
+    height: 180,
     marginBottom: 15,
-    flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
     borderRadius: 10,
@@ -127,10 +147,12 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 2,
     elevation: 1,
+    padding: 20,
   },
   boxText: {
     fontWeight: "bold",
     letterSpacing: 0.3,
+    fontSize: 16,
   },
   loginQuestion: {
     textAlign: "center",
@@ -145,5 +167,3 @@ const styles = StyleSheet.create({
     letterSpacing: 0.2,
   },
 });
-
-export default Register;

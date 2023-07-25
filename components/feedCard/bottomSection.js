@@ -9,6 +9,8 @@ import {
   View,
 } from "react-native";
 import GetTimesAgo from "../../functions/getTimesAgo";
+import { MaterialIcons } from "@expo/vector-icons";
+import { useDispatch } from "react-redux";
 
 /**
  * Feed card's bottom section
@@ -19,6 +21,9 @@ const { width: SCREEN_WIDTH } = Dimensions.get("window");
 export const BottomSection = (props) => {
   // share function
   const [shares, setShares] = useState(null);
+
+  // defines redux dispatch
+  const dispatch = useDispatch();
 
   // define shares total
   useEffect(() => {
@@ -144,6 +149,7 @@ export const BottomSection = (props) => {
             borderWidth: 1.5,
             borderColor: props.currentTheme.line,
             flex: 1,
+            height: "100%",
           },
         ]}
       >
@@ -159,7 +165,7 @@ export const BottomSection = (props) => {
               justifyContent: "center",
               flexDirection: "row",
               flex: 1,
-
+              height: "100%",
               borderRightWidth: 1.5,
               borderRightColor: props.currentTheme.line,
               gap: 5,
@@ -197,7 +203,9 @@ export const BottomSection = (props) => {
 
                 {
                   width: 25,
-                  color: props.currentTheme.disabled,
+                  color: props?.checkIfStared
+                    ? props.currentTheme.pink
+                    : "#fff",
                 },
               ]}
             >
@@ -213,20 +221,22 @@ export const BottomSection = (props) => {
 
           <Pressable
             onPress={
-              !props.from && !props.notifications
+              props.from === "FeedCard" &&
+              !props.notifications &&
+              props.from !== "scrollGallery"
                 ? () => {
                     props.navigation.navigate("UserFeed", {
                       user: props.user,
                       feed: props.feed,
                     });
                   }
-                : props.notifications
-                ? () => undefined
-                : () => props.setOpenReviews(!props.openReviews)
+                : props.from === "scrollGallery"
+                ? () => props.setOpenReviews(!props.openReviews)
+                : undefined
             }
             style={{
               flex: 1.3,
-              height: 50,
+              height: "100%",
               alignItems: "center",
               flexDirection: "row",
               justifyContent: "center",
@@ -262,7 +272,10 @@ export const BottomSection = (props) => {
               style={[
                 styles.bottomText,
                 {
-                  color: props.currentTheme.disabled,
+                  color:
+                    props.feed?.fileFormat === "video"
+                      ? "#fff"
+                      : props.currentTheme.disabled,
                 },
               ]}
             >
@@ -337,7 +350,10 @@ export const BottomSection = (props) => {
               style={[
                 styles.bottomText,
                 {
-                  color: props.currentTheme.disabled,
+                  color:
+                    props.feed?.fileFormat === "video"
+                      ? "#fff"
+                      : props.currentTheme.disabled,
                   textShadowColor:
                     props.user?.feed?.fileFormat === "video"
                       ? "rgba(0,0,0,0.2)"
@@ -357,14 +373,15 @@ export const BottomSection = (props) => {
             </Text>
           </Pressable>
         </View>
-        {/* {props.feed?.fileFormat === "video" && (
+        {props.feed?.fileFormat === "video" && (
           <View
             style={{
               alignItems: "center",
               flexDirection: "row",
               gap: 10,
-              flex: 1,
-              marginRight: 5,
+              position: "absolute",
+              right: 15,
+              bottom: props?.from === "FeedCard" ? 45 : 70,
             }}
           >
             <Pressable
@@ -386,7 +403,7 @@ export const BottomSection = (props) => {
               </Pressable>
             </Pressable>
           </View>
-        )} */}
+        )}
       </View>
     </View>
   );
@@ -405,6 +422,7 @@ const styles = StyleSheet.create({
   },
   stars: {
     flex: 1,
+    height: "100%",
     flexDirection: "row",
     alignItems: "center",
   },

@@ -13,7 +13,7 @@ import {
 import axios from "axios";
 import { LinearGradient } from "expo-linear-gradient";
 import { useEffect, useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 import { CacheableImage } from "../components/cacheableImage";
 import { useSocket } from "../context/socketContext";
@@ -42,6 +42,8 @@ import {
   setCleanUp,
   setRerenderCurrentUser,
   setRerenderOrders,
+  setCardRefreshControl,
+  setFeedRefreshControl,
 } from "../redux/rerenders";
 import {
   setActiveSentOrders,
@@ -55,6 +57,7 @@ import {
   setSentOrdersFilterResult,
   setSentOrdersTotalResult,
 } from "../redux/sentOrders";
+import { setZoomToTop } from "../redux/app";
 
 /**
  * create tab bar
@@ -63,7 +66,7 @@ const Tab = createBottomTabNavigator();
 
 // Custom Feed icon for tab bar, includes functions etc.
 
-const CustomTabBarFeedsIcon = ({ color, render, setRender }) => {
+const CustomTabBarFeedsIcon = ({ color, render, setRender, scrollY }) => {
   // define some routes and contexts
   const navigation = useNavigation();
   const isFocused = useIsFocused();
@@ -76,7 +79,14 @@ const CustomTabBarFeedsIcon = ({ color, render, setRender }) => {
       onPress={() => {
         if (isFocused) {
           if (routeName === "Feeds") {
-            dispatch(setCleanUp());
+            if (scrollY > 0) {
+              console.log("zoom");
+              dispatch(setZoomToTop());
+            } else {
+              console.log("refresh");
+              dispatch(setFeedRefreshControl(true));
+              dispatch(setCleanUp());
+            }
           } else {
             navigation.navigate("Feeds");
           }
@@ -98,7 +108,7 @@ const CustomTabBarFeedsIcon = ({ color, render, setRender }) => {
 
 // define custom cards icon, includes functions etc.
 
-const CustomTabBarCardsIcon = ({ color }) => {
+const CustomTabBarCardsIcon = ({ color, scrollY }) => {
   // define some contexts and routes
 
   const navigation = useNavigation();
@@ -112,7 +122,12 @@ const CustomTabBarCardsIcon = ({ color }) => {
       onPress={() => {
         if (isFocused) {
           if (routeName === "cards") {
-            dispatch(setCleanUp());
+            if (scrollY > 0) {
+              dispatch(setZoomToTop());
+            } else {
+              dispatch(setCardRefreshControl(true));
+              dispatch(setCleanUp());
+            }
           } else {
             navigation.navigate("cards");
           }
@@ -363,6 +378,20 @@ const CustomTabBarProfileIcon = (props) => {
   const newOrders = useSelector((state) => state.storeOrders.new);
   const newSentOrders = useSelector((state) => state.storeSentOrders.new);
 
+  // Select theme from global Redux state (dark or light theme)
+  const theme = useSelector((state) => state.storeApp.theme);
+  const currentTheme = theme ? darkTheme : lightTheme;
+
+  // cover loading state
+  const [loadCover, setLoadCover] = useState(true);
+
+  useEffect(() => {
+    setLoadCover(true);
+    if (props?.currentUser?.cover === "") {
+      setLoadCover(false);
+    }
+  }, [props.currentUser?.cover]);
+
   return (
     <Pressable
       onPress={() => {
@@ -408,8 +437,14 @@ const CustomTabBarProfileIcon = (props) => {
           </Text>
         </View>
       )}
+      {loadCover && (
+        <View style={{ position: "absolute", zIndex: 99999, left: 4, top: 8 }}>
+          <ActivityIndicator size="small" color={currentTheme.pink} />
+        </View>
+      )}
       {props.currentUser?.cover?.length > 0 ? (
         <CacheableImage
+          key={props.currentUser?.cover}
           style={{
             height: 27,
             width: 27,
@@ -425,6 +460,7 @@ const CustomTabBarProfileIcon = (props) => {
             { resize: { width: 100, height: 100 } },
             { rotate: 90 },
           ]}
+          onLoad={() => setLoadCover(false)}
         />
       ) : (
         <FontAwesome
@@ -478,7 +514,7 @@ export const BottomTabNavigator = () => {
   useEffect(() => {
     setNotifications(currentUser.notifications);
     setUnreadNotifications(
-      currentUser.notifications.filter((n) => n.status === "unread").length
+      currentUser.notifications.filter((n) => n?.status === "unread").length
     );
   }, [rerenderNotifications]);
 
@@ -608,6 +644,7 @@ export const BottomTabNavigator = () => {
   const rerenderRooms = useSelector((state) => state.storeChat.rerenderRooms);
 
   // getting chat rooms
+  const [rerenderChatRooms, setRerenderChatRooms] = useState(false);
   useEffect(() => {
     const GetChats = async () => {
       try {
@@ -618,12 +655,27 @@ export const BottomTabNavigator = () => {
         // save them in redux toolkit
         dispatch(setRooms(response.data.data.chats));
       } catch (error) {
+        console.log(error.response);
         dispatch(setRooms([]));
         console.log(error.response.data.message);
       }
     };
     GetChats();
-  }, [rerenderRooms]);
+  }, [rerenderRooms, rerenderChatRooms]);
+
+  useEffect(() => {
+    socket.on("chatUpdate", (data) => {
+      console.log("chat updated");
+      setTimeout(() => {
+        setRerenderChatRooms(!rerenderChatRooms);
+      }, 1000);
+    });
+  }, []);
+
+  // feeds scroll y position
+  const [feedsScrollY, setFeedsScrollY] = useState(0);
+  // cards scroll y position
+  const [cardsScrollY, setCardsScrollY] = useState(0);
 
   return (
     <Tab.Navigator
@@ -648,8 +700,14 @@ export const BottomTabNavigator = () => {
       {/** Main screen, feed stack screens inside tab */}
       <Tab.Screen
         name="Main"
-        children={() => <FeedsStack render={render} navigation={navigation} />}
-        options={({ navigation, route }) => ({
+        children={() => (
+          <FeedsStack
+            render={render}
+            navigation={navigation}
+            setScrollY={setFeedsScrollY}
+          />
+        )}
+        options={({}) => ({
           tabBarLabel: "",
           tabBarInactiveTintColor: currentTheme.disabled,
           tabBarActiveTintColor: currentTheme.pink,
@@ -674,6 +732,7 @@ export const BottomTabNavigator = () => {
               setRender={setRender}
               currentTheme={currentTheme}
               sum={sum}
+              scrollY={feedsScrollY}
             />
           ),
         })}
@@ -682,7 +741,13 @@ export const BottomTabNavigator = () => {
       {/** Cards screen, cards stack screens inside tab */}
       <Tab.Screen
         name="Cards"
-        component={CardsStack}
+        children={() => (
+          <CardsStack
+            render={render}
+            navigation={navigation}
+            setScrollY={setCardsScrollY}
+          />
+        )}
         options={{
           tabBarLabel: "",
           tabBarInactiveTintColor: currentTheme.disabled,
@@ -707,6 +772,7 @@ export const BottomTabNavigator = () => {
               {...props}
               sum={sum}
               currentTheme={currentTheme}
+              scrollY={cardsScrollY}
             />
           ),
         }}

@@ -18,12 +18,15 @@ import { Language } from "../../context/language";
 import { darkTheme, lightTheme } from "../../context/theme";
 import { ProceduresOptions } from "../../datas/registerDatas";
 import { setRerenderCurrentUser } from "../../redux/rerenders";
+import { useNavigation } from "@react-navigation/native";
 
 /*
   Business register screen for specialists and beauty salons, to complete registere process
 */
 
 const Business = () => {
+  // defines navigation
+  const navigation = useNavigation();
   // defined procedure list
   const proceduresOptions = ProceduresOptions();
   // theme context
@@ -60,18 +63,14 @@ const Business = () => {
             }),
           }
         );
-        // complete register, save user info in async storage
-        await AsyncStorage.setItem(
-          "Beautyverse:currentUser",
-          JSON.stringify(response.data.data.updatedUser)
-        );
-        // reload current user to navigate main content screen
-        dispatch(setRerenderCurrentUser());
+        // // complete register, save user info in async storage
+        navigation.navigate("Accept");
       } else {
         Alert.alert(language?.language?.Auth?.auth?.pleaseInput);
       }
     } catch (err) {
-      Alert.alert(err.response.data.message);
+      console.log(err.response);
+      Alert.alert(err.response);
     }
   };
 
@@ -120,10 +119,7 @@ const Business = () => {
           </View>
         </View>
         <TouchableOpacity style={styles.button} onPress={FillUp}>
-          <Text style={styles.buttonText}>
-            {" "}
-            {language?.language?.Auth?.auth?.register}
-          </Text>
+          <Text style={styles.buttonText}>Next</Text>
         </TouchableOpacity>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -160,5 +156,6 @@ const styles = StyleSheet.create({
   buttonText: {
     textAlign: "center",
     fontWeight: "bold",
+    color: "#fff",
   },
 });

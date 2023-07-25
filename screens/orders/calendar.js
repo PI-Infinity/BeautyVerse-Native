@@ -252,14 +252,14 @@ const DayItem = ({
   return (
     <TouchableOpacity
       onPress={
-        !isDisabled && !dayOffs.includes(activeDayName[0])
+        !isDisabled && new Date() < dateValue
           ? () => {
               setDate(dateValue.toISOString());
               setTime(null);
             }
           : undefined
       }
-      activeOpacity={0.8}
+      activeOpacity={!isDisabled && new Date() < dateValue ? 0.8 : 1}
       style={{
         width: SCREEN_WIDTH / 8,
         aspectRatio: 1,

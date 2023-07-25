@@ -1,4 +1,10 @@
-import { Entypo, FontAwesome5, MaterialIcons } from "@expo/vector-icons";
+import {
+  Entypo,
+  FontAwesome5,
+  Ionicons,
+  MaterialCommunityIcons,
+  MaterialIcons,
+} from "@expo/vector-icons";
 import axios from "axios";
 import React, { useEffect, useRef, useState } from "react";
 import {
@@ -21,6 +27,8 @@ import GoogleAutocomplete from "../../../components/mapAutocomplete";
 import { Language } from "../../../context/language";
 import { darkTheme, lightTheme } from "../../../context/theme";
 import { setRerenderCurrentUser } from "../../../redux/rerenders";
+import DeleteDialog from "../../../components/confirmDialog";
+import { setCurrentUser } from "../../../redux/user";
 
 /**
  * Addreses screen in settings
@@ -35,7 +43,13 @@ export const Addresses = () => {
   const dispatch = useDispatch();
 
   // define current user
+  const [addresses, setAddresses] = useState([]);
+
+  // define current user
   const currentUser = useSelector((state) => state.storeUser.currentUser);
+  useEffect(() => {
+    setAddresses(currentUser.address);
+  }, [currentUser]);
 
   // define theme
   const theme = useSelector((state) => state.storeApp.theme);
@@ -45,68 +59,43 @@ export const Addresses = () => {
   const [add, setAdd] = useState(false);
 
   // define loadings
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [loader, setLoader] = useState(true);
 
-  const [address, setAddress] = useState("");
-
-  // add address
-  const Add = async () => {
-    setLoading(true);
-    try {
-      if (address.country?.length > 0) {
-        const response = await axios.post(
-          `https://beautyverse.herokuapp.com/api/v1/users/${currentUser?._id}/address`,
-          {
-            country: address.country,
-            region: address.region,
-            city: address.city,
-            district: address.district,
-            street: address.street,
-            number: address.streetNumber,
-            latitude: address.latitude,
-            longitude: address.longitude,
-          }
-        );
-        const data = await response.data;
-        dispatch(setRerenderCurrentUser());
-        setAddress("");
-        setLoading(false);
-      } else {
-        setAddress("");
-        setLoading(false);
-      }
-    } catch (error) {
-      Alert.alert(error.response.data.message);
-      setLoading(false);
-    }
-  };
+  // delete dialog state
+  const [deleteDialog, setDeleteDialog] = useState(false);
+  // new state to store the ID of the item to be deleted
+  const [toDelete, setToDelete] = useState(null);
 
   // delete address
-  const DeleteAddress = async (itemId) => {
+
+  const DeleteAddress = async () => {
     setLoading(true);
-    Vibration.vibrate();
-    if (currentUser?.address?.length > 1) {
-      try {
-        const url = `https://beautyverse.herokuapp.com/api/v1/users/${currentUser._id}/address/${itemId}`;
-        const response = await axios.delete(url);
-        dispatch(setRerenderCurrentUser());
-        setLoading(false);
-      } catch (error) {
-        console.log("Error fetching data:", error);
-        setLoading(false);
-      }
-    } else {
-      Alert.alert("Cant delete last address");
+
+    try {
+      const updatedAddresses = addresses.filter(
+        (address) => address._id !== toDelete
+      );
+
+      setAddresses(updatedAddresses);
+
+      const url = `https://beautyverse.herokuapp.com/api/v1/users/${currentUser._id}/address/${toDelete}`;
+      await axios.delete(url);
+
+      dispatch(setRerenderCurrentUser());
+      setLoading(false);
+      setToDelete(null); // clear the toDelete state after deleting
+    } catch (error) {
+      console.log("Error fetching data:", error);
       setLoading(false);
     }
   };
-
   useEffect(() => {
     setTimeout(() => {
+      setLoading(false);
       setLoader(false);
     }, 300);
-  }, []);
+  }, [addresses]);
 
   return (
     <>
@@ -123,65 +112,41 @@ export const Addresses = () => {
         </View>
       ) : (
         <View
-          style={{ width: SCREEN_WIDTH, alignItems: "center", marginTop: 20 }}
+          style={{
+            width: SCREEN_WIDTH,
+            alignItems: "center",
+            marginTop: 20,
+          }}
         >
-          {!add ? (
-            <Pressable onPress={() => setAdd(true)} style={{ padding: 10 }}>
-              <MaterialIcons name="add" color="#F866B1" size={24} />
-            </Pressable>
-          ) : (
-            <Pressable onPress={() => setAdd(false)} style={{ padding: 10 }}>
-              <FontAwesome5 name="times" color="red" size={24} />
-            </Pressable>
-          )}
-
-          {add && (
-            <GoogleAutocomplete
-              setAddress={setAddress}
-              currentTheme={currentTheme}
-            />
-          )}
           {loading && <BackDrop loading={loading} setLoading={setLoading} />}
-          {address?.city?.length > 0 && (
-            <Pressable
-              style={{
-                alignItems: "center",
-                padding: 10,
-                borderRadius: 5,
-                backgroundColor: "#F866B1",
-                marginTop: 5,
-                marginBottom: 10,
+          {deleteDialog && (
+            <DeleteDialog
+              isVisible={deleteDialog}
+              onClose={() => {
+                setDeleteDialog(false);
+                setToDelete(null); // clear the toDelete state when the dialog is closed
               }}
-              onPress={() => Add()}
-            >
-              <Text style={{ color: currentTheme.font }}>
-                {language?.language?.Main.filter.save}
-              </Text>
-            </Pressable>
+              onDelete={DeleteAddress}
+              title="Are you sure to delete this address?"
+              delet="Delete"
+              cancel="Cancel"
+            />
           )}
           <ScrollView
             bounces={Platform.OS === "ios" ? false : undefined}
             overScrollMode={Platform.OS === "ios" ? "never" : "always"}
-            style={{ height: add ? SCREEN_HEIGHT / 1.7 : SCREEN_HEIGHT / 1.4 }}
           >
-            {currentUser?.address.map((item, index) => {
+            {addresses.map((item, index) => {
               return (
-                <TouchableOpacity
+                <View
                   activeOpacity={0.5}
                   key={index}
-                  onLongPress={
-                    currentUser?.address.length > 1
-                      ? () => {
-                          DeleteAddress(item._id);
-                        }
-                      : undefined
-                  }
-                  delayLongPress={300}
                   style={{
                     padding: 10,
                     backgroundColor: currentTheme.background2,
                     borderRadius: 10,
                     margin: 2.5,
+                    paddingRight: 8,
                     flexDirection: "row",
                     width: SCREEN_WIDTH - 30,
                     gap: 30,
@@ -193,8 +158,27 @@ export const Addresses = () => {
                     shadowOpacity: 0.05,
                     shadowRadius: 2,
                     elevation: 1,
+                    overflow: "hidden",
                   }}
                 >
+                  {addresses?.length > 1 && (
+                    <Ionicons
+                      style={{
+                        position: "absolute",
+                        right: 8,
+                        top: 8,
+                        zIndex: 999,
+                      }}
+                      name="remove"
+                      size={20}
+                      color="red"
+                      onPress={() => {
+                        Vibration.vibrate();
+                        setToDelete(item._id); // set the ID of the item to delete
+                        setDeleteDialog(true);
+                      }}
+                    />
+                  )}
                   <View style={{ gap: 10 }}>
                     <View
                       style={{ flexDirection: "row", alignItems: "center" }}
@@ -205,10 +189,19 @@ export const Addresses = () => {
                         size={20}
                       />
                       <Text
-                        style={{ color: currentTheme.font, fontWeight: "bold" }}
+                        style={{
+                          color: currentTheme.font,
+                          fontWeight: "bold",
+                          letterSpacing: 0.3,
+                        }}
                       >
                         {language?.language?.User.userPage.address}: N
-                        <Text style={{ fontWeight: "normal" }}>
+                        <Text
+                          style={{
+                            fontWeight: "bold",
+                            letterSpacing: 0.3,
+                          }}
+                        >
                           {index + 1}
                         </Text>
                       </Text>
@@ -221,53 +214,116 @@ export const Addresses = () => {
                   </View>
                   <View style={{ gap: 5 }}>
                     <Text
-                      style={{ color: currentTheme.font, fontWeight: "bold" }}
+                      style={{
+                        color: currentTheme.font,
+                        fontWeight: "bold",
+                        letterSpacing: 0.3,
+                      }}
                     >
                       {language?.language?.Main.filter.country}:{"  "}
-                      <Text style={{ fontWeight: "normal" }}>
+                      <Text
+                        style={{
+                          fontWeight: "normal",
+                          color: currentTheme.pink,
+                          letterSpacing: 0.3,
+                        }}
+                      >
                         {item?.country}
                       </Text>
                     </Text>
                     <Text
-                      style={{ color: currentTheme.font, fontWeight: "bold" }}
+                      style={{
+                        color: currentTheme.font,
+                        fontWeight: "bold",
+                        width: "95%",
+                        flexWrap: "nowrap",
+                      }}
                     >
                       {language?.language?.Main.filter.region}:{"  "}
-                      <Text style={{ fontWeight: "normal" }}>
+                      <Text
+                        style={{
+                          fontWeight: "normal",
+                          color: currentTheme.pink,
+                          letterSpacing: 0.3,
+                        }}
+                      >
                         {item?.region}
                       </Text>
                     </Text>
                     <Text
-                      style={{ color: currentTheme.font, fontWeight: "bold" }}
+                      style={{
+                        color: currentTheme.font,
+                        fontWeight: "bold",
+                        letterSpacing: 0.3,
+                      }}
                     >
                       {language?.language?.Main.filter.city}:{"  "}
-                      <Text style={{ fontWeight: "normal" }}>{item?.city}</Text>
+                      <Text
+                        style={{
+                          fontWeight: "normal",
+                          color: currentTheme.pink,
+                          letterSpacing: 0.3,
+                        }}
+                      >
+                        {item?.city}
+                      </Text>
                     </Text>
                     <Text
-                      style={{ color: currentTheme.font, fontWeight: "bold" }}
+                      style={{
+                        color: currentTheme.font,
+                        fontWeight: "bold",
+                        letterSpacing: 0.3,
+                      }}
                     >
                       {language?.language?.Main.filter.district}:{"  "}
-                      <Text style={{ fontWeight: "normal" }}>
+                      <Text
+                        style={{
+                          fontWeight: "normal",
+                          color: currentTheme.pink,
+                          letterSpacing: 0.3,
+                        }}
+                      >
                         {item?.district}
                       </Text>
                     </Text>
                     <Text
-                      style={{ color: currentTheme.font, fontWeight: "bold" }}
+                      style={{
+                        color: currentTheme.font,
+                        fontWeight: "bold",
+                        letterSpacing: 0.3,
+                      }}
                     >
                       {language?.language?.Main.filter.street}:{"  "}
-                      <Text style={{ fontWeight: "normal" }}>
+                      <Text
+                        style={{
+                          fontWeight: "normal",
+                          color: currentTheme.pink,
+                          letterSpacing: 0.3,
+                        }}
+                      >
                         {item?.street}
                       </Text>
                     </Text>
                     <Text
-                      style={{ color: currentTheme.font, fontWeight: "bold" }}
+                      style={{
+                        color: currentTheme.font,
+                        fontWeight: "bold",
+                        letterSpacing: 0.3,
+                      }}
                     >
                       {language?.language?.Main.filter.streetNumber}:{"  "}
-                      <Text style={{ fontWeight: "normal" }}>
+                      <Text
+                        style={{
+                          fontWeight: "normal",
+                          color: currentTheme.pink,
+                          letterSpacing: 0.3,
+                        }}
+                      >
                         {item?.number}
                       </Text>
                     </Text>
                   </View>
-                </TouchableOpacity>
+                </View>
               );
             })}
           </ScrollView>

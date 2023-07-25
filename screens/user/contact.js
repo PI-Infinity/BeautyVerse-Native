@@ -76,51 +76,53 @@ export const Contact = ({ targetUser }) => {
             </>
           )}
         </View>
-        <TouchableOpacity
-          onPress={(event) => event.stopPropagation()}
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 0,
-            marginRight: 10,
-            height: "100%",
-          }}
-        >
-          {targetUser.media.whatsapp && (
-            <TouchableOpacity
-              onPress={() => {
-                handleLinkPress(`https://wa.me/${targetUser.phone}`);
-              }}
-              style={[
-                styles.title,
-                { backgroundColor: currentTheme.background2 },
-              ]}
-            >
-              <FontAwesome
-                name="whatsapp"
-                size={18}
-                color={currentTheme.font}
-              />
-            </TouchableOpacity>
-          )}
-          {targetUser.media.telegram && (
-            <TouchableOpacity
-              onPress={() =>
-                handleLinkPress(`https://t.me/${targetUser.phone}`)
-              }
-              style={[
-                styles.title,
-                { backgroundColor: currentTheme.background2 },
-              ]}
-            >
-              <FontAwesome
-                name="telegram"
-                size={16}
-                color={currentTheme.font}
-              />
-            </TouchableOpacity>
-          )}
-        </TouchableOpacity>
+        {targetUser?.type !== "user" && (
+          <TouchableOpacity
+            onPress={(event) => event.stopPropagation()}
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 0,
+              marginRight: 10,
+              height: "100%",
+            }}
+          >
+            {targetUser.media.whatsapp && (
+              <TouchableOpacity
+                onPress={() => {
+                  handleLinkPress(`https://wa.me/${targetUser.phone}`);
+                }}
+                style={[
+                  styles.title,
+                  { backgroundColor: currentTheme.background2 },
+                ]}
+              >
+                <FontAwesome
+                  name="whatsapp"
+                  size={18}
+                  color={currentTheme.font}
+                />
+              </TouchableOpacity>
+            )}
+            {targetUser.media.telegram && (
+              <TouchableOpacity
+                onPress={() =>
+                  handleLinkPress(`https://t.me/${targetUser.phone}`)
+                }
+                style={[
+                  styles.title,
+                  { backgroundColor: currentTheme.background2 },
+                ]}
+              >
+                <FontAwesome
+                  name="telegram"
+                  size={16}
+                  color={currentTheme.font}
+                />
+              </TouchableOpacity>
+            )}
+          </TouchableOpacity>
+        )}
       </TouchableOpacity>
       <TouchableOpacity
         onPress={() => handleLinkPress(`mailto:${targetUser.email}`)}

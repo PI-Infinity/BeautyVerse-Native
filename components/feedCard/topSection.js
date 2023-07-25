@@ -107,7 +107,7 @@ export const TopSection = (props) => {
             <TouchableOpacity
               activeOpacity={route.name === "Feeds" ? 0.8 : 1}
               onPress={() =>
-                navigation.navigate("UserVisit", {
+                navigation.navigate("User", {
                   user: props.user,
                 })
               }
@@ -121,6 +121,7 @@ export const TopSection = (props) => {
               }}
             >
               <CacheableImage
+                key={props.user?.cover}
                 style={{
                   width: "100%",
                   aspectRatio: 0.95,

@@ -18,6 +18,7 @@ import { darkTheme, lightTheme } from "../../context/theme";
 import { setCurrentUser } from "../../redux/auth";
 import { setRerenderCurrentUser } from "../../redux/rerenders";
 import PasswordRessetPopup from "../../screens/authentication/resetPassword";
+import { BackDrop } from "../../components/backDropLoader";
 
 /**
  * Login Screen
@@ -38,17 +39,17 @@ export const Login = ({ navigation }) => {
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
 
-  // verify email states
-  const [verify, setVerify] = useState(false);
-  const [code, setCode] = useState("");
-
   // alert message
   const [alert, setAlert] = useState({ active: false, text: "", type: "" });
+
+  // defines loading backdrop
+  const [loading, setLoading] = useState(false);
 
   /**
    * Login function
    */
   const Login = async () => {
+    setLoading(true);
     try {
       // post login to backend
       await axios
@@ -57,38 +58,28 @@ export const Login = ({ navigation }) => {
           password: password,
         })
         .then(async (data) => {
-          // if email verified go to next steps to naviagtion to main content
-          if (data.data.filteredUser.verifiedEmail) {
-            if (
-              /**
-               * if user type is not "user" and procedures are not defined (user has stoped register until choising procedures),
-               * save user info to redux toolkit to go on the register to complete
-               * after saving info navigate to business register screen
-               */
-              data.data.filteredUser.type !== "user" &&
-              data.data.filteredUser.procedures?.length < 1
-            ) {
-              dispatch(setCurrentUser(data.data.filteredUser));
-              navigation.navigate("Business");
-            } else {
-              /**
-               * if user's type is not "user" and procedures defined, or type is "user"
-               * set repoonsed user info to async storage
-               */
-              await AsyncStorage.setItem(
-                "Beautyverse:currentUser",
-                JSON.stringify(data.data.filteredUser)
-              );
-              // after save user to async storage, rerender user info to complete login and navigate to main content
-              dispatch(setRerenderCurrentUser());
-            }
-            // if email not verified, lets verify it
+          if (
+            data.data.filteredUser?.registerStage === "done" ||
+            !data.data.filteredUser?.registerStage
+          ) {
+            await AsyncStorage.setItem(
+              "Beautyverse:currentUser",
+              JSON.stringify(data.data.filteredUser)
+            );
+            // after save user to async storage, rerender user info to complete login and navigate to main content
+            dispatch(setRerenderCurrentUser());
+            setTimeout(() => {
+              setLoading(false);
+            }, 1000);
           } else {
-            setVerify(true);
+            dispatch(setCurrentUser(data.data.filteredUser));
+            navigation.navigate("PersonalInfo");
+            setLoading(false);
           }
         });
     } catch (err) {
       console.log(err.response.data.message);
+      setLoading(false);
       // alert errors to be visible for users
       setAlert({
         active: true,
@@ -98,42 +89,44 @@ export const Login = ({ navigation }) => {
     }
   };
 
-  /**
-   * if this function need to use, so user registered succesfully but not verified email yet
-   * now when login, need complete register and need verify email
-   * Veryify function verifes email by 6 random numbers
-   */
-  async function Verify() {
-    try {
-      const response = await axios.post(
-        "https://beautyverse.herokuapp.com/api/v1/verifyEmail",
-        {
-          email: email,
-          code: code,
-        }
-      );
-      const newUser = response.data.data.newUser;
-      // if user type is "user" complete register and navigate to main content
-      if (newUser?.type === "user") {
-        await AsyncStorage.setItem(
-          "Beautyverse:currentUser",
-          JSON.stringify(newUser)
-        );
-        dispatch(setRerenderCurrentUser());
-      } else {
-        // if user type not "user", after verifying email navigate to business register screen
-        dispatch(setCurrentUser(newUser));
-        navigation.navigate("Business");
-      }
-    } catch (err) {
-      setAlert({
-        active: true,
-        text: err.response.data.message,
-        type: "error",
-      });
-      console.log(err.response.data.message);
-    }
-  }
+  // /**
+  //  * if this function need to use, so user registered succesfully but not verified email yet
+  //  * now when login, need complete register and need verify email
+  //  * Veryify function verifes email by 6 random numbers
+  //  */
+  // async function Verify() {
+  //   try {
+  //     const response = await axios.post(
+  //       "https://beautyverse.herokuapp.com/api/v1/verifyEmail",
+  //       {
+  //         email: email,
+  //         code: code,
+  //       }
+  //     );
+  //     const newUser = response.data.data.newUser;
+  //     // if user type is "user" complete register and navigate to main content
+  //     if (newUser?.type === "user") {
+  //       await AsyncStorage.setItem(
+  //         "Beautyverse:currentUser",
+  //         JSON.stringify(newUser)
+  //       );
+  //       setVerify(false);
+  //       dispatch(setRerenderCurrentUser());
+  //     } else {
+  //       // if user type not "user", after verifying email navigate to business register screen
+  //       dispatch(setCurrentUser(newUser));
+  //       setVerify(false);
+  //       navigation.navigate("Business");
+  //     }
+  //   } catch (err) {
+  //     setAlert({
+  //       active: true,
+  //       text: err.response.data.message,
+  //       type: "error",
+  //     });
+  //     console.log(err.response.data.message);
+  //   }
+  // }
 
   /**
    * this is states for reset passwords.
@@ -200,6 +193,7 @@ export const Login = ({ navigation }) => {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={{ flex: 1 }}
     >
+      <BackDrop loading={loading} setLoading={setLoading} />
       <AlertMessage
         isVisible={alert.active}
         type={alert.type}
@@ -208,7 +202,7 @@ export const Login = ({ navigation }) => {
         Press={() => setAlert({ active: false, text: "" })}
       />
       <View style={styles.container}>
-        <View style={{ position: "absolute" }}>
+        {/* <View style={{ position: "absolute" }}>
           {verify && (
             <EmailPopup
               setFunction={Verify}
@@ -218,7 +212,7 @@ export const Login = ({ navigation }) => {
               setOpen={setVerify}
             />
           )}
-        </View>
+        </View> */}
         <View style={{ position: "absolute" }}>
           {resetPopup && (
             <PasswordRessetPopup
@@ -274,7 +268,7 @@ export const Login = ({ navigation }) => {
           <Text style={[styles.registerQuestion, { color: currentTheme.font }]}>
             {language?.language?.Auth?.auth?.dontHave}{" "}
           </Text>
-          <TouchableOpacity onPress={() => navigation.navigate("Register")}>
+          <TouchableOpacity onPress={() => navigation.navigate("Identify")}>
             <Text style={[styles.register, { color: currentTheme.pink }]}>
               {language?.language?.Auth?.auth?.register}
             </Text>
@@ -327,6 +321,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     letterSpacing: 0.2,
     fontWeight: "bold",
+    color: "#fff",
   },
   forgot: {
     textAlign: "center",

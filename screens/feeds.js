@@ -10,17 +10,20 @@ import { Feed } from "../components/feedCard/feedCard";
 import SkeletonComponent from "../components/skelton";
 import { darkTheme, lightTheme } from "../context/theme";
 import { setSendReport } from "../redux/alerts";
-import { setCleanUp, setRerenderCurrentUser } from "../redux/rerenders";
+import { setCleanUp, setFeedRefreshControl } from "../redux/rerenders";
 
 /**
  * Feeds screen
  */
 
-const { height: hght, width: SCREEN_WIDTH } = Dimensions.get("window");
+const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
-export const Feeds = ({ navigation }) => {
-  // loading state
-  const [loading, setLoading] = useState(true);
+export const Feeds = ({ navigation, setScrollY }) => {
+  // refresh state
+  const refresh = useSelector(
+    (state) => state.storeRerenders.feedRefreshControl
+  );
+  const [firstLoading, setFirstLoading] = useState(true);
 
   // defines when screen focused
   const isFocused = useIsFocused();
@@ -28,15 +31,6 @@ export const Feeds = ({ navigation }) => {
   // defines theme context
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
-
-  // defines header height
-  const headerHeight = useHeaderHeight();
-
-  // defines bottom tab bar height
-  const tabBarHeight = useBottomTabBarHeight();
-
-  // defines sreen height without header and tab bar height
-  const SCREEN_HEIGHT = hght - tabBarHeight - headerHeight;
 
   // defines redux dispatch
   const dispatch = useDispatch();
@@ -48,9 +42,6 @@ export const Feeds = ({ navigation }) => {
    * users states with last feed
    */
   const [users, setUsers] = useState([]);
-
-  // defines ref for FlatList where mapped users
-  const flatListRef = useRef(null);
 
   /*
   page defines query for backend
@@ -69,50 +60,35 @@ export const Feeds = ({ navigation }) => {
 
   // Selector for the cleanup state
   const cleanUp = useSelector((state) => state.storeRerenders.cleanUp);
-
   /**
    * Get users function when screen loads
    */
   useEffect(() => {
     // Function to get feed data from server
-    const Getting = async (currentPage) => {
-      setLoading(true);
+    const Getting = async () => {
       try {
-        flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
         const response = await axios.get(
           `https://beautyverse.herokuapp.com/api/v1/feeds?search=${search}&filter=${filter}&type=${
             specialists ? "specialist" : ""
           }${
             salons ? "beautycenter" : ""
-          }&city=${city}&district=${district}&page=${currentPage}`
+          }&city=${city}&district=${district}&page=1`
         );
         setUsers(response.data.data.feedList);
+
         setTimeout(() => {
-          // setScrollY(0);
-          setLoading(false);
-        }, 300);
+          dispatch(setFeedRefreshControl(false));
+          setFirstLoading(false);
+        }, 1000);
       } catch (error) {
-        setLoading(false);
         console.log(error.response.data.message);
+        dispatch(setFeedRefreshControl(false));
       }
     };
-
-    if (scrollY < 10) {
-      setUsers([]);
-      Getting(1);
-      setPage(1);
-    } else {
-      flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
-      setScrollY(0);
-    }
-    dispatch(setRerenderCurrentUser());
-    // when clean up state changes, reloads users state
+    Getting();
   }, [cleanUp]);
 
-  // Selector for user list rerender
-  const rerenderUserList = useSelector(
-    (state) => state.storeRerenders.rerenderUserList
-  );
+  const flatListRef = useRef();
 
   /**
    * Function to get new users with feeds and adding them in user state while user scrolling to bottom
@@ -153,49 +129,27 @@ export const Feeds = ({ navigation }) => {
     } catch (error) {
       console.log(error.response.data.message);
     }
+    dispatch(setFeedRefreshControl(false));
   };
 
-  // avoid first render for useEffect which used adding new users
-  const isFirstRender = useRef(true);
-
-  // useEffect to handle feed and user data fetching based on current user and rerenderUserList
-  useEffect(() => {
-    if (isFirstRender.current) {
-      setLoading(false);
-      isFirstRender.current = false; // set to false after the first render
-      return;
-    }
-    flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
-    if (currentUser) {
-      AddUsersWithFeeds(page);
-    }
-  }, [rerenderUserList]);
-
-  // Define scrolling
-  const [scrollY, setScrollY] = useState(0);
-
-  const scrollRef = useRef(0);
-
   // Callback to handle scroll
-  const handleScroll = useCallback(
-    (event) => {
-      const offsetY = event.nativeEvent.contentOffset.y;
+  const scrollYRef = useRef(0);
 
-      // Remember the current scroll position for the next scroll event
-      scrollRef.current = offsetY;
-    },
-    [scrollRef]
-  );
+  const handleScroll = useCallback((event) => {
+    const offsetY = event.nativeEvent.contentOffset.y;
+    setScrollY(offsetY);
+    scrollYRef.current = offsetY; // Store the scroll position in scrollYRef, not flatListRef
+  }, []);
 
   // Callback to handle refresh
   const onRefresh = useCallback(async () => {
-    setPage(1);
+    dispatch(setFeedRefreshControl(true));
     dispatch(setCleanUp());
+    setPage(1);
   }, []);
 
   // State to keep track of displayed video index
   const [currentIndex, setCurrentIndex] = useState(0);
-
   // useRef to keep track of viewable items
   const onViewableItemsChangedRef = useRef(({ viewableItems, changed }) => {
     if (viewableItems.length > 0) {
@@ -218,9 +172,22 @@ export const Feeds = ({ navigation }) => {
   // send report
   const sendReport = useSelector((state) => state.storeAlerts.sendReport);
 
+  // zoom to top on change dependency
+  const zoomToTop = useSelector((state) => state.storeApp.zoomToTop);
+  let firstRend = useRef();
+  useEffect(() => {
+    if (firstRend.current) {
+      firstRend.current = false;
+      return;
+    }
+    if (scrollYRef.current > 0) {
+      flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
+    }
+  }, [zoomToTop]);
+
   return (
-    <>
-      {loading && (
+    <View>
+      {firstLoading && (
         <View
           style={{
             position: "absolute",
@@ -228,7 +195,7 @@ export const Feeds = ({ navigation }) => {
             width: SCREEN_WIDTH,
             top: 0,
             backgroundColor: currentTheme.background,
-            height: "100%",
+            height: SCREEN_HEIGHT,
           }}
         >
           <SkeletonComponent />
@@ -252,51 +219,29 @@ export const Feeds = ({ navigation }) => {
           refreshControl={
             <RefreshControl
               tintColor="#ccc"
-              refreshing={loading}
+              refreshing={refresh}
               onRefresh={onRefresh}
             />
           }
           renderItem={({ item, index }) => {
-            if (item.feed) {
-              return (
-                <Feed
-                  x={index}
-                  user={item}
-                  navigation={navigation}
-                  feeds={users}
-                  currentIndex={currentIndex}
-                  isFocused={isFocused}
-                />
-              );
-            } else {
-              if (index === 0) {
-                return (
-                  <View
-                    style={{
-                      flex: 1,
-                      alignItems: "center",
-                      justifyContent: "center",
-                      height: SCREEN_HEIGHT,
-                    }}
-                  >
-                    <Text style={{ color: currentTheme.disabled }}>
-                      No Feeds Found!
-                    </Text>
-                  </View>
-                );
-              }
-            }
+            return (
+              <Feed
+                x={index}
+                user={item}
+                navigation={navigation}
+                feeds={users}
+                currentIndex={currentIndex}
+                isFocused={isFocused}
+              />
+            );
           }}
           onEndReached={() => {
-            setPage((prevPage) => {
-              const nextPage = prevPage + 1;
-              AddUsersWithFeeds(nextPage);
-              return nextPage;
-            });
+            console.log("end");
+            AddUsersWithFeeds(page + 1);
+            setPage(page + 1);
           }}
-          onEndReachedThreshold={0.5}
+          onEndReachedThreshold={1}
           keyExtractor={(item) => item?._id}
-          // showsVerticalScrollIndicator={false}
           onViewableItemsChanged={onViewableItemsChangedRef.current}
           viewabilityConfig={viewabilityConfig}
         />
@@ -307,6 +252,6 @@ export const Feeds = ({ navigation }) => {
           <Text style={{ color: currentTheme.disabled }}>No Feeds found</Text>
         </View>
       )}
-    </>
+    </View>
   );
 };
