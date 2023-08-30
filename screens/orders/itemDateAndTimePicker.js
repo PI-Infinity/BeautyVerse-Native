@@ -144,12 +144,16 @@ const CustomDatePicker = ({
 
   const [loader, setLoader] = useState(false);
 
+  // backend url
+  const backendUrl = useSelector((state) => state.storeApp.backendUrl);
+
   const GetOrders = async () => {
     setLoader(true);
     let newDate = new Date(selectedYear, selectedMonth - 1, selectedDay);
     try {
       const response = await axios.get(
-        "https://beautyverse.herokuapp.com/api/v1/users/" +
+        backendUrl +
+          "/api/v1/users/" +
           targetUser._id +
           `/orders?date=${newDate}`
       );

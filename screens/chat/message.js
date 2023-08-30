@@ -78,24 +78,23 @@ export const Message = (props) => {
     };
   }
 
+  // backend url
+  const backendUrl = useSelector((state) => state.storeApp.backendUrl);
+
   // read message
   const ReadMessage = async () => {
     console.log(props?.data?.messageUniqueId);
     try {
       await axios.patch(
-        "https://beautyverse.herokuapp.com/api/v1/chats/seen/" +
-          props?.data?.messageUniqueId,
+        backendUrl + "/api/v1/chats/seen/" + props?.data?.messageUniqueId,
         {
           status: "read",
         }
       );
-      await axios.patch(
-        "https://beautyverse.herokuapp.com/api/v1/chats/" + currentChat.room,
-        {
-          status: "read",
-          lastMessageSeen: "seen",
-        }
-      );
+      await axios.patch(backendUrl + "/api/v1/chats/" + currentChat.room, {
+        status: "read",
+        lastMessageSeen: "seen",
+      });
       socket.emit("updateMessage", {
         targetId: props.data?.senderId,
         data: props.data,
@@ -141,9 +140,7 @@ export const Message = (props) => {
       if (props?.data?.senderId === currentUser._id) {
         console.log("delete by sender");
 
-        await axios.delete(
-          "https://beautyverse.herokuapp.com/api/v1/chats/messages/" + m
-        );
+        await axios.delete(backendUrl + "/api/v1/chats/messages/" + m);
         if (props?.data?.file?.url) {
           Deleting();
         }
@@ -157,8 +154,7 @@ export const Message = (props) => {
           let newLastMessage = props.messages[lastMsgIndex - 1];
           if (newLastMessage) {
             await axios.patch(
-              "https://beautyverse.herokuapp.com/api/v1/chats/" +
-                currentChat.room,
+              backendUrl + "/api/v1/chats/" + currentChat.room,
               {
                 lastMessage:
                   newLastMessage?.text.length > 0
@@ -173,14 +169,10 @@ export const Message = (props) => {
           }
         }
       } else {
-        console.log("not sender");
         // delete reciever id field if sender not current user
-        await axios.patch(
-          "https://beautyverse.herokuapp.com/api/v1/chats/messages/" + m,
-          {
-            receiverId: "",
-          }
-        );
+        await axios.patch(backendUrl + "/api/v1/chats/messages/" + m, {
+          receiverId: "",
+        });
       }
 
       dispatch(setRerederRooms());
@@ -279,8 +271,8 @@ export const Message = (props) => {
           style={{
             backgroundColor:
               data?.senderId === currentUser._id
-                ? "rgba(255,255,255,0.03)"
-                : "rgba(255,255,255,0.1)",
+                ? currentTheme.background
+                : currentTheme.background2,
             padding: 10,
             borderRadius: 15,
             gap: 5,
@@ -328,7 +320,11 @@ export const Message = (props) => {
                       backgroundColor: "rgba(255,255,255,0.1)",
                     }}
                   >
-                    <FontAwesome name="user" size={20} color="#e5e5e5" />
+                    <FontAwesome
+                      name="user"
+                      size={20}
+                      color={currentTheme.disabled}
+                    />
                   </View>
                 )}
               </Pressable>
@@ -385,7 +381,7 @@ export const Message = (props) => {
             </View>
           )}
           {data?.text?.length > 0 && (
-            <Text style={{ color: "#e5e5e5" }} multiline>
+            <Text style={{ color: currentTheme.font }} multiline>
               {data?.text}
             </Text>
           )}

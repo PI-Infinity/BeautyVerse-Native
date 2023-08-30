@@ -38,14 +38,16 @@ export const SuccessRegister = ({ navigation }) => {
               letterSpacing: 0.5,
             }}
           >
-            You are registered successfully!
+            {language?.language?.Auth?.auth?.successRegister}
           </Text>
 
           <TouchableOpacity
             style={styles.button}
             onPress={() => navigation.navigate("PersonalInfo")}
           >
-            <Text style={styles.buttonText}>Continue</Text>
+            <Text style={styles.buttonText}>
+              {language?.language?.Auth?.auth?.continue}
+            </Text>
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>

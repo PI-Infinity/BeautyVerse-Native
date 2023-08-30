@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Modal, View, Button, Text, TextInput } from "react-native";
+import { Modal, View, Button, Text, TextInput, Alert } from "react-native";
 
 // price list component
 
@@ -8,6 +8,7 @@ const PricePickerPopup = ({
   closeModal,
   oldPrice,
   currentTheme,
+  setEditPrice,
 }) => {
   const [selectedValue, setSelectedValue] = useState(null);
 
@@ -52,12 +53,16 @@ const PricePickerPopup = ({
           <Button
             title="Save"
             color={currentTheme.pink}
-            onPress={() => {
-              closeModal({ price: selectedValue ? selectedValue : oldPrice });
-              setTimeout(() => {
-                setSelectedValue("");
-              }, 1000);
-            }}
+            onPress={
+              selectedValue
+                ? () => {
+                    closeModal({ price: selectedValue });
+                    setTimeout(() => {
+                      setSelectedValue("");
+                    }, 1000);
+                  }
+                : () => setEditPrice(false)
+            }
           />
         </View>
       </View>

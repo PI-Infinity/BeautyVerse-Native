@@ -18,6 +18,7 @@ import { darkTheme, lightTheme } from "../../context/theme";
 import { storage } from "../../firebase";
 import { setRooms, setRerenderScroll, setRerederRooms } from "../../redux/chat";
 import { File } from "../../screens/chat/file";
+import { sendNotification } from "../../components/pushNotifications";
 
 /**
  * Room Input component
@@ -53,28 +54,6 @@ export const Input = ({
 
   // chats
   const rooms = useSelector((state) => state.storeChat.rooms);
-
-  // // read message if room open on arrival new message
-  // const ReadMessage = async () => {
-  //   try {
-  //     if (currentChat.lastSender !== currentUser._id) {
-  //       await axios.patch(
-  //         "https://beautyverse.herokuapp.com/api/v1/chats/" + currentChat.room,
-  //         {
-  //           status: "read",
-  //           lastMessageSeen: "seen",
-  //         }
-  //       );
-  //     }
-  //     socket.emit("updateChat", {
-  //       targetId: targetUser.id,
-  //     });
-  //     dispatch(setRerenderScroll());
-  //     dispatch(setRerederRooms());
-  //   } catch (error) {
-  //     console.log(error.response.data.message);
-  //   }
-  // };
 
   // avoid firs render to read message
   const isFirstRender = useRef(true);
@@ -199,6 +178,9 @@ export const Input = ({
 
   const videoRef = useRef();
 
+  // backend url
+  const backendUrl = useSelector((state) => state.storeApp.backendUrl);
+
   /**
    * Send message function
    */
@@ -229,25 +211,23 @@ export const Input = ({
       ]);
 
       dispatch(setRerenderScroll());
-      await axios.post(
-        "https://beautyverse.herokuapp.com/api/v1/chats/messages",
-        {
-          messageUniqueId: msgId,
-          room: currentChat.room,
-          senderId: currentUser._id,
-          receiverId: targetUser.id,
-          text: text,
-          file: {
-            url: url,
-            type: format,
-            height: format === "img" ? file[0].height : file.height,
-            width: format === "img" ? file[0].width : file.width,
-            id: fileId,
-          },
-          sentAt: new Date(),
-          status: "unread",
-        }
-      );
+      await axios.post(backendUrl + "/api/v1/chats/messages", {
+        messageUniqueId: msgId,
+        room: currentChat.room,
+        senderId: currentUser._id,
+        receiverId: targetUser.id,
+        text: text,
+        file: {
+          url: url,
+          type: format,
+          height: format === "img" ? file[0].height : file.height,
+          width: format === "img" ? file[0].width : file.width,
+          id: fileId,
+        },
+        sentAt: new Date(),
+        status: "unread",
+      });
+
       socket.emit("sendMessage", {
         messageUniqueId: msgId,
         room: currentChat.room,
@@ -265,6 +245,7 @@ export const Input = ({
         },
         status: "unread",
       });
+
       let updatedRoomObj = {
         lastMessage: text?.length > 0 ? text : "File...",
         lastMessageCreatedAt: new Date().toISOString(),
@@ -273,17 +254,23 @@ export const Input = ({
         status: "unread",
         hideFor: "",
       };
-      await axios.patch(
-        "https://beautyverse.herokuapp.com/api/v1/chats/" + currentChat.room,
-        {
-          ...updatedRoomObj,
-        }
-      );
+      await axios.patch(backendUrl + "/api/v1/chats/" + currentChat.room, {
+        ...updatedRoomObj,
+      });
 
       // update chats for target user
       socket.emit("updateChat", {
         targetId: targetUser.id,
       });
+
+      if (targetUser?.pushNotificationToken) {
+        await sendNotification(
+          targetUser?.pushNotificationToken,
+          currentUser.name,
+          text,
+          targetUser
+        );
+      }
 
       // update current user chats state
       dispatch(setRerederRooms());
@@ -352,8 +339,8 @@ export const Input = ({
         <TouchableOpacity
           onPress={
             text?.length > 0 && file?.length < 1
-              ? () => SendMessage("")
-              : file !== []
+              ? () => SendMessage()
+              : file?.length > 0
               ? () => FileUpload()
               : undefined
           }

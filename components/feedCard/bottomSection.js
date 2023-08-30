@@ -7,14 +7,34 @@ import {
   StyleSheet,
   Text,
   View,
+  Linking,
 } from "react-native";
 import GetTimesAgo from "../../functions/getTimesAgo";
 import { MaterialIcons } from "@expo/vector-icons";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import axios from "axios";
+import {
+  setCleanUp,
+  setRerenderUserFeed,
+  setRerenderUserFeeds,
+} from "../../redux/rerenders";
+import { sendNotification } from "../../components/pushNotifications";
+import { useSocket } from "../../context/socketContext";
 
 /**
  * Feed card's bottom section
  */
+
+const showNotification = async () => {
+  await Notifications.scheduleNotificationAsync({
+    content: {
+      title: "Welcome to BeautyVerse!",
+      body: "Discover the latest trends, tips, and more...",
+      data: { someData: "goes here" },
+    },
+    trigger: null, // This means the notification will be sent right away
+  });
+};
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -22,88 +42,101 @@ export const BottomSection = (props) => {
   // share function
   const [shares, setShares] = useState(null);
 
+  // define active theme
+  const theme = useSelector((state) => state.storeApp.theme);
+
+  // define socket server
+  const socket = useSocket();
+
   // defines redux dispatch
   const dispatch = useDispatch();
+
+  // defines current user
+  const currentUser = useSelector((state) => state.storeUser.currentUser);
 
   // define shares total
   useEffect(() => {
     setShares(props?.feed?.shares);
   }, [props?.feed?.shares]);
 
+  // defines backend url
+  const backendUrl = useSelector((state) => state.storeApp.backendUrl);
+
   // Include other imports you need
 
-  // const shareAndOpenURL = async (url, userId, itemId, val) => {
-  //   console.log(url);
-  //   const UpdatePost = async () => {
-  //     try {
-  //       await axios.patch(
-  //         `https://beautyverse.herokuapp.com/api/v1/users/${userId}/feeds/${itemId}`,
-  //         {
-  //           shares: val + 1,
-  //         }
-  //       );
-  //       setShares(shares + 1);
-  //       dispatch(setCleanUp());
-  //       dispatch(setRerenderUserFeeds());
-  //       dispatch(setRerenderUserFeed());
-  //       if (props.GetFeedObj) {
-  //         props.GetFeedObj();
-  //       }
-  //     } catch (error) {
-  //       console.log(error.response.data.message);
-  //     }
-  //   };
-  //   try {
-  //     const canOpen = await Linking.canOpenURL(url);
+  const shareAndOpenURL = async (url, userId, itemId, val) => {
+    const UpdatePost = async () => {
+      setShares(shares + 1);
+      try {
+        await axios.patch(
+          `${backendUrl}/api/v1/users/${userId}/feeds/${itemId}`,
+          {
+            shares: val + 1,
+          }
+        );
+        dispatch(setCleanUp());
+        dispatch(setRerenderUserFeeds());
+        dispatch(setRerenderUserFeed());
+        if (props.GetUserFeeds) {
+          props.GetUserFeeds();
+        }
 
-  //     if (!canOpen) {
-  //       console.log(`Can't open URL: ${url}`);
-  //       return;
-  //     }
-
-  //     const result = await Share.share({
-  //       title: "Open My App",
-  //       message: `Check this out: ${url}`,
-  //       url: url,
-  //     });
-
-  //     if (result.action === Share.sharedAction) {
-  //       if (result.activityType) {
-  //         // shared with activity type of result.activityType
-  //         console.log(`Shared with activity type of ${result.activityType}`);
-  //         UpdatePost();
-  //       } else {
-  //         // shared
-  //         console.log("Shared successfully");
-  //       }
-  //     } else if (result.action === Share.dismissedAction) {
-  //       // dismissed
-  //       console.log("Share was dismissed");
-  //     }
-  //   } catch (err) {
-  //     console.error("An error occurred", err);
-  //   }
-  // };
-
-  // share post
-  const shareAndOpenURL = async () => {
+        if (props.user._id !== currentUser._id) {
+          await axios.post(
+            `${backendUrl}/api/v1/users/${userId}/notifications`,
+            {
+              senderId: currentUser?._id,
+              text: `shared your feed!`,
+              date: new Date(),
+              type: "star",
+              status: "unread",
+              feed: `/api/v1/users/${props.user?._id}/feeds/${props.feed._id}`,
+            }
+          );
+          socket.emit("updateUser", {
+            targetId: props.user?._id,
+          });
+          if (props.user?.pushNotificationToken) {
+            await sendNotification(
+              props.user?.pushNotificationToken,
+              currentUser.name,
+              "shared your feed!",
+              props.feed
+            );
+          }
+        }
+      } catch (error) {
+        console.log(error.response.data.message);
+      }
+    };
     try {
+      const canOpen = await Linking.canOpenURL(url);
+
+      if (!canOpen) {
+        console.log(`Can't open URL: ${url}`);
+        return;
+      }
+
       const result = await Share.share({
-        message: "Check out my app! beautyverse://",
-        url: "beautyverse://",
+        message: "Check out my app! BeautyVerse",
+        url: url,
       });
 
       if (result.action === Share.sharedAction) {
         if (result.activityType) {
-          console.log("Shared with activity type of", result.activityType);
+          // shared with activity type of result.activityType
+          console.log(`Shared with activity type of ${result.activityType}`);
+          UpdatePost();
         } else {
-          console.log("Shared");
+          // shared
+          console.log("Shared successfully");
         }
       } else if (result.action === Share.dismissedAction) {
+        // dismissed
         console.log("Share was dismissed");
       }
-    } catch (error) {
-      console.error("An error occurred", error);
+    } catch (err) {
+      console.error("An error occurred", err);
     }
   };
 
@@ -147,7 +180,10 @@ export const BottomSection = (props) => {
           styles.gradient,
           {
             borderWidth: 1.5,
-            borderColor: props.currentTheme.line,
+            borderColor:
+              props.feed?.fileFormat === "video"
+                ? "rgba(255,255,255,0.8)"
+                : props.currentTheme.line,
             flex: 1,
             height: "100%",
           },
@@ -167,7 +203,10 @@ export const BottomSection = (props) => {
               flex: 1,
               height: "100%",
               borderRightWidth: 1.5,
-              borderRightColor: props.currentTheme.line,
+              borderRightColor:
+                props.feed?.fileFormat === "video"
+                  ? "rgba(255,255,255,0.8)"
+                  : props.currentTheme.line,
               gap: 5,
             }}
           >
@@ -175,10 +214,18 @@ export const BottomSection = (props) => {
               <FontAwesome
                 name="star-o"
                 size={22}
-                color={props?.checkIfStared ? props.currentTheme.pink : "#fff"}
+                color={
+                  props?.checkIfStared
+                    ? props.currentTheme.pink
+                    : props.feed?.fileFormat === "video"
+                    ? "rgba(255,255,255,0.8)"
+                    : props.currentTheme.font
+                }
                 style={{
                   textShadowColor: "rgba(0, 0, 0, 0.2)",
-                  textShadowOffset: { width: -0.5, height: 0.5 },
+                  textShadowOffset: !theme
+                    ? { width: 0, height: 0 }
+                    : { width: -0.5, height: 0.5 },
                   textShadowRadius: 0.5,
                 }}
               />
@@ -190,7 +237,10 @@ export const BottomSection = (props) => {
                 {
                   color: props?.checkIfStared
                     ? props.currentTheme.pink
-                    : "#fff",
+                    : !props?.checkIfStared &&
+                      props.feed?.fileFormat === "video"
+                    ? "rgba(255,255,255,0.8)"
+                    : props.currentTheme.font,
                 },
               ]}
             >
@@ -205,7 +255,10 @@ export const BottomSection = (props) => {
                   width: 25,
                   color: props?.checkIfStared
                     ? props.currentTheme.pink
-                    : "#fff",
+                    : !props?.checkIfStared &&
+                      props.feed?.fileFormat === "video"
+                    ? "rgba(255,255,255,0.8)"
+                    : props.currentTheme.font,
                 },
               ]}
             >
@@ -228,6 +281,7 @@ export const BottomSection = (props) => {
                     props.navigation.navigate("UserFeed", {
                       user: props.user,
                       feed: props.feed,
+                      from: "comment",
                     });
                   }
                 : props.from === "scrollGallery"
@@ -241,7 +295,10 @@ export const BottomSection = (props) => {
               flexDirection: "row",
               justifyContent: "center",
               borderRightWidth: 1.5,
-              borderRightColor: props.currentTheme.line,
+              borderRightColor:
+                props.feed?.fileFormat === "video"
+                  ? "rgba(255,255,255,0.8)"
+                  : props.currentTheme.line,
               gap: 5,
             }}
           >
@@ -249,12 +306,17 @@ export const BottomSection = (props) => {
               name="comment"
               size={18}
               style={{
-                color: "#f7f7f7",
+                color:
+                  props.feed?.fileFormat === "video"
+                    ? "rgba(255,255,255,0.8)"
+                    : props.currentTheme.font,
                 textShadowColor:
                   props.user?.feed?.fileFormat === "video"
                     ? "rgba(0,0,0,0.2)"
                     : props.currentTheme.shadow,
-                textShadowOffset: { width: -0.5, height: 0.5 },
+                textShadowOffset: !theme
+                  ? { width: 0, height: 0 }
+                  : { width: -0.5, height: 0.5 },
                 textShadowRadius: 0.5,
               }}
             />
@@ -262,7 +324,10 @@ export const BottomSection = (props) => {
               style={[
                 styles.bottomText,
                 {
-                  color: "#f7f7f7",
+                  color:
+                    props.feed?.fileFormat === "video"
+                      ? "rgba(255,255,255,0.8)"
+                      : props.currentTheme.font,
                 },
               ]}
             >
@@ -274,8 +339,8 @@ export const BottomSection = (props) => {
                 {
                   color:
                     props.feed?.fileFormat === "video"
-                      ? "#fff"
-                      : props.currentTheme.disabled,
+                      ? "rgba(255,255,255,0.8)"
+                      : props.currentTheme.font,
                 },
               ]}
             >
@@ -291,7 +356,7 @@ export const BottomSection = (props) => {
           <Pressable
             onPress={() =>
               shareAndOpenURL(
-                "beautyverse://",
+                "https://apps.apple.com/app/6448795980",
                 props.user._id,
                 props.feed._id,
                 shares ? shares : 0
@@ -318,14 +383,20 @@ export const BottomSection = (props) => {
               <Fontisto
                 name="share-a"
                 size={17}
-                color="#f7f7f7"
+                color={
+                  props.feed?.fileFormat === "video"
+                    ? "rgba(255,255,255,0.8)"
+                    : props.currentTheme.font
+                }
                 style={{
                   marginTop: 1,
                   textShadowColor:
                     props.user?.feed?.fileFormat === "video"
                       ? "rgba(0,0,0,0.2)"
                       : props.currentTheme.shadow,
-                  textShadowOffset: { width: -0.5, height: 0.5 },
+                  textShadowOffset: !theme
+                    ? { width: 0, height: 0 }
+                    : { width: -0.5, height: 0.5 },
                   textShadowRadius: 0.5,
                 }}
               />
@@ -334,7 +405,10 @@ export const BottomSection = (props) => {
               style={[
                 styles.bottomText,
                 {
-                  color: "#fff",
+                  color:
+                    props.feed?.fileFormat === "video"
+                      ? "rgba(255,255,255,0.8)"
+                      : props.currentTheme.font,
                   textShadowColor:
                     props.user?.feed?.fileFormat === "video"
                       ? "rgba(0,0,0,0.2)"
@@ -351,14 +425,16 @@ export const BottomSection = (props) => {
                 styles.bottomText,
                 {
                   color:
-                    props.feed?.fileFormat === "video"
-                      ? "#fff"
-                      : props.currentTheme.disabled,
+                    !props?.checkIfStared && props.feed?.fileFormat === "video"
+                      ? "rgba(255,255,255,0.8)"
+                      : props.currentTheme.font,
                   textShadowColor:
                     props.user?.feed?.fileFormat === "video"
                       ? "rgba(0,0,0,0.2)"
                       : props.currentTheme.shadow,
-                  textShadowOffset: { width: -0.5, height: 0.5 },
+                  textShadowOffset: !theme
+                    ? { width: 0, height: 0 }
+                    : { width: -0.5, height: 0.5 },
                   textShadowRadius: 0.5,
                 },
               ]}
@@ -398,7 +474,7 @@ export const BottomSection = (props) => {
                 <MaterialIcons
                   name={props.volume ? "volume-off" : "volume-up"}
                   size={20}
-                  color="#e5e5e5"
+                  color={props.currentTheme.font}
                 />
               </Pressable>
             </Pressable>

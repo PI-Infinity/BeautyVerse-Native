@@ -2,6 +2,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import {
   Dimensions,
+  Pressable,
   StyleSheet,
   Text,
   TextInput,
@@ -39,17 +40,32 @@ export const Districts = ({ districts, currentTheme }) => {
   };
 
   const RenderedItem = ({ item }) => (
-    <TouchableOpacity
-      style={styles.cityItem}
+    <Pressable
+      style={[
+        styles.cityItem,
+        {
+          padding: 5,
+          borderRadius: 50,
+          backgroundColor: currentTheme.background2,
+        },
+      ]}
       activeOpacity={0.5}
       onPress={() => handlePress(selectedDistrict === item ? "" : item)}
     >
-      <Text style={{ color: currentTheme.font }}>{item}</Text>
+      <Text
+        style={{
+          color: currentTheme.pink,
+          // fontWeight: "bold",
+          letterSpacing: 0.3,
+        }}
+      >
+        {item}
+      </Text>
 
       {selectedDistrict === item && (
         <MaterialIcons name="done" color="#F866b1" size={16} />
       )}
-    </TouchableOpacity>
+    </Pressable>
   );
 
   return (

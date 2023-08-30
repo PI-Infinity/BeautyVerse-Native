@@ -11,6 +11,7 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  Dimensions,
 } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 import AlertMessage from "../../components/alertMessage";
@@ -21,6 +22,8 @@ import { darkTheme, lightTheme } from "../../context/theme";
 import { setCurrentUser } from "../../redux/auth";
 import { setRerenderCurrentUser } from "../../redux/rerenders";
 import CountryPicker from "react-native-country-picker-modal";
+
+const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
 export const PersonalInfo = ({ navigation }) => {
   // redux toolkit dispatch
@@ -59,33 +62,43 @@ export const PersonalInfo = ({ navigation }) => {
 
   const currentUser = useSelector((state) => state.storeAuth.currentUser);
 
+  // backend url
+  const backendUrl = useSelector((state) => state.storeApp.backendUrl);
+
   const AddPresonalInfo = async (e) => {
     if (!name || !phone || !address) {
       return setAlert({
         active: true,
-        text: "Please input fields!",
+        text: language?.language?.Auth?.auth?.pleaseInput,
         type: "error",
       });
     }
     if (name?.length < 2 || name?.length > 35) {
       return setAlert({
         active: true,
-        text: "A name must have min 3 and max 35 symbols!",
+        text: language?.language?.Auth?.auth?.nameWarning,
+        type: "error",
+      });
+    }
+    if (phone?.includes("+")) {
+      return setAlert({
+        active: true,
+        text: "Phone number doesn't need country code (+)",
         type: "error",
       });
     }
     if (phone?.length < 8 || phone?.length > 35) {
       return setAlert({
         active: true,
-        text: "A phone number must have min 8 and max 35 symbols!",
+        text: language?.language?.Auth?.auth?.wrongPhoneNumber,
         type: "error",
       });
     }
 
-    if (!address.city) {
+    if (!address.street) {
       return setAlert({
         active: true,
-        text: "An address must to include a city",
+        text: language?.language?.Auth?.auth?.wrongAddress,
         type: "error",
       });
     }
@@ -94,30 +107,27 @@ export const PersonalInfo = ({ navigation }) => {
 
     try {
       // Signup user
-      await axios.patch(
-        "https://beautyverse.herokuapp.com/api/v1/users/" + currentUser._id,
-        {
-          name: name,
-          phone: "+" + callingCode + phone,
-          address: {
-            country: address?.country,
-            region: address?.region && address.region,
-            city: address?.city && address.city,
-            district: address?.district && address.district,
-            street: address?.street && address.street,
-            number: address?.number && address.number,
-            latitude: address?.latitude,
-            longitude: address?.longitude,
-          },
-        }
-      );
+      await axios.patch(backendUrl + "/api/v1/users/" + currentUser._id, {
+        name: name,
+        phone: "+" + callingCode + phone,
+        address: {
+          country: address?.country,
+          region: address?.region && address.region,
+          city: address?.city && address.city,
+          district: address?.district && address.district,
+          street: address?.street && address.street,
+          number: address?.number && address.number,
+          latitude: address?.latitude,
+          longitude: address?.longitude,
+        },
+      });
       navigation.navigate("Type");
     } catch (err) {
       // error handlers
       if (err.response.data.message?.includes("E11000")) {
         setAlert({
           active: true,
-          text: "The phone is already used!",
+          text: language?.language?.Auth?.auth?.usedPhone,
           type: "error",
         });
       } else {
@@ -131,99 +141,104 @@ export const PersonalInfo = ({ navigation }) => {
     }
   };
   return (
-    <>
-      <View style={styles.keyboardAvoidingContainer}>
-        <View style={{ position: "absolute", zIndex: 19000 }}>
-          <AlertMessage
-            isVisible={alert.active}
-            type={alert.type}
-            text={alert.text}
-            onClose={() => setAlert({ active: false, text: "" })}
-            Press={() => setAlert({ active: false, text: "" })}
-          />
-        </View>
-        <View style={styles.itemContainer}>
-          <Text style={[styles.itemTitle, { color: currentTheme.font }]}>
-            {language?.language?.Auth?.auth?.name}
-          </Text>
+    <View
+      style={[
+        styles.keyboardAvoidingContainer,
+        { height: SCREEN_HEIGHT - 200 },
+      ]}
+    >
+      <View style={{ position: "absolute", zIndex: 19000 }}>
+        <AlertMessage
+          isVisible={alert.active}
+          type={alert.type}
+          text={alert.text}
+          onClose={() => setAlert({ active: false, text: "" })}
+          Press={() => setAlert({ active: false, text: "" })}
+        />
+      </View>
+      <View style={styles.itemContainer}>
+        <Text style={[styles.itemTitle, { color: currentTheme.font }]}>
+          {language?.language?.Auth?.auth?.name}
+        </Text>
+        <TextInput
+          placeholder={language?.language?.Main?.filter?.typeHere}
+          placeholderTextColor={currentTheme.disabled}
+          value={name}
+          style={[
+            styles.input,
+            {
+              color: currentTheme.font,
+              borderColor: currentTheme.line,
+            },
+          ]}
+          onChangeText={(text) => setName(text)}
+        />
+      </View>
+      <View style={[styles.itemContainer, { marginTop: 0 }]}>
+        <Text style={[styles.itemTitle, { color: currentTheme.font }]}>
+          {language?.language?.Auth?.auth?.phone}
+        </Text>
+        <View
+          style={{
+            flexDirection: "row",
+            width: "100%",
+          }}
+        >
+          <View>
+            <CountryPicker
+              {...{
+                countryCode,
+                onSelect,
+                withFilter: true,
+                withFlag: true,
+                withCountryNameButton: true,
+                withAlphaFilter: true,
+                withCallingCode: true,
+                textStyle: styles.countryName,
+                containerButtonStyle: styles.pickerButton,
+              }}
+              theme={{
+                backgroundColor: currentTheme.background,
+                onBackgroundTextColor: currentTheme.font,
+              }}
+            />
+          </View>
           <TextInput
-            placeholder="Your or Business name"
+            placeholder={language?.language?.Auth?.auth?.eg + " 555000111222"}
             placeholderTextColor={currentTheme.disabled}
-            value={name}
+            value={phone}
             style={[
               styles.input,
               {
                 color: currentTheme.font,
                 borderColor: currentTheme.line,
+
+                width: "67%",
+                paddingLeft: 15,
               },
             ]}
-            onChangeText={(text) => setName(text)}
+            onChangeText={(text) => setPhone(text)}
           />
         </View>
-        <View style={[styles.itemContainer, { marginTop: 0 }]}>
-          <Text style={[styles.itemTitle, { color: currentTheme.font }]}>
-            {language?.language?.Auth?.auth?.phone}
-          </Text>
-          <View
-            style={{
-              flexDirection: "row",
-              width: "100%",
-            }}
-          >
-            <View>
-              <CountryPicker
-                {...{
-                  countryCode,
-                  onSelect,
-                  withFilter: true,
-                  withFlag: true,
-                  withCountryNameButton: true,
-                  withAlphaFilter: true,
-                  withCallingCode: true,
-                  textStyle: styles.countryName,
-                  containerButtonStyle: styles.pickerButton,
-                }}
-                theme={{
-                  backgroundColor: currentTheme.background,
-                  onBackgroundTextColor: currentTheme.font,
-                }}
-              />
-            </View>
-            <TextInput
-              placeholder="eg: 555000111222"
-              placeholderTextColor={currentTheme.disabled}
-              value={phone}
-              style={[
-                styles.input,
-                {
-                  color: currentTheme.font,
-                  borderColor: currentTheme.line,
-
-                  width: "67%",
-                  paddingLeft: 15,
-                },
-              ]}
-              onChangeText={(text) => setPhone(text)}
-            />
-          </View>
-        </View>
-        <View style={styles.container}>
-          <Text style={[styles.itemTitle, { color: currentTheme.font }]}>
-            {language?.language?.Auth?.auth?.address}
-          </Text>
-          <View style={styles.itemContainer}>
-            <GoogleAutocomplete
-              address={address}
-              setAddress={setAddress}
-              currentTheme={currentTheme}
-            />
-          </View>
-        </View>
-        <TouchableOpacity style={styles.button} onPress={AddPresonalInfo}>
-          <Text style={styles.buttonText}>Next</Text>
-        </TouchableOpacity>
       </View>
-    </>
+      <View style={styles.container}>
+        <Text style={[styles.itemTitle, { color: currentTheme.font }]}>
+          {language?.language?.Auth?.auth?.address}
+        </Text>
+        <View style={styles.itemContainer}>
+          <GoogleAutocomplete
+            address={address}
+            setAddress={setAddress}
+            currentTheme={currentTheme}
+          />
+        </View>
+      </View>
+      <TouchableOpacity style={styles.button} onPress={AddPresonalInfo}>
+        <Text style={styles.buttonText}>
+          {language?.language?.Auth?.auth?.next}
+        </Text>
+      </TouchableOpacity>
+    </View>
   );
 };
 
@@ -234,7 +249,6 @@ const styles = StyleSheet.create({
     gap: 20,
     zIndex: 100,
     paddingTop: 50,
-    height: "90%",
   },
   container: {
     width: "90%",
@@ -259,14 +273,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     // borderRadius: 50,
     borderBottomWidth: 1,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 3, // negative value places shadow on top
-    },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
   },
   showPasswordText: {
     fontSize: 12,
@@ -275,14 +281,15 @@ const styles = StyleSheet.create({
     marginTop: 5,
   },
   button: {
-    position: "absolute",
-    bottom: 50,
+    // position: "absolute",
+    // bottom: 50,
     zIndex: 9999,
     width: "45%",
     padding: 10,
     backgroundColor: "#F866B1",
     justifyContent: "center",
     borderRadius: 50,
+    marginTop: "auto",
   },
   buttonText: {
     color: "#fff",

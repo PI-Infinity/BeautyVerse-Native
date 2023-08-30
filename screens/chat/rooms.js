@@ -48,18 +48,13 @@ export const Rooms = ({ navigation, search }) => {
   // defines rooms list
   const rooms = useSelector((state) => state.storeChat.rooms);
 
-  // // real time rooms update
-  // useEffect(() => {
-  //   socket.on("chatUpdate", (data) => {
-  //     console.log("rerender chats");
-  //     // dispatch(setRerederRooms());
-  //   });
-  // }, []);
+  // defines language
+  const language = Language();
 
   return (
     <ScrollView
       showsVerticalScrollIndicator={false}
-      contentContainerStyle={{ marginTop: 0 }}
+      contentContainerStyle={{ marginTop: 5 }}
     >
       {rooms?.length > 0 ? (
         rooms &&
@@ -76,17 +71,23 @@ export const Rooms = ({ navigation, search }) => {
                 id: item?.members.member2,
                 name: item?.members.member2Name,
                 cover: item?.members.member2Cover,
+                pushNotificationToken:
+                  item.members.member1PushNotificationToken,
               };
             } else {
               targetChatMember = {
                 id: item?.members.member1,
                 name: item?.members.member1Name,
                 cover: item?.members.member1Cover,
+                pushNotificationToken:
+                  item.members.member2PushNotificationToken,
               };
             }
-            return targetChatMember?.name
-              ?.toLowerCase()
-              .includes(search.toLowerCase());
+            if (targetChatMember.name) {
+              return targetChatMember?.name
+                ?.toLowerCase()
+                .includes(search.toLowerCase());
+            }
           })
           ?.map((item, index) => {
             // define target member
@@ -108,7 +109,7 @@ export const Rooms = ({ navigation, search }) => {
               if (item.hideFor !== currentUser._id) {
                 return (
                   <RoomItem
-                    key={item.room}
+                    key={`${item.room}-${item.lastMessage}-${item.lastMessageCreatedAt}`}
                     targetChatMember={targetChatMember}
                     item={item}
                     navigation={navigation}
@@ -133,7 +134,7 @@ export const Rooms = ({ navigation, search }) => {
               color: "rgba(255,255,255,0.3)",
             }}
           >
-            No chats found
+            {language?.language?.Chat?.chat?.notFound}
           </Text>
         </View>
       )}
@@ -157,21 +158,24 @@ const RoomItem = ({ targetChatMember, item, navigation, socket }) => {
 
   // defines current user
   const currentUser = useSelector((state) => state.storeUser.currentUser);
-  // console.log("seen: " + item?.lastMessageSeen + " - " + currentUser.name);
-  // console.log("rooms: " + rooms?.length + " - " + currentUser.name);
 
   // defines user object
   const [userObj, setUserObj] = useState(null);
+
+  const [online, setOnline] = useState(false);
 
   // defines theme state
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
 
+  // backend url
+  const backendUrl = useSelector((state) => state.storeApp.backendUrl);
+
   // Get user info from db
   const GetUser = async () => {
     try {
       const response = await axios.get(
-        `https://beautyverse.herokuapp.com/api/v1/users/${targetChatMember?.id}`
+        backendUrl + `/api/v1/users/${targetChatMember?.id}`
       );
       dispatch(setChatUser(response.data.data.user));
       setUserObj(response.data.data.user);
@@ -183,6 +187,12 @@ const RoomItem = ({ targetChatMember, item, navigation, socket }) => {
     GetUser();
   }, []);
 
+  useEffect(() => {
+    if (online !== userObj?.online) {
+      setOnline(userObj?.online);
+    }
+  }, [userObj]);
+
   /* 
     get chat room on press and navigate
   */
@@ -191,13 +201,10 @@ const RoomItem = ({ targetChatMember, item, navigation, socket }) => {
       dispatch(setCurrentChat(Room));
       navigation.navigate("Room", { user: userObj });
       if (Room.lastSender !== currentUser._id) {
-        await axios.patch(
-          "https://beautyverse.herokuapp.com/api/v1/chats/" + Room.room,
-          {
-            status: "read",
-            lastMessageSeen: "seen",
-          }
-        );
+        await axios.patch(backendUrl + "/api/v1/chats/" + Room.room, {
+          status: "read",
+          // lastMessageSeen: "seen",
+        });
       }
       let currentRoomIndex = rooms.findIndex((r) => r._id === item._id);
 
@@ -206,7 +213,7 @@ const RoomItem = ({ targetChatMember, item, navigation, socket }) => {
         newRooms[currentRoomIndex] = {
           ...newRooms[currentRoomIndex],
           status: "read",
-          lastMessageSeen: "seen",
+          // lastMessageSeen: "seen",
         };
         dispatch(setRooms(newRooms));
       }
@@ -222,11 +229,10 @@ const RoomItem = ({ targetChatMember, item, navigation, socket }) => {
       dispatch(setRooms(rooms.filter((room) => room.room !== ch.room)));
 
       if (ch.hideFor?.length > 0) {
-        await axios.delete(
-          "https://beautyverse.herokuapp.com/api/v1/chats/" + ch.room
-        );
+        await axios.delete(backendUrl + "/api/v1/chats/" + ch.room);
         await axios.patch(
-          "https://beautyverse.herokuapp.com/api/v1/chats/messages/" +
+          backendUrl +
+            "/api/v1/chats/messages/" +
             ch.room +
             "/" +
             currentUser._id
@@ -236,16 +242,14 @@ const RoomItem = ({ targetChatMember, item, navigation, socket }) => {
           targetId: targetChatMember?.id,
         });
       } else {
+        await axios.patch(backendUrl + "/api/v1/chats/" + ch.room, {
+          status: "read",
+          lastMessage: "User has removed own messages...",
+          hideFor: currentUser._id,
+        });
         await axios.patch(
-          "https://beautyverse.herokuapp.com/api/v1/chats/" + ch.room,
-          {
-            status: "read",
-            lastMessage: "User has removed own messages...",
-            hideFor: currentUser._id,
-          }
-        );
-        await axios.patch(
-          "https://beautyverse.herokuapp.com/api/v1/chats/messages/" +
+          backendUrl +
+            "/api/v1/chats/messages/" +
             ch.room +
             "/" +
             currentUser._id
@@ -314,7 +318,7 @@ const RoomItem = ({ targetChatMember, item, navigation, socket }) => {
           borderRadius: 5,
           height: 70,
           borderBottomWidth: 1,
-          borderBottomColor: "#222",
+          borderBottomColor: currentTheme.line,
           flexDirection: "row",
           alignItems: "center",
         }}
@@ -327,38 +331,78 @@ const RoomItem = ({ targetChatMember, item, navigation, socket }) => {
           }}
         >
           {targetChatMember.cover?.length > 30 ? (
-            <View
-              style={{
-                width: 50,
-                height: 50,
-                borderRadius: 100,
-                overflow: "hidden",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <CacheableImage
+            <View>
+              {online && (
+                <View
+                  style={{
+                    width: 12,
+                    height: 12,
+                    backgroundColor: "#3bd16f",
+                    borderRadius: 50,
+                    position: "absolute",
+                    zIndex: 100,
+                    right: 2,
+                    bottom: 0,
+                    borderWidth: 2,
+                    borderColor: currentTheme.background,
+                  }}
+                ></View>
+              )}
+              <View
                 style={{
-                  height: 52,
-                  width: 52,
+                  width: 50,
+                  height: 50,
                   borderRadius: 100,
-                  resizeMode: "cover",
+                  overflow: "hidden",
+                  alignItems: "center",
+                  justifyContent: "center",
                 }}
-                source={{ uri: targetChatMember.cover }}
-              />
+              >
+                <CacheableImage
+                  style={{
+                    height: 52,
+                    width: 52,
+                    borderRadius: 100,
+                    resizeMode: "cover",
+                  }}
+                  source={{ uri: targetChatMember.cover }}
+                />
+              </View>
             </View>
           ) : (
-            <View
-              style={{
-                borderRadius: 100,
-                width: 50,
-                aspectRatio: 1,
-                alignItems: "center",
-                justifyContent: "center",
-                backgroundColor: "rgba(255,255,255,0.1)",
-              }}
-            >
-              <FontAwesome name="user" size={25} color="#e5e5e5" />
+            <View>
+              {online && (
+                <View
+                  style={{
+                    width: 12,
+                    height: 12,
+                    backgroundColor: "#3bd16f",
+                    borderRadius: 50,
+                    position: "absolute",
+                    zIndex: 100,
+                    right: 2,
+                    bottom: 2,
+                    borderWidth: 2,
+                    borderColor: currentTheme.background,
+                  }}
+                ></View>
+              )}
+              <View
+                style={{
+                  borderRadius: 100,
+                  width: 50,
+                  aspectRatio: 1,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor: currentTheme.background2,
+                }}
+              >
+                <FontAwesome
+                  name="user"
+                  size={25}
+                  color={currentTheme.disabled}
+                />
+              </View>
             </View>
           )}
         </View>
@@ -373,7 +417,11 @@ const RoomItem = ({ targetChatMember, item, navigation, socket }) => {
           }}
         >
           <Text
-            style={{ fontWeight: "bold", letterSpacing: 0.3, color: "#e5e5e5" }}
+            style={{
+              fontWeight: "bold",
+              letterSpacing: 0.3,
+              color: currentTheme.font,
+            }}
           >
             {targetChatMember.name}
           </Text>
@@ -381,12 +429,13 @@ const RoomItem = ({ targetChatMember, item, navigation, socket }) => {
             style={{
               letterSpacing: 0.3,
               color:
-                item.status === "unread" && item.lastSender !== currentUser._id
+                item?.status === "unread" &&
+                item?.lastSender !== currentUser._id
                   ? "green"
                   : "#888",
             }}
           >
-            {item.lastMessage}
+            {item?.lastMessage}
           </Text>
         </View>
         <View
@@ -408,7 +457,7 @@ const RoomItem = ({ targetChatMember, item, navigation, socket }) => {
           >
             {definedTime}
           </Text>
-          {item.lastSender === currentUser._id ? (
+          {item?.lastSender === currentUser._id ? (
             <MaterialIcons
               name="done-all"
               size={14}

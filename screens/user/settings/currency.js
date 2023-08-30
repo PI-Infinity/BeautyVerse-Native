@@ -32,6 +32,9 @@ export const Currency = ({ currentTheme }) => {
   // define ope/hide state
   const [add, setAdd] = useState(false);
 
+  // backend url
+  const backendUrl = useSelector((state) => state.storeApp.backendUrl);
+
   // add currency to DB
   const AddCurrency = async (curr) => {
     try {
@@ -42,12 +45,9 @@ export const Currency = ({ currentTheme }) => {
           currency: curr,
         })
       );
-      await axios.patch(
-        "https://beautyverse.herokuapp.com/api/v1/users/" + currentUser._id,
-        {
-          currency: curr,
-        }
-      );
+      await axios.patch(backendUrl + "/api/v1/users/" + currentUser._id, {
+        currency: curr,
+      });
       dispatch(setRerenderCurrentUser());
     } catch (error) {
       if (error.response) {

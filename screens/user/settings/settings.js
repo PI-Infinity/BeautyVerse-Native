@@ -17,7 +17,12 @@ import Collapsible from "react-native-collapsible";
 import { useDispatch, useSelector } from "react-redux";
 import { Language } from "../../../context/language";
 import { darkTheme, lightTheme } from "../../../context/theme";
-import { setLanguage, setLoading } from "../../../redux/app";
+import {
+  setLanguage,
+  setLoading,
+  setLogoutLoading,
+  setTheme,
+} from "../../../redux/app";
 import { setRerenderCurrentUser } from "../../../redux/rerenders";
 import { setCurrentUser } from "../../../redux/user";
 import { Security } from "../../../screens/user/settings/security";
@@ -56,11 +61,17 @@ export const Settings = ({ navigation }) => {
    * Logout function
    */
   const Logout = async () => {
-    dispatch(setLoading(true));
+    dispatch(setLogoutLoading(true));
     await AsyncStorage.removeItem("Beautyverse:currentUser");
     dispatch(setCurrentUser(null));
     dispatch(setRerenderCurrentUser());
+    setTimeout(() => {
+      dispatch(setLogoutLoading(false));
+    }, 1000);
   };
+
+  // backend url
+  const backendUrl = useSelector((state) => state.storeApp.backendUrl);
 
   /**
    * change user active in feeds and cards or not
@@ -68,12 +79,9 @@ export const Settings = ({ navigation }) => {
   const ControlActivity = async () => {
     try {
       dispatch(setCurrentUser({ ...currentUser, active: !currentUser.active }));
-      await axios.patch(
-        `https://beautyverse.herokuapp.com/api/v1/users/${currentUser?._id}`,
-        {
-          active: !currentUser?.active,
-        }
-      );
+      await axios.patch(`${backendUrl}/api/v1/users/${currentUser?._id}`, {
+        active: !currentUser?.active,
+      });
     } catch (error) {
       console.error(error);
     }
@@ -84,7 +92,11 @@ export const Settings = ({ navigation }) => {
 
   return (
     <ScrollView
-      contentContainerStyle={{ alignItems: "center", paddingBottom: 30 }}
+      contentContainerStyle={{
+        alignItems: "center",
+        paddingBottom: 30,
+        gap: 6,
+      }}
       bounces={Platform.OS === "ios" ? false : undefined}
       overScrollMode={Platform.OS === "ios" ? "never" : "always"}
       style={{
@@ -93,21 +105,27 @@ export const Settings = ({ navigation }) => {
         backgroundColor: currentTheme.background,
       }}
     >
-      {currentUser?.type.toLowerCase() !== "beautycenter" && (
+      {currentUser?.type.toLowerCase() === "specialist" && (
         <TouchableOpacity
           activeOpacity={0.5}
           onPress={() => navigation.navigate("Sent Orders")}
-          style={[styles.item, { backgroundColor: currentTheme.background2 }]}
+          style={[
+            styles.item,
+            {
+              borderWidth: 1,
+              borderColor: currentTheme.line,
+              borderRadius: 10,
+            },
+          ]}
         >
-          <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
+          <View style={{ flexDirection: "row", gap: 6, alignItems: "center" }}>
             <Text
               style={[
                 styles.sectionTitle,
                 { color: currentTheme.font, letterSpacing: 0.2 },
               ]}
             >
-              {/* {language?.language?.User?.userPage?.personalInfo} */}
-              My Bookings
+              {language?.language?.User?.userPage?.sentBookings}
             </Text>
             {newSentOrders > 0 && (
               <View
@@ -137,7 +155,14 @@ export const Settings = ({ navigation }) => {
       <TouchableOpacity
         activeOpacity={0.5}
         onPress={() => navigation.navigate("Personal info")}
-        style={[styles.item, { backgroundColor: currentTheme.background2 }]}
+        style={[
+          styles.item,
+          {
+            borderWidth: 1,
+            borderColor: currentTheme.line,
+            borderRadius: 10,
+          },
+        ]}
       >
         <Text
           style={[
@@ -156,7 +181,14 @@ export const Settings = ({ navigation }) => {
       <TouchableOpacity
         activeOpacity={0.5}
         onPress={() => navigation.navigate("Addresses")}
-        style={[styles.item, { backgroundColor: currentTheme.background2 }]}
+        style={[
+          styles.item,
+          {
+            borderWidth: 1,
+            borderColor: currentTheme.line,
+            borderRadius: 10,
+          },
+        ]}
       >
         <Text
           style={[
@@ -172,11 +204,19 @@ export const Settings = ({ navigation }) => {
           size={18}
         />
       </TouchableOpacity>
-      {currentUser.type !== "user" && (
+      {currentUser.type?.toLowerCase() === "specialist" ||
+      currentUser.type?.toLowerCase() === "beautycenter" ? (
         <TouchableOpacity
           activeOpacity={0.5}
           onPress={() => navigation.navigate("Procedures")}
-          style={[styles.item, { backgroundColor: currentTheme.background2 }]}
+          style={[
+            styles.item,
+            {
+              borderWidth: 1,
+              borderColor: currentTheme.line,
+              borderRadius: 10,
+            },
+          ]}
         >
           <Text
             style={[
@@ -192,12 +232,46 @@ export const Settings = ({ navigation }) => {
             size={18}
           />
         </TouchableOpacity>
-      )}
+      ) : currentUser.type === "shop" ? (
+        <TouchableOpacity
+          activeOpacity={0.5}
+          onPress={() => navigation.navigate("Products")}
+          style={[
+            styles.item,
+            {
+              borderWidth: 1,
+              borderColor: currentTheme.line,
+              borderRadius: 10,
+            },
+          ]}
+        >
+          <Text
+            style={[
+              styles.sectionTitle,
+              { color: currentTheme.font, letterSpacing: 0.2 },
+            ]}
+          >
+            {language?.language?.User?.userPage?.products}
+          </Text>
+          <MaterialIcons
+            name={"arrow-right"}
+            color={currentTheme.pink}
+            size={18}
+          />
+        </TouchableOpacity>
+      ) : null}
       {currentUser.type !== "user" && (
         <TouchableOpacity
           activeOpacity={0.5}
           onPress={() => navigation.navigate("Working info")}
-          style={[styles.item, { backgroundColor: currentTheme.background2 }]}
+          style={[
+            styles.item,
+            {
+              borderWidth: 1,
+              borderColor: currentTheme.line,
+              borderRadius: 10,
+            },
+          ]}
         >
           <Text
             style={[
@@ -217,7 +291,14 @@ export const Settings = ({ navigation }) => {
       <TouchableOpacity
         activeOpacity={0.5}
         onPress={() => setOpenSecurity(!openSecurity)}
-        style={[styles.item, { backgroundColor: currentTheme.background2 }]}
+        style={[
+          styles.item,
+          {
+            borderWidth: 1,
+            borderColor: currentTheme.line,
+            borderRadius: 10,
+          },
+        ]}
       >
         <Text
           style={[
@@ -240,7 +321,14 @@ export const Settings = ({ navigation }) => {
         activeOpacity={0.5}
         style={[
           styles.item,
-          { marginBottom: 20, backgroundColor: currentTheme.background2 },
+          {
+            // marginBottom: 20,
+            borderWidth: 1,
+            position: "relative",
+            bottom: 6,
+            borderColor: currentTheme.line,
+            borderRadius: 10,
+          },
         ]}
         onPress={() => setOpenLanguages(!openLanguages)}
       >
@@ -380,7 +468,7 @@ export const Settings = ({ navigation }) => {
               alignItems: "center",
               gap: 0,
               flexDirection: "row",
-              backgroundColor: currentTheme.background2,
+              borderWidth: 1, borderColor: currentTheme.line, borderRadius: 10,
               borderRadius: 50,
               paddingHorizontal: 10,
               paddingVertical: 5,
@@ -416,7 +504,7 @@ export const Settings = ({ navigation }) => {
           style={styles.switch}
         />
       </View> */}
-      {/* <View style={[styles.item, { backgroundColor: "rgba(0,0,0,0)" }]}>
+      <View style={[styles.item, { backgroundColor: "rgba(0,0,0,0)" }]}>
         <Text
           style={[
             styles.sectionTitle,
@@ -430,15 +518,15 @@ export const Settings = ({ navigation }) => {
           thumbColor={theme ? "#e5e5e5" : "#F866B1"}
           value={theme}
           onValueChange={async () => {
+            dispatch(setTheme(!theme));
             await AsyncStorage.setItem(
               "Beautyverse:themeMode",
               JSON.stringify({ theme: !theme })
             );
-            dispatch(setTheme(!theme));
           }}
           style={styles.switch}
         />
-      </View> */}
+      </View>
       {currentUser?.type !== "user" && (
         <View
           style={[
@@ -469,7 +557,7 @@ export const Settings = ({ navigation }) => {
           onPress={() => navigation.navigate("Prices", { from: "Settings" })}
           style={[
             styles.item,
-            { backgroundColor: currentTheme.background2, marginTop: 20 },
+            { borderWidth: 1, borderColor: currentTheme.line, borderRadius: 10, marginTop: 20 },
           ]}
         >
           <Text
@@ -493,8 +581,10 @@ export const Settings = ({ navigation }) => {
         style={[
           styles.item,
           {
-            backgroundColor: currentTheme.background2,
+            borderWidth: 1,
+            borderColor: currentTheme.line,
             marginTop: currentUser?.type === "user" ? 20 : 0,
+            borderRadius: 10,
           },
         ]}
       >
@@ -515,7 +605,14 @@ export const Settings = ({ navigation }) => {
       <TouchableOpacity
         activeOpacity={0.5}
         onPress={() => navigation.navigate("QA")}
-        style={[styles.item, { backgroundColor: currentTheme.background2 }]}
+        style={[
+          styles.item,
+          {
+            borderWidth: 1,
+            borderColor: currentTheme.line,
+            borderRadius: 10,
+          },
+        ]}
       >
         <Text
           style={[
@@ -534,7 +631,14 @@ export const Settings = ({ navigation }) => {
       <TouchableOpacity
         activeOpacity={0.5}
         onPress={() => navigation.navigate("Privacy")}
-        style={[styles.item, { backgroundColor: currentTheme.background2 }]}
+        style={[
+          styles.item,
+          {
+            borderWidth: 1,
+            borderColor: currentTheme.line,
+            borderRadius: 10,
+          },
+        ]}
       >
         <Text
           style={[
@@ -553,7 +657,14 @@ export const Settings = ({ navigation }) => {
       <TouchableOpacity
         activeOpacity={0.5}
         onPress={() => navigation.navigate("Usage")}
-        style={[styles.item, { backgroundColor: currentTheme.background2 }]}
+        style={[
+          styles.item,
+          {
+            borderWidth: 1,
+            borderColor: currentTheme.line,
+            borderRadius: 10,
+          },
+        ]}
       >
         <Text
           style={[
@@ -580,14 +691,15 @@ export const Settings = ({ navigation }) => {
             marginBottom: 40,
             borderRadius: 50,
             justifyContent: "center",
-            backgroundColor: currentTheme.background2,
+            // borderWidth: 1,
+            // borderColor: currentTheme.line,
           },
         ]}
       >
         <Text
           style={[
             styles.sectionTitle,
-            { color: currentTheme.font, letterSpacing: 0.2 },
+            { color: currentTheme.pink, letterSpacing: 0.2 },
           ]}
         >
           {language?.language?.User?.userPage?.logout}
@@ -601,8 +713,6 @@ const styles = StyleSheet.create({
   item: {
     width: "90%",
     padding: 15,
-    // borderRadius: 5,
-    backgroundColor: "rgba(255,255,255,0.02)",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",

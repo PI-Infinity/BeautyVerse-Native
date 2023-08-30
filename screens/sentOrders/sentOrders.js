@@ -103,6 +103,9 @@ export const SentOrders = ({ navigation }) => {
   // defines loader on load more button
   const [bottomLoader, setBottomLoader] = useState(false);
 
+  // backend url
+  const backendUrl = useSelector((state) => state.storeApp.backendUrl);
+
   const loadMoreOrders = async () => {
     // Increment the page number in the state
     setPage(page + 1);
@@ -111,7 +114,8 @@ export const SentOrders = ({ navigation }) => {
     try {
       setBottomLoader(true);
       const response = await axios.get(
-        "https://beautyverse.herokuapp.com/api/v1/users/" +
+        backendUrl +
+          "/api/v1/users/" +
           currentUser._id +
           `/sentorders?page=${page + 1}&status=${
             statusFilter === "All" ? "" : statusFilter?.toLowerCase()
@@ -238,7 +242,7 @@ export const SentOrders = ({ navigation }) => {
               marginHorizontal: 0,
               paddingHorizontal: 15,
               paddingVertical: 10,
-              backgroundColor: currentTheme.background2,
+              // backgroundColor: currentTheme.background2,
               flexDirection: "row",
               justifyContent: "space-between",
               alignItems: "center",
@@ -293,12 +297,16 @@ export const SentOrders = ({ navigation }) => {
                   }}
                 >
                   {view ? (
-                    <FontAwesome name="list-ol" size={14} color="#ccc" />
+                    <FontAwesome
+                      name="list-ol"
+                      size={14}
+                      color={currentTheme.font}
+                    />
                   ) : (
                     <MaterialCommunityIcons
                       name="card-text-outline"
                       size={18}
-                      color="#ccc"
+                      color={currentTheme.font}
                     />
                   )}
                 </View>
@@ -318,7 +326,7 @@ export const SentOrders = ({ navigation }) => {
                       : "sort-calendar-descending"
                   }
                   size={18}
-                  color="#ccc"
+                  color={currentTheme.font}
                 />
               </TouchableOpacity>
             </View>

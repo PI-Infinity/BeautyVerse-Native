@@ -1,20 +1,20 @@
-export const privacy = `Beautyverse Privacy Policy
+export const privacy = `BeautyVerse Privacy Policy
 
 Effective Date: 02.05.2023
 
-Welcome to Beautyverse, a social media app dedicated to the beauty industry. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our app. By using Beautyverse, you agree to the collection and use of information in accordance with this policy.
+Welcome to BeautyVerse, a social media app dedicated to the beauty industry. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our app. By using BeautyVerse, you agree to the collection and use of information in accordance with this policy.
 
-Please read this Privacy Policy carefully. If you do not agree with the terms of this policy, please do not access or use Beautyverse.
+Please read this Privacy Policy carefully. If you do not agree with the terms of this policy, please do not access or use BeautyVerse.
 
 We reserve the right to make changes to this Privacy Policy at any time and for any reason. We will notify you about any changes by updating the "Effective Date" at the top of this Privacy Policy. You are encouraged to periodically review this Privacy Policy to stay informed of updates.
 
 1.	Information We Collect
 
-When you use Beautyverse, we may collect the following types of information:
+When you use BeautyVerse, we may collect the following types of information:
 
 a. Personal Information: We collect personal information you provide when you create an account or update your profile, such as your name, phone number, email address, username, and the address of your beauty salon or business.
-b. User Content: We collect content you create or share on Beautyverse, such as your feeds, reviews, and the number of stars you give to other users' feeds.
-c. Social Network Data: We collect information about your followers, followings, and other interactions with users on Beautyverse.
+b. User Content: We collect content you create or share on BeautyVerse, such as your feeds, reviews, and the number of stars you give to other users' feeds.
+c. Social Network Data: We collect information about your followers, followings, and other interactions with users on BeautyVerse.
 
 2.	How We Use Your Information
 
@@ -22,7 +22,7 @@ We use the information we collect to:
 
 a. Provide, maintain, and improve our services.
 b. Personalize your user experience and deliver content tailored to your interests.
-c. Communicate with you about Beautyverse, including updates, promotions, and customer support.
+c. Communicate with you about BeautyVerse, including updates, promotions, and customer support.
 d. Monitor and analyze usage and trends to improve our app's functionality.
 e. Protect the security and integrity of our app and services.
 
@@ -30,10 +30,10 @@ e. Protect the security and integrity of our app and services.
 
 We may share your information in the following situations:
 
-a. With your consent, to other users, such as when you choose to make your profile public or share your content on Beautyverse.
+a. With your consent, to other users, such as when you choose to make your profile public or share your content on BeautyVerse.
 b. With third-party service providers, contractors, or agents who perform services for us, such as analytics, customer support, and marketing.
 c. As required by law or to comply with legal processes, such as subpoenas or court orders.
-d. To protect the rights, property, or personal safety of Beautyverse, our users, or the public.
+d. To protect the rights, property, or personal safety of BeautyVerse, our users, or the public.
 
 4.	Security of Your Information
 
@@ -41,19 +41,19 @@ We take the security of your information seriously and implement appropriate tec
 
 5.	Links to Other Websites 
 
-Our app may contain links to other websites or services that are not owned or controlled by Beautyverse. We are not responsible for the privacy practices or content of these third-party websites or services. We encourage you to review the privacy policies of any third-party websites or services before providing any personal information.
+Our app may contain links to other websites or services that are not owned or controlled by BeautyVerse. We are not responsible for the privacy practices or content of these third-party websites or services. We encourage you to review the privacy policies of any third-party websites or services before providing any personal information.
 
 6.	Children's Privacy
 
-Beautyverse is not intended for use by individuals under the age of 18. We do not knowingly collect personal information from children under 18. If you become aware that a child has provided us with personal information, please contact us immediately so that we can take steps to remove such information and terminate the child's account.
+BeautyVerse is not intended for use by individuals under the age of 18. We do not knowingly collect personal information from children under 18. If you become aware that a child has provided us with personal information, please contact us immediately so that we can take steps to remove such information and terminate the child's account.
 
 7.	Your Rights and Choices
 
 You have certain rights and choices regarding the personal information we collect and maintain about you. These include:
 
-a. Access, Correction, and Deletion: You may request access to, correction of, or deletion of your personal information by contacting us at beautyverseservies@gmail.com. We may require additional information to verify your identity before processing your request.
-b. Account Settings: You can update your account settings and control the visibility of your profile and content on Beautyverse.
-c. Opt-out of Marketing Communications: You can opt-out of receiving promotional emails from us by following the instructions provided in those emails or by contacting us at beautyverseservices@gmail.com.
+a. Access, Correction, and Deletion: You may request access to, correction of, or deletion of your personal information by contacting us at BeautyVerseservies@gmail.com. We may require additional information to verify your identity before processing your request.
+b. Account Settings: You can update your account settings and control the visibility of your profile and content on BeautyVerse.
+c. Opt-out of Marketing Communications: You can opt-out of receiving promotional emails from us by following the instructions provided in those emails or by contacting us at BeautyVerseservices@gmail.com.
 
 8.	Data Retention We retain your personal information for as long as necessary to fulfill the purposes for which we collected it, including for the purposes of satisfying any legal, accounting, or reporting requirements. To determine the appropriate retention period for personal information, we consider the amount, nature, and sensitivity of the information, the potential risk of harm from unauthorized use or disclosure, the purposes for which we process it, and whether we can achieve those purposes through other means.
 
@@ -61,11 +61,11 @@ c. Opt-out of Marketing Communications: You can opt-out of receiving promotional
 
 10.	Changes to This Privacy Policy We may update our Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy on this page and updating the "Effective Date" at the top. You are advised to review this Privacy Policy periodically for any changes. Changes to this Privacy Policy are effective when they are posted on this page.
 
-11.	Contact Us If you have any questions or concerns about this Privacy Policy, please contact us by email at beautyverseservices@gmail.com
+11.	Contact Us If you have any questions or concerns about this Privacy Policy, please contact us by email at BeautyVerseservices@gmail.com
 
-Beautyverse, Inc.
+BeautyVerse, Inc.
 
-By using Beautyverse, you acknowledge that you have read, understood, and agreed to be bound by this Privacy Policy. If you do not agree with any of the terms contained herein, please do not access or use our app. Your continued use of Beautyverse following the posting of any changes to this Privacy Policy constitutes acceptance of those changes.
+By using BeautyVerse, you acknowledge that you have read, understood, and agreed to be bound by this Privacy Policy. If you do not agree with any of the terms contained herein, please do not access or use our app. Your continued use of BeautyVerse following the posting of any changes to this Privacy Policy constitutes acceptance of those changes.
 `;
 
 export const terms = `BeautyVerse Website Terms of Use
@@ -542,12 +542,12 @@ The Site Administration is not responsible for the actions of third parties who,
 • 9.3. The Site Administration undertakes to consider and send a response to the user's request within 30 days from the date of receipt of the request.
 • 9.4. All correspondence received by the Site Administration from users (applications in written or electronic form) refers to restricted access information and is not disclosed without the written consent of the User. Personal data and other information about the User who sent the request cannot be used without the special consent of the User except to respond to the topic of the received request or in cases expressly provided for by law.
 
-Rules for considering applications related to the placement of content by users on the BEAUTYVERSE website
+Rules for considering applications related to the placement of content by users on the BeautyVerse website
 
-The content of the BEAUTYVERSE (LINK) Site (hereinafter referred to as the Site) consists of texts, graphics, design elements, video, audio, computer programs and other objects (hereinafter referred to as the Content). Unless expressly stated otherwise, Site Content is Content created on the Site or uploaded to the Site by Users.
+The content of the BeautyVerse (LINK) Site (hereinafter referred to as the Site) consists of texts, graphics, design elements, video, audio, computer programs and other objects (hereinafter referred to as the Content). Unless expressly stated otherwise, Site Content is Content created on the Site or uploaded to the Site by Users.
 
 With regard to the protection of intellectual property rights in connection with user Content on the LLC Site
-«BEAUTYVERSE» acts as an information intermediary and, in accordance with the article ( FIND COUNTRY ARTICLE AND SPECIFY) of the Law "On Information, Information Technologies and Information Protection", takes measures to suppress relevant violations at the request of copyright holders.
+«BeautyVerse» acts as an information intermediary and, in accordance with the article ( FIND COUNTRY ARTICLE AND SPECIFY) of the Law "On Information, Information Technologies and Information Protection", takes measures to suppress relevant violations at the request of copyright holders.
 
 If you find Content on the Site that you believe is illegal, please read this document. We ask you to understand that in the absence of the necessary amount of information about the alleged violation and ownership of rights, we cannot properly respond to your application.
 
@@ -556,7 +556,7 @@ If you find Content on the Site that you believe is illegal, please read this do
 
 The site is an Internet resource designed to enable people to find and use the information they need.
 
-These Rules for considering applications related to the placement of Content on the BEAUTYVERSE Site (hereinafter referred to as the Rules) are an official document of BEAUTYVERSE (hereinafter referred to as the Site Administration) and determine the policy of the Site Administration regarding the resolution of conflicts arising in connection with the Content posted by Users on the Site, as well as the rights and obligations of the Site Administration, Site Users and third parties in the process of resolving such conflicts.
+These Rules for considering applications related to the placement of Content on the BeautyVerse Site (hereinafter referred to as the Rules) are an official document of BeautyVerse (hereinafter referred to as the Site Administration) and determine the policy of the Site Administration regarding the resolution of conflicts arising in connection with the Content posted by Users on the Site, as well as the rights and obligations of the Site Administration, Site Users and third parties in the process of resolving such conflicts.
 
 Capitalized terms not expressly defined in these Rules have the meanings specified in the Terms of Use of the Site.
 
@@ -609,7 +609,7 @@ The Applicant acknowledges and confirms that the Content in respect of which the
 2.1. Any owner of objects of copyright or related rights (hereinafter referred to as the Applicant), in case of discovery on the Site of Content posted by Users without his permission or other legal grounds, has the right to apply to the Site Administration with a statement about the violation of his copyright and (or) related rights to the Content.
 
 2.2. To contact the Site Administration, the Applicant uses his own registered account on the Site or goes through the account registration procedure. Registration on the Site is necessary to ensure prompt interaction with the Site Administration and transparency of the procedure for considering an application using a convenient interface for accessing information on the application. Registered on the Site, the Applicant fills out a web form at: LINK
-An appeal to the Site Administration in this way is considered an appeal in electronic form for the purposes of complying with the requirements of the Law “On Information, Information Technologies and Information Protection”. At the same time, the Copyright Holder has the right to refuse the proposed effective form of interaction and send a notification to the legal address of BEAUTYVERSE or by e-mail
+An appeal to the Site Administration in this way is considered an appeal in electronic form for the purposes of complying with the requirements of the Law “On Information, Information Technologies and Information Protection”. At the same time, the Copyright Holder has the right to refuse the proposed effective form of interaction and send a notification to the legal address of BeautyVerse or by e-mail
 
 2.3. When applying to the Site Administration, a person must reasonably declare a violation of his rights and legitimate interests. The application must contain the following correct information:
 2.3.1. information about the Applicant that allows him to be identified and quickly contacted if necessary, including by e-mail:
@@ -675,35 +675,35 @@ The Site Administration reserves the right to make changes and additions to thes
 The current version of the Rules is available at LINK.
 `;
 
-export const qa = `Question 1: What is Beautyverse?
+export const qa = `Question 1: What is BeautyVerse?
 
-Answer 1: Beautyverse is a social media app designed specifically for beauty specialists, beauty salons, and users interested in beauty services. It allows users to discover and connect with specialists and salons, follow feeds, and engage with content through stars and reviews.
+Answer 1: BeautyVerse is a social media app designed specifically for beauty specialists, beauty salons, and users interested in beauty services. It allows users to discover and connect with specialists and salons, follow feeds, and engage with content through stars and reviews.
 
-Question 2: How can I register on Beautyverse?
+Question 2: How can I register on BeautyVerse?
 
-Answer 2: You can register on Beautyverse as a user, specialist, or salon. Simply download the app, provide the required information, and choose the appropriate registration type to create your account.
+Answer 2: You can register on BeautyVerse as a user, specialist, or salon. Simply download the app, provide the required information, and choose the appropriate registration type to create your account.
 
-Question 3: Is Beautyverse available in my country?
+Question 3: Is BeautyVerse available in my country?
 
-Answer 3: Beautyverse is designed to be used in any country. Users can search for beauty specialists and salons in their country, region, city, district, or even on a specific street.
+Answer 3: BeautyVerse is designed to be used in any country. Users can search for beauty specialists and salons in their country, region, city, district, or even on a specific street.
 
-Question 4: How do I search for beauty specialists and salons on Beautyverse?
+Question 4: How do I search for beauty specialists and salons on BeautyVerse?
 
 Answer 4: To search for specialists or salons, you can use the in-app search function by entering keywords or selecting a category related to the beauty services you are interested in. The app will then display results based on your location and preferences.
 
-Question 5: Can I review beauty specialists and salons on Beautyverse?
+Question 5: Can I review beauty specialists and salons on BeautyVerse?
 
-Answer 5: Yes, you can leave reviews for beauty specialists and salons on Beautyverse. This allows users to share their experiences and help others make informed decisions when choosing a specialist or salon.
+Answer 5: Yes, you can leave reviews for beauty specialists and salons on BeautyVerse. This allows users to share their experiences and help others make informed decisions when choosing a specialist or salon.
 
-Question 6: How can I interact with content on Beautyverse?
+Question 6: How can I interact with content on BeautyVerse?
 
-Answer 6: You can interact with content on Beautyverse by following specialists and salons, engaging with their feeds, and giving stars (similar to "likes") to the posts you enjoy. You can also participate in discussions by commenting on posts and sharing your thoughts with other users.
+Answer 6: You can interact with content on BeautyVerse by following specialists and salons, engaging with their feeds, and giving stars (similar to "likes") to the posts you enjoy. You can also participate in discussions by commenting on posts and sharing your thoughts with other users.
 
-Question 7: How do specialists and salons offer their services on Beautyverse?
+Question 7: How do specialists and salons offer their services on BeautyVerse?
 
-Answer 7: Specialists and salons can create profiles on Beautyverse, showcasing their services, expertise, and work samples. They can also post updates, promotions, and other information on their feeds to attract potential clients and keep their followers informed.`;
+Answer 7: Specialists and salons can create profiles on BeautyVerse, showcasing their services, expertise, and work samples. They can also post updates, promotions, and other information on their feeds to attract potential clients and keep their followers informed.`;
 
-export const usage = `Beautyverse is a global social media app designed to connect beauty specialists, beauty salons, and users interested in beauty services. The platform is available in every country and offers a variety of features to make it easy for users to find the perfect beauty specialist or salon for their needs. Here's how the app works:
+export const usage = `BeautyVerse is a global social media app designed to connect beauty specialists, beauty salons, and users interested in beauty services. The platform is available in every country and offers a variety of features to make it easy for users to find the perfect beauty specialist or salon for their needs. Here's how the app works:
 
 Registration:
 Users can sign up as a regular user, a beauty specialist, or a salon. To create an account, they need to provide basic information such as their name, email, location, and a password. Specialists and salons should also include details about their services, certifications, and work experience.
@@ -712,21 +712,21 @@ Creating a profile:
 After registration, users can create a profile that showcases their preferences, interests, or expertise. Specialists and salons should upload photos of their work, provide a brief description of their services, and list any awards or accomplishments.
 
 Feeds, followers, and followings:
-Beautyverse has a feed system that allows users to see content from the specialists and salons they follow. Users can follow and unfollow other users, specialists, or salons to customize their feed. They can also discover new content through hashtags, location tags, or by browsing featured profiles.
+BeautyVerse has a feed system that allows users to see content from the specialists and salons they follow. Users can follow and unfollow other users, specialists, or salons to customize their feed. They can also discover new content through hashtags, location tags, or by browsing featured profiles.
 
 Search and discovery:
 Users can search for beauty specialists or salons by category, keywords, or location. The search function allows users to filter results based on their country, region, city, district, or even street. This makes it easy to find the perfect specialist or salon nearby.
 
 Stars and reviews:
-To help users make informed decisions, Beautyverse allows them to rate and review specialists and salons. Users can give stars (likes) to feeds and leave reviews for services they've experienced. This helps create a sense of trust and credibility within the community.
+To help users make informed decisions, BeautyVerse allows them to rate and review specialists and salons. Users can give stars (likes) to feeds and leave reviews for services they've experienced. This helps create a sense of trust and credibility within the community.
 
 Booking services:
 Once a user finds a specialist or salon they're interested in, they can book a service through the app. Users can view available time slots, select the desired service, and pay securely within the app. Both parties receive notifications about the appointment, and users can manage their bookings through their account.
 
 In-app communication:
-Beautyverse offers a messaging system that allows users to communicate directly with specialists and salons. Users can ask questions, discuss their needs, or provide additional information about their appointment.
+BeautyVerse offers a messaging system that allows users to communicate directly with specialists and salons. Users can ask questions, discuss their needs, or provide additional information about their appointment.
 
 Localization:
-Beautyverse is available in multiple languages and supports various currencies, making it accessible for users around the world. The app automatically adjusts to the user's location, providing a seamless experience across different countries and regions.
+BeautyVerse is available in multiple languages and supports various currencies, making it accessible for users around the world. The app automatically adjusts to the user's location, providing a seamless experience across different countries and regions.
 
-In summary, Beautyverse is a comprehensive social media app that connects beauty enthusiasts with specialists and salons worldwide. It offers a wide range of features, from personalized feeds to a powerful search function, to help users find the perfect beauty service for their needs. With its global reach and user-friendly design, Beautyverse is the go-to platform for the beauty community.`;
+In summary, BeautyVerse is a comprehensive social media app that connects beauty enthusiasts with specialists and salons worldwide. It offers a wide range of features, from personalized feeds to a powerful search function, to help users find the perfect beauty service for their needs. With its global reach and user-friendly design, BeautyVerse is the go-to platform for the beauty community.`;

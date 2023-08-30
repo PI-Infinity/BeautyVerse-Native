@@ -56,12 +56,14 @@ export const Room = ({ route }) => {
       id: currentChat?.members.member2,
       name: currentChat?.members.member2Name,
       cover: currentChat?.members.member2Cover,
+      pushNotificationToken: currentChat?.members.member2PushNotificationToken,
     };
   } else {
     targetChatMember = {
       id: currentChat?.members.member1,
       name: currentChat?.members.member1Name,
       cover: currentChat?.members.member1Cover,
+      pushNotificationToken: currentChat?.members.member1PushNotificationToken,
     };
   }
 
@@ -73,15 +75,16 @@ export const Room = ({ route }) => {
   // defines pages for backend to get messages on scrolling
   const [page, setPage] = useState(1);
 
+  // backend url
+  const backendUrl = useSelector((state) => state.storeApp.backendUrl);
+
   /**
    * Get messages function
    */
   useEffect(() => {
     const GetMessages = async () => {
       const response = await axios.get(
-        "https://beautyverse.herokuapp.com/api/v1/chats/messages/" +
-          currentChat.room +
-          "?page=1"
+        backendUrl + "/api/v1/chats/messages/" + currentChat.room + "?page=1"
       );
       if (response && response.data) {
         // handle the response
@@ -115,15 +118,18 @@ export const Room = ({ route }) => {
    * Add old messages on scroll to top
    */
   const AddMessages = async () => {
+    console.log("run");
     setLoadingMore(true);
     try {
       const response = await axios.get(
-        "https://beautyverse.herokuapp.com/api/v1/chats/messages/" +
+        backendUrl +
+          "/api/v1/chats/messages/" +
           currentChat.room +
           "?page=" +
           page
       );
       setMessagesLength(response.data.length);
+      console.log(response.data.data.chats?.length);
       setMessages((prev) => {
         const newMessages = response.data.data.chats;
         return newMessages.reduce((acc, curr) => {
@@ -148,12 +154,7 @@ export const Room = ({ route }) => {
     }
   };
 
-  const avoidFirstRender = useRef(true);
   useEffect(() => {
-    if (avoidFirstRender.current) {
-      avoidFirstRender.current === false;
-      return;
-    }
     AddMessages();
   }, [page]);
 
@@ -181,21 +182,8 @@ export const Room = ({ route }) => {
               status: data.status,
             },
           ]);
-        // dispatch(
-        //   updateRoom({
-        //     roomId: data.room,
-        //     lastMessageCreatedAt: new Date().toISOString(),
-        //     lastSender: data.senderId,
-        //     lastMessage: data.text,
-        //     lastMessageSeen: "false",
-        //     status: isFocused ? "read" : "unread",
-        //     file: data.file?.url ? data.file : "",
-        //   })
-        // );
-        // setTimeout(() => {
-        //   dispatch(setRerederRooms());
-        // }, 1000);
       };
+
       Adding();
       dispatch(setRerenderScroll());
     });

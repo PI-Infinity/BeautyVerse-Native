@@ -20,7 +20,11 @@ import ZoomableImage from "../../components/zoomableImage";
 import { Language } from "../../context/language";
 import { useSocket } from "../../context/socketContext";
 import { darkTheme, lightTheme } from "../../context/theme";
-import feed, { setVideoVolume } from "../../redux/feed";
+import feed, { setFeedPost, setVideoVolume } from "../../redux/feed";
+import { setLoading } from "../../redux/app";
+import * as Location from "expo-location";
+import * as Notifications from "expo-notifications";
+import { sendNotification } from "../../components/pushNotifications";
 
 /**
  * Feed Item in feeds screen
@@ -49,6 +53,9 @@ export const Feed = (props) => {
   // define language
   const language = Language();
 
+  // define language state from redux
+  const lang = useSelector((state) => state.storeApp.language);
+
   // define socket server
   const socket = useSocket();
 
@@ -65,15 +72,17 @@ export const Feed = (props) => {
    */
   const [userFeeds, setUserFeeds] = useState([]);
 
+  const backendUrl = useSelector((state) => state.storeApp.backendUrl);
+
   // define all feeds length
   const [feedsLength, setFeedsLength] = useState(null);
   //Get user feeds
   async function GetUserFeeds() {
     try {
       const response = await axios.get(
-        `https://beautyverse.herokuapp.com/api/v1/users/${
+        `${backendUrl}/api/v1/users/${
           props.user?._id
-        }/feeds/native?page=${1}&check=${currentUser?._id}`
+        }/feeds/native?page=${1}&check=${currentUser?._id}&language=${lang}`
       );
       setUserFeeds(response.data.data.feeds);
       setFeedsLength(response.data.result);
@@ -90,8 +99,6 @@ export const Feed = (props) => {
 
   // define current user state from redux
   const currentUser = useSelector((state) => state.storeUser.currentUser);
-  // define language state from redux
-  const lang = useSelector((state) => state.storeApp.language);
 
   // define active feec by index
   const [activeFeed, setActiveFeed] = useState(0);
@@ -220,7 +227,7 @@ export const Feed = (props) => {
     try {
       AddStar();
       await axios.post(
-        `https://beautyverse.herokuapp.com/api/v1/users/${props.user?._id}/feeds/${userFeeds[activeFeed]?._id}/stars`,
+        `${backendUrl}/api/v1/users/${props.user?._id}/feeds/${userFeeds[activeFeed]?._id}/stars`,
         {
           staredBy: currentUser?._id,
           createdAt: new Date(),
@@ -228,7 +235,7 @@ export const Feed = (props) => {
       );
       if (currentUser?._id !== props.user?._id) {
         await axios.post(
-          `https://beautyverse.herokuapp.com/api/v1/users/${props.user?._id}/notifications`,
+          `${backendUrl}/api/v1/users/${props.user?._id}/notifications`,
           {
             senderId: currentUser?._id,
             text: `მიანიჭა ვარსკვლავი თქვენ პოსტს!`,
@@ -238,10 +245,21 @@ export const Feed = (props) => {
             feed: `/api/v1/users/${props.user?._id}/feeds/${userFeeds[activeFeed]?._id}`,
           }
         );
+        if (props.user?.pushNotificationToken) {
+          await sendNotification(
+            props.user?.pushNotificationToken,
+            currentUser.name,
+            "added star to your feed!",
+            props.feed
+          );
+        }
         socket.emit("updateUser", {
           targetId: props.user?._id,
         });
       }
+      if (props.user?.pushNotificationToken) {
+      }
+      // await schedulePushNotification();
     } catch (error) {
       console.error(error.response.data.message);
     }
@@ -255,7 +273,7 @@ export const Feed = (props) => {
     try {
       RemoveStarFromState();
 
-      const url = `https://beautyverse.herokuapp.com/api/v1/users/${props.user?._id}/feeds/${userFeeds[activeFeed]?._id}/stars/${currentUser?._id}`;
+      const url = `${backendUrl}/api/v1/users/${props.user?._id}/feeds/${userFeeds[activeFeed]?._id}/stars/${currentUser?._id}`;
       await fetch(url, { method: "DELETE" })
         .then((response) => response.json())
 
@@ -327,7 +345,10 @@ export const Feed = (props) => {
    */
 
   // open/hide post
-  const [numLines, setNumLines] = useState(3);
+  const [numLines, setNumLines] = useState(5);
+
+  // post
+  const [post, setPost] = useState(null);
 
   // define video volume
   const volume = useSelector((state) => state.storeFeed.videoVolume);
@@ -395,11 +416,13 @@ export const Feed = (props) => {
       {props.user.feed?.post && props.user.feed?.fileFormat === "img" && (
         <View style={{ paddingLeft: 10 }}>
           <Post
+            post={post}
+            setPost={setPost}
             currentTheme={currentTheme}
             numLines={numLines}
             setNumLines={setNumLines}
             fileFormat={props.user.feed?.fileFormat}
-            text={props.user.feed.post}
+            postItem={props.user.feed?.post}
           />
         </View>
       )}
@@ -466,11 +489,13 @@ export const Feed = (props) => {
             <View style={{ marginTop: 10 }}>
               {props.user.feed?.post && (
                 <Post
+                  post={post}
+                  setPost={setPost}
                   currentTheme={currentTheme}
                   numLines={numLines}
                   setNumLines={setNumLines}
-                  text={props.user.feed?.post}
                   fileFormat={props.user.feed?.fileFormat}
+                  postItem={props.user.feed?.post}
                 />
               )}
             </View>
@@ -495,15 +520,16 @@ export const Feed = (props) => {
 
             <CacheableVideo
               videoRef={videoRef}
-              onLongPress={() =>
+              onPress={() =>
                 navigation.navigate("ScrollGallery", {
                   user: props.user,
                   scrolableFeeds: userFeeds,
                   feedsLength: feedsLength,
                   page: props.page,
+                  post: post,
                 })
               }
-              delayLongPress={80}
+              // delayLongPress={80}
               style={{
                 width: SCREEN_WIDTH,
                 height:
@@ -522,11 +548,19 @@ export const Feed = (props) => {
               }
               isLooping
               resizeMode="contain"
-              onLoad={(response) => {
+              onLoad={async (response) => {
+                let { status } =
+                  await Location.requestForegroundPermissionsAsync();
                 setLoadVideo(false);
                 setTimeout(() => {
                   if (props.setLoading) {
                     props.setLoading(false);
+                  }
+                  if (
+                    props.x === props.feedsLength - 1 &&
+                    status !== "denied"
+                  ) {
+                    dispatch(setLoading(false));
                   }
                 }, 1000);
               }}
@@ -546,7 +580,7 @@ export const Feed = (props) => {
               alignItems: "center",
             }}
           >
-            {props.user.feed.images?.map((itm, x) => {
+            {props.user.feed?.images?.map((itm, x) => {
               return (
                 <Pressable
                   key={x}
@@ -561,16 +595,16 @@ export const Feed = (props) => {
                     width: SCREEN_WIDTH,
                     overflow: "hidden",
                   }}
-                  onLongPress={() => {
+                  onPress={() => {
                     navigation.navigate("ScrollGallery", {
                       user: props.user,
                       scrolableFeeds: userFeeds,
                       feedsLength: feedsLength,
                       page: props.page,
+                      post: post,
                     });
                     dispatch(setVideoVolume(true));
                   }}
-                  delayLongPress={80}
                 >
                   <ZoomableImage
                     key={itm.url}
@@ -590,13 +624,21 @@ export const Feed = (props) => {
                       uri: itm.url,
                       cache: "reload",
                     }}
-                    onLoad={() =>
+                    onLoad={async () => {
+                      let { status } =
+                        await Location.requestForegroundPermissionsAsync();
                       setTimeout(() => {
                         if (props.setLoading) {
                           props.setLoading(false);
                         }
-                      }, 500)
-                    }
+                        if (
+                          props.x + 1 === props.feedsLength - 1 &&
+                          status !== "denied"
+                        ) {
+                          dispatch(setLoading(false));
+                        }
+                      }, 1000);
+                    }}
                   />
                 </Pressable>
               );
@@ -635,6 +677,7 @@ export const Feed = (props) => {
                 starsLength={userFeeds[activeFeed]?.starsLength}
                 from="FeedCard"
                 GetUserFeeds={GetUserFeeds}
+                post={post}
               />
             )}
           </Pressable>
@@ -674,6 +717,7 @@ export const Feed = (props) => {
                 starsLength={userFeeds[activeFeed]?.starsLength}
                 GetUserFeeds={GetUserFeeds}
                 from="FeedCard"
+                post={post}
               />
             )}
           </View>

@@ -24,7 +24,7 @@ export const Search = ({ search, setSearch }) => {
     <View
       style={{
         width: "95%",
-        backgroundColor: currentTheme.background2,
+        height: 40,
         borderWidth: 1.5,
         borderColor: active ? currentTheme.pink : currentTheme.line,
         borderRadius: 50,

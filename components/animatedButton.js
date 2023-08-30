@@ -44,10 +44,18 @@ export default function AnimatedButton({ navigation, currentTheme, title }) {
         borderRadius: 50,
         position: "relative",
         bottom: 30,
-        backgroundColor: currentTheme.pink,
+        // backgroundColor: currentTheme.pink,
+        borderWidth: 1,
+        borderColor: currentTheme.line,
       }}
     >
-      <Text style={{ color: "#fff", fontWeight: "bold", letterSpacing: 0.5 }}>
+      <Text
+        style={{
+          color: currentTheme.pink,
+          fontWeight: "bold",
+          letterSpacing: 0.5,
+        }}
+      >
         {title}
       </Text>
     </TouchableOpacity>

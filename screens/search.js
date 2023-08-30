@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState, useContext } from "react";
 import {
   Platform,
   Pressable,
@@ -18,10 +18,16 @@ import { setCleanUp, setRerenderUserList } from "../redux/rerenders";
 import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import { Language } from "../context/language";
 import { darkTheme, lightTheme } from "../context/theme";
+import { useNavigation } from "@react-navigation/native";
+
+import { RouteNameContext } from "../context/routName";
 
 export const Search = ({}) => {
   // Initialize state variables
   const [qnt, setQnt] = useState(20);
+
+  // defines navigation
+  const navigation = useNavigation();
 
   // Get current language, theme, and search input from Redux state
   const language = Language();
@@ -46,9 +52,30 @@ export const Search = ({}) => {
       dispatch(setSearchInput(lab[lab?.length - 1]));
       dispatch(setSearch(value?.value?.toLowerCase()));
       dispatch(setCleanUp());
+      setTimeout(() => {
+        if (routeName === "Search1") {
+          navigation.navigate("cards");
+        } else {
+          navigation.navigate("Feeds");
+        }
+      }, 1000);
     },
     [dispatch, proceduresOptions]
   );
+
+  const routeName = useContext(RouteNameContext);
+
+  const handleGo = (value) => {
+    dispatch(setSearch(search));
+    dispatch(setCleanUp());
+    setTimeout(() => {
+      if (routeName === "Search1") {
+        navigation.navigate("cards");
+      } else {
+        navigation.navigate("Feeds");
+      }
+    }, 1000);
+  };
 
   return (
     <View style={{ width: "100%", alignItems: "center", paddingTop: 0 }}>
@@ -58,11 +85,12 @@ export const Search = ({}) => {
           backgroundColor: currentTheme.background2,
           borderWidth: 1.5,
           borderColor: currentTheme.pink,
-          borderRadius: 10,
+          borderRadius: 50,
           flexDirection: "row",
           alignItems: "center",
           gap: 5,
           paddingHorizontal: 10,
+          height: 40,
         }}
       >
         <FontAwesome name="search" size={20} color={currentTheme.font} />
@@ -79,6 +107,8 @@ export const Search = ({}) => {
           placeholder={language?.language?.Main?.filter?.typeHere}
           onChangeText={(value) => dispatch(setSearchInput(value))}
           value={search}
+          returnKeyType="search"
+          onSubmitEditing={() => handleGo()}
         />
         <Pressable
           onPress={() => {
@@ -125,9 +155,9 @@ export const Search = ({}) => {
                 }
               >
                 <Text style={{ color: currentTheme.font }}>{item.label}</Text>
-                {search === item.value && (
+                {/* {search === item.value && (
                   <MaterialIcons name="done" color="#F866B1" size={16} />
-                )}
+                )} */}
               </TouchableOpacity>
             );
           }

@@ -92,6 +92,9 @@ export const Procedures = () => {
     }).start();
   };
 
+  // backend url
+  const backendUrl = useSelector((state) => state.storeApp.backendUrl);
+
   // // add procedure
   // const AddProcedure = async (val) => {
   //   let ifInclude = currentUser?.procedures.find(
@@ -103,7 +106,7 @@ export const Procedures = () => {
   //     try {
   //       dispatch(AddCurrentUserProcedure({ value: val }));
   //       const response = await axios.post(
-  //         `https://beautyverse.herokuapp.com/api/v1/users/${currentUser?._id}/procedures`,
+  //         backendUrl + `/api/v1/users/${currentUser?._id}/procedures`,
   //         {
   //           value: val,
   //         }
@@ -142,15 +145,17 @@ export const Procedures = () => {
         updatedProcedure,
       })
     );
+    setEditPrice(false);
+
     try {
       await axios.patch(
-        "https://beautyverse.herokuapp.com/api/v1/users/" +
+        backendUrl +
+          "/api/v1/users/" +
           currentUser._id +
           "/procedures/" +
           proc._id,
         val
       );
-      setEditPrice(false);
       setVisible(false);
       dispatch(setRerenderCurrentUser());
     } catch (error) {
@@ -164,7 +169,8 @@ export const Procedures = () => {
     setLoading(true);
     if (currentUser?.procedures?.length > 1) {
       dispatch(RemoveCurrentUserProcedure(itemId));
-      const url = `https://beautyverse.herokuapp.com/api/v1/users/${currentUser?._id}/procedures/${itemId}`;
+      const url =
+        backendUrl + `/api/v1/users/${currentUser?._id}/procedures/${itemId}`;
       const response = await fetch(url, { method: "DELETE" })
         .then((response) => response.json())
         .then(() => dispatch(setRerenderCurrentUser()))
@@ -189,7 +195,7 @@ export const Procedures = () => {
 
   useEffect(() => {
     const cats = Array.from(
-      new Set(currentUser.procedures.map((item) => item.value.split(" - ")[0]))
+      new Set(currentUser.procedures.map((item) => item?.value.split(" - ")[0]))
     );
     setCategories(
       cats.map((item, index) => {
@@ -207,7 +213,7 @@ export const Procedures = () => {
       setLoader(false);
     }, 100);
   }, []);
-  console.log(active);
+
   return (
     <>
       <BackDrop loading={loading} setLoading={setLoading} />
@@ -272,7 +278,7 @@ export const Procedures = () => {
                     key={index}
                     onPress={() => setActive(cat?.value)}
                     style={
-                      active.toLowerCase() === cat.value.toLowerCase()
+                      active.toLowerCase() === cat?.value.toLowerCase()
                         ? styles.categoryButtonActive
                         : styles.categoryButton
                     }
@@ -282,7 +288,7 @@ export const Procedures = () => {
                         styles.buttonText,
                         {
                           color:
-                            active.toLowerCase() === cat.value.toLowerCase()
+                            active.toLowerCase() === cat?.value.toLowerCase()
                               ? "#111"
                               : "#ccc",
                         },
@@ -316,7 +322,7 @@ export const Procedures = () => {
                   }
                 })
                 .map((item, index) => {
-                  const label = splited.find((c) => item.value === c.value);
+                  const label = splited.find((c) => item?.value === c.value);
                   return (
                     <View
                       style={[
@@ -466,6 +472,7 @@ export const Procedures = () => {
               <ProcedurePricePicker
                 currentTheme={currentTheme}
                 isVisible={editPrice}
+                setEditPrice={setEditPrice}
                 closeModal={EditProcedure}
                 oldPrice={proc?.price}
                 // fadeAnim={fadeDurationAnim}

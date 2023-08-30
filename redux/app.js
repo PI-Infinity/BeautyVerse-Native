@@ -2,6 +2,7 @@ import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
   loading: true,
+  logoutLoading: false,
   language: "ka",
   theme: true,
   users: [],
@@ -11,6 +12,10 @@ const initialState = {
   cardsResult: 0,
   machineId: null,
   zoomToTop: false,
+  backendUrl: "http://192.168.0.108:5000",
+  devicePushToken: null,
+
+  location: { country: null, city: null, latitude: null, longitude: null },
 };
 
 export const App = createSlice({
@@ -20,6 +25,9 @@ export const App = createSlice({
   reducers: {
     setLoading: (state, action) => {
       state.loading = action.payload;
+    },
+    setLogoutLoading: (state, action) => {
+      state.logoutLoading = action.payload;
     },
     setLanguage: (state, action) => {
       state.language = action.payload;
@@ -42,11 +50,18 @@ export const App = createSlice({
     setZoomToTop: (state, action) => {
       state.zoomToTop = !state.zoomToTop;
     },
+    setLocation: (state, action) => {
+      state.location = action.payload;
+    },
+    setDevicePushToken: (state, action) => {
+      state.devicePushToken = action.payload;
+    },
   },
 });
 
 export const {
   setLoading,
+  setLogoutLoading,
   setLanguage,
   setTheme,
   setUsers,
@@ -54,5 +69,7 @@ export const {
   setFeedsResult,
   setCardsResult,
   setZoomToTop,
+  setLocation,
+  setDevicePushToken,
 } = App.actions;
 export default App.reducer;

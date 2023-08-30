@@ -2,7 +2,13 @@ import {
   createStackNavigator,
   CardStyleInterpolators,
 } from "@react-navigation/stack";
-import { View, Text, Dimensions } from "react-native";
+import {
+  View,
+  Text,
+  Dimensions,
+  TouchableOpacity,
+  Pressable,
+} from "react-native";
 import Welcome from "../screens/welcome";
 import { Login } from "../screens/authentication/login";
 import { Type } from "../screens/authentication/type";
@@ -21,6 +27,8 @@ import { PersonalInfo } from "../screens/authentication/personalInfo";
 // import { Info } from "../screens/authentication/info";
 import { SuccessRegister } from "../screens/authentication/SuccessRegister";
 import { Accept } from "../screens/authentication/accept";
+import { FontAwesome } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -32,7 +40,7 @@ export function AuthStack({ route }) {
   const currentTheme = theme ? darkTheme : lightTheme;
   // define language which stored from context folder
   const language = Language();
-
+  const navigation = useNavigation();
   //*
   // define authentications screens
   //
@@ -50,6 +58,7 @@ export function AuthStack({ route }) {
         options={{
           title: "Welcome",
           headerStyle: {
+            height: SCREEN_HEIGHT / 9,
             backgroundColor: currentTheme.background,
             elevation: 0,
             shadowOpacity: 0,
@@ -96,7 +105,21 @@ export function AuthStack({ route }) {
         options={{
           title: language?.language?.Auth?.auth?.login,
           headerBackTitleVisible: false,
+          headerLeft: () => (
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => navigation.goBack()}
+              style={{ padding: 8, paddingLeft: 15 }}
+            >
+              <FontAwesome
+                name="arrow-left"
+                color={currentTheme.pink}
+                size={22}
+              />
+            </TouchableOpacity>
+          ),
           headerStyle: {
+            height: SCREEN_HEIGHT / 9,
             backgroundColor: currentTheme.background,
 
             elevation: 0,
@@ -119,9 +142,23 @@ export function AuthStack({ route }) {
         name="Type"
         component={Type}
         options={{
-          title: "Choice Type",
+          title: language?.language?.Auth?.auth?.choice,
           headerBackTitleVisible: false,
+          headerLeft: () => (
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => navigation.goBack()}
+              style={{ padding: 8, paddingLeft: 15 }}
+            >
+              <FontAwesome
+                name="arrow-left"
+                color={currentTheme.pink}
+                size={22}
+              />
+            </TouchableOpacity>
+          ),
           headerStyle: {
+            height: SCREEN_HEIGHT / 9,
             backgroundColor: currentTheme.background,
 
             elevation: 0,
@@ -145,7 +182,21 @@ export function AuthStack({ route }) {
         options={{
           title: language?.language?.Auth?.auth?.identify,
           headerBackTitleVisible: false,
+          headerLeft: () => (
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => navigation.goBack()}
+              style={{ padding: 8, paddingLeft: 15 }}
+            >
+              <FontAwesome
+                name="arrow-left"
+                color={currentTheme.pink}
+                size={22}
+              />
+            </TouchableOpacity>
+          ),
           headerStyle: {
+            height: SCREEN_HEIGHT / 9,
             backgroundColor: currentTheme.background,
 
             elevation: 0,
@@ -167,9 +218,23 @@ export function AuthStack({ route }) {
         name="PersonalInfo"
         component={PersonalInfo}
         options={{
-          title: "Personal Info",
+          title: language?.language?.Auth?.auth?.register,
           headerBackTitleVisible: false,
+          headerLeft: () => (
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => navigation.goBack()}
+              style={{ padding: 8, paddingLeft: 15 }}
+            >
+              <FontAwesome
+                name="arrow-left"
+                color={currentTheme.pink}
+                size={22}
+              />
+            </TouchableOpacity>
+          ),
           headerStyle: {
+            height: SCREEN_HEIGHT / 9,
             backgroundColor: currentTheme.background,
 
             elevation: 0,
@@ -192,9 +257,23 @@ export function AuthStack({ route }) {
         name="Accept"
         component={Accept}
         options={{
-          title: "Accept Rules",
+          title: language?.language?.Auth?.auth?.acceptRules,
           headerBackTitleVisible: false,
+          headerLeft: () => (
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => navigation.goBack()}
+              style={{ padding: 8, paddingLeft: 15 }}
+            >
+              <FontAwesome
+                name="arrow-left"
+                color={currentTheme.pink}
+                size={22}
+              />
+            </TouchableOpacity>
+          ),
           headerStyle: {
+            height: SCREEN_HEIGHT / 9,
             backgroundColor: currentTheme.background,
 
             elevation: 0,
@@ -217,9 +296,23 @@ export function AuthStack({ route }) {
         name="SuccessRegister"
         component={SuccessRegister}
         options={{
-          title: "Congretulation!",
+          title: language?.language?.Auth?.auth?.congretulation,
           headerBackTitleVisible: false,
+          headerLeft: () => (
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => navigation.goBack()}
+              style={{ padding: 8, paddingLeft: 15 }}
+            >
+              <FontAwesome
+                name="arrow-left"
+                color={currentTheme.pink}
+                size={22}
+              />
+            </TouchableOpacity>
+          ),
           headerStyle: {
+            height: SCREEN_HEIGHT / 9,
             backgroundColor: currentTheme.background,
 
             elevation: 0,
@@ -268,7 +361,21 @@ export function AuthStack({ route }) {
         options={{
           title: language?.language?.Auth?.auth?.businessInfo,
           headerBackTitleVisible: false,
+          headerLeft: () => (
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => navigation.goBack()}
+              style={{ padding: 8, paddingLeft: 15 }}
+            >
+              <FontAwesome
+                name="arrow-left"
+                color={currentTheme.pink}
+                size={22}
+              />
+            </TouchableOpacity>
+          ),
           headerStyle: {
+            height: SCREEN_HEIGHT / 9,
             backgroundColor: currentTheme.background,
 
             elevation: 0,
@@ -317,8 +424,22 @@ export function AuthStack({ route }) {
         component={Terms}
         options={({ route }) => ({
           headerBackTitleVisible: false,
+          headerLeft: () => (
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => navigation.goBack()}
+              style={{ padding: 8, paddingLeft: 15 }}
+            >
+              <FontAwesome
+                name="arrow-left"
+                color={currentTheme.pink}
+                size={22}
+              />
+            </TouchableOpacity>
+          ),
           title: language?.language?.Pages?.pages?.terms,
           headerStyle: {
+            height: SCREEN_HEIGHT / 9,
             backgroundColor: currentTheme.background,
 
             elevation: 0,
@@ -342,8 +463,22 @@ export function AuthStack({ route }) {
         component={Privacy}
         options={({ route }) => ({
           headerBackTitleVisible: false,
+          headerLeft: () => (
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => navigation.goBack()}
+              style={{ padding: 8, paddingLeft: 15 }}
+            >
+              <FontAwesome
+                name="arrow-left"
+                color={currentTheme.pink}
+                size={22}
+              />
+            </TouchableOpacity>
+          ),
           title: language?.language?.Pages?.pages?.privacy,
           headerStyle: {
+            height: SCREEN_HEIGHT / 9,
             backgroundColor: currentTheme.background,
 
             elevation: 0,
@@ -367,8 +502,22 @@ export function AuthStack({ route }) {
         component={QA}
         options={({ route }) => ({
           headerBackTitleVisible: false,
+          headerLeft: () => (
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => navigation.goBack()}
+              style={{ padding: 8, paddingLeft: 15 }}
+            >
+              <FontAwesome
+                name="arrow-left"
+                color={currentTheme.pink}
+                size={22}
+              />
+            </TouchableOpacity>
+          ),
           title: language?.language?.Pages?.pages?.qa,
           headerStyle: {
+            height: SCREEN_HEIGHT / 9,
             backgroundColor: currentTheme.background,
 
             elevation: 0,
@@ -392,8 +541,22 @@ export function AuthStack({ route }) {
         component={Usage}
         options={({ route }) => ({
           headerBackTitleVisible: false,
+          headerLeft: () => (
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => navigation.goBack()}
+              style={{ padding: 8, paddingLeft: 15 }}
+            >
+              <FontAwesome
+                name="arrow-left"
+                color={currentTheme.pink}
+                size={22}
+              />
+            </TouchableOpacity>
+          ),
           title: language?.language?.Pages?.pages?.usage,
           headerStyle: {
+            height: SCREEN_HEIGHT / 9,
             backgroundColor: currentTheme.background,
 
             elevation: 0,

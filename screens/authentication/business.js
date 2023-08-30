@@ -45,6 +45,9 @@ const Business = () => {
   // current user state which defined in prev auth screens
   const currentUser = useSelector((state) => state.storeAuth.currentUser);
 
+  // backend url
+  const backendUrl = useSelector((state) => state.storeApp.backendUrl);
+
   /**
    * this function completes register process for specialists and salons
    */
@@ -53,7 +56,7 @@ const Business = () => {
       if (procedures?.length > 0) {
         // Signup user and add procedures and working infos
         const response = await axios.patch(
-          "https://beautyverse.herokuapp.com/api/v1/users/" + currentUser?._id,
+          backendUrl + "/api/v1/users/" + currentUser?._id,
           {
             procedures: procedures?.map((item, index) => {
               return { value: item.value };
@@ -93,7 +96,7 @@ const Business = () => {
             marginTop: 20,
           }}
         >
-          Select procedures:
+          {language?.language?.Auth?.auth?.selectProcedures}
         </Text>
         <View style={styles.itemContainer}>
           <Text style={[styles.itemTitle, { color: currentTheme.font }]}>

@@ -44,6 +44,11 @@ import { Usage } from "../screens/user/usage";
 import { User } from "../screens/user/user";
 import { AddNewAddress } from "../screens/user/settings/addNewAddress";
 import { AddNewProcedures } from "../screens/user/settings/addNewProcedures";
+import { EditAddress } from "../screens/user/settings/editAddress";
+import Products from "../Marketplace/screens/userProductListSettings";
+import AddNewProduct from "../Marketplace/screens/addProduct";
+import EditProduct from "../Marketplace/screens/editProduct";
+import Product from "../Marketplace/screens/product";
 
 /**
  * Create user profile stack, where include all main configs
@@ -58,6 +63,7 @@ export function ProfileStack({
   setUnreadNotifications,
   notifications,
   setNotifications,
+  setScrollY,
 }) {
   // language state
   const language = Language();
@@ -88,9 +94,16 @@ export function ProfileStack({
       {/* current user profile screen */}
       <Stack.Screen
         name="UserProfile"
-        children={() => <User user={currentUser} navigation={navigation} />}
+        children={() => (
+          <User
+            user={currentUser}
+            navigation={navigation}
+            setScrollY={setScrollY}
+          />
+        )}
         options={({ route }) => ({
           headerStyle: {
+            height: SCREEN_HEIGHT / 9,
             backgroundColor: currentTheme.background,
             elevation: 0,
             shadowOpacity: 0,
@@ -113,7 +126,7 @@ export function ProfileStack({
                 alignItems: "center",
                 gap: 5,
                 marginLeft: 15,
-                maxWidth: "75%",
+                width: SCREEN_WIDTH * 0.6,
               }}
             >
               <Text
@@ -148,13 +161,13 @@ export function ProfileStack({
                     style={{ marginRight: 12, padding: 5, paddingRight: 0 }}
                   >
                     <MaterialIcons
-                      name="add-box"
+                      name="library-add"
                       size={22}
                       color={currentTheme.pink}
                     />
                   </Pressable>
 
-                  <Pressable
+                  {/* <Pressable
                     acitveOpacity={0.3}
                     style={{
                       marginRight: 10,
@@ -208,7 +221,7 @@ export function ProfileStack({
                     >
                       BMS
                     </Text>
-                  </Pressable>
+                  </Pressable> */}
                 </>
               )}
               <View>
@@ -249,7 +262,7 @@ export function ProfileStack({
                 onPress={() => navigation.navigate("Settings")}
                 style={{ marginRight: 15, padding: 5 }}
               >
-                {newSentOrders > 0 && (
+                {currentUser?.type === "specialist" && newSentOrders > 0 && (
                   <View
                     style={{
                       width: "auto",
@@ -293,9 +306,23 @@ export function ProfileStack({
           />
         )}
         options={({ route }) => ({
-          headerTitle: "Notifications",
+          headerTitle: language?.language?.Pages?.pages?.notifications,
           headerBackTitleVisible: false,
+          headerLeft: () => (
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => navigation.goBack()}
+              style={{ padding: 8, paddingLeft: 15 }}
+            >
+              <FontAwesome
+                name="arrow-left"
+                color={currentTheme.pink}
+                size={22}
+              />
+            </TouchableOpacity>
+          ),
           headerStyle: {
+            height: SCREEN_HEIGHT / 9,
             backgroundColor: currentTheme.background,
 
             elevation: 0,
@@ -315,9 +342,24 @@ export function ProfileStack({
       />
       <Stack.Screen
         name="UserVisit"
-        children={() => <User navigation={navigation} />}
+        children={() => (
+          <User navigation={navigation} setScrollY={setScrollY} />
+        )}
         options={({ route }) => ({
           headerBackTitleVisible: false,
+          headerLeft: () => (
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => navigation.goBack()}
+              style={{ padding: 8, paddingLeft: 15 }}
+            >
+              <FontAwesome
+                name="arrow-left"
+                color={currentTheme.pink}
+                size={22}
+              />
+            </TouchableOpacity>
+          ),
           headerTitleAlign: "center",
           headerTitle: (props) => (
             <View
@@ -370,6 +412,7 @@ export function ProfileStack({
           },
 
           headerStyle: {
+            height: SCREEN_HEIGHT / 9,
             backgroundColor: currentTheme.background,
 
             elevation: 0,
@@ -393,8 +436,22 @@ export function ProfileStack({
         component={ScrollGallery}
         options={({ route }) => ({
           headerBackTitleVisible: false,
+          headerLeft: () => (
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => navigation.goBack()}
+              style={{ padding: 8, paddingLeft: 15 }}
+            >
+              <FontAwesome
+                name="arrow-left"
+                color={currentTheme.pink}
+                size={22}
+              />
+            </TouchableOpacity>
+          ),
           title: language?.language?.User?.userPage?.feeds,
           headerStyle: {
+            height: SCREEN_HEIGHT / 9,
             backgroundColor: currentTheme.background,
 
             elevation: 0,
@@ -417,8 +474,22 @@ export function ProfileStack({
         component={FeedItem}
         options={({ route }) => ({
           headerBackTitleVisible: false,
-          title: "Feed",
+          headerLeft: () => (
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => navigation.goBack()}
+              style={{ padding: 8, paddingLeft: 15 }}
+            >
+              <FontAwesome
+                name="arrow-left"
+                color={currentTheme.pink}
+                size={22}
+              />
+            </TouchableOpacity>
+          ),
+          title: language?.language?.Main?.feedCard?.feed,
           headerStyle: {
+            height: SCREEN_HEIGHT / 9,
             backgroundColor: currentTheme.background,
 
             elevation: 0,
@@ -442,8 +513,22 @@ export function ProfileStack({
         component={AddFeed}
         options={({ route }) => ({
           headerBackTitleVisible: false,
+          headerLeft: () => (
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => navigation.goBack()}
+              style={{ padding: 8, paddingLeft: 15 }}
+            >
+              <FontAwesome
+                name="arrow-left"
+                color={currentTheme.pink}
+                size={22}
+              />
+            </TouchableOpacity>
+          ),
           title: language?.language?.User?.userPage?.add,
           headerStyle: {
+            height: SCREEN_HEIGHT / 9,
             backgroundColor: currentTheme.background,
 
             elevation: 0,
@@ -462,92 +547,28 @@ export function ProfileStack({
         })}
       />
       {/** main order list screen  */}
-      <Stack.Screen
-        name="Orders"
-        children={() => <Orders navigation={navigation} />}
-        options={({ navigation }) => ({
-          headerBackTitleVisible: false,
-          title: "Booking Managment",
-          headerStyle: {
-            backgroundColor: currentTheme.background,
-            elevation: 0,
-            shadowOpacity: 0,
-            borderBottomWidth: 0,
-          },
-          headerTintColor: currentTheme.font,
-          headerTitleStyle: {
-            fontWeight: "bold",
-            fontSize: 18,
-            letterSpacing: 0.5,
-          },
-          cardStyle: {
-            backgroundColor: currentTheme.background,
-          },
 
-          headerRight: () => (
-            <View
-              style={{ flexDirection: "row", gap: 10, alignItems: "center" }}
-            >
-              <TouchableOpacity
-                acitveOpacity={0.3}
-                style={{ marginRight: 15 }}
-                onPress={() => navigation.navigate("Add Order")}
-              >
-                <MaterialIcons
-                  style={{
-                    color: currentTheme.pink,
-                  }}
-                  name="add"
-                  size={24}
-                />
-              </TouchableOpacity>
-
-              {/* <TouchableOpacity
-                acitveOpacity={0.3}
-                style={{ marginRight: 15 }}
-                onPress={() => navigation.navigate("Order Statistics")}
-              >
-                <MaterialIcons
-                  name="bar-chart"
-                  size={26}
-                  color={currentTheme.font}
-                />
-              </TouchableOpacity> */}
-            </View>
-          ),
-        })}
-      />
-      <Stack.Screen
-        name="Add Order"
-        component={AddOrder}
-        options={({ route }) => ({
-          headerBackTitleVisible: false,
-          title: "Add new order",
-          headerStyle: {
-            backgroundColor: currentTheme.background,
-
-            elevation: 0,
-            shadowOpacity: 0,
-            borderBottomWidth: 0,
-          },
-          headerTintColor: currentTheme.font,
-          headerTitleStyle: {
-            fontWeight: "bold",
-            fontSize: 18,
-            letterSpacing: 0.5,
-          },
-          cardStyle: {
-            backgroundColor: currentTheme.background,
-          },
-        })}
-      />
       <Stack.Screen
         name="Send Order"
         component={SendOrder}
         options={({ route }) => ({
           headerBackTitleVisible: false,
-          title: "Booking",
+          headerLeft: () => (
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => navigation.goBack()}
+              style={{ padding: 8, paddingLeft: 15 }}
+            >
+              <FontAwesome
+                name="arrow-left"
+                color={currentTheme.pink}
+                size={22}
+              />
+            </TouchableOpacity>
+          ),
+          title: language?.language?.Bookings?.bookings?.createBooking,
           headerStyle: {
+            height: SCREEN_HEIGHT / 9,
             backgroundColor: currentTheme.background,
             elevation: 0,
             shadowOpacity: 0,
@@ -569,8 +590,22 @@ export function ProfileStack({
         component={SentOrders}
         options={({ route }) => ({
           headerBackTitleVisible: false,
-          title: "My Bookings",
+          headerLeft: () => (
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => navigation.goBack()}
+              style={{ padding: 8, paddingLeft: 15 }}
+            >
+              <FontAwesome
+                name="arrow-left"
+                color={currentTheme.pink}
+                size={22}
+              />
+            </TouchableOpacity>
+          ),
+          title: language?.language?.User?.userPage?.sentBookings,
           headerStyle: {
+            height: SCREEN_HEIGHT / 9,
             backgroundColor: currentTheme.background,
             elevation: 0,
             shadowOpacity: 0,
@@ -593,8 +628,22 @@ export function ProfileStack({
         component={Statistics}
         options={({ route }) => ({
           headerBackTitleVisible: false,
+          headerLeft: () => (
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => navigation.goBack()}
+              style={{ padding: 8, paddingLeft: 15 }}
+            >
+              <FontAwesome
+                name="arrow-left"
+                color={currentTheme.pink}
+                size={22}
+              />
+            </TouchableOpacity>
+          ),
           title: "Order statistics",
           headerStyle: {
+            height: SCREEN_HEIGHT / 9,
             backgroundColor: currentTheme.background,
 
             elevation: 0,
@@ -618,8 +667,22 @@ export function ProfileStack({
         component={Settings}
         options={({ route }) => ({
           headerBackTitleVisible: false,
+          headerLeft: () => (
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => navigation.goBack()}
+              style={{ padding: 8, paddingLeft: 15 }}
+            >
+              <FontAwesome
+                name="arrow-left"
+                color={currentTheme.pink}
+                size={22}
+              />
+            </TouchableOpacity>
+          ),
           title: language?.language?.User?.userPage?.settings,
           headerStyle: {
+            height: SCREEN_HEIGHT / 9,
             backgroundColor: currentTheme.background,
 
             elevation: 0,
@@ -643,8 +706,22 @@ export function ProfileStack({
         component={PersonalInfo}
         options={({ route }) => ({
           headerBackTitleVisible: false,
+          headerLeft: () => (
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => navigation.goBack()}
+              style={{ padding: 8, paddingLeft: 15 }}
+            >
+              <FontAwesome
+                name="arrow-left"
+                color={currentTheme.pink}
+                size={22}
+              />
+            </TouchableOpacity>
+          ),
           title: language?.language?.User?.userPage?.personalInfo,
           headerStyle: {
+            height: SCREEN_HEIGHT / 9,
             backgroundColor: currentTheme.background,
 
             elevation: 0,
@@ -668,8 +745,22 @@ export function ProfileStack({
         component={Procedures}
         options={({ route }) => ({
           headerBackTitleVisible: false,
+          headerLeft: () => (
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => navigation.goBack()}
+              style={{ padding: 8, paddingLeft: 15 }}
+            >
+              <FontAwesome
+                name="arrow-left"
+                color={currentTheme.pink}
+                size={22}
+              />
+            </TouchableOpacity>
+          ),
           title: language?.language?.User?.userPage?.procedures,
           headerStyle: {
+            height: SCREEN_HEIGHT / 9,
             backgroundColor: currentTheme.background,
 
             elevation: 0,
@@ -706,14 +797,203 @@ export function ProfileStack({
           ),
         })}
       />
+      {/* edit products screen */}
+      <Stack.Screen
+        name="Products"
+        component={Products}
+        options={({ route }) => ({
+          headerBackTitleVisible: false,
+          headerLeft: () => (
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => navigation.goBack()}
+              style={{ padding: 8, paddingLeft: 15 }}
+            >
+              <FontAwesome
+                name="arrow-left"
+                color={currentTheme.pink}
+                size={22}
+              />
+            </TouchableOpacity>
+          ),
+          title: language?.language?.User?.userPage?.products,
+          headerStyle: {
+            height: SCREEN_HEIGHT / 9,
+            backgroundColor: currentTheme.background,
+
+            elevation: 0,
+            shadowOpacity: 0,
+            borderBottomWidth: 0,
+          },
+          headerTintColor: currentTheme.font,
+          headerTitleStyle: {
+            fontWeight: "bold",
+            fontSize: 18,
+            letterSpacing: 0.5,
+          },
+          cardStyle: {
+            backgroundColor: currentTheme.background,
+          },
+          headerRight: () => (
+            <View
+              style={{ flexDirection: "row", gap: 10, alignItems: "center" }}
+            >
+              <TouchableOpacity
+                acitveOpacity={0.3}
+                style={{ marginRight: 15 }}
+                onPress={() => navigation.navigate("AddNewProduct")}
+              >
+                <MaterialIcons
+                  style={{
+                    color: currentTheme.pink,
+                  }}
+                  name="add"
+                  size={24}
+                />
+              </TouchableOpacity>
+            </View>
+          ),
+        })}
+      />
+      {/* Add new product screen */}
+      <Stack.Screen
+        name="AddNewProduct"
+        component={AddNewProduct}
+        options={({ route }) => ({
+          headerBackTitleVisible: false,
+          headerLeft: () => (
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => navigation.goBack()}
+              style={{ padding: 8, paddingLeft: 15 }}
+            >
+              <FontAwesome
+                name="arrow-left"
+                color={currentTheme.pink}
+                size={22}
+              />
+            </TouchableOpacity>
+          ),
+          title: language?.language?.User?.userPage?.add,
+          headerStyle: {
+            height: SCREEN_HEIGHT / 9,
+            backgroundColor: currentTheme.background,
+
+            elevation: 0,
+            shadowOpacity: 0,
+            borderBottomWidth: 0,
+          },
+          headerTintColor: currentTheme.font,
+          headerTitleStyle: {
+            fontWeight: "bold",
+            fontSize: 18,
+            letterSpacing: 0.5,
+          },
+          cardStyle: {
+            backgroundColor: currentTheme.background,
+          },
+        })}
+      />
+      {/* Edit product screen */}
+      <Stack.Screen
+        name="EditProduct"
+        component={EditProduct}
+        options={({ route }) => ({
+          headerBackTitleVisible: false,
+          headerLeft: () => (
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => navigation.goBack()}
+              style={{ padding: 8, paddingLeft: 15 }}
+            >
+              <FontAwesome
+                name="arrow-left"
+                color={currentTheme.pink}
+                size={22}
+              />
+            </TouchableOpacity>
+          ),
+          title: language?.language?.User?.userPage?.edit,
+          headerStyle: {
+            height: SCREEN_HEIGHT / 9,
+            backgroundColor: currentTheme.background,
+
+            elevation: 0,
+            shadowOpacity: 0,
+            borderBottomWidth: 0,
+          },
+          headerTintColor: currentTheme.font,
+          headerTitleStyle: {
+            fontWeight: "bold",
+            fontSize: 18,
+            letterSpacing: 0.5,
+          },
+          cardStyle: {
+            backgroundColor: currentTheme.background,
+          },
+        })}
+      />
+      {/* product screen */}
+      <Stack.Screen
+        name="Product"
+        component={Product}
+        options={({ route }) => ({
+          headerBackTitleVisible: false,
+          headerLeft: () => (
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => navigation.goBack()}
+              style={{ padding: 8, paddingLeft: 15 }}
+            >
+              <FontAwesome
+                name="arrow-left"
+                color={currentTheme.pink}
+                size={22}
+              />
+            </TouchableOpacity>
+          ),
+          title: route.params.product.title,
+          headerStyle: {
+            height: SCREEN_HEIGHT / 9,
+            backgroundColor: currentTheme.background,
+
+            elevation: 0,
+            shadowOpacity: 0,
+            borderBottomWidth: 0,
+          },
+          headerTintColor: currentTheme.font,
+          headerTitleStyle: {
+            fontWeight: "bold",
+            fontSize: 18,
+            letterSpacing: 0.5,
+          },
+          cardStyle: {
+            backgroundColor: currentTheme.background,
+          },
+        })}
+      />
       {/* edit working info screen */}
       <Stack.Screen
         name="Working info"
         component={WorkingInfo}
         options={({ route }) => ({
           headerBackTitleVisible: false,
+          headerLeft: () => (
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => navigation.goBack()}
+              style={{ padding: 8, paddingLeft: 15 }}
+            >
+              <FontAwesome
+                name="arrow-left"
+                color={currentTheme.pink}
+                size={22}
+              />
+            </TouchableOpacity>
+          ),
           title: language?.language?.User?.userPage?.workingInfo,
           headerStyle: {
+            height: SCREEN_HEIGHT / 9,
             backgroundColor: currentTheme.background,
 
             elevation: 0,
@@ -737,8 +1017,22 @@ export function ProfileStack({
         component={Addresses}
         options={({ route }) => ({
           headerBackTitleVisible: false,
+          headerLeft: () => (
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => navigation.goBack()}
+              style={{ padding: 8, paddingLeft: 15 }}
+            >
+              <FontAwesome
+                name="arrow-left"
+                color={currentTheme.pink}
+                size={22}
+              />
+            </TouchableOpacity>
+          ),
           title: language?.language?.User?.userPage?.addresses,
           headerStyle: {
+            height: SCREEN_HEIGHT / 9,
             backgroundColor: currentTheme.background,
 
             elevation: 0,
@@ -781,8 +1075,60 @@ export function ProfileStack({
         component={AddNewAddress}
         options={({ route }) => ({
           headerBackTitleVisible: false,
+          headerLeft: () => (
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => navigation.goBack()}
+              style={{ padding: 8, paddingLeft: 15 }}
+            >
+              <FontAwesome
+                name="arrow-left"
+                color={currentTheme.pink}
+                size={22}
+              />
+            </TouchableOpacity>
+          ),
           title: "Add new address",
           headerStyle: {
+            height: SCREEN_HEIGHT / 9,
+            backgroundColor: currentTheme.background,
+
+            elevation: 0,
+            shadowOpacity: 0,
+            borderBottomWidth: 0,
+          },
+          headerTintColor: currentTheme.font,
+          headerTitleStyle: {
+            fontWeight: "bold",
+            fontSize: 18,
+            letterSpacing: 0.5,
+          },
+          cardStyle: {
+            backgroundColor: currentTheme.background,
+          },
+        })}
+      />
+      <Stack.Screen
+        name="EditAddress"
+        component={EditAddress}
+        options={({ route }) => ({
+          headerBackTitleVisible: false,
+          headerLeft: () => (
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => navigation.goBack()}
+              style={{ padding: 8, paddingLeft: 15 }}
+            >
+              <FontAwesome
+                name="arrow-left"
+                color={currentTheme.pink}
+                size={22}
+              />
+            </TouchableOpacity>
+          ),
+          title: "Edit address",
+          headerStyle: {
+            height: SCREEN_HEIGHT / 9,
             backgroundColor: currentTheme.background,
 
             elevation: 0,
@@ -806,8 +1152,22 @@ export function ProfileStack({
         component={AddNewProcedures}
         options={({ route }) => ({
           headerBackTitleVisible: false,
+          headerLeft: () => (
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => navigation.goBack()}
+              style={{ padding: 8, paddingLeft: 15 }}
+            >
+              <FontAwesome
+                name="arrow-left"
+                color={currentTheme.pink}
+                size={22}
+              />
+            </TouchableOpacity>
+          ),
           title: "Add new procedures",
           headerStyle: {
+            height: SCREEN_HEIGHT / 9,
             backgroundColor: currentTheme.background,
 
             elevation: 0,
@@ -831,8 +1191,22 @@ export function ProfileStack({
         component={Prices}
         options={({ route }) => ({
           headerBackTitleVisible: false,
+          headerLeft: () => (
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => navigation.goBack()}
+              style={{ padding: 8, paddingLeft: 15 }}
+            >
+              <FontAwesome
+                name="arrow-left"
+                color={currentTheme.pink}
+                size={22}
+              />
+            </TouchableOpacity>
+          ),
           title: language?.language?.User?.userPage?.prices,
           headerStyle: {
+            height: SCREEN_HEIGHT / 9,
             backgroundColor: currentTheme.background,
 
             elevation: 0,
@@ -856,8 +1230,22 @@ export function ProfileStack({
         component={Charts}
         options={({ route }) => ({
           headerBackTitleVisible: false,
+          headerLeft: () => (
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => navigation.goBack()}
+              style={{ padding: 8, paddingLeft: 15 }}
+            >
+              <FontAwesome
+                name="arrow-left"
+                color={currentTheme.pink}
+                size={22}
+              />
+            </TouchableOpacity>
+          ),
           title: "Charts",
           headerStyle: {
+            height: SCREEN_HEIGHT / 9,
             backgroundColor: currentTheme.background,
 
             elevation: 0,
@@ -880,8 +1268,22 @@ export function ProfileStack({
         component={Terms}
         options={({ route }) => ({
           headerBackTitleVisible: false,
+          headerLeft: () => (
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => navigation.goBack()}
+              style={{ padding: 8, paddingLeft: 15 }}
+            >
+              <FontAwesome
+                name="arrow-left"
+                color={currentTheme.pink}
+                size={22}
+              />
+            </TouchableOpacity>
+          ),
           title: language?.language?.Pages?.pages?.terms,
           headerStyle: {
+            height: SCREEN_HEIGHT / 9,
             backgroundColor: currentTheme.background,
 
             elevation: 0,
@@ -904,8 +1306,22 @@ export function ProfileStack({
         component={Privacy}
         options={({ route }) => ({
           headerBackTitleVisible: false,
+          headerLeft: () => (
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => navigation.goBack()}
+              style={{ padding: 8, paddingLeft: 15 }}
+            >
+              <FontAwesome
+                name="arrow-left"
+                color={currentTheme.pink}
+                size={22}
+              />
+            </TouchableOpacity>
+          ),
           title: language?.language?.Pages?.pages?.privacy,
           headerStyle: {
+            height: SCREEN_HEIGHT / 9,
             backgroundColor: currentTheme.background,
 
             elevation: 0,
@@ -928,8 +1344,22 @@ export function ProfileStack({
         component={QA}
         options={({ route }) => ({
           headerBackTitleVisible: false,
+          headerLeft: () => (
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => navigation.goBack()}
+              style={{ padding: 8, paddingLeft: 15 }}
+            >
+              <FontAwesome
+                name="arrow-left"
+                color={currentTheme.pink}
+                size={22}
+              />
+            </TouchableOpacity>
+          ),
           title: language?.language?.Pages?.pages?.qa,
           headerStyle: {
+            height: SCREEN_HEIGHT / 9,
             backgroundColor: currentTheme.background,
 
             elevation: 0,
@@ -952,8 +1382,22 @@ export function ProfileStack({
         component={Usage}
         options={({ route }) => ({
           headerBackTitleVisible: false,
+          headerLeft: () => (
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => navigation.goBack()}
+              style={{ padding: 8, paddingLeft: 15 }}
+            >
+              <FontAwesome
+                name="arrow-left"
+                color={currentTheme.pink}
+                size={22}
+              />
+            </TouchableOpacity>
+          ),
           title: language?.language?.Pages?.pages?.usage,
           headerStyle: {
+            height: SCREEN_HEIGHT / 9,
             backgroundColor: currentTheme.background,
 
             elevation: 0,
@@ -977,8 +1421,22 @@ export function ProfileStack({
         initialParams={{ screenHeight }}
         options={({ navigation, route }) => ({
           headerBackTitleVisible: false,
+          headerLeft: () => (
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => navigation.goBack()}
+              style={{ padding: 8, paddingLeft: 15 }}
+            >
+              <FontAwesome
+                name="arrow-left"
+                color={currentTheme.pink}
+                size={22}
+              />
+            </TouchableOpacity>
+          ),
           // title: "name",
           headerStyle: {
+            height: SCREEN_HEIGHT / 9,
             backgroundColor: currentTheme.background,
 
             elevation: 0,

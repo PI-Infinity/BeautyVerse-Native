@@ -2,6 +2,8 @@ import {
   AntDesign,
   FontAwesome,
   FontAwesome5,
+  Fontisto,
+  MaterialCommunityIcons,
   MaterialIcons,
 } from "@expo/vector-icons";
 import { useRoute } from "@react-navigation/native";
@@ -49,6 +51,9 @@ import {
 import { setRerenderOrders } from "../../redux/rerenders";
 import { Image } from "@rneui/base";
 import ConfirmPopup from "../../components/confirmDialog";
+import { sendNotification } from "../../components/pushNotifications";
+import Showroom from "../../Marketplace/components/shworoom";
+import { setRerenderProducts } from "../../redux/Marketplace";
 
 /**
  * User Profile Screen
@@ -56,23 +61,46 @@ import ConfirmPopup from "../../components/confirmDialog";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
-export const User = ({ navigation, user, variant }) => {
+export const User = ({ navigation, user, variant, setScrollY }) => {
   // Initialize language for multi-language support
   const language = Language();
   const dispatch = useDispatch();
   // Get current route for navigation
   const route = useRoute();
 
+  // zoom to top on change dependency
+  const zoomToTop = useSelector((state) => state.storeApp.zoomToTop);
+
+  // Scroll ref for scrollable content
+  const scrollViewRef = useRef();
+  let firstRend = useRef(true);
+  useEffect(() => {
+    if (firstRend.current) {
+      firstRend.current = false;
+      return;
+    }
+    if (scrollViewRef.current) {
+      scrollViewRef.current.scrollTo({ y: 0, animated: true });
+    }
+  }, [zoomToTop]);
+
   // State for followerDefined
   const [followerDefined, setFollowerDefined] = useState("");
   const [loadingFollowerDefined, setLoadingFollowerDefined] = useState(true);
+
+  // defines baclend url
+  const backendUrl = useSelector((state) => state.storeApp.backendUrl);
+
+  // Get currentUser from global Redux state
+  const currentUser = useSelector((state) => state.storeUser.currentUser);
 
   // useEffect to check follower
   useEffect(() => {
     setLoadingFollowerDefined(true);
     async function checkFollower() {
       const response = await fetch(
-        `https://beautyverse.herokuapp.com/api/v1/users/${targetUser?._id}/followers/${currentUser?._id}/check/`
+        backendUrl +
+          `/api/v1/users/${targetUser?._id}/followers/${currentUser?._id}/check/`
       )
         .then((response) => response.json())
         .then(async (data) => {
@@ -93,9 +121,6 @@ export const User = ({ navigation, user, variant }) => {
 
   // Set currentTheme based on the theme
   const currentTheme = theme ? darkTheme : lightTheme;
-
-  // Get currentUser from global Redux state
-  const currentUser = useSelector((state) => state.storeUser.currentUser);
 
   // Get rerenderCurrentUser from global Redux state
   const rerenderCurrentUser = useSelector(
@@ -157,15 +182,16 @@ export const User = ({ navigation, user, variant }) => {
     userType = tp;
   }
 
-  // Scroll ref for scrollable content
-  const scrollViewRef = useRef();
-
   // State for active navigator
-  const [active, setActive] = useState(targetUser.type === "user" ? 1 : 0);
+  const [active, setActive] = useState(
+    targetUser.type === "user" ? 2 : targetUser.type === "shop" ? 0 : 1
+  );
   const navigatorRef = useRef(null);
 
   useEffect(() => {
-    setActive(targetUser.type === "user" ? 1 : 0);
+    setActive(
+      targetUser.type === "user" ? 2 : targetUser?.type === "shop" ? 0 : 1
+    );
     navigatorRef.current.scrollToOffset({ offset: 0, animated: true });
   }, [route]);
 
@@ -185,32 +211,32 @@ export const User = ({ navigation, user, variant }) => {
   const navigatorItems = [
     {
       id: 0,
-      name: language?.language?.User?.userPage?.feeds,
+      name: language?.language?.User?.userPage.showroom,
       icon: (
-        <MaterialIcons
-          name="dynamic-feed"
+        <Fontisto
+          name="shopping-bag-1"
           color={active === 0 ? currentTheme.pink : currentTheme.disabled}
-          size={18}
+          size={17}
         />
       ),
     },
     {
       id: 1,
-      name: language?.language?.User?.userPage?.contact,
+      name: language?.language?.User?.userPage?.feeds,
       icon: (
         <MaterialIcons
-          name="contacts"
+          name="dynamic-feed"
           color={active === 1 ? currentTheme.pink : currentTheme.disabled}
-          size={16}
+          size={18}
         />
       ),
     },
     {
       id: 2,
-      name: language?.language?.User?.userPage?.service,
+      name: language?.language?.User?.userPage?.contact,
       icon: (
         <MaterialIcons
-          name="format-list-bulleted"
+          name="contacts"
           color={active === 2 ? currentTheme.pink : currentTheme.disabled}
           size={16}
         />
@@ -218,10 +244,10 @@ export const User = ({ navigation, user, variant }) => {
     },
     {
       id: 3,
-      name: language?.language?.User?.userPage?.workingInfo,
+      name: language?.language?.User?.userPage?.service,
       icon: (
         <MaterialIcons
-          name="info-outline"
+          name="format-list-bulleted"
           color={active === 3 ? currentTheme.pink : currentTheme.disabled}
           size={16}
         />
@@ -229,10 +255,10 @@ export const User = ({ navigation, user, variant }) => {
     },
     {
       id: 4,
-      name: language?.language?.User?.userPage?.statistics,
+      name: language?.language?.User?.userPage?.workingInfo,
       icon: (
         <MaterialIcons
-          name="bar-chart"
+          name="info-outline"
           color={active === 4 ? currentTheme.pink : currentTheme.disabled}
           size={16}
         />
@@ -240,11 +266,22 @@ export const User = ({ navigation, user, variant }) => {
     },
     {
       id: 5,
+      name: language?.language?.User?.userPage?.statistics,
+      icon: (
+        <MaterialIcons
+          name="bar-chart"
+          color={active === 5 ? currentTheme.pink : currentTheme.disabled}
+          size={16}
+        />
+      ),
+    },
+    {
+      id: 6,
       name: language?.language?.User?.userPage?.audience,
       icon: (
         <MaterialIcons
           name="supervised-user-circle"
-          color={active === 5 ? currentTheme.pink : currentTheme.disabled}
+          color={active === 6 ? currentTheme.pink : currentTheme.disabled}
           size={16}
         />
       ),
@@ -270,7 +307,7 @@ export const User = ({ navigation, user, variant }) => {
         followAt: new Date(),
       });
       await axios.post(
-        `https://beautyverse.herokuapp.com/api/v1/users/${currentUser?._id}/followings`,
+        backendUrl + `/api/v1/users/${currentUser?._id}/followings`,
         {
           followingId: targetUser?._id,
           followerId: currentUser?._id,
@@ -278,7 +315,7 @@ export const User = ({ navigation, user, variant }) => {
         }
       );
       await axios.post(
-        `https://beautyverse.herokuapp.com/api/v1/users/${targetUser?._id}/followers`,
+        backendUrl + `/api/v1/users/${targetUser?._id}/followers`,
         {
           followerId: currentUser?._id,
           followingId: targetUser?._id,
@@ -287,7 +324,7 @@ export const User = ({ navigation, user, variant }) => {
       );
       if (currentUser?._id !== targetUser?._id) {
         await axios.post(
-          `https://beautyverse.herokuapp.com/api/v1/users/${targetUser?._id}/notifications`,
+          backendUrl + `/api/v1/users/${targetUser?._id}/notifications`,
           {
             senderId: currentUser?._id,
             text: `გამოიწერა თქვენი გვერდი!`,
@@ -296,6 +333,14 @@ export const User = ({ navigation, user, variant }) => {
             status: "unread",
             feed: `/api/v1/users/${currentUser?._id}/`,
           }
+        );
+      }
+      if (targetUser?.pushNotificationToken) {
+        await sendNotification(
+          targetUser?.pushNotificationToken,
+          currentUser.name,
+          "saved your profile!",
+          targetUser
         );
       }
 
@@ -309,14 +354,18 @@ export const User = ({ navigation, user, variant }) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     try {
       setFollowerDefined("");
-      const url = `https://beautyverse.herokuapp.com/api/v1/users/${currentUser?._id}/followings/${targetUser?._id}`;
+      const url =
+        backendUrl +
+        `/api/v1/users/${currentUser?._id}/followings/${targetUser?._id}`;
       await fetch(url, { method: "DELETE" })
         .then((response) => response.json())
         .then(async (data) => {})
         .catch((error) => {
           console.log("Error fetching data:", error);
         });
-      const url2 = `https://beautyverse.herokuapp.com/api/v1/users/${targetUser?._id}/followers/${followerDefined?.followerId}`;
+      const url2 =
+        backendUrl +
+        `/api/v1/users/${targetUser?._id}/followers/${followerDefined?.followerId}`;
       await fetch(url2, { method: "DELETE" })
         .then((response) => response.json())
         .then(async (data) => {})
@@ -335,46 +384,6 @@ export const User = ({ navigation, user, variant }) => {
   const [feedsLength, setFeedsLength] = useState(0);
   const [feeds, setFeeds] = useState([]);
 
-  // Define activeContent based on active state
-  let activeContent;
-  if (active == 0) {
-    activeContent = (
-      <Feeds
-        page={page}
-        setPage={setPage}
-        feeds={feeds}
-        setFeeds={setFeeds}
-        feedsLength={feedsLength}
-        setFeedsLength={setFeedsLength}
-        targetUser={targetUser}
-        scrollViewRef={scrollViewRef}
-        navigation={navigation}
-        variant={variant}
-      />
-    );
-  } else if (active == 1) {
-    activeContent = <Contact targetUser={targetUser} />;
-  } else if (active == 2) {
-    activeContent = <ProceduresList targetUser={targetUser} />;
-  } else if (active == 3) {
-    activeContent = (
-      <WorkingInfo targetUser={targetUser} navigation={navigation} />
-    );
-  } else if (active == 4) {
-    activeContent = (
-      <Statistics targetUser={targetUser} navigation={navigation} />
-    );
-  } else if (active == 5) {
-    activeContent = (
-      <Audience
-        targetUser={targetUser}
-        navigation={navigation}
-        renderCheck={render}
-        setRenderCheck={setRender}
-      />
-    );
-  }
-
   // Get visitor from global Redux state
   const visitor = useSelector((state) => state.storeApp.machineId);
 
@@ -382,7 +391,7 @@ export const User = ({ navigation, user, variant }) => {
   useEffect(() => {
     const SendUserVisit = async () => {
       await axios.post(
-        `https://beautyverse.herokuapp.com/api/v1/users/${targetUser?._id}/visitors`,
+        backendUrl + `/api/v1/users/${targetUser?._id}/visitors`,
         {
           visitor,
         }
@@ -420,7 +429,6 @@ export const User = ({ navigation, user, variant }) => {
         (r.members.member2 === currentUser._id ||
           r.members.member2 === targetUser._id)
     );
-
   // get chat room
   const GetNewChatRoom = async () => {
     let newChat = {
@@ -436,12 +444,9 @@ export const User = ({ navigation, user, variant }) => {
     };
     try {
       navigation.navigate("Room", { user: targetUser });
-      const response = await axios.post(
-        "https://beautyverse.herokuapp.com/api/v1/chats/",
-        {
-          ...newChat,
-        }
-      );
+      const response = await axios.post(backendUrl + "/api/v1/chats/", {
+        ...newChat,
+      });
       if (response && response.data) {
         // handle the response
         dispatch(setCurrentChat(response.data.data.chat));
@@ -480,12 +485,10 @@ export const User = ({ navigation, user, variant }) => {
       dispatch(setCurrentChat(Room));
       navigation.navigate("Room", { user: targetUser });
       if (Room.lastSender !== currentUser._id) {
-        await axios.patch(
-          "https://beautyverse.herokuapp.com/api/v1/chats/" + Room.room,
-          {
-            status: "read",
-          }
-        );
+        await axios.patch(backendUrl + "/api/v1/chats/" + Room.room, {
+          status: "read",
+          // lastMessageSeen: "seen",
+        });
       }
       let currentRoomIndex = rooms.findIndex((r) => r._id === Room._id);
 
@@ -494,26 +497,14 @@ export const User = ({ navigation, user, variant }) => {
         newRooms[currentRoomIndex] = {
           ...newRooms[currentRoomIndex],
           status: "read",
+          // lastMessageSeen:
+          //   Room.lastSender !== currentUser._id ? "seen" : "unread",
         };
         dispatch(setRooms(newRooms));
       }
       dispatch(setRerenderScroll());
     } catch (error) {
       Alert.alert(error.response.data.message);
-    }
-  };
-
-  const onScroll = (event) => {
-    const offsetY = event.nativeEvent.contentOffset.y;
-    const contentHeight = event.nativeEvent.contentSize.height;
-    const layoutHeight = event.nativeEvent.layoutMeasurement.height;
-
-    const isBottom = offsetY + layoutHeight >= contentHeight - 200;
-    const canLoadMore = feedsLength > feeds.length;
-
-    if (isBottom && canLoadMore) {
-      AddFeeds(page + 1);
-      console.log("Reached the bottom. New page:", page + 1);
     }
   };
 
@@ -524,7 +515,8 @@ export const User = ({ navigation, user, variant }) => {
   async function AddFeeds(p) {
     try {
       const response = await axios.get(
-        `https://beautyverse.herokuapp.com/api/v1/users/${targetUser._id}/feeds/native?page=${p}&limit=8`
+        backendUrl +
+          `/api/v1/users/${targetUser._id}/feeds/native?page=${p}&limit=8`
       );
       setFeeds((prev) => {
         const newFeeds = response.data.data?.feeds;
@@ -549,18 +541,234 @@ export const User = ({ navigation, user, variant }) => {
   // remove cover
   const RemoveCover = async () => {
     try {
-      await axios.patch(
-        `https://beautyverse.herokuapp.com/api/v1/users/${targetUser?._id}`,
-        {
-          cover: "",
-        }
-      );
+      await axios.patch(backendUrl + `/api/v1/users/${targetUser?._id}`, {
+        cover: "",
+      });
       dispatch(setRerenderCurrentUser());
     } catch (error) {
       console.log(error);
     }
   };
 
+  /**
+   * get user products for showroom
+   */
+  /**
+   * get user products
+   */
+  // loading state
+  const [loadingProducts, setLoadingProducts] = useState(true);
+  // search state
+  const [search, setSearch] = useState("");
+
+  // list
+  const [list, setList] = useState([]);
+  // categories
+  const [categories, setCategories] = useState([]);
+  const [brands, setBrands] = useState([]);
+
+  // filters
+  const categoryFilter = useSelector(
+    (state) => state.storeMarketplace.categories
+  );
+  const brandFilter = useSelector((state) => state.storeMarketplace.brands);
+  const minPrice = useSelector((state) => state.storeMarketplace.minPrice);
+  const maxPrice = useSelector((state) => state.storeMarketplace.maxPrice);
+  const sexFilter = useSelector((state) => state.storeMarketplace.sex);
+  const typeFilter = useSelector((state) => state.storeMarketplace.type);
+  const discounts = useSelector((state) => state.storeMarketplace.discounts);
+
+  // shworoom pages
+  const [pageSh, setPageSh] = useState(1);
+
+  // rerender products
+  const rerenderProducts = useSelector(
+    (state) => state.storeMarketplace.rerenderProducts
+  );
+
+  useEffect(() => {
+    const GetUserProducts = async () => {
+      setLoading(true);
+      try {
+        const response = await axios.get(
+          backendUrl +
+            "/api/v1/marketplace/" +
+            targetUser._id +
+            "/products?page=1&limit=6&search=" +
+            search +
+            "&categories=" +
+            categoryFilter +
+            "&brand=" +
+            brandFilter +
+            "&discounts=" +
+            discounts +
+            "&minPrice=" +
+            minPrice +
+            "&maxPrice=" +
+            maxPrice +
+            "&sex=" +
+            sexFilter +
+            "&type=" +
+            typeFilter +
+            "&from=showroom"
+        );
+        if (response.data.data.products) {
+          setPageSh(1);
+          setList(response.data.data.products);
+          setCategories(response.data.categories);
+          setBrands(response.data.brands);
+          setLoadingProducts(false);
+        }
+      } catch (error) {
+        console.log("Error fetching user products:", error);
+        setLoadingProducts(false);
+      }
+    };
+
+    try {
+      if (targetUser) {
+        GetUserProducts();
+      }
+    } catch (error) {
+      console.log("Error in useEffect:", error);
+    }
+  }, [
+    currentUser,
+    rerenderProducts,
+    search,
+    targetUser,
+    categoryFilter,
+    sexFilter,
+    typeFilter,
+    minPrice,
+    maxPrice,
+    brandFilter,
+    discounts,
+  ]);
+
+  const AddUserProducts = async () => {
+    // Helper function to merge two arrays while ensuring uniqueness based on _id
+    try {
+      const response = await axios.get(
+        backendUrl +
+          "/api/v1/marketplace/" +
+          targetUser._id +
+          "/products?page=" +
+          parseInt(pageSh + 1) +
+          "&search=" +
+          search +
+          "&categories=" +
+          categoryFilter +
+          "&brand=" +
+          brandFilter +
+          "&discounts=" +
+          discounts +
+          "&minPrice=" +
+          minPrice +
+          "&maxPrice=" +
+          maxPrice +
+          "&sex=" +
+          sexFilter +
+          "&type=" +
+          typeFilter +
+          "&from=showroom"
+      );
+      if (response.data.data.products) {
+        const newProducts = response.data.data.products;
+        const updatedUserProducts = mergeUniqueProducts(list, newProducts);
+        setList(updatedUserProducts);
+        setCategories(response.data.categories);
+        setBrands(response.data.brands);
+        setPageSh(pageSh + 1);
+      }
+    } catch (error) {
+      console.log("Error fetching user products:", error);
+    }
+  };
+  // merge all and new list
+  const mergeUniqueProducts = (oldList, newList) => {
+    const mergedList = [...oldList];
+    newList.forEach((newProduct) => {
+      if (!oldList.some((oldProduct) => oldProduct._id === newProduct._id)) {
+        mergedList.push(newProduct);
+      }
+    });
+    return mergedList;
+  };
+
+  // on scroll getting new data
+  const onScroll = (event) => {
+    const offsetY = event.nativeEvent.contentOffset.y;
+    const contentHeight = event.nativeEvent.contentSize.height;
+    const layoutHeight = event.nativeEvent.layoutMeasurement.height;
+
+    const isBottom = offsetY + layoutHeight >= contentHeight - 200;
+    const canLoadMore = feedsLength > feeds.length;
+
+    if (route.name === "UserProfile") {
+      setScrollY(offsetY);
+    }
+
+    if (isBottom && active === 0 && targetUser?.type === "shop") {
+      AddUserProducts();
+    }
+    if (isBottom && canLoadMore) {
+      AddFeeds(page + 1);
+      console.log("Reached the bottom. New page:", page + 1);
+    }
+  };
+
+  // Define activeContent based on active state
+  let activeContent;
+  if (active == 0) {
+    activeContent = (
+      <Showroom
+        list={list}
+        search={search}
+        setSearch={setSearch}
+        targetUser={targetUser}
+        loading={loadingProducts}
+        categories={categories}
+        brands={brands}
+      />
+    );
+  } else if (active == 1) {
+    activeContent = (
+      <Feeds
+        page={page}
+        setPage={setPage}
+        feeds={feeds}
+        setFeeds={setFeeds}
+        feedsLength={feedsLength}
+        setFeedsLength={setFeedsLength}
+        targetUser={targetUser}
+        scrollViewRef={scrollViewRef}
+        navigation={navigation}
+        variant={variant}
+      />
+    );
+  } else if (active == 2) {
+    activeContent = <Contact targetUser={targetUser} />;
+  } else if (active == 3) {
+    activeContent = <ProceduresList targetUser={targetUser} />;
+  } else if (active == 4) {
+    activeContent = (
+      <WorkingInfo targetUser={targetUser} navigation={navigation} />
+    );
+  } else if (active == 5) {
+    activeContent = (
+      <Statistics targetUser={targetUser} navigation={navigation} />
+    );
+  } else if (active == 6) {
+    activeContent = (
+      <Audience
+        targetUser={targetUser}
+        navigation={navigation}
+        renderCheck={render}
+        setRenderCheck={setRender}
+      />
+    );
+  }
   return (
     <>
       <ConfirmPopup
@@ -582,7 +790,6 @@ export const User = ({ navigation, user, variant }) => {
           <RefreshControl
             tintColor="#ccc"
             refreshing={refresh}
-            size="small"
             onRefresh={() => {
               dispatch(setRerenderOrders());
               dispatch(setRerenderCurrentUser());
@@ -597,99 +804,122 @@ export const User = ({ navigation, user, variant }) => {
               justifyContent: "center",
             }}
           >
-            <View style={styles.coverImg}>
-              {route.name === "UserProfile" &&
-                currentUser._id === targetUser._id && (
-                  <View
-                    style={{
-                      position: "absolute",
-                      zIndex: 10000,
-                      height: 100,
-                      width: 100,
-                    }}
-                  >
-                    {Platform.OS === "ios" ? (
-                      <InputFile
-                        targetUser={targetUser}
-                        setOpenPopup={setOpenPopup}
-                      />
-                    ) : (
-                      <InputCoverAndroid
-                        targetUser={targetUser}
-                        onCoverUpdate={handleCoverUpdate}
-                      />
-                    )}
-                  </View>
-                )}
-              {targetUser?.cover?.length > 30 ? (
+            <View>
+              {targetUser._id !== currentUser._id && targetUser?.online && (
                 <View
                   style={{
-                    width: 110,
-                    aspectRatio: 0.99,
-                    alignItems: "center",
-                    justifyContent: "center",
+                    width: 15,
+                    height: 15,
+                    backgroundColor: "#3bd16f",
+                    borderRadius: 50,
+                    position: "absolute",
+                    zIndex: 10000,
+                    right: 5,
+                    bottom: 5,
+                    borderWidth: 2.5,
+                    borderColor: currentTheme.background,
                   }}
-                >
-                  {loading && (
+                ></View>
+              )}
+              <View style={styles.coverImg}>
+                {route.name === "UserProfile" &&
+                  currentUser._id === targetUser._id && (
                     <View
                       style={{
                         position: "absolute",
-                        width: 110,
-                        aspectRatio: 0.99,
-                        borderRadius: 50,
-                        zIndex: 120,
-                        alignItems: "center",
-                        justifyContent: "center",
-                        opacity: 0.5,
+                        zIndex: 10000,
+                        height: 100,
+                        width: 100,
                       }}
                     >
-                      <ActivityIndicator color={currentTheme.pink} />
+                      {Platform.OS === "ios" ? (
+                        <InputFile
+                          targetUser={targetUser}
+                          setOpenPopup={setOpenPopup}
+                        />
+                      ) : (
+                        <InputCoverAndroid
+                          targetUser={targetUser}
+                          onCoverUpdate={handleCoverUpdate}
+                        />
+                      )}
                     </View>
                   )}
-                  <Animated.View
+                {targetUser?.cover?.length > 30 ? (
+                  <View
                     style={{
-                      opacity: fadeAnim,
-                      padding: 10,
+                      width: 110,
+                      aspectRatio: 0.99,
+                      alignItems: "center",
+                      justifyContent: "center",
                     }}
                   >
-                    <CacheableImage
-                      key={targetUser?.cover}
+                    {loading && (
+                      <View
+                        style={{
+                          position: "absolute",
+                          width: 110,
+                          aspectRatio: 0.99,
+                          borderRadius: 50,
+                          zIndex: 120,
+                          alignItems: "center",
+                          justifyContent: "center",
+                          opacity: 0.5,
+                        }}
+                      >
+                        <ActivityIndicator color={currentTheme.pink} />
+                      </View>
+                    )}
+                    <Animated.View
                       style={{
-                        width: "100%",
-                        aspectRatio: 1,
-                        resizeMode: "cover",
+                        opacity: fadeAnim,
+                        padding: 10,
                       }}
-                      source={{
-                        uri: targetUser?.cover,
-                      }}
-                      manipulationOptions={[
-                        {
-                          resize: {
-                            width: "100%",
-                            aspectRatio: 1,
-                            resizeMode: "cover",
+                    >
+                      <CacheableImage
+                        key={targetUser?.cover}
+                        style={{
+                          width: "100%",
+                          aspectRatio: 1,
+                          resizeMode: "cover",
+                        }}
+                        source={{
+                          uri: targetUser?.cover,
+                        }}
+                        manipulationOptions={[
+                          {
+                            resize: {
+                              width: "100%",
+                              aspectRatio: 1,
+                              resizeMode: "cover",
+                            },
                           },
-                        },
-                        { rotate: 90 },
-                      ]}
-                      onLoad={() => setLoading(false)}
-                      onError={() => console.log("Error loading image")}
+                          { rotate: 90 },
+                        ]}
+                        onLoad={() => setLoading(false)}
+                        onError={() => console.log("Error loading image")}
+                      />
+                    </Animated.View>
+                  </View>
+                ) : (
+                  <View
+                    style={{
+                      alignItems: "center",
+                      justifyContent: "center",
+                      width: 110,
+                      aspectRatio: 1,
+                      borderWidth: 2,
+                      backgroundColor: currentTheme.background2,
+                    }}
+                  >
+                    <FontAwesome
+                      name="user"
+                      size={40}
+                      color={currentTheme.disabled}
                     />
-                  </Animated.View>
-                </View>
-              ) : (
-                <View
-                  style={{
-                    alignItems: "center",
-                    justifyContent: "center",
-                    width: 110,
-                    aspectRatio: 1,
-                    borderWidth: 2,
-                  }}
-                >
-                  <FontAwesome name="user" size={40} color="#e5e5e5" />
-                </View>
-              )}
+                  </View>
+                )}
+              </View>
             </View>
           </View>
           <View style={{ flex: 6, justifyContent: "center" }}>
@@ -759,9 +989,15 @@ export const User = ({ navigation, user, variant }) => {
               bounces={Platform.OS === "ios" ? false : undefined}
               overScrollMode={Platform.OS === "ios" ? "never" : "always"}
               renderItem={({ item }) => {
+                if (targetUser.type === "shop" && item.id === 3) {
+                  return;
+                }
+                if (targetUser.type !== "shop" && item.id === 0) {
+                  return;
+                }
                 if (
                   targetUser.type === "user" &&
-                  (item.id === 1 || item.id === 5)
+                  (item.id === 2 || item.id === 6)
                 ) {
                   return (
                     <TouchableOpacity
@@ -775,6 +1011,7 @@ export const User = ({ navigation, user, variant }) => {
                         flexDirection: "row",
                         gap: 5,
                         margin: 5,
+                        marginVertical: 7.5,
                         paddingLeft: 15,
                         paddingRight: 15,
                         borderRadius: 50,
@@ -799,7 +1036,7 @@ export const User = ({ navigation, user, variant }) => {
                     </TouchableOpacity>
                   );
                 } else if (targetUser.type !== "user") {
-                  if (item.id === 4 && targetUser._id !== currentUser._id) {
+                  if (item.id === 5 && targetUser._id !== currentUser._id) {
                     return null;
                   } else {
                     return (
@@ -814,6 +1051,7 @@ export const User = ({ navigation, user, variant }) => {
                           flexDirection: "row",
                           gap: 5,
                           margin: 5,
+                          marginVertical: 7.5,
                           paddingLeft: 15,
                           paddingRight: 15,
                           borderRadius: 50,

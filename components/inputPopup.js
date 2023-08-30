@@ -57,7 +57,7 @@ const InputPopup = (props) => {
                     },
                   ]}
                 >
-                  Verification code has been sent to email!
+                  {language?.language?.Auth?.auth?.verifyCodeSent}
                 </Text>
               )}
 
@@ -96,7 +96,9 @@ const InputPopup = (props) => {
                   ]}
                   onPress={handleSend}
                 >
-                  <Text style={styles.buttonText}>Verify</Text>
+                  <Text style={styles.buttonText}>
+                    {language?.language?.Auth?.auth?.verify}
+                  </Text>
                 </TouchableOpacity>
               </View>
             </View>

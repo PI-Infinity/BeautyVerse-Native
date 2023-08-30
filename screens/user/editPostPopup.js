@@ -51,7 +51,7 @@ const SmoothModal = ({
   const currentUser = useSelector((state) => state.storeUser.currentUser);
 
   useEffect(() => {
-    setText(post);
+    setText(post.original);
   }, []);
 
   // on save function
@@ -67,26 +67,30 @@ const SmoothModal = ({
     setText("");
   };
 
+  // backend url
+  const backendUrl = useSelector((state) => state.storeApp.backendUrl);
+
+  // loading state
+  const [loading, setLoading] = useState(false);
+
   // update post
   const UpdatePost = async () => {
     try {
-      setPost(text);
-      await axios.patch(
-        `https://beautyverse.herokuapp.com/api/v1/users/${currentUser?._id}/feeds/${itemId}`,
+      const response = await axios.patch(
+        backendUrl + `/api/v1/users/${currentUser?._id}/feeds/${itemId}`,
         {
           post: text,
         }
       );
-      handleCancel();
+      setPost(response.data.data.feed);
       dispatch(setCleanUp());
       dispatch(setRerenderUserFeeds());
+
+      handleCancel();
     } catch (error) {
       console.log(error.response.data.message);
     }
   };
-
-  // loading state
-  const [loading, setLoading] = useState(false);
 
   /**
    * Delete post
@@ -103,7 +107,8 @@ const SmoothModal = ({
     }
 
     // remove feed from DB
-    const url = `https://beautyverse.herokuapp.com/api/v1/users/${currentUser?._id}/feeds/${itemId}`;
+    const url =
+      backendUrl + `/api/v1/users/${currentUser?._id}/feeds/${itemId}`;
     await fetch(url, { method: "DELETE" })
       .then((response) => response.json())
       .then(async (data) => {
@@ -194,7 +199,7 @@ const SmoothModal = ({
                 Edit Post:
               </Text>
               <Text style={{ color: currentTheme.font, fontSize: 12 }}>
-                ({text.length})
+                ({text?.length})
               </Text>
             </View>
             <TextInput

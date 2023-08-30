@@ -55,34 +55,45 @@ export const Cards = ({ navigation, setScrollY }) => {
   // Fetching cleanUp flag from Redux store
   const cleanUp = useSelector((state) => state.storeRerenders.cleanUp);
 
+  // defines location
+  const location = useSelector((state) => state.storeApp.location);
+
+  // defines backend url
+  const backendUrl = useSelector((state) => state.storeApp.backendUrl);
+
   // useEffect hook to get data from the API
   useEffect(() => {
     const Getting = async () => {
+      console.log(currentUser.address[0].country);
       try {
         const response = await axios.get(
-          `https://beautyverse.herokuapp.com/api/v1/cards?search=${search}&filter=${filter}&type=${
+          `${backendUrl}/api/v1/cards?search=${search}&filter=${filter}&type=${
             specialists ? "specialist" : ""
           }${
             salons ? "beautyCenter" : ""
           }&city=${city}&district=${district}&check=${
             currentUser !== null ? currentUser._id : ""
-          }&page=${1}&limit=8`
+          }&page=${1}&limit=8&country=${
+            location.country ? location.country : currentUser.address[0].country
+          }`
         );
 
         setUsers(response.data.data.feedList);
         setTimeout(() => {
           setLoadingSkelton(false);
           dispatch(setCardRefreshControl(false));
+          setPage(1);
         }, 300);
       } catch (error) {
         console.log(error);
         setTimeout(() => {
           setLoadingSkelton(false);
+          setPage(1);
         }, 300);
       }
     };
     Getting();
-  }, [cleanUp]);
+  }, [cleanUp, location]);
 
   const flatListRef = useRef();
 
@@ -100,13 +111,15 @@ export const Cards = ({ navigation, setScrollY }) => {
   const GetUsersWithCards = async (currentPage) => {
     try {
       const response = await axios.get(
-        `https://beautyverse.herokuapp.com/api/v1/cards?search=${search}&filter=${filter}&type=${
+        `${backendUrl}/api/v1/cards?search=${search}&filter=${filter}&type=${
           specialists ? "specialist" : ""
         }${
           salons ? "beautyCenter" : ""
         }&city=${city}&district=${district}&check=${
           currentUser !== null ? currentUser._id : ""
-        }&page=${currentPage}&limit=8`
+        }&page=${currentPage}&limit=8&country=${
+          location.country ? location.country : currentUser.address[0].country
+        }`
       );
       setUsers((prev) => {
         const newUsers = response.data.data.feedList;
@@ -158,13 +171,22 @@ export const Cards = ({ navigation, setScrollY }) => {
     <View
       style={{
         flex: 1,
-        alignItems: "center",
+        alignItems: users?.length > 0 ? "flex-start" : "center",
         justifyContent: "center",
         height: "100%",
       }}
     >
       {loadingSkelton ? (
-        <ActivityIndicator color={currentTheme.pink} size="large" />
+        <View
+          style={{
+            width: SCREEN_WIDTH,
+            height: SCREEN_HEIGHT,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <ActivityIndicator color={currentTheme.pink} size="large" />
+        </View>
       ) : users?.length > 0 ? (
         <FlatList
           ref={flatListRef}
@@ -172,7 +194,9 @@ export const Cards = ({ navigation, setScrollY }) => {
           onScroll={handleScroll}
           scrollEventThrottle={1}
           numColumns={2}
-          contentContainerStyle={styles.contentContainer}
+          contentContainerStyle={{
+            width: SCREEN_WIDTH,
+          }}
           columnWrapperStyle={styles.columnWrapper}
           // bounces={Platform.OS === "ios" ? false : undefined}
           // overScrollMode={Platform.OS === "ios" ? "never" : "always"}
@@ -197,7 +221,6 @@ export const Cards = ({ navigation, setScrollY }) => {
             );
           }}
           onEndReached={() => {
-            console.log("end");
             GetUsersWithCards(page + 1);
             setPage(page + 1);
           }}

@@ -946,7 +946,7 @@ const proceduresOptionsRu = [
   },
   {
     value: "Permanent Makeup - Powdered brows - Powdered brows",
-    label: "დაპუდვრა",
+    label: "Пудровое напыление бровей",
   },
   {
     value:

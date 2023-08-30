@@ -58,7 +58,9 @@ export const WorkingInfo = ({ targetUser, navigation }) => {
                 style={[
                   styles.option,
                   {
-                    backgroundColor: currentTheme.background2,
+                    // backgroundColor: currentTheme.background2,
+                    borderWidth: 1,
+                    borderColor: currentTheme.line,
                     borderRadius: 50,
                   },
                 ]}
@@ -114,11 +116,7 @@ export const WorkingInfo = ({ targetUser, navigation }) => {
                 justifyContent: "center",
               }}
             >
-              <Ionicons
-                name="add-circle"
-                color={currentTheme.disabled}
-                size={34}
-              />
+              <Ionicons name="add-circle" color={currentTheme.pink} size={30} />
             </Pressable>
           ) : (
             <View>
@@ -145,13 +143,14 @@ export const WorkingInfo = ({ targetUser, navigation }) => {
           >
             Experience
           </Text>
-          {targetUser?.experience?.length > 0 && (
+          {targetUser?.experience?.length > 0 ? (
             <View
               style={{
                 width: "90%",
                 backgroundColor: currentTheme.background2,
                 padding: 10,
-                borderRadius: 10,
+                paddingHorizontal: 15,
+                borderRadius: 5,
               }}
             >
               <Text
@@ -164,20 +163,20 @@ export const WorkingInfo = ({ targetUser, navigation }) => {
                 {targetUser?.experience}
               </Text>
             </View>
+          ) : (
+            <Pressable
+              onPress={() => navigation.navigate("Working info")}
+              style={{
+                width: "30%",
+                height: 35,
+                borderRadius: 10,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Ionicons name="add-circle" color={currentTheme.pink} size={30} />
+            </Pressable>
           )}
-
-          <Pressable
-            onPress={() => navigation.navigate("Working info")}
-            style={{
-              width: "30%",
-              height: 35,
-              borderRadius: 10,
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <Ionicons name="add-circle" color={currentTheme.pink} size={30} />
-          </Pressable>
         </>
       )}
     </View>
@@ -186,7 +185,6 @@ export const WorkingInfo = ({ targetUser, navigation }) => {
 
 const styles = StyleSheet.create({
   option: {
-    backgroundColor: "rgba(255,255,255,0.05)",
     borderRadius: 5,
     padding: 10,
     marginTop: 5,

@@ -56,14 +56,6 @@ const GoogleAutocomplete = ({ address, setAddress, currentTheme }) => {
       borderBottomWidth: 1,
       borderColor: currentTheme.line,
       backgroundColor: currentTheme.background, // Add this line
-      shadowColor: "#000",
-      shadowOffset: {
-        width: 0,
-        height: 3, // negative value places shadow on top
-      },
-      shadowOpacity: 0.05,
-      shadowRadius: 2,
-      elevation: 1,
     },
     description: {
       // Add this block
@@ -78,7 +70,7 @@ const GoogleAutocomplete = ({ address, setAddress, currentTheme }) => {
   return (
     <Animated.View style={{ zIndex: 20000, height: heightAnim }}>
       <GooglePlacesAutocomplete
-        placeholder="Your location"
+        placeholder={language?.language?.Auth?.auth?.findLocation}
         minLength={2}
         autoFocus={false}
         returnKeyType="search"
@@ -108,6 +100,16 @@ const GoogleAutocomplete = ({ address, setAddress, currentTheme }) => {
           const longitude = details.geometry.location.lng;
           handleChangeText2();
           setAddress({
+            country,
+            region,
+            city,
+            district,
+            street,
+            streetNumber,
+            latitude,
+            longitude,
+          });
+          console.log({
             country,
             region,
             city,

@@ -2,118 +2,57 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { useRoute } from "@react-navigation/native";
 import * as Haptics from "expo-haptics";
 import React, { useEffect, useRef, useState } from "react";
-import { Animated, Pressable, Text } from "react-native";
-import { useSelector } from "react-redux";
+import { View, Pressable, Text } from "react-native";
+import { useSelector, useDispatch } from "react-redux";
+import { setFeedPost } from "../../redux/feed";
 /**
  * Post component
  */
 
 export const Post = (props) => {
-  // define text state
-  const [txt, setTxt] = useState("");
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  // define route
-  const route = useRoute();
-  // console.log(route);
+  const [loading, setLoading] = useState(true);
 
-  // define text's language
-  const [defLanguage, setDefLanguage] = useState(null);
+  const [post, setPost] = useState(null);
+  const [original, setOriginal] = useState(false);
+
+  useEffect(() => {
+    setPost(props.postItem);
+  }, [props.postItem]);
 
   // define current user's active language
   const lang = useSelector((state) => state.storeApp.language);
 
-  // define translate active or not
-  const [active, setActive] = useState(false);
-
-  // if translate active shows translated, if not shows default
-  useEffect(() => {
-    TranslateText(props.text);
-    console.log("run");
-    DetectLanguage();
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 1200, // This can be set to whatever feels right
-      useNativeDriver: true, // Use native driver for better performance
-    }).start();
-  }, [props.text, lang, route]);
-
-  // detect text language
-
-  const DetectLanguage = () => {
-    const API_KEY = "AIzaSyAuSnUmGlptL0E4m4wP-1XzlqL_iv_y3g8";
-
-    let url = `https://translation.googleapis.com/language/translate/v2/detect?key=${API_KEY}`;
-
-    fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      body: JSON.stringify({
-        q: props.text,
-      }),
-    })
-      .then((res) => res.json())
-      .then((response) => {
-        if (response.data.detections[0][0].language !== "und") {
-          setDefLanguage(response.data.detections[0][0].language);
-        }
-      })
-      .catch((error) => {
-        console.log(
-          "There was an error with the language detection request: ",
-          error
-        );
-      });
-  };
-
-  // translate text
-
-  const TranslateText = (x) => {
-    const API_KEY = "AIzaSyAuSnUmGlptL0E4m4wP-1XzlqL_iv_y3g8";
-
-    // replace line breaks with a unique character sequence
-    let modifiedText = x.replace(/\n/g, "<br>");
-
-    let url = `https://translation.googleapis.com/language/translate/v2?q=${modifiedText}&target=${lang}&key=${API_KEY}`;
-
-    fetch(url, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-    })
-      .then((res) => res.json())
-      .then((response) => {
-        // replace the unique character sequence with line breaks
-        let translatedText =
-          response.data.translations[0].translatedText.replace(/<br>/g, "\n");
-        setTxt(translatedText);
-        setActive(true);
-      })
-      .catch((error) => {
-        console.log("There was an error with the translation request: ", error);
-      });
-  };
+  let text;
+  if (original) {
+    text = post?.original;
+  } else {
+    if (lang === "en") {
+      text = post?.en;
+    } else if (lang === "ru") {
+      text = post?.ru;
+    } else {
+      text = post?.ka;
+    }
+  }
 
   return (
-    <Animated.View
+    <View
       style={{
-        padding: 5,
+        padding: post?.original?.length > 0 ? 5 : 0,
         paddingRight: 20,
         paddingTop: 0,
-        paddingBottom: 15,
+        paddingBottom: post?.original?.length > 0 ? 15 : 0,
         borderRadius: 10,
         width: "auto",
-        opacity: fadeAnim, // Bind opacity to animated value
       }}
     >
+      {/* {loading ? (
+        <Text style={{ color: "pink" }}>Loading...</Text>
+      ) : ( */}
       <Pressable
         onPress={
-          props.numLines > 3
-            ? () => props.setNumLines(3)
+          props.numLines > 5
+            ? () => props.setNumLines(5)
             : () => props.setNumLines(50)
         }
       >
@@ -121,6 +60,7 @@ export const Post = (props) => {
           multiline
           numberOfLines={props.numLines}
           style={{
+            height: post?.original?.length > 0 ? "auto" : 0,
             color:
               props.fileFormat === "video" ? "#ddd" : props.currentTheme.font,
             letterSpacing: 0.3,
@@ -134,44 +74,46 @@ export const Post = (props) => {
             textShadowRadius: 1,
           }}
         >
-          {txt}
+          <>{text}</>
         </Text>
-        {defLanguage && defLanguage !== lang && (
+
+        {post && post?.originalLanguage !== lang && (
           <Pressable
             onPress={
-              active
+              !original
                 ? () => {
                     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                    setTxt(props.text);
-                    setActive(false);
+                    setOriginal(true);
                   }
                 : () => {
                     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                    TranslateText(props.text);
+                    setOriginal(false);
                   }
             }
             style={{
-              marginTop: 10,
+              // position: "absolute",
+              paddingTop: post?.original?.length > 0 ? 10 : 0,
               marginLeft: 10,
               flexDirection: "row",
               alignItems: "center",
+              width: 120,
               gap: 8,
-              padding: 5,
+              padding: post?.original?.length > 0 ? 5 : 0,
             }}
           >
             <MaterialIcons
               name="g-translate"
               size={14}
               color={
-                active ? props.currentTheme.disabled : props.currentTheme.pink
+                original ? props.currentTheme.pink : props.currentTheme.disabled
               }
             />
             <Text
               style={{
                 fontSize: 14,
-                color: active
-                  ? props.currentTheme.disabled
-                  : props.currentTheme.pink,
+                color: original
+                  ? props.currentTheme.pink
+                  : props.currentTheme.disabled,
               }}
             >
               See original
@@ -179,6 +121,7 @@ export const Post = (props) => {
           </Pressable>
         )}
       </Pressable>
-    </Animated.View>
+      {/* )} */}
+    </View>
   );
 };

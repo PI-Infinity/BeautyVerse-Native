@@ -66,14 +66,14 @@ export const Identify = ({ navigation }) => {
     ) {
       return setAlert({
         active: true,
-        text: "Please input fields!",
+        text: language?.language?.Auth?.auth?.successRegister,
         type: "error",
       });
     }
     if (!email?.includes("@") || email?.length < 6 || email?.length > 40) {
       return setAlert({
         active: true,
-        text: "Please input vaild email!",
+        text: language?.language?.Auth?.auth?.pleaseInput,
         type: "error",
       });
     }
@@ -82,7 +82,7 @@ export const Identify = ({ navigation }) => {
     if (reg.test(email) === false) {
       return setAlert({
         active: true,
-        text: "An email is not vaild!",
+        text: language?.language?.Auth?.auth?.wrongEmail,
         type: "error",
       });
     }
@@ -90,20 +90,20 @@ export const Identify = ({ navigation }) => {
     if (password?.length < 8 || password?.length > 40) {
       return setAlert({
         active: true,
-        text: "Password should be min 8 and max 40 symbols!",
+        text: language?.language?.Auth?.auth?.wrongPassword,
         type: "error",
       });
     }
     if (password !== confirmPassword) {
       return setAlert({
         active: true,
-        text: "Password and confirm password must be same!",
+        text: language?.language?.Auth?.auth?.differentPasswords,
         type: "error",
       });
     }
     try {
       const response = await axios.post(
-        "https://beautyverse.herokuapp.com/api/v1/sendVerifyEmail",
+        backendUrl + "/api/v1/sendVerifyEmail",
         {
           email: email,
         }
@@ -122,6 +122,9 @@ export const Identify = ({ navigation }) => {
     }
   };
 
+  // backend url
+  const backendUrl = useSelector((state) => state.storeApp.backendUrl);
+
   /**
    * Registration
    */
@@ -133,33 +136,30 @@ export const Identify = ({ navigation }) => {
     if (code === codeInput) {
       try {
         // Signup user
-        const response = await axios.post(
-          "https://beautyverse.herokuapp.com/api/v1/signup",
-          {
-            name: "",
-            type: "user",
-            email: email,
-            phone: "",
-            password: password,
-            confirmPassword: confirmPassword,
-            cover: "",
-            address: {},
-            media: {
-              facebook: "",
-              instagram: "",
-              tiktok: "",
-              youtube: "",
-              telegram: false,
-              whatsapp: false,
-            },
-            experience: "",
-            orders: [],
-            subscription: { status: "active" },
-            notifications: [],
-            active: false,
-            registerStage: "identify",
-          }
-        );
+        const response = await axios.post(backendUrl + "/api/v1/signup", {
+          name: "",
+          type: "user",
+          email: email,
+          phone: "",
+          password: password,
+          confirmPassword: confirmPassword,
+          cover: "",
+          address: {},
+          media: {
+            facebook: "",
+            instagram: "",
+            tiktok: "",
+            youtube: "",
+            telegram: false,
+            whatsapp: false,
+          },
+          experience: "",
+          orders: [],
+          subscription: { status: "active" },
+          notifications: [],
+          active: false,
+          registerStage: "identify",
+        });
         // after send data to db, open email verify popup
         setVerify(false);
         dispatch(setCurrentUser(response.data.newUser));
@@ -182,7 +182,7 @@ export const Identify = ({ navigation }) => {
         });
       }
     } else {
-      Alert.alert("Wrong verification code!");
+      Alert.alert(language?.language?.Auth?.auth?.wrongVerifyCode);
     }
   };
   return (
@@ -246,7 +246,7 @@ export const Identify = ({ navigation }) => {
               }}
             >
               <TextInput
-                placeholder="min 8 symbols"
+                placeholder={language?.language?.Auth?.auth?.min8symbols}
                 placeholderTextColor={currentTheme.disabled}
                 value={password}
                 style={[
@@ -337,7 +337,9 @@ export const Identify = ({ navigation }) => {
             </View>
           </View>
           <TouchableOpacity style={styles.button} onPress={SendEmail}>
-            <Text style={styles.buttonText}>Register</Text>
+            <Text style={styles.buttonText}>
+              {language?.language?.Auth?.auth?.register}
+            </Text>
           </TouchableOpacity>
           <View
             style={{
@@ -398,14 +400,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     // borderRadius: 50,
     borderBottomWidth: 1,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 3, // negative value places shadow on top
-    },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
   },
   showPasswordText: {
     fontSize: 12,

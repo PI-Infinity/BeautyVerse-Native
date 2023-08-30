@@ -80,7 +80,7 @@ export const ProceduresList = ({
               style={[
                 styles.buttonText,
                 {
-                  color: active === "all" ? "#e5e5e5" : "#ccc",
+                  color: active === "all" ? "#fff" : currentTheme.disabled,
                   letterSpacing: 0.2,
                 },
               ]}
@@ -105,8 +105,8 @@ export const ProceduresList = ({
                   {
                     color:
                       active.toLowerCase() === cat.value.toLowerCase()
-                        ? "#e5e5e5"
-                        : "#ccc",
+                        ? "#fff"
+                        : currentTheme.disabled,
                     letterSpacing: 0.2,
                   },
                 ]}

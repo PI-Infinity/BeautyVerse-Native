@@ -10,6 +10,7 @@ import FeedReducer from "./feed";
 import OrdersReducer from "./orders";
 import SentOrdersReducer from "./sentOrders";
 import AlertsReducer from "./alerts";
+import MarketplaceReducer from "./Marketplace";
 
 export const store = configureStore({
   reducer: {
@@ -24,5 +25,6 @@ export const store = configureStore({
     storeOrders: OrdersReducer,
     storeSentOrders: SentOrdersReducer,
     storeAlerts: AlertsReducer,
+    storeMarketplace: MarketplaceReducer,
   },
 });

@@ -24,14 +24,14 @@ const Charts = ({ route }) => {
   const data = route.params;
 
   // define active chart
-  const [activeChart, setActiveChart] = useState(0);
+  const [activeChart, setActiveChart] = useState(1);
 
   /**
    * Define chart
    */
 
   let chart;
-  if (activeChart === 0) {
+  if (activeChart === 1) {
     chart = (
       <View style={{ gap: 15 }}>
         <Chart
@@ -103,7 +103,10 @@ const Charts = ({ route }) => {
   }
 
   return (
-    <View style={{ backgroundColor: currentTheme.background, height: "100%" }}>
+    <ScrollView
+      style={{ backgroundColor: currentTheme.background }}
+      contentContainerStyle={{ gap: 15, paddingBottom: 50 }}
+    >
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -117,68 +120,56 @@ const Charts = ({ route }) => {
       >
         <TouchableOpacity
           style={{
-            backgroundColor:
-              activeChart === 0 ? currentTheme.pink : currentTheme.background,
             padding: 10,
+            paddingVertical: 5,
             borderRadius: 50,
-            maxHeight: 40,
+            alignItems: "center",
+            borderWidth: 2,
+            borderColor:
+              activeChart === 1 ? currentTheme.pink : currentTheme.background,
+            height: 30,
           }}
           activeOpacity={0.3}
-          onPress={() => setActiveChart(0)}
+          onPress={() => setActiveChart(1)}
         >
-          <Text
-            style={[
-              styles.itemTitle,
-              { color: activeChart === 0 ? "#e5e5e5" : "#ccc" },
-            ]}
-          >
-            Last month
-          </Text>
+          <Text style={[styles.itemTitle, { color: "#ccc" }]}>Last month</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={{
-            backgroundColor:
-              activeChart === 2 ? currentTheme.pink : currentTheme.background,
             padding: 10,
+            paddingVertical: 5,
             borderRadius: 50,
-            maxHeight: 40,
+            alignItems: "center",
+            borderWidth: 2,
+            borderColor:
+              activeChart === 2 ? currentTheme.pink : currentTheme.background,
+            height: 30,
           }}
           activeOpacity={0.3}
           onPress={() => setActiveChart(2)}
         >
-          <Text
-            style={[
-              styles.itemTitle,
-              { color: activeChart === 2 ? "#e5e5e5" : "#ccc" },
-            ]}
-          >
-            Last year
-          </Text>
+          <Text style={[styles.itemTitle, { color: "#ccc" }]}>Last year</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={{
-            backgroundColor:
-              activeChart === 3 ? currentTheme.pink : currentTheme.background,
             padding: 10,
+            paddingVertical: 5,
             borderRadius: 50,
-            maxHeight: 40,
+            alignItems: "center",
+            borderWidth: 2,
+            borderColor:
+              activeChart === 3 ? currentTheme.pink : currentTheme.background,
+            height: 30,
           }}
           activeOpacity={0.3}
           onPress={() => setActiveChart(3)}
         >
-          <Text
-            style={[
-              styles.itemTitle,
-              { color: activeChart === 3 ? "#e5e5e5" : "#ccc" },
-            ]}
-          >
-            Yearly
-          </Text>
+          <Text style={[styles.itemTitle, { color: "#ccc" }]}>Annually</Text>
         </TouchableOpacity>
       </ScrollView>
-      {chart}
-    </View>
+      <View>{chart}</View>
+    </ScrollView>
   );
 };
 
@@ -189,7 +180,8 @@ const Chart = ({ data, title, x, initial }) => {
     <View
       style={{
         paddingHorizontal: 10,
-        backgroundColor: currentTheme.background2,
+        borderWidth: 1,
+        borderColor: currentTheme.line,
         marginHorizontal: 10,
         gap: 20,
         height: 180,
@@ -236,11 +228,11 @@ const Chart = ({ data, title, x, initial }) => {
                   <View
                     style={{
                       minWidth: 20,
-                      height: 15 + item[x] * 5,
+                      height: 15 + item[x] * 0.2,
                       borderRadius: 5,
                       backgroundColor: currentTheme.pink,
                       alignItems: "center",
-                      justifyContent: "center",
+                      justifyContent: "flex-end",
                     }}
                   >
                     <Text style={{ color: "#e5e5e5", fontSize: 12 }}>
@@ -250,8 +242,9 @@ const Chart = ({ data, title, x, initial }) => {
                   <View style={{ width: 20 }}>
                     <Text
                       style={{
-                        color: currentTheme.font,
+                        color: currentTheme.disabled,
                         fontSize: 12,
+                        fontStyle: "italic",
                         // transform: [{ rotate: "270deg" }],
                       }}
                     >

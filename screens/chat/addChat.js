@@ -22,6 +22,7 @@ import {
   setRerederRooms,
 } from "../../redux/chat";
 import { Search } from "../../screens/chat/search";
+import { FontAwesome } from "@expo/vector-icons";
 
 /**
  * Add new chat component in chat.
@@ -54,6 +55,9 @@ export const AddChat = ({}) => {
   // defines current user
   const currentUser = useSelector((state) => state.storeUser.currentUser);
 
+  // backend url
+  const backendUrl = useSelector((state) => state.storeApp.backendUrl);
+
   /**
    * Gett followings
    */
@@ -61,7 +65,7 @@ export const AddChat = ({}) => {
     async function GetAudience(userId) {
       try {
         const response = await fetch(
-          `https://beautyverse.herokuapp.com/api/v1/users/${userId}/followings`
+          backendUrl + `/api/v1/users/${userId}/followings`
         );
         const data = await response.json();
         setFollowings(data.data?.followings);
@@ -94,6 +98,7 @@ export const AddChat = ({}) => {
       lastMessage: "",
       lastSender: "",
       status: "read",
+      lastMessageSeen: "",
     };
     try {
       // navigate to room passed new chat and user in route
@@ -102,19 +107,17 @@ export const AddChat = ({}) => {
         user: userObj,
       });
       // add new chat in mongoDB
-      const response = await axios.post(
-        "https://beautyverse.herokuapp.com/api/v1/chats/",
-        {
-          room: currentUser?._id + member2.member2Id,
-          members: {
-            member1: currentUser._id,
-            member2: member2.member2Id,
-          },
-          lastMessage: "",
-          lastSender: "",
-          status: "read",
-        }
-      );
+      const response = await axios.post(backendUrl + "/api/v1/chats/", {
+        room: currentUser?._id + member2.member2Id,
+        members: {
+          member1: currentUser._id,
+          member2: member2.member2Id,
+        },
+        lastMessage: "",
+        lastSender: "",
+        status: "read",
+        lastMessageSeen: "",
+      });
       // define new chat in redux
       dispatch(setCurrentChat(response.data.data.chat));
       // rerender rooms
@@ -275,7 +278,7 @@ const RenderItem = ({ item, GetChatRoom, currentTheme }) => {
   const GetUser = async () => {
     try {
       const response = await axios.get(
-        `https://beautyverse.herokuapp.com/api/v1/users/${item?._id}`
+        backendUrl + `/api/v1/users/${item?._id}`
       );
       setUserObj(response.data.data.user);
     } catch (error) {
@@ -304,20 +307,69 @@ const RenderItem = ({ item, GetChatRoom, currentTheme }) => {
       }
     >
       <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-        {item.cover?.length > 10 && (
-          <CacheableImage
-            style={{
-              height: 40,
-              width: 40,
-              borderRadius: 50,
-              resizeMode: "cover",
-            }}
-            source={{ uri: item.cover }}
-            manipulationOptions={[
-              { resize: { width: 40, height: 40 } },
-              { rotate: 90 },
-            ]}
-          />
+        {item.cover?.length > 10 ? (
+          <View>
+            {userObj?.online && (
+              <View
+                style={{
+                  width: 10,
+                  height: 10,
+                  backgroundColor: "#3bd16f",
+                  borderRadius: 50,
+                  position: "absolute",
+                  zIndex: 100,
+                  right: 1,
+                  bottom: 1,
+                  borderWidth: 1.5,
+                  borderColor: currentTheme.background,
+                }}
+              ></View>
+            )}
+            <CacheableImage
+              style={{
+                height: 40,
+                width: 40,
+                borderRadius: 50,
+                resizeMode: "cover",
+              }}
+              source={{ uri: item.cover }}
+              manipulationOptions={[
+                { resize: { width: 40, height: 40 } },
+                { rotate: 90 },
+              ]}
+            />
+          </View>
+        ) : (
+          <View>
+            {userObj?.online && (
+              <View
+                style={{
+                  width: 10,
+                  height: 10,
+                  backgroundColor: "#3bd16f",
+                  borderRadius: 50,
+                  position: "absolute",
+                  zIndex: 100,
+                  right: 1,
+                  bottom: 1,
+                  borderWidth: 1.5,
+                  borderColor: currentTheme.background,
+                }}
+              ></View>
+            )}
+            <View
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: 50,
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: currentTheme.line,
+              }}
+            >
+              <FontAwesome name="user" size={24} color="#e5e5e5" />
+            </View>
+          </View>
         )}
         <Text
           style={{

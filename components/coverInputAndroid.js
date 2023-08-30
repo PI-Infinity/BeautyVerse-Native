@@ -4,7 +4,7 @@ import * as ImagePicker from "expo-image-picker";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import React, { useEffect, useState } from "react";
 import { Alert, StyleSheet, TouchableOpacity, View } from "react-native";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { BackDrop } from "../components/backDropLoader";
 import { storage } from "../firebase";
 import { setCleanUp, setRerenderCurrentUser } from "../redux/rerenders";
@@ -40,7 +40,7 @@ const InputFile = ({ targetUser }) => {
     });
 
     if (result.assets) {
-      let newWidth = 300;
+      let newWidth = 500;
       let newHeight =
         (newWidth / result.assets[0].width) * result.assets[0].height;
 
@@ -66,6 +66,8 @@ const InputFile = ({ targetUser }) => {
     }
   }
 
+  const backendUrl = useSelector((state) => state.storeApp.backendUrl);
+
   async function FileUpload() {
     /* aadd cover
      */
@@ -81,7 +83,7 @@ const InputFile = ({ targetUser }) => {
           .then((url) => {
             const UploadCover = async () => {
               const response = await axios.patch(
-                `https://beautyverse.herokuapp.com/api/v1/users/${targetUser?._id}`,
+                `${backendUrl}/api/v1/users/${targetUser?._id}`,
                 {
                   cover: url,
                 }

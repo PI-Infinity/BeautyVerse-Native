@@ -15,6 +15,7 @@ import "moment-timezone";
 import * as Localization from "expo-localization";
 import { useState, useEffect, useRef } from "react";
 import { lightTheme, darkTheme } from "../../context/theme";
+import { Language } from "../../context/language";
 
 /**
  * Date and time picket
@@ -26,6 +27,9 @@ const CustomDatePicker = ({ from, dateAndTime, setDateAndTime }) => {
   // defines theme
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
+
+  // defines language
+  const language = Language();
 
   // defines current user
   const currentUser = useSelector((state) => state.storeUser.currentUser);
@@ -212,17 +216,17 @@ const CustomDatePicker = ({ from, dateAndTime, setDateAndTime }) => {
             style={{
               fontSize: 16,
               fontWeight: "bold",
-              color: "#f1f1f1",
+              color: currentTheme.font,
               letterSpacing: 0.3,
             }}
           >
-            Choice Date:
+            {language?.language?.Bookings?.bookings?.choiceDate}:
           </Text>
         </View>
         <TouchableOpacity
           onPress={openPicker}
           style={{
-            backgroundColor: currentTheme.background2,
+            // backgroundColor: currentTheme.background2,
             width: "48%",
             borderRadius: 50,
             padding: 5,
@@ -234,7 +238,7 @@ const CustomDatePicker = ({ from, dateAndTime, setDateAndTime }) => {
         >
           <Text
             style={{
-              color: "#f1f1f1",
+              color: currentTheme.font,
               fontSize: 14,
             }}
           >

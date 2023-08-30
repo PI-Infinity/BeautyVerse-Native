@@ -26,7 +26,6 @@ const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 export const AddNewProcedures = () => {
   // defined procedure list
   const proceduresOptions = ProceduresOptions();
-  console.log("add update");
   // procedures state
   const [procedures, setProcedures] = useState([]);
   // redux dispatch
@@ -43,6 +42,9 @@ export const AddNewProcedures = () => {
   // current user
   const currentUser = useSelector((state) => state.storeUser.currentUser);
 
+  // backend url
+  const backendUrl = useSelector((state) => state.storeApp.backendUrl);
+
   // add procedure
   const AddProcedure = async (val) => {
     let ifInclude = currentUser?.procedures.find(
@@ -55,7 +57,7 @@ export const AddNewProcedures = () => {
       try {
         dispatch(AddCurrentUserProcedure({ value: val }));
         await axios.post(
-          `https://beautyverse.herokuapp.com/api/v1/users/${currentUser?._id}/procedures`,
+          `${backendUrl}/api/v1/users/${currentUser?._id}/procedures`,
           {
             value: val,
           }
@@ -73,7 +75,7 @@ export const AddNewProcedures = () => {
     const id = currentUser?.procedures?.find((i) => i.value === val);
     if (currentUser?.procedures?.length > 1) {
       dispatch(RemoveCurrentUserProcedure(val));
-      const url = `https://beautyverse.herokuapp.com/api/v1/users/${currentUser?._id}/procedures/${id._id}`;
+      const url = `${backendUrl}/api/v1/users/${currentUser?._id}/procedures/${id._id}`;
       const response = await fetch(url, { method: "DELETE" })
         .then((response) => response.json())
         .then(() => dispatch(setRerenderCurrentUser()))

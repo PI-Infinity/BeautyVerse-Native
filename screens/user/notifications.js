@@ -44,6 +44,9 @@ export const Notifications = ({
   // loading state
   const [loading, setLoading] = useState(true);
 
+  // backend url
+  const backendUrl = useSelector((state) => state.storeApp.backendUrl);
+
   // read notification
   const ReadNotification = async (id) => {
     try {
@@ -63,7 +66,7 @@ export const Notifications = ({
         });
       });
       await axios.patch(
-        `https://beautyverse.herokuapp.com/api/v1/users/${currentUser?._id}/notifications/${id}`,
+        backendUrl + `/api/v1/users/${currentUser?._id}/notifications/${id}`,
         {
           status: "read",
         }
@@ -158,6 +161,9 @@ const NotificationItem = ({
   // define screen id by query split
   let feed = item?.feed?.split("/");
 
+  // backend url
+  const backendUrl = useSelector((state) => state.storeApp.backendUrl);
+
   // define some states
   const [loadCover, setLoadCover] = useState(true);
   const [feedObj, setFeedObj] = useState(null);
@@ -176,9 +182,10 @@ const NotificationItem = ({
     try {
       if (item?.type !== "welcome") {
         let response = await axios.get(
-          `https://beautyverse.herokuapp.com/api/v1/users/${
-            currentUser?._id
-          }/feeds/${feed[feed?.length - 1]}?check=${currentUser._id}`
+          backendUrl +
+            `/api/v1/users/${currentUser?._id}/feeds/${
+              feed[feed?.length - 1]
+            }?check=${currentUser._id}`
         );
 
         setFeedObj(response.data.data.feedObj);
@@ -193,7 +200,7 @@ const NotificationItem = ({
     try {
       if (item?.type !== "welcome") {
         let res = await axios.get(
-          `https://beautyverse.herokuapp.com/api/v1/users/${item?.senderId}`
+          backendUrl + `/api/v1/users/${item?.senderId}`
         );
         setUser(res.data.data.user);
       }
@@ -228,7 +235,8 @@ const NotificationItem = ({
       );
       setNotifications(updatedNotifications);
       await axios.delete(
-        `https://beautyverse.herokuapp.com/api/v1/users/${currentUser?._id}/notifications/${item?._id}`
+        backendUrl +
+          `/api/v1/users/${currentUser?._id}/notifications/${item?._id}`
       );
       console.log("deleted");
     } catch (error) {
@@ -334,7 +342,7 @@ const NotificationItem = ({
             <View
               style={{
                 flexDirection: "row",
-                width: "70%",
+                width: "100%",
                 alignItems: "center",
                 gap: 8,
               }}

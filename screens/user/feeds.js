@@ -41,11 +41,15 @@ export const Feeds = ({
 
   // define current user
   const currentUser = useSelector((state) => state.storeUser.currentUser);
+  const lang = useSelector((state) => state.storeApp.language);
 
   // define rerender user feeds in user screen
   const rerenderUserFeeds = useSelector(
     (state) => state.storeRerenders.rerenderUserFeeds
   );
+
+  // backend url
+  const backendUrl = useSelector((state) => state.storeApp.backendUrl);
 
   // get user feeds
   useEffect(() => {
@@ -53,10 +57,11 @@ export const Feeds = ({
       setFeeds([]);
       try {
         const response = await axios.get(
-          `https://beautyverse.herokuapp.com/api/v1/users/${userId}/feeds/native?page=${1}&limit=8&check=${
+          `${backendUrl}/api/v1/users/${userId}/feeds/native?page=${1}&limit=8&check=${
             currentUser?._id
           }`
         );
+
         setFeeds(response.data.data?.feeds);
         setFeedsLength(response.data.result);
         setTimeout(() => {
@@ -207,7 +212,7 @@ export const Feeds = ({
               flexDirection: "row",
               flexWrap: "wrap",
               gap: 1,
-              marginTop: 5,
+              // marginTop: 5,
             }}
           >
             {feeds?.length > 0 ? (
@@ -258,7 +263,6 @@ const styles = StyleSheet.create({
  */
 
 const FeedItem = (props) => {
-  console.log(props.feed.video);
   // fade in
   const fadeAnim = useRef(new Animated.Value(0)).current; // Initial value for opacity: 0
 

@@ -39,11 +39,14 @@ export const Reports = ({
   // define which report is active
   const [active, setActive] = useState(null);
 
+  // backend url
+  const backendUrl = useSelector((state) => state.storeApp.backendUrl);
+
   // send report
   const SendReport = async () => {
     const { number, ...activeWithoutNumber } = active;
     try {
-      await axios.post("https://beautyverse.herokuapp.com/api/v1/reports", {
+      await axios.post(backendUrl + "/api/v1/reports", {
         ...number,
         ...activeWithoutNumber,
       });

@@ -17,6 +17,7 @@ import "moment-timezone";
 import * as Localization from "expo-localization";
 import { useState, useEffect, useRef } from "react";
 import { lightTheme, darkTheme } from "../../context/theme";
+import { Language } from "../../context/language";
 
 /**
  * Only date picker
@@ -28,6 +29,9 @@ const CustomDatePicker = ({ from, targetUser }) => {
   const dispatch = useDispatch();
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
+
+  // defines language
+  const language = Language();
 
   // const define state
   const dateState = useSelector((state) => {
@@ -44,9 +48,32 @@ const CustomDatePicker = ({ from, targetUser }) => {
     setdate(new Date(dateState.date));
   }, [dateState]);
 
-  let initialDate = moment(date)
+  let dt = moment(date).tz(Localization.timezone).format("DD MMMM YYYY");
+
+  // For Today
+  let today = moment().tz(Localization.timezone).format("DD MMMM YYYY");
+  // For yesterday
+  let yesterday = moment()
     .tz(Localization.timezone)
+    .subtract(1, "days")
     .format("DD MMMM YYYY");
+
+  // For tomorrow
+  let tomorrow = moment()
+    .tz(Localization.timezone)
+    .add(1, "days")
+    .format("DD MMMM YYYY");
+
+  let initialDate;
+  if (dt === today) {
+    initialDate = language?.language?.Bookings?.bookings?.today;
+  } else if (dt === yesterday) {
+    initialDate = language?.language?.Bookings?.bookings?.yesterday;
+  } else if (dt === tomorrow) {
+    initialDate = language?.language?.Bookings?.bookings?.tomorrow;
+  } else {
+    initialDate = dt;
+  }
 
   /**
    * open close functions
@@ -140,7 +167,6 @@ const CustomDatePicker = ({ from, targetUser }) => {
   return (
     <View
       style={{
-        // flex: 1,
         justifyContent: "center",
         alignItems: "center",
         width: "100%",
@@ -166,17 +192,17 @@ const CustomDatePicker = ({ from, targetUser }) => {
             style={{
               fontSize: 16,
               fontWeight: "bold",
-              color: "#f1f1f1",
+              color: currentTheme.font,
               letterSpacing: 0.3,
             }}
           >
-            Choice Date:
+            {language?.language?.Bookings?.bookings?.choiceDate}:{" "}
           </Text>
         </View>
         <TouchableOpacity
           onPress={openPicker}
           style={{
-            backgroundColor: currentTheme.background2,
+            // backgroundColor: currentTheme.background2,
             width: "40%",
             borderRadius: 50,
             padding: 5,
@@ -184,14 +210,15 @@ const CustomDatePicker = ({ from, targetUser }) => {
             borderWidth: 1.5,
             borderColor: dateState.active
               ? currentTheme.pink
-              : currentTheme.disabled,
+              : currentTheme.line,
             marginLeft: "auto",
           }}
         >
           <Text
             style={{
-              color: "#f1f1f1",
+              color: dateState.active ? currentTheme.pink : currentTheme.font,
               fontSize: 14,
+              fontWeight: "bold",
             }}
           >
             {dateState.active ? initialDate : "N/A"}

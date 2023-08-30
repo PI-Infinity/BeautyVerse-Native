@@ -12,6 +12,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import { setRerenderCurrentUser } from "../../redux/rerenders";
 import { BackDrop } from "../../components/backDropLoader";
+import * as Notifications from "expo-notifications";
 
 /*
   Register Screen,
@@ -42,6 +43,9 @@ export const Accept = ({ navigation }) => {
   // alert message
   const [alert, setAlert] = useState({ active: false, text: "", type: "" });
 
+  // backend url
+  const backendUrl = useSelector((state) => state.storeApp.backendUrl);
+
   /**
    * accept terms and rules and confirm register
    */
@@ -51,7 +55,7 @@ export const Accept = ({ navigation }) => {
     if (accept && acceptP) {
       try {
         const response = await axios.patch(
-          "https://beautyverse.herokuapp.com/api/v1/users/" + currentUser._id,
+          backendUrl + "/api/v1/users/" + currentUser._id,
           {
             type: type,
             acceptPrivacy: true,
@@ -77,8 +81,21 @@ export const Accept = ({ navigation }) => {
         );
         // after save user to async storage, rerender user info to complete login and navigate to main content
         dispatch(setRerenderCurrentUser());
-        setTimeout(() => {
+        setTimeout(async () => {
           setLoading(false);
+          const showNotification = async () => {
+            await Notifications.scheduleNotificationAsync({
+              content: {
+                title: "Welcome to BeautyVerse!",
+                body: "Discover the latest trends, tips, and more...",
+                data: { someData: "goes here" },
+              },
+              trigger: null, // This means the notification will be sent right away
+            });
+          };
+          setTimeout(() => {
+            showNotification();
+          }, 3000);
         }, 1000);
       } catch (error) {
         console.log(error);
@@ -114,7 +131,7 @@ export const Accept = ({ navigation }) => {
         }}
       >
         <CheckBox
-          title="Terms & Rules"
+          title={language?.language?.Pages?.pages?.terms}
           checked={accept}
           onPress={() => {
             setAccept(!accept);
@@ -173,7 +190,7 @@ export const Accept = ({ navigation }) => {
         }}
       >
         <CheckBox
-          title="Privacy Police"
+          title={language?.language?.Pages?.pages?.privacy}
           checked={acceptP}
           onPress={() => {
             setAcceptP(!acceptP);
@@ -222,7 +239,9 @@ export const Accept = ({ navigation }) => {
         </TouchableOpacity>
       </View>
       <TouchableOpacity style={styles.button} onPress={Confirm}>
-        <Text style={styles.buttonText}>Confirm</Text>
+        <Text style={styles.buttonText}>
+          {language?.language?.Auth?.auth?.confirm}
+        </Text>
       </TouchableOpacity>
     </View>
   );

@@ -1,5 +1,11 @@
 import React from "react";
-import { View, StyleSheet, Text, TouchableOpacity } from "react-native";
+import {
+  View,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  ScrollView,
+} from "react-native";
 import { useSelector, useDispatch } from "react-redux";
 import { setType } from "../../redux/auth";
 import { Language } from "../../context/language";
@@ -21,12 +27,17 @@ export const Type = ({ navigation }) => {
   const currentTheme = theme ? darkTheme : lightTheme;
 
   return (
-    <View style={styles.container}>
+    <ScrollView contentContainerStyle={styles.container}>
       <TouchableOpacity
         activeOpacity={0.9}
         style={[
           styles.box,
-          { backgroundColor: currentTheme.background2, gap: 10 },
+          {
+            backgroundColor: currentTheme.background,
+            borderWidth: 1,
+            borderColor: currentTheme.line,
+            gap: 10,
+          },
         ]}
         onPress={() => {
           dispatch(setType("user"));
@@ -50,15 +61,19 @@ export const Type = ({ navigation }) => {
             },
           ]}
         >
-          Simple user, to find services, book them and comunicate with beauty
-          experts and businesses!
+          {language?.language?.Auth?.auth?.userText}
         </Text>
       </TouchableOpacity>
       <TouchableOpacity
         activeOpacity={0.9}
         style={[
           styles.box,
-          { backgroundColor: currentTheme.background2, gap: 10 },
+          {
+            backgroundColor: currentTheme.background,
+            borderWidth: 1,
+            borderColor: currentTheme.line,
+            gap: 10,
+          },
         ]}
         onPress={() => {
           dispatch(setType("specialist"));
@@ -82,14 +97,19 @@ export const Type = ({ navigation }) => {
             },
           ]}
         >
-          Specialist profile, to book & recieve services!
+          {language?.language?.Auth?.auth?.specText}
         </Text>
       </TouchableOpacity>
       <TouchableOpacity
         activeOpacity={0.9}
         style={[
           styles.box,
-          { backgroundColor: currentTheme.background2, gap: 10 },
+          {
+            backgroundColor: currentTheme.background,
+            borderWidth: 1,
+            borderColor: currentTheme.line,
+            gap: 10,
+          },
         ]}
         onPress={() => {
           dispatch(setType("beautyCenter"));
@@ -117,10 +137,50 @@ export const Type = ({ navigation }) => {
             },
           ]}
         >
-          Phisycal beauty enviroment!
+          {language?.language?.Auth?.auth?.salonText}
         </Text>
       </TouchableOpacity>
-    </View>
+      <TouchableOpacity
+        activeOpacity={0.9}
+        style={[
+          styles.box,
+          {
+            backgroundColor: currentTheme.background,
+            borderWidth: 1,
+            borderColor: currentTheme.line,
+            gap: 10,
+          },
+        ]}
+        onPress={() => {
+          dispatch(setType("shop"));
+          navigation.navigate("Accept");
+        }}
+      >
+        <MaterialIcons
+          name="add-business"
+          size={26}
+          color={currentTheme.pink}
+        />
+        <Text style={[styles.boxText, { color: currentTheme.font }]}>
+          {language?.language?.Auth?.auth?.shop}
+        </Text>
+        <Text
+          style={[
+            styles.boxText,
+            {
+              color: currentTheme.font,
+              textAlign: "center",
+              fontWeight: "normal",
+              color: currentTheme.disabled,
+              lineHeight: 20,
+              fontSize: 14,
+            },
+          ]}
+        >
+          {language?.language?.Auth?.auth?.shopText}
+        </Text>
+      </TouchableOpacity>
+    </ScrollView>
   );
 };
 
@@ -130,23 +190,17 @@ const styles = StyleSheet.create({
     width: "100%",
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 50,
+
+    // marginBottom: 50,
   },
   box: {
     width: "80%",
-    height: 180,
-    marginBottom: 15,
+    height: 160,
+    marginBottom: 10,
     justifyContent: "center",
     alignItems: "center",
-    borderRadius: 10,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 3, // negative value places shadow on top
-    },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
+    borderRadius: 15,
+
     padding: 20,
   },
   boxText: {

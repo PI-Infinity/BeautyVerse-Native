@@ -1,0 +1,1362 @@
+import {
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  Image,
+  Dimensions,
+  Alert,
+} from "react-native";
+import React, { useEffect, useRef, useState } from "react";
+import axios from "axios";
+import { useSelector, useDispatch } from "react-redux";
+import { Language } from "../../context/language";
+import { darkTheme, lightTheme } from "../../context/theme";
+import CategoryList from "../../Marketplace/components/categoryList";
+import { ProceduresOptions } from "../../datas/registerDatas";
+import { Entypo, FontAwesome, MaterialIcons } from "@expo/vector-icons";
+import InputFile from "../../Marketplace/components/fileInput";
+import Variants from "../../Marketplace/components/variants";
+import uuid from "react-native-uuid";
+import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
+import { storage } from "../../firebase";
+import { BackDrop } from "../../components/backDropLoader";
+import { useNavigation } from "@react-navigation/native";
+import { setRerenderProducts } from "../../redux/Marketplace";
+import CountryFlag from "react-native-country-flag";
+
+const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
+
+const AddNewProduct = () => {
+  // defines backendUrl
+  const backendUrl = useSelector((state) => state.storeApp.backendUrl);
+
+  // defines current user
+  const currentUser = useSelector((state) => state.storeUser.currentUser);
+
+  // language state
+  const language = Language();
+  const lang = useSelector((state) => state.storeApp.language);
+
+  // defines dispatch
+  const dispatch = useDispatch();
+
+  // naviagtion
+  const navigation = useNavigation();
+
+  // theme state
+  const theme = useSelector((state) => state.storeApp.theme);
+  const currentTheme = theme ? darkTheme : lightTheme;
+
+  // loading state
+  const [loading, setLoading] = useState(false);
+
+  // categories
+  const categoriesList = ProceduresOptions();
+
+  // input refs
+  const brandRef = useRef();
+  const priceRef = useRef();
+  const saleRef = useRef();
+  const stockRef = useRef();
+  const shortDescRef = useRef();
+  const fullDescRef = useRef();
+  const howToUseRef = useRef();
+  const compositionsRef = useRef();
+  const variantsRef = useRef();
+
+  // category list modal opening state
+  const [isModalVisible, setIsModalVisible] = useState(false);
+
+  // language activator
+  const [inputLanguage, setInputLanguage] = useState("us");
+  useEffect(() => {
+    setInputLanguage(lang === "en" ? "us" : lang === "ka" ? "ge" : "ru");
+  }, [lang]);
+
+  // field states
+  const [title, setTitle] = useState("");
+  const [categories, setCategories] = useState([]);
+  const [type, setType] = useState("everyone");
+  const [brand, setBrand] = useState("");
+  const [price, setPrice] = useState(null);
+  const [currency, setCurrency] = useState(null);
+  useEffect(() => {
+    setCurrency(currentUser?.currency);
+  }, []);
+  const [sale, setSale] = useState(null);
+  const [inStock, setInStock] = useState(null);
+  const [sex, setSex] = useState("all");
+  const [shortDescription, setShortDescription] = useState("");
+  const [shortDescriptionRu, setShortDescriptionRu] = useState("");
+  const [shortDescriptionKa, setShortDescriptionKa] = useState("");
+  const [fullDescription, setFullDescription] = useState("");
+  const [fullDescriptionRu, setFullDescriptionRu] = useState("");
+  const [fullDescriptionKa, setFullDescriptionKa] = useState("");
+  const [howToUse, setHowToUse] = useState("");
+  const [howToUseRu, setHowToUseRu] = useState("");
+  const [howToUseKa, setHowToUseKa] = useState("");
+  const [compositons, setCompositions] = useState("");
+  const [compositonsRu, setCompositionsRu] = useState("");
+  const [compositonsKa, setCompositionsKa] = useState("");
+  const [variants, setVariants] = useState([]);
+  const [files, setFiles] = useState([]);
+  const [cover, setCover] = useState(0);
+
+  // variants list modal opening state
+  const [isModalVisibleVariants, setIsModalVisibleVariants] = useState(false);
+
+  /**
+   * Add product function
+   */
+  const UploadProduct = async () => {
+    if (files?.length < 1) {
+      return Alert.alert("The product must have any image!");
+    }
+    if (title?.length < 3) {
+      return Alert.alert("Title must include min. 3 symbols!");
+    }
+    if (categories?.length < 1) {
+      return Alert.alert("The product must have a category!");
+    }
+    if (brand?.length < 1) {
+      return Alert.alert("The product must have a brand!");
+    }
+    if (!price) {
+      return Alert.alert("The product must have a price!");
+    }
+    // if (!inStock) {
+    //   return Alert.alert("Please add in stock quantity!");
+    // }
+    if (
+      shortDescription?.length < 1 &&
+      shortDescriptionKa?.length < 1 &&
+      shortDescriptionRu?.length < 1
+    ) {
+      return Alert.alert("Short Description not defined!");
+    }
+    setLoading(true);
+    // convert file to blob
+
+    async function uriToBlob(uri) {
+      if (Platform.OS === "android" || Platform.OS === "ios") {
+        const response = await fetch(uri);
+        return await response.blob();
+      }
+    }
+    const AddFileInCloud = async (index, folder, uri) => {
+      let imgId = title + uuid.v4();
+      let fileRef = ref(
+        storage,
+        `marketplace/${currentUser?._id}/products/images/${folder}/${imgId}/`
+      );
+      const blb = await uriToBlob(uri);
+
+      if (fileRef) {
+        // add desktop version
+        const snapshot = await uploadBytesResumable(fileRef, blb);
+        const url = await getDownloadURL(snapshot.ref);
+        return { url: url, imgId: imgId, folder: folder };
+      }
+    };
+
+    let folderId = currentUser?._id + title + brand + uuid.v4();
+
+    const uploadPromises = files.map((_, index) =>
+      AddFileInCloud(index, folderId, files[index].uri)
+    );
+
+    Promise.all(uploadPromises).then(async (uploadedUrls) => {
+      try {
+        const product = {
+          title: title,
+          categories: categories,
+          type: type,
+          brand: brand,
+          price: price,
+          currency: currency,
+          sale: sale,
+          inStock: inStock,
+          sex: sex,
+          active: false,
+          shortDescription: {
+            en: shortDescription,
+            ru: shortDescriptionRu,
+            ka: shortDescriptionKa,
+          },
+          description: {
+            en: fullDescription,
+            ru: fullDescriptionRu,
+            ka: fullDescriptionKa,
+          },
+          howToUse: {
+            en: howToUse,
+            ru: howToUseRu,
+            ka: howToUseKa,
+          },
+          compositions: {
+            en: compositons,
+            ru: compositonsRu,
+            ka: compositonsKa,
+          },
+          variants: variants?.map((i, x) => {
+            return i;
+          }),
+          cover: cover,
+          gallery: uploadedUrls,
+          totalOrders: 0,
+          owner: currentUser?._id,
+          lastOrderDate: new Date(),
+          reviews: [],
+        };
+        await axios.post(backendUrl + "/api/v1/marketplace", product);
+        setTimeout(() => {
+          setLoading(false);
+          dispatch(setRerenderProducts());
+          navigation.navigate("Products");
+          setTitle("");
+          setSex("all");
+          setCategories([]);
+          setBrand("");
+          setPrice(null);
+          setCurrency(null);
+          setSale(null);
+          setInStock(null);
+          setShortDescription("");
+          setShortDescriptionRu("");
+          setShortDescriptionKa("");
+          setFullDescription("");
+          setFullDescriptionRu("");
+          setFullDescriptionKa("");
+          setHowToUse("");
+          setHowToUseRu("");
+          setHowToUseKa("");
+          setCompositions("");
+          setCompositionsRu("");
+          setCompositionsKa("");
+          setVariants([]);
+          setFiles([]);
+          setCover(0);
+          setType("everyone");
+        }, 1000);
+      } catch (error) {
+        console.error(error.response.data.message);
+        setTimeout(async () => {
+          setLoading(false);
+        }, 1000);
+      }
+    });
+  };
+
+  return (
+    <KeyboardAvoidingView // <-- Add this wrapper
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 20}
+    >
+      <Pressable>
+        <BackDrop loading={loading} setLoading={setLoading} />
+      </Pressable>
+      <CategoryList
+        isModalVisible={isModalVisible}
+        setIsModalVisible={setIsModalVisible}
+        categories={categories}
+        setCategories={setCategories}
+        categoriesList={categoriesList}
+      />
+      <Variants
+        isModalVisible={isModalVisibleVariants}
+        setIsModalVisible={setIsModalVisibleVariants}
+        setVariants={setVariants}
+        variants={variants}
+      />
+      <ScrollView
+        style={[styles.container, {}]}
+        contentContainerStyle={{
+          alignItems: "center",
+          padding: 15,
+          gap: 15,
+        }}
+      >
+        {(title?.length > 0 ||
+          categories?.length > 0 ||
+          brand?.length > 0 ||
+          price ||
+          sale ||
+          inStock ||
+          sex !== "all" ||
+          type !== "everyone" ||
+          shortDescription?.length > 0 ||
+          shortDescriptionKa?.length > 0 ||
+          shortDescriptionRu?.length > 0 ||
+          fullDescription?.length > 0 ||
+          fullDescriptionKa?.length > 0 ||
+          fullDescriptionRu?.length > 0 ||
+          howToUse?.length > 0 ||
+          howToUseKa?.length > 0 ||
+          howToUseRu?.length > 0 ||
+          compositons?.length > 0 ||
+          compositonsKa?.length > 0 ||
+          compositonsRu?.length > 0 ||
+          variants?.length > 0 ||
+          files?.length > 0) && (
+          <Pressable
+            onPress={() => {
+              setTitle("");
+              setSex("all");
+              setCategories([]);
+              setBrand("");
+              setPrice(null);
+              setCurrency(null);
+              setSale(null);
+              setInStock(null);
+              setShortDescription("");
+              setShortDescriptionRu("");
+              setShortDescriptionKa("");
+              setFullDescription("");
+              setFullDescriptionRu("");
+              setFullDescriptionKa("");
+              setHowToUse("");
+              setHowToUseRu("");
+              setHowToUseKa("");
+              setCompositions("");
+              setCompositionsRu("");
+              setCompositionsKa("");
+              setVariants([]);
+              setFiles([]);
+              setCover(0);
+              setType("everyone");
+            }}
+            style={{ position: "relative" }}
+          >
+            <Text style={{ color: "red", letterSpacing: 0.3 }}>
+              Clear All fields
+            </Text>
+          </Pressable>
+        )}
+        <View
+          style={[
+            styles.fieldContainer,
+            {
+              overflow: "hidden",
+              paddingHorizontal: 15,
+
+              borderColor: currentTheme.line,
+            },
+          ]}
+        >
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <Text style={[styles.fieldTitle, { color: currentTheme.font }]}>
+              Files
+            </Text>
+          </View>
+          <ScrollView
+            contentContainerStyle={{
+              flexDirection: "row",
+              gap: 15,
+              paddingRight: 65,
+            }}
+            style={{ width: SCREEN_WIDTH }}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            bounces={Platform.OS === "ios" ? false : undefined}
+            overScrollMode={Platform.OS === "ios" ? "never" : "always"}
+          >
+            <InputFile
+              files={files}
+              setFiles={setFiles}
+              currentTheme={currentTheme}
+            />
+            {files?.map((i, x) => {
+              return (
+                <Pressable onPress={() => setCover(x)} key={x}>
+                  {x === cover && (
+                    <View
+                      style={{
+                        position: "absolute",
+                        right: 8,
+                        top: 8,
+                        zIndex: 10,
+                      }}
+                    >
+                      <Text
+                        style={{
+                          color: currentTheme.pink,
+                          letterSpacing: 0.3,
+                          fontSize: 12,
+                          fontWeight: "bold",
+                        }}
+                      >
+                        Cover
+                      </Text>
+                    </View>
+                  )}
+                  {x !== cover && (
+                    <Pressable
+                      onPress={() => {
+                        setFiles((prev) => prev.filter((item) => item !== i));
+                        setCover(0);
+                      }}
+                      style={{
+                        position: "absolute",
+                        right: 8,
+                        top: 8,
+                        zIndex: 10,
+                        padding: 5,
+                      }}
+                    >
+                      <Text
+                        style={{
+                          color: "red",
+                          letterSpacing: 0.3,
+                          fontSize: 16,
+                          fontWeight: "bold",
+                        }}
+                      >
+                        X
+                      </Text>
+                    </Pressable>
+                  )}
+                  <Image
+                    style={{
+                      height: 170,
+                      width: 150,
+                      borderRadius: 10,
+                      resizeMode: "cover",
+                      borderWidth: 2,
+                      borderColor:
+                        x === cover ? currentTheme.pink : "transparent",
+                      borderRadius: 10,
+                    }}
+                    source={{ uri: i.uri }}
+                  />
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+        </View>
+
+        <View
+          style={[
+            styles.fieldContainer,
+            {
+              borderColor: currentTheme.line,
+            },
+          ]}
+        >
+          <View style={{ flex: 3 }}>
+            <Text style={[styles.fieldTitle, { color: currentTheme.font }]}>
+              Title
+            </Text>
+          </View>
+
+          <TextInput
+            value={title}
+            placeholder="Add product name"
+            placeholderTextColor={currentTheme.disabled}
+            style={[
+              styles.inputField,
+              {
+                borderColor: currentTheme.line,
+                color: currentTheme.pink,
+              },
+            ]}
+            onChangeText={(val) => setTitle(val)}
+            returnKeyType="next"
+            onSubmitEditing={() => setIsModalVisible(true)}
+          />
+        </View>
+        <View
+          style={[
+            styles.fieldContainer,
+            {
+              marginVertical: 10,
+              borderColor: currentTheme.line,
+            },
+          ]}
+        >
+          <Text style={[styles.fieldTitle, { color: currentTheme.font }]}>
+            Type
+          </Text>
+          <View style={{ flexDirection: "row", gap: 15 }}>
+            <TouchableOpacity
+              onPress={() => setType("everyone")}
+              style={{
+                padding: 8,
+                borderRadius: 50,
+                borderWidth: 1.5,
+                borderColor:
+                  type !== "professionals"
+                    ? currentTheme.pink
+                    : currentTheme.line,
+                width: "40%",
+                width: "40%",
+                alignItems: "center",
+              }}
+            >
+              <Text
+                style={{
+                  color:
+                    type === "professionals"
+                      ? currentTheme.font
+                      : currentTheme.pink,
+                  letterSpacing: 0.3,
+                }}
+              >
+                For Everyone
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setType("professionals")}
+              style={{
+                padding: 8,
+                borderRadius: 50,
+                borderWidth: 1.5,
+                borderColor:
+                  type === "professionals"
+                    ? currentTheme.pink
+                    : currentTheme.line,
+                width: "40%",
+                alignItems: "center",
+              }}
+            >
+              <Text
+                style={{
+                  color:
+                    type !== "professionals"
+                      ? currentTheme.font
+                      : currentTheme.pink,
+                  letterSpacing: 0.3,
+                }}
+              >
+                For Professionals
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+        <View
+          style={[
+            styles.fieldContainer,
+            {
+              marginVertical: 10,
+              borderColor: currentTheme.line,
+            },
+          ]}
+        >
+          <Text style={[styles.fieldTitle, { color: currentTheme.font }]}>
+            Sex
+          </Text>
+          <View style={{ flexDirection: "row", gap: 15 }}>
+            <TouchableOpacity
+              onPress={() => setSex("all")}
+              style={{
+                padding: 8,
+                borderRadius: 50,
+                borderWidth: 1.5,
+                borderColor:
+                  sex === "all" ? currentTheme.pink : currentTheme.line,
+                width: "30%",
+                alignItems: "center",
+              }}
+            >
+              <Text
+                style={{
+                  color: sex === "all" ? currentTheme.pink : currentTheme.font,
+                  letterSpacing: 0.3,
+                }}
+              >
+                All
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setSex("women")}
+              style={{
+                padding: 8,
+                borderRadius: 50,
+                borderWidth: 1.5,
+                borderColor:
+                  sex === "women" ? currentTheme.pink : currentTheme.line,
+                width: "30%",
+                alignItems: "center",
+              }}
+            >
+              <Text
+                style={{
+                  color:
+                    sex === "women" ? currentTheme.pink : currentTheme.font,
+                  letterSpacing: 0.3,
+                }}
+              >
+                Women
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setSex("men")}
+              style={{
+                padding: 8,
+                borderRadius: 50,
+                borderWidth: 1.5,
+                borderColor:
+                  sex === "men" ? currentTheme.pink : currentTheme.line,
+                width: "30%",
+                alignItems: "center",
+              }}
+            >
+              <Text
+                style={{
+                  color: sex === "men" ? currentTheme.pink : currentTheme.font,
+                  letterSpacing: 0.3,
+                }}
+              >
+                Men
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+        <View
+          style={[
+            styles.fieldContainer,
+            {
+              borderColor: currentTheme.line,
+            },
+          ]}
+        >
+          <Text style={[styles.fieldTitle, { color: currentTheme.font }]}>
+            Category
+          </Text>
+          <View
+            style={{
+              gap: categories?.length > 0 ? 8 : 0,
+              marginVertical: categories?.length > 0 ? 15 : 0,
+            }}
+          >
+            {categories?.map((it, x) => {
+              let lab = categoriesList?.find((i) => i.value === it);
+              return (
+                <View
+                  key={it}
+                  style={{
+                    width: "80%",
+                    flexDirection: "row",
+                    padding: 8,
+                    borderRadius: 50,
+                    backgroundColor: currentTheme.pink,
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    paddingHorizontal: 15,
+                  }}
+                >
+                  <Text style={{ color: "#fff" }}>{lab.label}</Text>
+                  <MaterialIcons
+                    name="close"
+                    color="red"
+                    size={18}
+                    onPress={() =>
+                      setCategories((prev) => prev?.filter((i) => i !== it))
+                    }
+                  />
+                </View>
+              );
+            })}
+          </View>
+          <TouchableOpacity
+            onPress={() => setIsModalVisible(true)}
+            style={[
+              styles.inputField,
+              {
+                borderColor: currentTheme.line,
+                color: currentTheme.font,
+              },
+            ]}
+          >
+            <Text
+              style={{
+                borderColor: currentTheme.line,
+                color:
+                  categories?.length > 0
+                    ? currentTheme.pink
+                    : currentTheme.font,
+              }}
+            >
+              Choice category...
+            </Text>
+          </TouchableOpacity>
+        </View>
+        <View
+          style={[
+            styles.fieldContainer,
+            {
+              borderColor: currentTheme.line,
+            },
+          ]}
+        >
+          <Text style={[styles.fieldTitle, { color: currentTheme.font }]}>
+            Brand
+          </Text>
+          <TextInput
+            value={brand}
+            ref={brandRef}
+            placeholder="Add brand name..."
+            placeholderTextColor={currentTheme.disabled}
+            style={[
+              styles.inputField,
+              {
+                borderColor: currentTheme.line,
+                color: currentTheme.pink,
+              },
+            ]}
+            onChangeText={(val) => setBrand(val)}
+            returnKeyType="next"
+            onSubmitEditing={() => priceRef.current?.focus()}
+          />
+        </View>
+        <View
+          style={[styles.fieldContainer, { borderColor: currentTheme.line }]}
+        >
+          <Text style={[styles.fieldTitle, { color: currentTheme.font }]}>
+            Price
+          </Text>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              width: "100%",
+              gap: 15,
+            }}
+          >
+            <TextInput
+              value={price}
+              keyboardType="numeric"
+              ref={priceRef}
+              placeholder="add price.."
+              placeholderTextColor={currentTheme.disabled}
+              style={[
+                styles.inputField,
+                {
+                  borderColor: currentTheme.line,
+                  color: currentTheme.pink,
+                  width: "50%",
+                },
+              ]}
+              onChangeText={(val) => setPrice(val)}
+              returnKeyType="next"
+              onSubmitEditing={() => saleRef.current?.focus()}
+            />
+            <Pressable
+              style={{ padding: 8, marginRight: 8 }}
+              onPress={() =>
+                setCurrency(
+                  !currency || currency === "dollar"
+                    ? "euro"
+                    : currency === "euro"
+                    ? "lari"
+                    : "dollar"
+                )
+              }
+            >
+              <View
+                style={{
+                  width: 30,
+                  alignItems: "center",
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                }}
+              >
+                {!currency || currency === "dollar" ? (
+                  <FontAwesome
+                    name="dollar"
+                    color={currentTheme.pink}
+                    size={20}
+                  />
+                ) : currency === "euro" ? (
+                  <FontAwesome
+                    name="euro"
+                    color={currentTheme.pink}
+                    size={20}
+                  />
+                ) : (
+                  <Text
+                    style={{
+                      fontWeight: "bold",
+                      color: currentTheme.pink,
+                      fontSize: 20,
+                    }}
+                  >
+                    {"\u20BE"}
+                  </Text>
+                )}
+                <Entypo
+                  name="select-arrows"
+                  color={currentTheme.font}
+                  size={12}
+                />
+              </View>
+            </Pressable>
+          </View>
+        </View>
+        <View
+          style={[
+            styles.fieldContainer,
+            {
+              borderColor: currentTheme.line,
+            },
+          ]}
+        >
+          <Text style={[styles.fieldTitle, { color: currentTheme.font }]}>
+            Sale % (Optional)
+          </Text>
+          <TextInput
+            value={sale}
+            keyboardType="numeric"
+            ref={saleRef}
+            placeholder="add sale in %.."
+            placeholderTextColor={currentTheme.disabled}
+            style={[
+              styles.inputField,
+              {
+                borderColor: currentTheme.line,
+                color: currentTheme.pink,
+                width: "50%",
+              },
+            ]}
+            onChangeText={(val) => setSale(val)}
+            returnKeyType="next"
+            onSubmitEditing={() => stockRef.current?.focus()}
+          />
+        </View>
+        <View
+          style={[
+            styles.fieldContainer,
+            {
+              borderColor: currentTheme.line,
+            },
+          ]}
+        >
+          <Text style={[styles.fieldTitle, { color: currentTheme.font }]}>
+            In Stock (Optional)
+          </Text>
+          <TextInput
+            keyboardType="numeric"
+            value={inStock}
+            ref={stockRef}
+            placeholder="Add total in stock.."
+            placeholderTextColor={currentTheme.disabled}
+            style={[
+              styles.inputField,
+              {
+                borderColor: currentTheme.line,
+                color: currentTheme.pink,
+                width: "50%",
+              },
+            ]}
+            onChangeText={(val) => setInStock(val)}
+            returnKeyType="next"
+            onSubmitEditing={() => shortDescRef.current?.focus()}
+          />
+        </View>
+        <View
+          style={[
+            styles.fieldContainer,
+            {
+              borderColor: currentTheme.line,
+            },
+          ]}
+        >
+          <Text style={[styles.fieldTitle, { color: currentTheme.font }]}>
+            Variants (Optional)
+          </Text>
+          <View
+            style={{
+              gap: variants?.length > 0 ? 8 : 0,
+              marginVertical: variants?.length > 0 ? 15 : 0,
+            }}
+          >
+            {variants?.map((it, x) => {
+              return (
+                <View
+                  key={it._id}
+                  style={{
+                    width: "80%",
+                    minWidth: "80%",
+                    flexDirection: "row",
+                    padding: 4,
+                    borderRadius: 50,
+                    backgroundColor: currentTheme.pink,
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    // paddingHorizontal: 15,
+                  }}
+                >
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      gap: 8,
+                      alignItems: "center",
+                    }}
+                  >
+                    <Image
+                      style={{ width: 40, height: 40, borderRadius: 50 }}
+                      source={{ uri: it.gallery[it.cover].url }}
+                    />
+                    <Text
+                      style={{
+                        color: "#fff",
+                        fontSize: 16,
+                        letterSpacing: 0.3,
+                      }}
+                    >
+                      {it.title}
+                    </Text>
+                  </View>
+                  <MaterialIcons
+                    name="close"
+                    color="red"
+                    size={22}
+                    onPress={() =>
+                      setVariants((prev) => prev?.filter((i) => i !== it))
+                    }
+                    style={{ marginRight: 4 }}
+                  />
+                </View>
+              );
+            })}
+          </View>
+          <TouchableOpacity
+            onPress={() => setIsModalVisibleVariants(true)}
+            style={[
+              styles.inputField,
+              {
+                borderColor: currentTheme.line,
+                color: currentTheme.font,
+              },
+            ]}
+          >
+            <Text
+              style={{
+                borderColor: currentTheme.line,
+                color:
+                  variants?.length > 0 ? currentTheme.pink : currentTheme.font,
+              }}
+            >
+              Choice variants...
+            </Text>
+          </TouchableOpacity>
+        </View>
+        <View
+          style={[
+            styles.fieldContainer,
+            {
+              borderColor: currentTheme.line,
+            },
+          ]}
+        >
+          <View
+            style={{
+              flexDirection: "row",
+              width: "100%",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            <View style={{ flex: 3 }}>
+              <Text style={[styles.fieldTitle, { color: currentTheme.font }]}>
+                Short Description
+              </Text>
+            </View>
+            <View style={{ flexDirection: "row", gap: 4, flex: 1 }}>
+              <TouchableOpacity
+                onPress={() => setInputLanguage("us")}
+                style={{ padding: 5 }}
+              >
+                <CountryFlag
+                  isoCode="us"
+                  size={10}
+                  style={{ opacity: inputLanguage === "us" ? 1 : 0.3 }}
+                />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => setInputLanguage("ge")}
+                style={{ padding: 5 }}
+              >
+                <CountryFlag
+                  isoCode="ge"
+                  size={10}
+                  style={{ opacity: inputLanguage === "ge" ? 1 : 0.3 }}
+                />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => setInputLanguage("ru")}
+                style={{ padding: 5 }}
+              >
+                <CountryFlag
+                  isoCode="ru"
+                  size={10}
+                  style={{ opacity: inputLanguage === "ru" ? 1 : 0.3 }}
+                />
+              </TouchableOpacity>
+            </View>
+          </View>
+          <TextInput
+            value={
+              inputLanguage === "us"
+                ? shortDescription
+                : inputLanguage === "ru"
+                ? shortDescriptionRu
+                : shortDescriptionKa
+            }
+            ref={shortDescRef}
+            placeholder="Add short Description"
+            placeholderTextColor={currentTheme.disabled}
+            multiline
+            numberOfLines={15}
+            maxLength={600}
+            style={[
+              styles.inputField,
+
+              {
+                borderColor: currentTheme.line,
+                color: currentTheme.pink,
+                height: 150,
+                borderRadius: 10,
+                paddingTop: 15,
+              },
+            ]}
+            onChangeText={
+              inputLanguage === "us"
+                ? (val) => setShortDescription(val)
+                : inputLanguage === "ru"
+                ? (val) => setShortDescriptionRu(val)
+                : (val) => setShortDescriptionKa(val)
+            }
+            returnKeyType="next"
+            onSubmitEditing={() => fullDescRef.current?.focus()}
+          />
+        </View>
+        <View
+          style={[
+            styles.fieldContainer,
+            {
+              borderColor: currentTheme.line,
+            },
+          ]}
+        >
+          <View
+            style={{
+              flexDirection: "row",
+              width: "100%",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            <View style={{ flex: 3 }}>
+              <Text style={[styles.fieldTitle, { color: currentTheme.font }]}>
+                Full Description (Optional)
+              </Text>
+            </View>
+            <View style={{ flexDirection: "row", gap: 4, flex: 1 }}>
+              <TouchableOpacity
+                onPress={() => setInputLanguage("us")}
+                style={{ padding: 5 }}
+              >
+                <CountryFlag
+                  isoCode="us"
+                  size={10}
+                  style={{ opacity: inputLanguage === "us" ? 1 : 0.3 }}
+                />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => setInputLanguage("ge")}
+                style={{ padding: 5 }}
+              >
+                <CountryFlag
+                  isoCode="ge"
+                  size={10}
+                  style={{ opacity: inputLanguage === "ge" ? 1 : 0.3 }}
+                />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => setInputLanguage("ru")}
+                style={{ padding: 5 }}
+              >
+                <CountryFlag
+                  isoCode="ru"
+                  size={10}
+                  style={{ opacity: inputLanguage === "ru" ? 1 : 0.3 }}
+                />
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          <TextInput
+            value={
+              inputLanguage === "us"
+                ? fullDescription
+                : inputLanguage === "ru"
+                ? fullDescriptionRu
+                : fullDescriptionKa
+            }
+            onChangeText={
+              inputLanguage === "us"
+                ? (val) => setFullDescription(val)
+                : inputLanguage === "ru"
+                ? (val) => setFullDescriptionRu(val)
+                : (val) => setFullDescriptionKa(val)
+            }
+            ref={fullDescRef}
+            placeholder="Add full description"
+            placeholderTextColor={currentTheme.disabled}
+            multiline
+            numberOfLines={15}
+            maxLength={1200}
+            style={[
+              styles.inputField,
+
+              {
+                borderColor: currentTheme.line,
+                color: currentTheme.pink,
+                height: 300,
+                borderRadius: 10,
+                paddingTop: 15,
+              },
+            ]}
+            returnKeyType="next"
+            onSubmitEditing={() => howToUseRef.current?.focus()}
+          />
+        </View>
+        <View
+          style={[
+            styles.fieldContainer,
+            {
+              borderColor: currentTheme.line,
+            },
+          ]}
+        >
+          <View
+            style={{
+              flexDirection: "row",
+              width: "100%",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            <View style={{ flex: 3 }}>
+              <Text style={[styles.fieldTitle, { color: currentTheme.font }]}>
+                How to use? (Optional)
+              </Text>
+            </View>
+            <View style={{ flexDirection: "row", gap: 4, flex: 1 }}>
+              <TouchableOpacity
+                onPress={() => setInputLanguage("us")}
+                style={{ padding: 5 }}
+              >
+                <CountryFlag
+                  isoCode="us"
+                  size={10}
+                  style={{ opacity: inputLanguage === "us" ? 1 : 0.3 }}
+                />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => setInputLanguage("ge")}
+                style={{ padding: 5 }}
+              >
+                <CountryFlag
+                  isoCode="ge"
+                  size={10}
+                  style={{ opacity: inputLanguage === "ge" ? 1 : 0.3 }}
+                />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => setInputLanguage("ru")}
+                style={{ padding: 5 }}
+              >
+                <CountryFlag
+                  isoCode="ru"
+                  size={10}
+                  style={{ opacity: inputLanguage === "ru" ? 1 : 0.3 }}
+                />
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          <TextInput
+            value={
+              inputLanguage === "us"
+                ? howToUse
+                : inputLanguage === "ru"
+                ? howToUseRu
+                : howToUseKa
+            }
+            onChangeText={
+              inputLanguage === "us"
+                ? (val) => setHowToUse(val)
+                : inputLanguage === "ru"
+                ? (val) => setHowToUseRu(val)
+                : (val) => setHowToUseKa(val)
+            }
+            ref={howToUseRef}
+            placeholder="Add how to use.."
+            placeholderTextColor={currentTheme.disabled}
+            multiline
+            numberOfLines={15}
+            maxLength={800}
+            style={[
+              styles.inputField,
+
+              {
+                borderColor: currentTheme.line,
+                color: currentTheme.pink,
+                height: 300,
+                borderRadius: 10,
+                paddingTop: 15,
+              },
+            ]}
+            returnKeyType="next"
+            onSubmitEditing={() => compositionsRef.current?.focus()}
+          />
+        </View>
+
+        <View
+          style={[
+            styles.fieldContainer,
+            {
+              borderColor: currentTheme.line,
+            },
+          ]}
+        >
+          <View
+            style={{
+              flexDirection: "row",
+              width: "100%",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            <View style={{ flex: 3 }}>
+              <Text style={[styles.fieldTitle, { color: currentTheme.font }]}>
+                Compositions (Optional)
+              </Text>
+            </View>
+            <View style={{ flexDirection: "row", gap: 4, flex: 1 }}>
+              <TouchableOpacity
+                onPress={() => setInputLanguage("us")}
+                style={{ padding: 5 }}
+              >
+                <CountryFlag
+                  isoCode="us"
+                  size={10}
+                  style={{ opacity: inputLanguage === "us" ? 1 : 0.3 }}
+                />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => setInputLanguage("ge")}
+                style={{ padding: 5 }}
+              >
+                <CountryFlag
+                  isoCode="ge"
+                  size={10}
+                  style={{ opacity: inputLanguage === "ge" ? 1 : 0.3 }}
+                />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => setInputLanguage("ru")}
+                style={{ padding: 5 }}
+              >
+                <CountryFlag
+                  isoCode="ru"
+                  size={10}
+                  style={{ opacity: inputLanguage === "ru" ? 1 : 0.3 }}
+                />
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          <TextInput
+            value={
+              inputLanguage === "us"
+                ? compositons
+                : inputLanguage === "ru"
+                ? compositonsRu
+                : compositonsKa
+            }
+            onChangeText={
+              inputLanguage === "us"
+                ? (val) => setCompositions(val)
+                : inputLanguage === "ru"
+                ? (val) => setCompositionsRu(val)
+                : (val) => setCompositionsKa(val)
+            }
+            ref={compositionsRef}
+            placeholder="Add product composition.."
+            placeholderTextColor={currentTheme.disabled}
+            multiline
+            numberOfLines={15}
+            maxLength={600}
+            style={[
+              styles.inputField,
+
+              {
+                borderColor: currentTheme.line,
+                color: currentTheme.pink,
+                height: 300,
+                borderRadius: 10,
+                paddingTop: 15,
+              },
+            ]}
+            returnKeyType="next"
+            onSubmitEditing={() => variantsRef.current?.focus()}
+          />
+        </View>
+
+        <TouchableOpacity
+          onPress={UploadProduct}
+          style={{
+            width: "45%",
+            borderRadius: 50,
+            backgroundColor: currentTheme.pink,
+            padding: 8,
+            paddingVertical: 10,
+            alignItems: "center",
+            justifyContent: "center",
+            marginVertical: 20,
+          }}
+        >
+          <Text style={{ color: "#fff" }}>Upload</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </KeyboardAvoidingView>
+  );
+};
+
+export default AddNewProduct;
+
+const styles = StyleSheet.create({
+  container: { flex: 1 },
+  fieldContainer: {
+    width: "100%",
+    gap: 10,
+    borderWidth: 1,
+    borderColor: "red",
+    padding: 15,
+    borderRadius: 10,
+  },
+  fieldTitle: { fontSize: 16, fontWeight: "bold", letterSpacing: 0.5 },
+  inputField: {
+    borderWidth: 1,
+    letterSpacing: 0.3,
+    borderWidth: 2,
+    borderRadius: 50,
+    padding: 15,
+  },
+});

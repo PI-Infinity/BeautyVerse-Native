@@ -10,6 +10,7 @@ import {
   Dimensions,
   StyleSheet,
   Text,
+  Easing,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -61,15 +62,22 @@ export const Card = (props) => {
     type = language?.language?.Auth?.auth?.beautySalon;
   }
 
+  // define active address
+  const city = useSelector((state) => state.storeFilter.city);
+  const definedAddress = props?.user.address.find(
+    (item) => item?.city.replace("'", "") === city
+  );
+
+  // defines backend url
+  const backendUrl = useSelector((state) => state.storeApp.backendUrl);
+
   /**
    * Define stars total
    */
   const [stars, setStars] = useState([]);
 
   async function GetStars() {
-    await fetch(
-      `https://beautyverse.herokuapp.com/api/v1/users/${props?.user._id}/stars`
-    )
+    await fetch(`${backendUrl}/api/v1/users/${props?.user._id}/stars`)
       .then((response) => response.json())
       .then(async (data) => {
         setStars(data.data.stars);
@@ -101,7 +109,12 @@ export const Card = (props) => {
           style={[styles.container, { borderColor: currentTheme.line }]}
         ></View>
       ) : (
-        <View style={[styles.container, { borderColor: currentTheme.line }]}>
+        <View
+          style={[
+            styles.container,
+            { borderColor: currentTheme.line, paddingHorizontal: 10 },
+          ]}
+        >
           <View
             style={{
               flexDirection: "row",
@@ -125,19 +138,52 @@ export const Card = (props) => {
             activeOpacity={0.9}
             onPress={() => navigation.navigate("User", { user: props.user })}
           >
+            {props.user?.online && (
+              <View
+                style={{
+                  padding: 5,
+                  paddingVertical: 1.5,
+                  backgroundColor: "#3bd16f",
+                  borderRadius: 50,
+                  position: "absolute",
+                  zIndex: 100,
+                  left: 3,
+                  top: 3,
+
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 4,
+                }}
+              >
+                <View
+                  style={{
+                    width: 5,
+                    height: 5,
+                    backgroundColor: "#fff",
+                    borderRadius: 10,
+                  }}
+                ></View>
+                <Text
+                  style={{ color: "#fff", fontSize: 8, fontWeight: "bold" }}
+                >
+                  Online
+                </Text>
+              </View>
+            )}
             <Animated.View styles={{ opacity: fadeAnim }}>
-              {props.user.cover?.length > 0 ? (
+              {props.user.cover?.url?.length > 0 ||
+              props.user?.cover?.length ? (
                 <View style={{ width: "100%", aspectRatio: 1 }}>
                   <CacheableImage
-                    key={props.user?.cover}
+                    key={props.user?.cover?.url || props.user?.cover}
                     style={{
                       width: "100%",
                       aspectRatio: 0.99,
                       resizeMode: "cover",
-                      // borderRadius: 10,
+                      borderRadius: 5,
                     }}
                     source={{
-                      uri: props.user.cover,
+                      uri: props.user?.cover?.url || props.user?.cover,
                     }}
                     onLoad={() => setLoading(false)}
                     onError={() => console.log("Error loading image")}
@@ -151,10 +197,14 @@ export const Card = (props) => {
                     alignItems: "center",
                     justifyContent: "center",
                     // borderWidth: 1,
-                    borderColor: currentTheme.pink2,
+                    // borderColor: currentTheme.pink2,
                   }}
                 >
-                  <FontAwesome name="user" size={80} color="#e5e5e5" />
+                  <FontAwesome
+                    name="user"
+                    size={80}
+                    color={currentTheme.disabled}
+                  />
                 </View>
               )}
             </Animated.View>
@@ -192,9 +242,11 @@ export const Card = (props) => {
               numberOfLines={1}
               ellipsizeMode={"tail"}
             >
-              {props.user.address[0].city.replace("'", "")}
-              {props.user.address[0].district &&
-                " - " + props.user.address[0].district}
+              {definedAddress?.city.replace("'", "")}
+              {definedAddress?.district && " - " + definedAddress?.district}
+              {!definedAddress?.district &&
+                definedAddress?.street &&
+                " - " + definedAddress?.street}
             </Text>
           </View>
           <View
@@ -202,18 +254,20 @@ export const Card = (props) => {
               styles.starsContainer,
               {
                 justifyContent: "center",
-                shadowColor: "#000",
-                borderTopWidth: 1,
-                borderBottomWidth: 1,
+                // shadowColor: "#000",
+                borderTopWidth: 1.5,
+                borderBottomWidth: 1.5,
                 borderColor: currentTheme.line,
-                shadowOffset: {
-                  width: 0,
-                  height: 1, // negative value places shadow on top
-                },
-                shadowOpacity: 0.1,
-                shadowRadius: 1,
-                elevation: 1,
-                backgroundColor: currentTheme.background2,
+                // shadowOffset: {
+                //   width: 0,
+                //   height: 1, // negative value places shadow on top
+                // },
+                // shadowOpacity: 0.1,
+                // shadowRadius: 1,
+                // elevation: 1,
+                // backgroundColor: theme
+                //   ? currentTheme.background2
+                //   : "rgba(0,0,0,0)",
               },
             ]}
           >
@@ -302,19 +356,19 @@ const styles = StyleSheet.create({
     letterSpacing: 0.2,
   },
   starsContainer: {
-    width: "90%",
+    width: "100%",
     margin: 10,
     alignItems: "center",
     flexDirection: "row",
     justifyContent: "center",
     gap: 0,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 0.2, // negative value places shadow on top
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
+    // shadowColor: "#000",
+    // shadowOffset: {
+    //   width: 0,
+    //   height: 0.2, // negative value places shadow on top
+    // },
+    // shadowOpacity: 0.1,
+    // shadowRadius: 2,
     // borderRadius: 50,
   },
   stars: {

@@ -75,7 +75,8 @@ export const DateScreen = ({ route }) => {
       try {
         setLoader(true);
         const response = await axios.get(
-          "https://beautyverse.herokuapp.com/api/v1/users/" +
+          backendUrl +
+            "/api/v1/users/" +
             currentUser._id +
             `/orders?date=${activedate}&page=1`
         );

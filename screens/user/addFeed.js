@@ -13,6 +13,7 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  Alert,
 } from "react-native";
 import DocumentPicker from "react-native-document-picker";
 import uuid from "react-native-uuid";
@@ -40,6 +41,9 @@ export const AddFeed = ({ navigation }) => {
 
   // define current user
   const currentUser = useSelector((state) => state.storeUser.currentUser);
+
+  // app language
+  const lang = useSelector((state) => state.storeApp.language);
 
   // define theme
   const theme = useSelector((state) => state.storeApp.theme);
@@ -93,6 +97,9 @@ export const AddFeed = ({ navigation }) => {
     }
   };
 
+  // backend url
+  const backendUrl = useSelector((state) => state.storeApp.backendUrl);
+
   /**
    * File upload function
    */
@@ -136,12 +143,13 @@ export const AddFeed = ({ navigation }) => {
             fileWidth: file[0]?.width,
           };
           const feedResponse = await axios.post(
-            `https://beautyverse.herokuapp.com/api/v1/users/${currentUser?._id}/feeds`,
+            backendUrl +
+              `api/v1/users/${currentUser?._id}/feeds?language=${lang}`,
             newFeed
           );
 
           const userResponse = await axios.patch(
-            `https://beautyverse.herokuapp.com/api/v1/users/${currentUser?._id}`,
+            backendUrl + `api/v1/users/${currentUser?._id}`,
             {
               lastPostCreatedAt: new Date(),
             }
@@ -198,16 +206,13 @@ export const AddFeed = ({ navigation }) => {
             };
 
             const response = await axios.post(
-              `https://beautyverse.herokuapp.com/api/v1/users/${currentUser?._id}/feeds`,
+              backendUrl + `api/v1/users/${currentUser?._id}/feeds`,
               newFeed
             );
 
-            await axios.patch(
-              `https://beautyverse.herokuapp.com/api/v1/users/${currentUser?._id}`,
-              {
-                lastPostCreatedAt: new Date(),
-              }
-            );
+            await axios.patch(backendUrl + `api/v1/users/${currentUser?._id}`, {
+              lastPostCreatedAt: new Date(),
+            });
 
             setTimeout(() => {
               dispatch(setRerenderUserFeeds());
@@ -284,7 +289,8 @@ export const AddFeed = ({ navigation }) => {
             flexDirection: "row",
             alignItems: "center",
             gap: 10,
-            backgroundColor: "rgba(255,255,255,0.05)",
+            borderWidth: 1,
+            borderColor: currentTheme.line,
             borderRadius: 50,
             minWidth: "60%",
           }}
@@ -372,7 +378,8 @@ export const AddFeed = ({ navigation }) => {
               justifyContent: "center",
               flexDirection: "row",
               gap: 15,
-              backgroundColor: currentTheme.background2,
+              borderWidth: 1,
+              borderColor: currentTheme.line,
 
               borderRadius: 50,
             }}
@@ -404,7 +411,8 @@ export const AddFeed = ({ navigation }) => {
               justifyContent: "center",
               flexDirection: "row",
               gap: 15,
-              backgroundColor: currentTheme.background2,
+              borderWidth: 1,
+              borderColor: currentTheme.line,
               borderRadius: 50,
             }}
           >
@@ -514,9 +522,9 @@ export const AddFeed = ({ navigation }) => {
             borderRadius: 50,
           }}
           onPress={
-            (file || file?.length > 0) && postText.length < 1501
+            file?.length > 0 && postText.length < 1501
               ? FileUpload
-              : undefined
+              : () => Alert.alert("File not include!")
           }
         >
           <Text style={{ textAlign: "center", color: "#eee" }}>

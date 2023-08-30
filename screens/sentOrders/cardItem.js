@@ -28,6 +28,10 @@ import {
   setRerederRooms,
   setRerenderScroll,
 } from "../../redux/chat";
+import { useNavigation } from "@react-navigation/native";
+import { sendNotification } from "../../components/pushNotifications";
+import { setSentOrders } from "../../redux/sentOrders";
+import { Language } from "../../context/language";
 
 /**
  * Card item for sent orders
@@ -39,11 +43,17 @@ export const Card = ({
   item,
   currentUser,
   currentTheme,
-  navigation,
+
   setLoader,
 }) => {
   // defines redux dispatch
   const dispatch = useDispatch();
+
+  //
+  const navigation = useNavigation();
+
+  //
+  const language = Language();
 
   // defines socket server
   const socket = useSocket();
@@ -78,6 +88,9 @@ export const Card = ({
   // defines date and time
   const [dateAndTime, setDateAndTime] = useState(item.date);
 
+  // backend url
+  const backendUrl = useSelector((state) => state.storeApp.backendUrl);
+
   /**
    * Delete order function
    */
@@ -85,7 +98,8 @@ export const Card = ({
     try {
       setLoader(true);
       await axios.delete(
-        "https://beautyverse.herokuapp.com/api/v1/users/" +
+        backendUrl +
+          "/api/v1/users/" +
           currentUser._id +
           "/sentOrders/" +
           item._id
@@ -102,7 +116,8 @@ export const Card = ({
   const UpdateOrder = async (val) => {
     try {
       await axios.patch(
-        "https://beautyverse.herokuapp.com/api/v1/users/" +
+        backendUrl +
+          "/api/v1/users/" +
           item.user._id +
           "/orders/" +
           item.orderNumber,
@@ -111,7 +126,8 @@ export const Card = ({
         }
       );
       await axios.patch(
-        "https://beautyverse.herokuapp.com/api/v1/users/" +
+        backendUrl +
+          "/api/v1/users/" +
           currentUser._id +
           "/sentorders/" +
           item.orderNumber,
@@ -119,6 +135,17 @@ export const Card = ({
           status: val,
         }
       );
+      if (item.user?.pushNotificationToken) {
+        await sendNotification(
+          item.user?.pushNotificationToken,
+          currentUser.name,
+          "has changed order status to - " + val,
+          item.user
+        );
+      }
+      socket.emit("updateOrders", {
+        targetId: item.user?._id,
+      });
       dispatch(setRerenderOrders());
     } catch (error) {
       console.log(error.response.data.message);
@@ -129,10 +156,23 @@ export const Card = ({
    * Edit returned order
    */
 
+  // defines all orders
+  const orders = useSelector((state) => state.storeSentOrders.orders);
+
   const ReturnRequest = async (val) => {
     try {
+      dispatch(
+        setSentOrders(
+          orders.map((order) =>
+            order._id === item._id
+              ? { ...order, date: dateAndTime.date, status: "pending" }
+              : order
+          )
+        )
+      );
       await axios.patch(
-        "https://beautyverse.herokuapp.com/api/v1/users/" +
+        backendUrl +
+          "/api/v1/users/" +
           item.user._id +
           "/orders/" +
           item.orderNumber +
@@ -150,7 +190,8 @@ export const Card = ({
         }
       );
       await axios.patch(
-        "https://beautyverse.herokuapp.com/api/v1/users/" +
+        backendUrl +
+          "/api/v1/users/" +
           currentUser._id +
           "/sentorders/" +
           item.orderNumber +
@@ -167,10 +208,24 @@ export const Card = ({
           status: "pending",
         }
       );
+
+      let lab = proceduresOptions?.find(
+        (it) =>
+          it?.value?.toLowerCase() === item?.orderedProcedure?.toLowerCase()
+      );
+      if (item.user?.pushNotificationToken) {
+        await sendNotification(
+          item.user?.pushNotificationToken,
+          currentUser.name,
+          "return you an appointment request! - " + lab.label,
+          item.user
+        );
+      }
+      dispatch(setRerenderOrders());
       socket.emit("updateOrders", {
         targetId: item.user?._id,
       });
-      dispatch(setRerenderOrders());
+      // dispatch(setRerenderOrders());
     } catch (error) {
       console.log(error.response.data.message);
     }
@@ -181,24 +236,8 @@ export const Card = ({
   const [openStatusOption, setOpenStatusOption] = useState(false);
 
   // define some style
-  let bg;
-  let font;
-  if (selectedItem === "pending") {
-    bg = "orange";
-    font = "#111";
-  } else if (selectedItem === "new") {
-    bg = "green";
-    font = "#ccc";
-  } else if (selectedItem === "canceled" || selectedItem === "rejected") {
-    bg = currentTheme.disabled;
-    font = "#ccc";
-  } else if (selectedItem === "active") {
-    bg = currentTheme.pink;
-    font = "#111";
-  } else {
-    bg = currentTheme.background2;
-    font = "#ccc";
-  }
+
+  let font = currentTheme.font;
 
   // navigate to chat
   const rooms = useSelector((state) => state.storeChat.rooms);
@@ -226,25 +265,23 @@ export const Card = ({
       lastMessage: "",
       lastSender: "",
       status: "read",
+      lastMessageSeen: "",
     };
     try {
       navigation.navigate("Room", {
         newChat,
         user: item.user,
       });
-      const response = await axios.post(
-        "https://beautyverse.herokuapp.com/api/v1/chats/",
-        {
-          room: currentUser?._id + item.user?._id,
-          members: {
-            member1: currentUser._id,
-            member2: item.user?._id,
-          },
-          lastMessage: "",
-          lastSender: "",
-          status: "read",
-        }
-      );
+      const response = await axios.post(backendUrl + "/api/v1/chats/", {
+        room: currentUser?._id + item.user?._id,
+        members: {
+          member1: currentUser._id,
+          member2: item.user?._id,
+        },
+        lastMessage: "",
+        lastSender: "",
+        status: "read",
+      });
       dispatch(setCurrentChat(response.data.data.chat));
       dispatch(setRerederRooms());
     } catch (error) {
@@ -281,12 +318,10 @@ export const Card = ({
         screenHeight: screenHeight,
       });
       if (Room.lastSender !== currentUser._id) {
-        await axios.patch(
-          "https://beautyverse.herokuapp.com/api/v1/chats/" + Room.room,
-          {
-            status: "read",
-          }
-        );
+        await axios.patch(backendUrl + "/api/v1/chats/" + Room.room, {
+          status: "read",
+          // lastMessageSeen: "seen",
+        });
       }
       let currentRoomIndex = rooms.findIndex((r) => r._id === Room._id);
 
@@ -295,6 +330,8 @@ export const Card = ({
         newRooms[currentRoomIndex] = {
           ...newRooms[currentRoomIndex],
           status: "read",
+          // lastMessageSeen:
+          //   Room.lastSender !== currentUser._id ? "seen" : "unread",
         };
         dispatch(setRooms(newRooms));
       }
@@ -330,8 +367,10 @@ export const Card = ({
           padding: 15,
           paddingVertical: 10,
           borderRadius: 10,
-          backgroundColor: bg,
+          // backgroundColor: bg,
           gap: 5,
+          borderWidth: 2,
+          borderColor: currentTheme.line,
         }}
       >
         <View
@@ -363,14 +402,57 @@ export const Card = ({
               >
                 Date:{" "}
               </Text>
-              <Text style={{ color: font, letterSpacing: 0.2 }}>
-                {(() => {
-                  let formattedDateWithMonthName = moment
-                    .utc(item.date)
-                    .format("DD MMMM YYYY - HH:mm");
-                  return formattedDateWithMonthName;
-                })()}
-              </Text>
+              {(() => {
+                // let formattedDateWithMonthName = moment
+                //   .utc(item.date)
+                //   .format("DD MMMM YYYY - HH:mm");
+                let dt = moment.utc(item?.date).format("DD MMMM YYYY");
+                let tm = moment.utc(item?.date).format("HH:mm");
+
+                // For Today
+                let Today = moment()
+                  .tz(Localization.timezone)
+                  .format("DD MMMM YYYY");
+                // For yesterday
+                let yesterday = moment()
+                  .tz(Localization.timezone)
+                  .subtract(1, "days")
+                  .format("DD MMMM YYYY");
+
+                // For tomorrow
+                let tomorrow = moment()
+                  .tz(Localization.timezone)
+                  .add(1, "days")
+                  .format("DD MMMM YYYY");
+
+                let initialDate;
+                if (dt === Today) {
+                  initialDate = language?.language?.Bookings?.bookings?.today;
+                } else if (dt === yesterday) {
+                  initialDate =
+                    language?.language?.Bookings?.bookings?.yesterday;
+                } else if (dt === tomorrow) {
+                  initialDate =
+                    language?.language?.Bookings?.bookings?.tomorrow;
+                } else {
+                  initialDate = dt;
+                }
+
+                return (
+                  <View style={{ flexDirection: "row", alignItems: "center" }}>
+                    <Text
+                      style={{ color: currentTheme.pink, letterSpacing: 0.3 }}
+                    >
+                      {initialDate}
+                    </Text>
+                    <Text
+                      style={{ color: currentTheme.pink, letterSpacing: 0.3 }}
+                    >
+                      {" - " + tm}
+                    </Text>
+                  </View>
+                );
+              })()}
             </View>
           )}
           {!editRequest && (
@@ -378,9 +460,10 @@ export const Card = ({
               currentTheme={currentTheme}
               selectedItem={selectedItem}
               setSelectedItem={setSelectedItem}
-              setOpenStatusOption={setOpenStatusOption}
               UpdateOrder={UpdateOrder}
               Delete={DeleteOrder}
+              from="sentOrders"
+              setEditRequest={setEditRequest}
             />
           )}
         </View>
@@ -635,7 +718,7 @@ export const Card = ({
         </View>
         <View
           style={{
-            flexDirection: "row",
+            // flexDirection: "row",
             alignItems: "center",
             justifyContent: "space-between",
           }}
@@ -672,7 +755,7 @@ export const Card = ({
                 }}
               >
                 {(() => {
-                  let formattedDateInTimezone = moment(item.orderedAt)
+                  let formattedDateInTimezone = moment(item.orderdAt)
                     .tz(Localization.timezone)
                     .format("DD MMMM YYYY - HH:mm");
 
@@ -687,11 +770,12 @@ export const Card = ({
                 flexDirection: "row",
                 alignItems: "center",
                 justifyContent: "center",
-                gap: 25,
+                gap: 45,
                 backgroundColor: currentTheme.background2,
                 borderRadius: 50,
                 padding: 5,
                 paddingHorizontal: 15,
+                marginTop: 10,
               }}
             >
               <TouchableOpacity
@@ -720,7 +804,6 @@ export const Card = ({
                 activeOpacity={0.8}
                 onPress={() => {
                   UpdateOrder("active");
-                  dispatch(setRerenderOrders());
                 }}
               >
                 <FontAwesome size={20} name="check" color="green" />
@@ -732,11 +815,12 @@ export const Card = ({
                 flexDirection: "row",
                 alignItems: "center",
                 justifyContent: "center",
-                gap: 25,
+                gap: 45,
                 backgroundColor: currentTheme.background2,
                 borderRadius: 50,
                 padding: 5,
                 paddingHorizontal: 15,
+                marginTop: 10,
               }}
             >
               <TouchableOpacity
@@ -753,7 +837,7 @@ export const Card = ({
                 activeOpacity={0.8}
                 onPress={() => {
                   ReturnRequest();
-                  dispatch(setRerenderOrders());
+                  // dispatch(setRerenderOrders());
                 }}
               >
                 <Text style={{ fontWeight: "bold", color: "green" }}>Send</Text>

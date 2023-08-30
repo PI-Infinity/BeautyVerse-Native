@@ -8,12 +8,13 @@ import MainFeedCard from "../languages/pages/main/feedCard";
 import Menu from "../languages/components/menu";
 import User from "../languages/pages/user/user";
 import Chat from "../languages/pages/chat/chat";
+import Bookings from "../languages/pages/bookings/bookings";
 import Auth from "../languages/pages/auth/auth";
 import Pages from "../languages/pages/pages";
 
 export const Language = () => {
   const lang = useSelector((state) => state.storeApp.language);
-  let language;
+
   if (lang === "en") {
     return {
       language: {
@@ -31,6 +32,9 @@ export const Language = () => {
         },
         Chat: {
           chat: Chat.en,
+        },
+        Bookings: {
+          bookings: Bookings.en,
         },
         Auth: {
           auth: Auth.en,
@@ -58,6 +62,9 @@ export const Language = () => {
         Chat: {
           chat: Chat.ka,
         },
+        Bookings: {
+          bookings: Bookings.ka,
+        },
         Auth: {
           auth: Auth.ka,
         },
@@ -83,6 +90,9 @@ export const Language = () => {
         },
         Chat: {
           chat: Chat.ru,
+        },
+        Bookings: {
+          bookings: Bookings.ru,
         },
         Auth: {
           auth: Auth.ru,

@@ -29,6 +29,7 @@ import { darkTheme, lightTheme } from "../../../context/theme";
 import { setRerenderCurrentUser } from "../../../redux/rerenders";
 import DeleteDialog from "../../../components/confirmDialog";
 import { setCurrentUser } from "../../../redux/user";
+import { useNavigation } from "@react-navigation/native";
 
 /**
  * Addreses screen in settings
@@ -41,6 +42,9 @@ export const Addresses = () => {
   const language = Language();
   //define redux dispatch
   const dispatch = useDispatch();
+
+  // defines navigation
+  const navigation = useNavigation();
 
   // define current user
   const [addresses, setAddresses] = useState([]);
@@ -67,6 +71,9 @@ export const Addresses = () => {
   // new state to store the ID of the item to be deleted
   const [toDelete, setToDelete] = useState(null);
 
+  // backend url
+  const backendUrl = useSelector((state) => state.storeApp.backendUrl);
+
   // delete address
 
   const DeleteAddress = async () => {
@@ -79,7 +86,7 @@ export const Addresses = () => {
 
       setAddresses(updatedAddresses);
 
-      const url = `https://beautyverse.herokuapp.com/api/v1/users/${currentUser._id}/address/${toDelete}`;
+      const url = `${backendUrl}/api/v1/users/${currentUser._id}/address/${toDelete}`;
       await axios.delete(url);
 
       dispatch(setRerenderCurrentUser());
@@ -138,13 +145,18 @@ export const Addresses = () => {
           >
             {addresses.map((item, index) => {
               return (
-                <View
+                <TouchableOpacity
+                  onPress={() =>
+                    navigation.navigate("EditAddress", { address: item })
+                  }
                   activeOpacity={0.5}
                   key={index}
                   style={{
                     padding: 10,
-                    backgroundColor: currentTheme.background2,
+                    // backgroundColor: currentTheme.background2,
                     borderRadius: 10,
+                    borderWidth: 1,
+                    borderColor: currentTheme.line,
                     margin: 2.5,
                     paddingRight: 8,
                     flexDirection: "row",
@@ -181,7 +193,7 @@ export const Addresses = () => {
                   )}
                   <View style={{ gap: 10 }}>
                     <View
-                      style={{ flexDirection: "row", alignItems: "center" }}
+                      style={{ flexDirection: "row", alignItems: "flex-end" }}
                     >
                       <Entypo
                         name="location-pin"
@@ -195,24 +207,40 @@ export const Addresses = () => {
                           letterSpacing: 0.3,
                         }}
                       >
-                        {language?.language?.User.userPage.address}: N
-                        <Text
-                          style={{
-                            fontWeight: "bold",
-                            letterSpacing: 0.3,
-                          }}
-                        >
-                          {index + 1}
-                        </Text>
+                        {index === 0
+                          ? "Main address"
+                          : language?.language?.User.userPage.address}
+                        {index !== 0 && (
+                          <Text
+                            style={{
+                              fontWeight: "bold",
+                              letterSpacing: 0.3,
+                            }}
+                          >
+                            : N
+                          </Text>
+                        )}
+                        {index !== 0 && (
+                          <Text
+                            style={{
+                              fontWeight: "bold",
+                              letterSpacing: 0.3,
+                            }}
+                          >
+                            {index + 1}
+                          </Text>
+                        )}
                       </Text>
                     </View>
-                    <Map
-                      latitude={item?.latitude}
-                      longitude={item.longitude}
-                      height={100}
-                    />
+                    <View style={{ height: 100, width: SCREEN_WIDTH / 3 }}>
+                      <Map
+                        latitude={item?.latitude}
+                        longitude={item.longitude}
+                        height={100}
+                      />
+                    </View>
                   </View>
-                  <View style={{ gap: 5 }}>
+                  <View style={{ gap: 5, marginTop: 3 }}>
                     <Text
                       style={{
                         color: currentTheme.font,
@@ -323,7 +351,7 @@ export const Addresses = () => {
                       </Text>
                     </Text>
                   </View>
-                </View>
+                </TouchableOpacity>
               );
             })}
           </ScrollView>

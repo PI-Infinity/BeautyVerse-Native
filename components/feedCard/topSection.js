@@ -97,73 +97,96 @@ export const TopSection = (props) => {
           width: "100%",
         }}
       >
-        <View
-          style={[
-            styles.coverContainer,
-            { borderColor: props.currentTheme.pink },
-          ]}
-        >
-          {props.user?.cover?.length > 0 ? (
-            <TouchableOpacity
-              activeOpacity={route.name === "Feeds" ? 0.8 : 1}
-              onPress={() =>
-                navigation.navigate("User", {
-                  user: props.user,
-                })
-              }
+        <View>
+          {props?.user.online && (
+            <View
               style={{
-                width: 40,
-                height: 40,
-                overflow: "hidden",
-                alignItems: "center",
-                justifyContent: "center",
+                width: 14,
+                height: 14,
+                backgroundColor: "#3bd16f",
                 borderRadius: 50,
+                position: "absolute",
+                zIndex: 10000,
+                right: 0,
+                bottom: 3,
+                borderWidth: 3,
+                borderColor: props.currentTheme.background,
               }}
-            >
-              <CacheableImage
-                key={props.user?.cover}
-                style={{
-                  width: "100%",
-                  aspectRatio: 0.95,
-                  resizeMode: "cover",
-                }}
-                source={{
-                  uri: props.user?.cover,
-                }}
-                manipulationOptions={[
-                  {
-                    resize: {
-                      width: "100%",
-                      aspectRatio: 0.95,
-                      resizeMode: "cover",
-                    },
-                  },
-                  { rotate: 90 },
-                ]}
-              />
-            </TouchableOpacity>
-          ) : (
-            <Pressable
-              style={{
-                width: 45,
-                height: 45,
-                borderRadius: 50,
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-              onPress={
-                route.name === "Feeds"
-                  ? () =>
-                      navigation.navigate("User", {
-                        user: props.user,
-                      })
-                  : undefined
-              }
-            >
-              <FontAwesome name="user" size={24} color="#e5e5e5" />
-            </Pressable>
+            ></View>
           )}
+          <View
+            style={[
+              styles.coverContainer,
+              { borderColor: props.currentTheme.pink },
+            ]}
+          >
+            {props.user?.cover?.length > 0 ? (
+              <TouchableOpacity
+                activeOpacity={route.name === "Feeds" ? 0.8 : 1}
+                onPress={() =>
+                  navigation.navigate("User", {
+                    user: props.user,
+                  })
+                }
+                style={{
+                  width: 40,
+                  height: 40,
+                  overflow: "hidden",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  borderRadius: 50,
+                }}
+              >
+                <CacheableImage
+                  key={props.user?.cover}
+                  style={{
+                    width: "100%",
+                    aspectRatio: 0.95,
+                    resizeMode: "cover",
+                  }}
+                  source={{
+                    uri: props.user?.cover,
+                  }}
+                  manipulationOptions={[
+                    {
+                      resize: {
+                        width: "100%",
+                        aspectRatio: 0.95,
+                        resizeMode: "cover",
+                      },
+                    },
+                    { rotate: 90 },
+                  ]}
+                />
+              </TouchableOpacity>
+            ) : (
+              <Pressable
+                style={{
+                  width: 45,
+                  height: 45,
+                  borderRadius: 50,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+                onPress={
+                  route.name === "Feeds"
+                    ? () =>
+                        navigation.navigate("User", {
+                          user: props.user,
+                        })
+                    : undefined
+                }
+              >
+                <FontAwesome
+                  name="user"
+                  size={24}
+                  color={props.currentTheme.disabled}
+                />
+              </Pressable>
+            )}
+          </View>
         </View>
+
         <View
           style={{
             gap: 2.5,

@@ -9,6 +9,7 @@ import {
   View,
 } from "react-native";
 import Collapsible from "react-native-collapsible";
+import { Language } from "../context/language";
 
 /**
  * autocomplete filter shows search variants when searching
@@ -18,6 +19,9 @@ const Autocomplete = ({ data, setState, currentTheme }) => {
   const [search, setSearch] = useState("");
   const [filteredData, setFilteredData] = useState([]);
   const [selectedItems, setSelectedItems] = useState([]);
+
+  // defines language
+  const language = Language();
 
   useEffect(() => {
     setFilteredData(data);
@@ -88,7 +92,7 @@ const Autocomplete = ({ data, setState, currentTheme }) => {
           }}
           value={search}
           onChangeText={handleSearch}
-          placeholder="Search procedure..."
+          placeholder={language?.language?.Auth?.auth?.searchProcedure}
           placeholderTextColor={currentTheme.disabled}
           // onFocus={() => setHide(false)}
         />
@@ -159,14 +163,6 @@ const styles = StyleSheet.create({
     height: 35,
     borderRadius: 50,
     marginTop: 15,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 3, // negative value places shadow on top
-    },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
   },
   scrollView: {
     // height: 300,

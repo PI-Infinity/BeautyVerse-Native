@@ -42,6 +42,9 @@ export const Calendar = ({ date, setDate, targetUser, setTime }) => {
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
 
+  // defines language
+  const language = Language();
+
   const [currentDate, setCurrentDate] = useState(new Date());
 
   const month = currentDate.getMonth();
@@ -126,6 +129,8 @@ export const Calendar = ({ date, setDate, targetUser, setTime }) => {
             borderColor: currentTheme.line,
             borderRadius: 50,
             backgroundColor: currentTheme.background2,
+            width: "30%",
+            alignItems: "center",
           }}
           onPress={() =>
             setCurrentDate(
@@ -133,7 +138,12 @@ export const Calendar = ({ date, setDate, targetUser, setTime }) => {
             )
           }
         >
-          <Text style={{ fontSize: 14, color: currentTheme.pink }}>Prev</Text>
+          <Text
+            numberOfLines={1}
+            style={{ fontSize: 14, color: currentTheme.pink }}
+          >
+            {language?.language?.Bookings?.bookings?.prev}
+          </Text>
         </TouchableOpacity>
         <Text style={{ color: "#f1f1f1" }}>
           {monthNames[month]} {year}
@@ -146,6 +156,8 @@ export const Calendar = ({ date, setDate, targetUser, setTime }) => {
             borderColor: currentTheme.line,
             borderRadius: 50,
             backgroundColor: currentTheme.background2,
+            width: "30%",
+            alignItems: "center",
           }}
           onPress={() =>
             setCurrentDate(
@@ -153,7 +165,12 @@ export const Calendar = ({ date, setDate, targetUser, setTime }) => {
             )
           }
         >
-          <Text style={{ fontSize: 14, color: currentTheme.pink }}>Next</Text>
+          <Text
+            style={{ fontSize: 14, color: currentTheme.pink }}
+            numberOfLines={1}
+          >
+            {language?.language?.Bookings?.bookings?.next}
+          </Text>
         </TouchableOpacity>
       </View>
       <View

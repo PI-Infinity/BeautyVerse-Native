@@ -1,9 +1,10 @@
 import { FontAwesome } from "@expo/vector-icons";
-import React from "react";
+import React, { useContext } from "react";
 import { Pressable, TextInput, View } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 import { Language } from "../context/language";
 import { setSearch, setSearchInput } from "../redux/filter";
+import { RouteNameContext } from "../context/routName";
 
 /**
  * Search universal component
@@ -15,15 +16,17 @@ export const Search = ({ navigation, currentTheme }) => {
 
   const search = useSelector((state) => state.storeFilter.searchInput);
 
+  const routeName = useContext(RouteNameContext);
+
   return (
     <Pressable style={{ width: "100%", alignItems: "center" }}>
       <View
         style={{
           width: "95%",
-          backgroundColor: currentTheme.background2,
+          height: 40,
           borderWidth: 1.5,
           borderColor: currentTheme.line,
-          borderRadius: 10,
+          borderRadius: 50,
           flexDirection: "row",
           alignItems: "center",
           gap: 5,
@@ -41,7 +44,11 @@ export const Search = ({ navigation, currentTheme }) => {
             borderRadius: 50,
             letterSpacing: 0.3,
           }}
-          onFocus={() => navigation.navigate("Search")}
+          onFocus={
+            routeName === "Filter"
+              ? () => navigation.navigate("Search")
+              : () => navigation.navigate("Search1")
+          }
           showSoftInputOnFocus={false}
           // onChangeText={updateSearch}
           value={search}

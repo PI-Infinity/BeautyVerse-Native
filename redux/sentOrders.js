@@ -16,7 +16,7 @@ const initialState = {
   loader: false,
   orders: [],
   statusFilter: "",
-  date: { active: false, date: formattedDateInTimezone },
+  date: { active: true, date: formattedDateInTimezone },
   createdAt: "",
   procedure: "",
   totalResult: null,

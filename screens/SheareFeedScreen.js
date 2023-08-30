@@ -48,12 +48,16 @@ export const FeedItem = () => {
   // get feed object
   const [feedObj, setFeedObj] = useState(null);
 
+  // backend url
+  const backendUrl = useSelector((state) => state.storeApp.backendUrl);
+
   async function GetFeedObj() {
     try {
       let response = await axios.get(
-        `https://beautyverse.herokuapp.com/api/v1/users/${
-          currentUser?._id
-        }/feeds/${feed[feed?.length - 1]}?check=${currentUser._id}`
+        backendUrl +
+          `/api/v1/users/${currentUser?._id}/feeds/${
+            feed[feed?.length - 1]
+          }?check=${currentUser._id}`
       );
 
       setFeedObj(response.data.data.feedObj);
@@ -86,7 +90,8 @@ export const FeedItem = () => {
       dispatch(setActiveFeedFromScrollGallery(props?.feed?._id));
 
       await axios.post(
-        `https://beautyverse.herokuapp.com/api/v1/users/${props?.user?._id}/feeds/${feedObj?._id}/stars`,
+        backendUrl +
+          `/api/v1/users/${props?.user?._id}/feeds/${feedObj?._id}/stars`,
         {
           staredBy: currentUser?._id,
           createdAt: new Date(),
@@ -94,7 +99,7 @@ export const FeedItem = () => {
       );
       if (currentUser?._id !== user?._id) {
         await axios.post(
-          `https://beautyverse.herokuapp.com/api/v1/users/${user?._id}/notifications`,
+          backendUrl + `/api/v1/users/${user?._id}/notifications`,
           {
             senderId: currentUser?._id,
             text: `მიანიჭა ვარსკვლავი თქვენ პოსტს!`,
@@ -123,7 +128,9 @@ export const FeedItem = () => {
 
     dispatch(setActiveFeedFromScrollGallery(feedObj?._id));
     try {
-      const url = `https://beautyverse.herokuapp.com/api/v1/users/${props?.user?._id}/feeds/${feedObj?._id}/stars/${currentUser?._id}`;
+      const url =
+        backendUrl +
+        `/api/v1/users/${props?.user?._id}/feeds/${feedObj?._id}/stars/${currentUser?._id}`;
       const response = await fetch(url, { method: "DELETE" })
         .then((response) => response.json())
         .then(() => {
@@ -147,7 +154,8 @@ export const FeedItem = () => {
     const GetReviews = async () => {
       try {
         const response = await axios.get(
-          `https://beautyverse.herokuapp.com/api/v1/users/${props?.user?._id}/feeds/${props?.feed?._id}/reviews?page=${reviewsPage}`
+          backendUrl +
+            `/api/v1/users/${props?.user?._id}/feeds/${props?.feed?._id}/reviews?page=${reviewsPage}`
         );
         setReviewsList(response.data.data.reviews);
         setReviewLength(response.data.result);
@@ -162,7 +170,8 @@ export const FeedItem = () => {
   async function AddNewReviews(nextPage) {
     try {
       const response = await axios.get(
-        `https://beautyverse.herokuapp.com/api/v1/users/${props?.user._id}/feeds/${props?.feed?._id}/reviews?page=${nextPage}`
+        backendUrl +
+          `/api/v1/users/${props?.user._id}/feeds/${props?.feed?._id}/reviews?page=${nextPage}`
       );
       setReviewsList((prev) => {
         const newReviews = response.data.data?.reviews || [];
@@ -224,7 +233,8 @@ export const FeedItem = () => {
       setReviewInput("");
       setOpenReviews(true);
       await axios.post(
-        `https://beautyverse.herokuapp.com/api/v1/users/${props?.user._id}/feeds/${feedObj?._id}/reviews`,
+        backendUrl +
+          `/api/v1/users/${props?.user._id}/feeds/${feedObj?._id}/reviews`,
         {
           reviewId: newId,
           reviewer: currentUser?._id,
@@ -234,7 +244,7 @@ export const FeedItem = () => {
       );
       if (currentUser?._id !== user?._id) {
         await axios.post(
-          `https://beautyverse.herokuapp.com/api/v1/users/${user?._id}/notifications`,
+          backendUrl + `/api/v1/users/${user?._id}/notifications`,
           {
             senderId: currentUser?._id,
             text: `დატოვა კომენტარი თქვენს პოსტზე!`,
@@ -263,7 +273,9 @@ export const FeedItem = () => {
   const [removeReview, setRemoveReview] = useState(null);
 
   const DeleteReview = async (id) => {
-    const url = `https://beautyverse.herokuapp.com/api/v1/users/${props?.user?._id}/feeds/${feedObj?._id}/reviews/${id}`;
+    const url =
+      backendUrl +
+      `/api/v1/users/${props?.user?._id}/feeds/${feedObj?._id}/reviews/${id}`;
     try {
       setReviewsList((prevReviews) =>
         prevReviews.filter((review) => review.reviewId !== id)
@@ -467,6 +479,7 @@ export const FeedItem = () => {
                 numLines={numLines}
                 setNumLines={setNumLines}
                 text={post}
+                feedId={props?.feed._id}
               />
             </View>
           )}
@@ -505,6 +518,7 @@ export const FeedItem = () => {
                     numLines={numLines}
                     setNumLines={setNumLines}
                     text={post}
+                    feedId={props?.feed._id}
                   />
                 </View>
               )}
@@ -864,7 +878,7 @@ const ReviewItem = ({
   useEffect(() => {
     const GetUser = async () => {
       const response = await axios.get(
-        "https://beautyverse.herokuapp.com/api/v1/users/" + item.reviewer.id
+        backendUrl + "/api/v1/users/" + item.reviewer.id
       );
       setUser(response.data.data.user);
     };

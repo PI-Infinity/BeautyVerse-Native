@@ -19,6 +19,9 @@ const FeedCard = {
     w: " w",
     mo: " mo",
     y: " y",
+    feed: "Feed",
+    writeText: "Write text...",
+    noComments: "No comments",
   },
   ka: {
     specialist: "სპეციალისტი",
@@ -38,8 +41,11 @@ const FeedCard = {
     h: " სთ",
     d: " დ",
     w: " კვ",
-    mo: "თვ",
+    mo: " თვ",
     y: " წ",
+    feed: "პოსტი",
+    writeText: "დაწერე ტექსტი...",
+    noComments: "კომენტარი არ მოიძებნა",
   },
   ru: {
     specialist: "Специалист",
@@ -61,6 +67,9 @@ const FeedCard = {
     w: " нед",
     mo: " мес",
     y: " г",
+    feed: "Пост",
+    writeText: "Напишите текст...",
+    noComments: "Нет комментариев",
   },
 };
 

@@ -30,6 +30,9 @@ export const Prices = ({ route }) => {
 
   const [loading, setLoading] = useState(false);
 
+  // backend url
+  const backendUrl = useSelector((state) => state.storeApp.backendUrl);
+
   // update subscription
   const UpdateSubscription = async () => {
     setLoading(true);
@@ -37,21 +40,18 @@ export const Prices = ({ route }) => {
     expireDate.setMonth(expireDate.getMonth() + 1);
 
     try {
-      await axios.patch(
-        `https://beautyverse.herokuapp.com/api/v1/users/${currentUser._id}`,
-        {
-          subscription: {
-            status:
-              currentUser.subscription?.status === "active"
-                ? "inactive"
-                : "active",
-            activationDate: new Date(),
-            expireDate: expireDate,
-            // variant: "Monthly",
-            // price: 10,
-          },
-        }
-      );
+      await axios.patch(`${backendUrl}/api/v1/users/${currentUser._id}`, {
+        subscription: {
+          status:
+            currentUser.subscription?.status === "active"
+              ? "inactive"
+              : "active",
+          activationDate: new Date(),
+          expireDate: expireDate,
+          // variant: "Monthly",
+          // price: 10,
+        },
+      });
       dispatch(setRerenderCurrentUser());
       dispatch(setRerenderUserList());
       setTimeout(() => {

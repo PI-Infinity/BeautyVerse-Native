@@ -7,6 +7,7 @@ import {
   View,
 } from "react-native";
 import Modal from "react-native-modal";
+import { Language } from "../../context/language";
 
 /**
  * Status popup for order item
@@ -20,14 +21,35 @@ export const StatusPopup = ({
   setSelectedItem,
   UpdateOrder,
   Delete,
+  from,
+  setEditRequest,
 }) => {
   const [isModalVisible, setModalVisible] = useState(false);
 
+  // defines language
+  const language = Language();
+
   const items = [
-    { label: "Active", value: "active" },
-    { label: "Completed", value: "completed" },
-    { label: "Canceled", value: "canceled" },
-    { label: "Delete", value: "delete" },
+    { label: language?.language?.Bookings?.bookings?.active, value: "active" },
+    { label: language?.language?.Bookings?.bookings?.new, value: "new" },
+    {
+      label: language?.language?.Bookings?.bookings?.pending,
+      value: "pending",
+    },
+    {
+      label: language?.language?.Bookings?.bookings?.completed,
+      value: "completed",
+    },
+    {
+      label: language?.language?.Bookings?.bookings?.canceled,
+      value: "canceled",
+    },
+    {
+      label: language?.language?.Bookings?.bookings?.rejected,
+      value: "rejected",
+    },
+    { label: language?.language?.Bookings?.bookings?.edit, value: "edit" },
+    { label: language?.language?.Bookings?.bookings?.delete, value: "delete" },
   ];
 
   const handleSelect = (value) => {
@@ -41,19 +63,22 @@ export const StatusPopup = ({
   let font;
   if (selectedItem === "new") {
     bg = "green";
-    font = "#ccc";
+    font = "green";
   } else if (selectedItem === "pending") {
     bg = "orange";
-    font = "#111";
+    font = "orange";
   } else if (selectedItem === "canceled" || selectedItem === "rejected") {
-    bg = currentTheme.disabled;
-    font = "#ccc";
+    bg = "#777";
+    font = "#777";
   } else if (selectedItem === "active") {
     bg = currentTheme.pink;
-    font = "#111";
+    font = currentTheme.pink;
+  } else if (selectedItem === "edit") {
+    bg = "yellow";
+    font = "yellow";
   } else {
-    bg = currentTheme.background2;
-    font = "#ccc";
+    bg = currentTheme.font;
+    font = currentTheme.font;
   }
 
   function capitalizeFirstLetter(string) {
@@ -79,7 +104,12 @@ export const StatusPopup = ({
         }}
       >
         <Text style={{ color: font, letterSpacing: 0.3, fontWeight: "bold" }}>
-          {activeStatus}
+          {
+            items.find(
+              (i) =>
+                i.value.toLocaleLowerCase() === selectedItem.toLocaleLowerCase()
+            )?.label
+          }
         </Text>
       </TouchableOpacity>
 
@@ -100,7 +130,7 @@ export const StatusPopup = ({
           style={{
             gap: 8,
             backgroundColor: currentTheme.background,
-            height: 220,
+            // height: 220,
             width: 300,
             borderRadius: 10,
             padding: 15,
@@ -108,6 +138,29 @@ export const StatusPopup = ({
           }}
         >
           {items.map((item) => {
+            if (from === "listItem" && item.value === "edit") {
+              return;
+            }
+            if (item.value === "pending") {
+              return;
+            }
+            if (from === "sentOrders" && item.value === "new") {
+              return;
+            }
+            if (
+              selectedItem.toLocaleLowerCase() !== "new" &&
+              item.value === "new"
+            ) {
+              return;
+            }
+            if (
+              selectedItem.toLocaleLowerCase() === "active" &&
+              (item.value === "pending" ||
+                item.value === "new" ||
+                item.value === "rejected")
+            ) {
+              return;
+            }
             return (
               <TouchableOpacity
                 key={item.value}
@@ -124,6 +177,8 @@ export const StatusPopup = ({
                 onPress={
                   item.value === "delete"
                     ? Delete
+                    : item.value === "edit"
+                    ? () => setEditRequest(true)
                     : () => handleSelect(item.value)
                 }
               >
@@ -138,6 +193,12 @@ export const StatusPopup = ({
                           ? currentTheme.font
                           : item.value === "delete"
                           ? "red"
+                          : item.value === "edit"
+                          ? "yellow"
+                          : item.value === "pending"
+                          ? "orange"
+                          : item.value === "new"
+                          ? "green"
                           : currentTheme.disabled,
                     },
                   ]}

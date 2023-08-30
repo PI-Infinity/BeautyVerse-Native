@@ -10,6 +10,7 @@ const Chat = {
     confirmText: "Are you sure you want to delete the text?",
     cancel: "Cancel",
     remove: "Remove",
+    notFound: "Chats not found",
   },
   ka: {
     title: "სასაუბრო",
@@ -22,6 +23,7 @@ const Chat = {
     confirmText: "ნამდვილად გსურთ ტექსტის წაშლა?",
     cancel: "გაუქმება",
     remove: "წაშლა",
+    notFound: "სასაუბროები არ მოიძებნა",
   },
   ru: {
     title: "Чат",
@@ -34,6 +36,7 @@ const Chat = {
     confirmText: "Вы уверены, что хотите удалить текст?",
     cancel: "Отмена",
     remove: "Удалить",
+    notFound: "Чаты не найдены",
   },
 };
 

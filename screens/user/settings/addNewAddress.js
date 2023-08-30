@@ -14,6 +14,8 @@ import { setRerenderCurrentUser } from "../../../redux/rerenders";
 import { useDispatch, useSelector } from "react-redux";
 import { BackDrop } from "../../../components/backDropLoader";
 import Map from "../../../components/map";
+import { Language } from "../../../context/language";
+import AlertMessage from "../../../components/alertMessage";
 
 /**
  * Add new address screen
@@ -25,6 +27,9 @@ export const AddNewAddress = ({ navigation }) => {
   // define theme
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
+
+  // defines language
+  const language = Language();
 
   // loading state
   const [loading, setLoading] = useState(false);
@@ -38,36 +43,43 @@ export const AddNewAddress = ({ navigation }) => {
   // current user state
   const currentUser = useSelector((state) => state.storeUser.currentUser);
 
+  // alert message
+  const [alert, setAlert] = useState({ active: false, text: "", type: "" });
+
+  // backend url
+  const backendUrl = useSelector((state) => state.storeApp.backendUrl);
+
   // add address
   const Add = async () => {
+    if (!address.street) {
+      return setAlert({
+        active: true,
+        text: language?.language?.Auth?.auth?.wrongAddress,
+        type: "error",
+      });
+    }
     setLoading(true);
     try {
-      if (address.country?.length > 0) {
-        await axios.post(
-          `https://beautyverse.herokuapp.com/api/v1/users/${currentUser?._id}/address`,
-          {
-            country: address.country,
-            region: address.region,
-            city: address.city && address.city,
-            district: address.district && address.district,
-            street: address.street && address.street,
-            number: address.streetNumber && address.streetNumber,
-            latitude: address.latitude,
-            longitude: address.longitude,
-          }
-        );
+      await axios.post(
+        `${backendUrl}/api/v1/users/${currentUser?._id}/address`,
+        {
+          country: address.country,
+          region: address.region,
+          city: address.city && address.city,
+          district: address.district && address.district,
+          street: address.street && address.street,
+          number: address.streetNumber && address.streetNumber,
+          latitude: address.latitude,
+          longitude: address.longitude,
+        }
+      );
 
-        dispatch(setRerenderCurrentUser());
-        setAddress("");
-        setTimeout(() => {
-          setLoading(false);
-          navigation.navigate("Addresses");
-        }, 500);
-      } else {
-        setAddress("");
+      dispatch(setRerenderCurrentUser());
+      setAddress("");
+      setTimeout(() => {
         setLoading(false);
-        Alert.alert("New address not defined!");
-      }
+        navigation.navigate("Addresses");
+      }, 500);
     } catch (error) {
       console.log(error.response);
       Alert.alert(error.response.data.message);
@@ -110,6 +122,15 @@ export const AddNewAddress = ({ navigation }) => {
       >
         <Text style={{ color: "#f1f1f1" }}>Save</Text>
       </Pressable>
+      <View style={{ position: "absolute", zIndex: 19000 }}>
+        <AlertMessage
+          isVisible={alert.active}
+          type={alert.type}
+          text={alert.text}
+          onClose={() => setAlert({ active: false, text: "" })}
+          Press={() => setAlert({ active: false, text: "" })}
+        />
+      </View>
     </View>
   );
 };

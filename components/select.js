@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { workingDaysOptions } from "../datas/registerDatas";
+import { useSelector } from "react-redux";
 
 /**
  * Select component
@@ -8,6 +9,8 @@ import { workingDaysOptions } from "../datas/registerDatas";
 
 const Select = ({ state, setState, currentTheme }) => {
   const [selectedOptions, setSelectedOptions] = useState([]);
+
+  const lang = useSelector((state) => state.storeApp.language);
 
   const handleSelect = (option) => {
     if (selectedOptions.includes(option)) {
@@ -57,7 +60,7 @@ const Select = ({ state, setState, currentTheme }) => {
                 : { color: currentTheme.font },
             ]}
           >
-            {option.en}
+            {lang === "en" ? option.en : lang === "ru" ? option.ru : option.ka}
           </Text>
         </TouchableOpacity>
       ))}
@@ -75,6 +78,7 @@ const styles = StyleSheet.create({
   option: {
     padding: 10,
     borderRadius: 50,
+    alignItems: "center",
   },
   optionText: {
     fontSize: 16,

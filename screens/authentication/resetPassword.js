@@ -115,14 +115,7 @@ const styles = StyleSheet.create({
     paddingLeft: 10,
     marginBottom: 15,
     paddingVertical: 10,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2, // negative value places shadow on top
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 1,
-    elevation: 1,
+
     letterSpacing: 0.2,
   },
   buttonContainer: {

@@ -18,7 +18,7 @@ import DeleteUserPopup from "../../../components/confirmDialog";
 import { Language } from "../../../context/language";
 import { darkTheme, lightTheme } from "../../../context/theme";
 import { storage } from "../../../firebase";
-import { setLoading } from "../../../redux/app";
+import { setLoading, setLogoutLoading } from "../../../redux/app";
 import { setCurrentUser } from "../../../redux/user";
 
 /**
@@ -51,14 +51,16 @@ export const Security = () => {
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
 
+  // backend url
+  const backendUrl = useSelector((state) => state.storeApp.backendUrl);
+
   /**
    * password change function
    *  */
   const Changing = async () => {
     try {
       await axios.patch(
-        "https://beautyverse.herokuapp.com/api/v1/changePassword/" +
-          currentUser._id,
+        backendUrl + "/api/v1/changePassword/" + currentUser._id,
         {
           oldPassword: oldPassword,
           newPassword: newPassword,
@@ -94,11 +96,11 @@ export const Security = () => {
     let videofileRef = ref(storage, `videos/${currentUser?._id}/`);
     let imagefileRef = ref(storage, `images/${currentUser?._id}/`);
     try {
-      dispatch(setLoading(true));
+      dispatch(setLogoutLoading(true));
       await AsyncStorage.removeItem("Beautyverse:currentUser");
-      await dispatch(setCurrentUser(null));
+      dispatch(setCurrentUser(null));
       const response = await axios.delete(
-        "https://beautyverse.herokuapp.com/api/v1/users/" + currentUser?._id
+        backendUrl + "/api/v1/users/" + currentUser?._id
       );
 
       if (response.status === 204) {
@@ -129,7 +131,9 @@ export const Security = () => {
               });
           });
         }
-
+        setTimeout(() => {
+          dispatch(setLogoutLoading(false));
+        }, 1000);
         console.log("User deleted successfully");
       } else {
         console.log("Something went wrong while deleting the user");

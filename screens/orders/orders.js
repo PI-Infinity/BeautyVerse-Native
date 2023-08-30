@@ -31,6 +31,7 @@ import { Card } from "../../screens/orders/cardItem";
 import DatePicker from "../../screens/orders/datePicker";
 import { ListItem } from "../../screens/orders/listItem";
 import { SortPopup } from "../../screens/orders/sortPopup";
+import { Language } from "../../context/language";
 
 /**
  * Defines orders list
@@ -42,6 +43,9 @@ export const Orders = ({ navigation }) => {
   // defines theme
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
+
+  // defines language
+  const language = Language();
 
   // defines loading state
   const [isLoaded, setIsLoaded] = useState(true); // new state variable
@@ -98,6 +102,9 @@ export const Orders = ({ navigation }) => {
   // defines bottom loader when adding new orders
   const [bottomLoader, setBottomLoader] = useState(false);
 
+  // backend url
+  const backendUrl = useSelector((state) => state.storeApp.backendUrl);
+
   /**
    * Load more orders
    */
@@ -109,7 +116,8 @@ export const Orders = ({ navigation }) => {
     try {
       setBottomLoader(true);
       const response = await axios.get(
-        "https://beautyverse.herokuapp.com/api/v1/users/" +
+        backendUrl +
+          "/api/v1/users/" +
           currentUser._id +
           `/orders?page=${page + 1}&status=${
             statusFilter === "All" ? "" : statusFilter?.toLowerCase()
@@ -200,11 +208,11 @@ export const Orders = ({ navigation }) => {
         >
           {filterResult > orders?.length && filterResult > 5 ? (
             <Text style={{ color: currentTheme.pink, fontWeight: "bold" }}>
-              Load More
+              {language?.language?.Bookings?.bookings?.loadMore}
             </Text>
           ) : filterResult <= orders?.length && filterResult > 5 ? (
             <Text style={{ color: currentTheme.disabled, fontWeight: "bold" }}>
-              Load Less
+              {language?.language?.Bookings?.bookings?.loadLess}
             </Text>
           ) : null}
         </Pressable>
@@ -237,7 +245,7 @@ export const Orders = ({ navigation }) => {
               marginHorizontal: 0,
               paddingHorizontal: 15,
               paddingVertical: 10,
-              backgroundColor: currentTheme.background2,
+              // backgroundColor: currentTheme.background2,
               flexDirection: "row",
               justifyContent: "space-between",
               alignItems: "center",
@@ -259,7 +267,7 @@ export const Orders = ({ navigation }) => {
                   fontSize: 14,
                 }}
               >
-                Result: {filterResult}
+                {language?.language?.Bookings?.bookings?.result}: {filterResult}
               </Text>
             </View>
             <View style={{ flex: 1, alignItems: "center" }}>
@@ -292,12 +300,16 @@ export const Orders = ({ navigation }) => {
                   }}
                 >
                   {view ? (
-                    <FontAwesome name="list-ol" size={14} color="#ccc" />
+                    <FontAwesome
+                      name="list-ol"
+                      size={14}
+                      color={currentTheme.font}
+                    />
                   ) : (
                     <MaterialCommunityIcons
                       name="card-text-outline"
                       size={18}
-                      color="#ccc"
+                      color={currentTheme.font}
                     />
                   )}
                 </View>
@@ -317,7 +329,7 @@ export const Orders = ({ navigation }) => {
                       : "sort-calendar-descending"
                   }
                   size={18}
-                  color="#ccc"
+                  color={currentTheme.font}
                 />
               </TouchableOpacity>
             </View>
@@ -369,7 +381,7 @@ export const Orders = ({ navigation }) => {
                   }}
                 >
                   <Text style={{ color: currentTheme.disabled }}>
-                    No orders found!
+                    {language?.language?.Bookings?.bookings?.notFound}
                   </Text>
                 </View>
               )}

@@ -36,7 +36,7 @@ export const ProceduresList = ({ targetUser, addOrder }) => {
   );
   const categories = cats.map((item, index) => {
     let lab = proceduresOptions.find((it) => {
-      return it?.value?.toLowerCase().includes(item?.toLowerCase());
+      return it?.value?.toLowerCase() === item?.toLowerCase();
     });
     return lab;
   });
@@ -67,7 +67,7 @@ export const ProceduresList = ({ targetUser, addOrder }) => {
             <Text
               style={[
                 styles.buttonText,
-                { color: active === "all" ? "#111" : "#ccc" },
+                { color: active === "all" ? "#fff" : currentTheme.disabled },
               ]}
             >
               {language?.language?.User?.userPage?.all}
@@ -89,8 +89,8 @@ export const ProceduresList = ({ targetUser, addOrder }) => {
                   {
                     color:
                       active.toLowerCase() === cat.value.toLowerCase()
-                        ? "#111"
-                        : "#ccc",
+                        ? "#fff"
+                        : currentTheme.disabled,
                   },
                 ]}
               >
@@ -100,7 +100,7 @@ export const ProceduresList = ({ targetUser, addOrder }) => {
           ))}
         </ScrollView>
       )}
-      <View style={{ gap: 10, alignItems: "center" }}>
+      <View style={{ gap: 8, alignItems: "center", paddingHorizontal: 15 }}>
         {targetUser.procedures
           .filter((item) => {
             if (active === "all") {
@@ -118,8 +118,9 @@ export const ProceduresList = ({ targetUser, addOrder }) => {
                 activeOpacity={addOrder ? 0.5 : 1}
                 key={index}
                 style={{
-                  width: "95%",
-                  backgroundColor: currentTheme.background2,
+                  width: "100%",
+                  borderWidth: 1,
+                  borderColor: currentTheme.line,
                   borderRadius: 10,
                   padding: 15,
                   paddingVertical: 7.5,
@@ -145,14 +146,14 @@ export const ProceduresList = ({ targetUser, addOrder }) => {
                       alignItems: "center",
                     }}
                   >
-                    <View
+                    {/* <View
                       style={{
                         width: 10,
                         height: 10,
                         borderRadius: 10,
                         backgroundColor: currentTheme.pink,
                       }}
-                    ></View>
+                    ></View> */}
                     <Text
                       style={{ color: currentTheme.font, letterSpacing: 0.2 }}
                     >
@@ -198,15 +199,15 @@ export const ProceduresList = ({ targetUser, addOrder }) => {
                     )}
                   </View>
                 </View>
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: 8,
-                    justifyContent: "flex-end",
-                  }}
-                >
-                  {item.duration && (
+                {item.duration && (
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 8,
+                      justifyContent: "flex-end",
+                    }}
+                  >
                     <View
                       style={{
                         flexDirection: "row",
@@ -233,8 +234,8 @@ export const ProceduresList = ({ targetUser, addOrder }) => {
                         size={12}
                       />
                     </View>
-                  )}
-                </View>
+                  </View>
+                )}
               </TouchableOpacity>
             );
           })}

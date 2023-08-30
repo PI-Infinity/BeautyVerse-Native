@@ -24,15 +24,16 @@ export const Statistics = ({ navigation }) => {
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
 
+  // defines backend url
+  const backendUrl = useSelector((state) => state.storeApp.backendUrl);
+
   // define statistics state
   const [statistics, setStatistics] = useState([]);
 
   // get statistics from backend
   useEffect(() => {
     async function GetStats() {
-      await fetch(
-        `https://beautyverse.herokuapp.com/api/v1/users/${currentUser?._id}/statistics`
-      )
+      await fetch(backendUrl + `/api/v1/users/${currentUser?._id}/statistics`)
         .then((response) => response.json())
         .then((data) => {
           setStatistics(data.data.data);
@@ -62,7 +63,9 @@ export const Statistics = ({ navigation }) => {
             })
           }
           style={{
-            backgroundColor: currentTheme.background2,
+            // borderWidth: 1.5, borderColor: currentTheme.line,
+            borderWidth: 1.5,
+            borderColor: currentTheme.line,
             borderRadius: 20,
             paddingHorizontal: 20,
             paddingVertical: 10,
@@ -105,7 +108,7 @@ export const Statistics = ({ navigation }) => {
         <View
           style={[
             styles.sectionContainer,
-            { backgroundColor: currentTheme.background2 },
+            { borderWidth: 1.5, borderColor: currentTheme.line },
           ]}
         >
           <Text
@@ -152,7 +155,7 @@ export const Statistics = ({ navigation }) => {
         <View
           style={[
             styles.sectionContainer,
-            { backgroundColor: currentTheme.background2 },
+            { borderWidth: 1.5, borderColor: currentTheme.line },
           ]}
         >
           <Text
@@ -199,7 +202,7 @@ export const Statistics = ({ navigation }) => {
         <View
           style={[
             styles.sectionContainer,
-            { backgroundColor: currentTheme.background2 },
+            { borderWidth: 1.5, borderColor: currentTheme.line },
           ]}
         >
           <Text
@@ -246,7 +249,7 @@ export const Statistics = ({ navigation }) => {
         <View
           style={[
             styles.sectionContainer,
-            { backgroundColor: currentTheme.background2 },
+            { borderWidth: 1.5, borderColor: currentTheme.line },
           ]}
         >
           <Text

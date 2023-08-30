@@ -25,6 +25,7 @@ import { darkTheme, lightTheme } from "../../context/theme";
 import { setRerenderOrders } from "../../redux/rerenders";
 import DateAndTimePicker from "../../screens/orders/dateAndTimePicker";
 import { ProceduresList } from "../../screens/orders/procedures";
+import { Language } from "../../context/language";
 
 /**
  * Add new order manualy from OMS
@@ -33,6 +34,10 @@ import { ProceduresList } from "../../screens/orders/procedures";
 export const AddOrder = ({ route, navigation }) => {
   // defines redux dispatch
   const dispatch = useDispatch();
+
+  // defines language
+  const language = Language();
+  const lang = useSelector((state) => state.storeApp.language);
 
   // defines theme state
   const theme = useSelector((state) => state.storeApp.theme);
@@ -79,6 +84,9 @@ export const AddOrder = ({ route, navigation }) => {
   // defines loader
   const [loader, setLoader] = useState(false);
 
+  // backend url
+  const backendUrl = useSelector((state) => state.storeApp.backendUrl);
+
   /**
    * Add order to db
    */
@@ -94,9 +102,7 @@ export const AddOrder = ({ route, navigation }) => {
 
       try {
         await axios.post(
-          "https://beautyverse.herokuapp.com/api/v1/users/" +
-            currentUser._id +
-            "/orders",
+          backendUrl + "/api/v1/users/" + currentUser._id + "/orders",
           {
             orderNumber: orderId,
             user: { id: user.id, phone: user.phone, name: user.name },
@@ -167,7 +173,6 @@ export const AddOrder = ({ route, navigation }) => {
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
           keyboardVerticalOffset={100}
-          // style={{ flex: 1 }}
         >
           <ScrollView
             style={{}}
@@ -216,7 +221,7 @@ export const AddOrder = ({ route, navigation }) => {
                     letterSpacing: 0.3,
                   }}
                 >
-                  Choice Procedure:
+                  {language?.language?.Bookings?.bookings?.choiceProcedure}:
                 </Text>
               </View>
               <ProceduresList
@@ -246,8 +251,7 @@ export const AddOrder = ({ route, navigation }) => {
                   backgroundColor: "red",
                   padding: 5,
                   borderRadius: 50,
-                  backgroundColor: "#151515",
-                  width: "30%",
+                  width: "50%",
                   alignItems: "center",
                   backgroundColor: currentTheme.background2,
                   borderWidth: 1,
@@ -255,10 +259,15 @@ export const AddOrder = ({ route, navigation }) => {
                 }}
               >
                 <TextInput
-                  placeholder="Price"
+                  placeholder={language?.language?.Bookings?.bookings?.price}
                   placeholderTextColor={currentTheme.disabled}
                   value={price?.toString()}
-                  style={{ color: currentTheme.font, fontSize: 16 }}
+                  style={{
+                    color: currentTheme.font,
+                    fontSize: 16,
+                    width: "100%",
+                    textAlign: "center",
+                  }}
                   onChangeText={setPrice}
                 />
               </View>
@@ -317,7 +326,7 @@ export const AddOrder = ({ route, navigation }) => {
                       onPress={() => setCurrency("Dollar")}
                     >
                       <Text style={{ color: currentTheme.font, fontSize: 16 }}>
-                        <FontAwesome name="dollar" color={"#111"} size={16} />
+                        <FontAwesome name="dollar" color={"#fff"} size={16} />
                       </Text>
                     </TouchableOpacity>
                   ) : currency === "Dollar" ? (
@@ -331,7 +340,7 @@ export const AddOrder = ({ route, navigation }) => {
                       }}
                     >
                       <Text style={{ color: currentTheme.font, fontSize: 16 }}>
-                        <FontAwesome name="euro" color={"#111"} size={16} />
+                        <FontAwesome name="euro" color={"#fff"} size={16} />
                       </Text>
                     </TouchableOpacity>
                   ) : (
@@ -347,7 +356,7 @@ export const AddOrder = ({ route, navigation }) => {
                       <Text
                         style={{
                           fontWeight: "bold",
-                          color: "#111",
+                          color: "#fff",
                           fontSize: 16,
                         }}
                       >
@@ -375,7 +384,7 @@ export const AddOrder = ({ route, navigation }) => {
                   padding: 5,
                   borderRadius: 50,
                   backgroundColor: "#151515",
-                  width: "30%",
+                  width: "50%",
                   alignItems: "center",
                   backgroundColor: currentTheme.background2,
                   borderWidth: 1,
@@ -397,11 +406,15 @@ export const AddOrder = ({ route, navigation }) => {
                     </Text>
                   </TouchableOpacity>
                 ) : (
-                  <TouchableOpacity onPress={showDurationModal}>
+                  <TouchableOpacity
+                    onPress={showDurationModal}
+                    style={{ overflow: "hidden" }}
+                  >
                     <Text
+                      numberOfLines={1}
                       style={{ color: currentTheme.disabled, fontSize: 16 }}
                     >
-                      Duration
+                      {language?.language?.Bookings?.bookings?.duration}
                     </Text>
                   </TouchableOpacity>
                 )}
@@ -433,11 +446,11 @@ export const AddOrder = ({ route, navigation }) => {
                     letterSpacing: 0.3,
                   }}
                 >
-                  Client:
+                  {language?.language?.Bookings?.bookings?.client}:
                 </Text>
               </View>
               <TextInput
-                placeholder="Name"
+                placeholder={language?.language?.Bookings?.bookings?.name}
                 placeholderTextColor={currentTheme.disabled}
                 value={user.name}
                 style={{
@@ -449,7 +462,13 @@ export const AddOrder = ({ route, navigation }) => {
                 onChangeText={(val) => setUser({ ...user, name: val })}
               />
               <TextInput
-                placeholder="Phone Number (optional)"
+                placeholder={
+                  language?.language?.Bookings?.bookings?.phone +
+                  " " +
+                  "(" +
+                  language?.language?.Bookings?.bookings?.optional +
+                  ")"
+                }
                 placeholderTextColor={currentTheme.disabled}
                 value={user.phone}
                 style={{
@@ -461,7 +480,13 @@ export const AddOrder = ({ route, navigation }) => {
                 onChangeText={(val) => setUser({ ...user, phone: val })}
               />
               <TextInput
-                placeholder="Addationl info (optional)"
+                placeholder={
+                  language?.language?.Bookings?.bookings?.addational +
+                  " " +
+                  "(" +
+                  language?.language?.Bookings?.bookings?.optional +
+                  ")"
+                }
                 placeholderTextColor={currentTheme.disabled}
                 value={user.addationalInfo}
                 style={{
@@ -476,7 +501,13 @@ export const AddOrder = ({ route, navigation }) => {
                 }
               />
               <TextInput
-                placeholder="Comment (optional)"
+                placeholder={
+                  language?.language?.Bookings?.bookings?.comment +
+                  " " +
+                  "(" +
+                  language?.language?.Bookings?.bookings?.optional +
+                  ")"
+                }
                 placeholderTextColor={currentTheme.disabled}
                 value={comment}
                 style={{
@@ -495,14 +526,20 @@ export const AddOrder = ({ route, navigation }) => {
               style={{
                 marginVertical: 15,
                 borderRadius: 50,
-                width: "45%",
+                width: "65%",
                 backgroundColor: currentTheme.pink,
                 padding: 10,
                 alignItems: "center",
               }}
             >
-              <Text style={{ color: "#f1f1f1", fontWeight: "bold" }}>
-                Add Order
+              <Text
+                style={{
+                  color: "#f1f1f1",
+                  fontWeight: "bold",
+                  textAlign: "center",
+                }}
+              >
+                {language?.language?.Bookings?.bookings?.addOrder}
               </Text>
             </TouchableOpacity>
           </ScrollView>

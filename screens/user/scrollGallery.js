@@ -41,6 +41,8 @@ import {
   setRemoveStarRerenderFromScrollGallery,
 } from "../../redux/rerenders";
 import SmoothModal from "../../screens/user/editPostPopup";
+import * as Notifications from "expo-notifications";
+import { sendNotification } from "../../components/pushNotifications";
 
 /**
  * User feeds scrolling gallery
@@ -56,6 +58,9 @@ export const ScrollGallery = ({ route, navigation }) => {
   // define props from route
   const props = route.params;
 
+  // app language
+  const lang = useSelector((state) => state.storeApp.language);
+
   // define feeds list
   const [scrolableFeeds, setScrollableFeeds] = useState([]);
 
@@ -69,12 +74,16 @@ export const ScrollGallery = ({ route, navigation }) => {
   // define when new feeds loads
   const [loadNewFeeds, setLoadNewFeeds] = useState(false);
 
+  // backend url
+  const backendUrl = useSelector((state) => state.storeApp.backendUrl);
+
   // add new feeds function
   async function AddFeedObjs() {
     setLoadNewFeeds(true);
     try {
       const response = await axios.get(
-        `https://beautyverse.herokuapp.com/api/v1/users/${props.user?._id}/feeds/native?page=${page}&check=${props.user?._id}`
+        backendUrl +
+          `/api/v1/users/${props.user?._id}/feeds/native?page=${page}&check=${props.user?._id}`
       );
       setScrollableFeeds((prev) => {
         const newFeeds = response.data.data?.feeds;
@@ -122,6 +131,8 @@ export const ScrollGallery = ({ route, navigation }) => {
   /**
    * define feeds map
    */
+  const scrollViewRef = useRef();
+  const [scrollY, setScrollY] = useState(0);
 
   const FeedItems = useMemo(
     () =>
@@ -137,6 +148,9 @@ export const ScrollGallery = ({ route, navigation }) => {
             navigation={navigation}
             currentIndex={0}
             isFocused={isFocused}
+            scrollViewRef={scrollViewRef}
+            scrollY={scrollY}
+            setScrollY={setScrollY}
           />
         );
       }),
@@ -151,8 +165,10 @@ export const ScrollGallery = ({ route, navigation }) => {
     const contentHeight = event.nativeEvent.contentSize.height;
     const layoutHeight = event.nativeEvent.layoutMeasurement.height;
 
+    setScrollY(event.nativeEvent.contentOffset.y);
+
     if (props.feedsLength > scrolableFeeds.length) {
-      if (offsetY + layoutHeight >= contentHeight - 20) {
+      if (offsetY + layoutHeight >= contentHeight - 600) {
         if (!loadNewFeeds) {
           setPage(page + 1);
         }
@@ -169,10 +185,11 @@ export const ScrollGallery = ({ route, navigation }) => {
         text="The Report sent succesfully!"
       />
       <ScrollView
-        contentContainerStyle={{ paddingBottom: 200 }}
+        contentContainerStyle={{ paddingBottom: 50 }}
         showsVerticalScrollIndicator={false}
         onScroll={handleScroll}
         scrollEventThrottle={16}
+        ref={scrollViewRef}
         // bounces={Platform.OS === "ios" ? false : undefined}
         // overScrollMode={Platform.OS === "ios" ? "never" : "always"}
       >
@@ -296,6 +313,9 @@ const FeedItem = (props) => {
   // define redux dispatch
   const dispatch = useDispatch();
 
+  // backend url
+  const backendUrl = useSelector((state) => state.storeApp.backendUrl);
+
   // define socket server
   const socket = useSocket();
 
@@ -326,7 +346,8 @@ const FeedItem = (props) => {
       dispatch(setActiveFeedFromScrollGallery(props?.feed._id));
 
       await axios.post(
-        `https://beautyverse.herokuapp.com/api/v1/users/${props?.user._id}/feeds/${props.feed._id}/stars`,
+        backendUrl +
+          `/api/v1/users/${props?.user._id}/feeds/${props.feed._id}/stars`,
         {
           staredBy: props.currentUser?._id,
           createdAt: new Date(),
@@ -334,7 +355,7 @@ const FeedItem = (props) => {
       );
       if (currentUser?._id !== props.user?._id) {
         await axios.post(
-          `https://beautyverse.herokuapp.com/api/v1/users/${props.user?._id}/notifications`,
+          backendUrl + `/api/v1/users/${props.user?._id}/notifications`,
           {
             senderId: currentUser?._id,
             text: `მიანიჭა ვარსკვლავი თქვენ პოსტს!`,
@@ -344,6 +365,16 @@ const FeedItem = (props) => {
             feed: `/api/v1/users/${props.user?._id}/feeds/${props.feed._id}`,
           }
         );
+        if (props.user._id !== currentUser._id) {
+          if (props.user?.pushNotificationToken) {
+            await sendNotification(
+              props.user?.pushNotificationToken,
+              currentUser.name,
+              "added start to your feed!",
+              props.feed
+            );
+          }
+        }
         socket.emit("updateUser", {
           targetId: props.user?._id,
         });
@@ -366,7 +397,9 @@ const FeedItem = (props) => {
 
     dispatch(setActiveFeedFromScrollGallery(props.feed._id));
     try {
-      const url = `https://beautyverse.herokuapp.com/api/v1/users/${props?.user._id}/feeds/${props.feed._id}/stars/${props.currentUser?._id}`;
+      const url =
+        backendUrl +
+        `/api/v1/users/${props?.user._id}/feeds/${props.feed._id}/stars/${props.currentUser?._id}`;
       const response = await fetch(url, { method: "DELETE" })
         .then((response) => response.json())
         .then(() => {
@@ -388,7 +421,8 @@ const FeedItem = (props) => {
     const GetReviews = async () => {
       try {
         const response = await axios.get(
-          `https://beautyverse.herokuapp.com/api/v1/users/${props?.user?._id}/feeds/${props?.feed?._id}/reviews?page=${reviewsPage}`
+          backendUrl +
+            `/api/v1/users/${props?.user?._id}/feeds/${props?.feed?._id}/reviews?page=${reviewsPage}`
         );
         setReviewsList(response.data.data.reviews);
         setReviewLength(response.data.result);
@@ -403,7 +437,8 @@ const FeedItem = (props) => {
   async function AddNewReviews(nextPage) {
     try {
       const response = await axios.get(
-        `https://beautyverse.herokuapp.com/api/v1/users/${props?.user._id}/feeds/${props?.feed._id}/reviews?page=${nextPage}`
+        backendUrl +
+          `/api/v1/users/${props?.user._id}/feeds/${props?.feed._id}/reviews?page=${nextPage}`
       );
       setReviewsList((prev) => {
         const newReviews = response.data.data?.reviews || [];
@@ -462,7 +497,8 @@ const FeedItem = (props) => {
       setReviewInput("");
       setOpenReviews(true);
       await axios.post(
-        `https://beautyverse.herokuapp.com/api/v1/users/${props?.user._id}/feeds/${props.feed._id}/reviews`,
+        backendUrl +
+          `/api/v1/users/${props?.user._id}/feeds/${props.feed._id}/reviews`,
         {
           reviewId: newId,
           reviewer: props.currentUser?._id,
@@ -472,7 +508,7 @@ const FeedItem = (props) => {
       );
       if (currentUser?._id !== props.user?._id) {
         await axios.post(
-          `https://beautyverse.herokuapp.com/api/v1/users/${props.user?._id}/notifications`,
+          backendUrl + `/api/v1/users/${props.user?._id}/notifications`,
           {
             senderId: currentUser?._id,
             text: `დატოვა კომენტარი თქვენს პოსტზე!`,
@@ -482,7 +518,18 @@ const FeedItem = (props) => {
             feed: `/api/v1/users/${props.user?._id}/feeds/${props?.feed._id}`,
           }
         );
+        if (props.user._id !== currentUser._id) {
+          if (props.user?.pushNotificationToken) {
+            await sendNotification(
+              props.user?.pushNotificationToken,
+              currentUser.name,
+              "added comment to your feed!",
+              props.feed
+            );
+          }
+        }
       }
+
       socket.emit("updateUser", {
         targetId: props.user?._id,
       });
@@ -503,7 +550,9 @@ const FeedItem = (props) => {
   const [removeReview, setRemoveReview] = useState(null);
 
   const DeleteReview = async (id) => {
-    const url = `https://beautyverse.herokuapp.com/api/v1/users/${props?.user._id}/feeds/${props.feed._id}/reviews/${id}`;
+    const url =
+      backendUrl +
+      `/api/v1/users/${props?.user._id}/feeds/${props.feed._id}/reviews/${id}`;
     try {
       setReviewsList((prevReviews) =>
         prevReviews.filter((review) => review.reviewId !== id)
@@ -527,7 +576,7 @@ const FeedItem = (props) => {
   };
 
   // open reviews
-  const [openReviews, setOpenReviews] = useState(true);
+  const [openReviews, setOpenReviews] = useState(false);
 
   // fade in
   const fadeAnim = useRef(new Animated.Value(0)).current; // Initial value for opacity: 0
@@ -541,7 +590,7 @@ const FeedItem = (props) => {
   }, [fadeAnim]);
 
   // define open post or hide
-  const [numLines, setNumLines] = useState(3);
+  const [numLines, setNumLines] = useState(5);
 
   // define post text
   const [post, setPost] = useState("");
@@ -620,6 +669,8 @@ const FeedItem = (props) => {
   // load video indicator loader
   const [loadVideo, setLoadVideo] = useState(true);
 
+  console.log(props.scrollY);
+
   return (
     <>
       {props.x !== 0 && (
@@ -667,7 +718,7 @@ const FeedItem = (props) => {
               visible={feedOption}
               onClose={() => setFeedOption(false)}
               onSave={() => setFeedOption(false)}
-              post={props?.feed?.post}
+              post={post}
               feedId={props.feed._id}
               setPost={setPost}
               feedOption={feedOption}
@@ -677,13 +728,13 @@ const FeedItem = (props) => {
             />
           </View>
         )}
-        {props?.feed?.post?.length > 0 && props?.feed?.fileFormat === "img" && (
+        {props?.feed?.fileFormat === "img" && (
           <View style={{ paddingLeft: 10 }}>
             <Post
               currentTheme={currentTheme}
               numLines={numLines}
               setNumLines={setNumLines}
-              text={post}
+              postItem={post}
             />
           </View>
         )}
@@ -707,7 +758,7 @@ const FeedItem = (props) => {
               visible={feedOption}
               onClose={() => setFeedOption(false)}
               onSave={() => setFeedOption(false)}
-              post={props?.feed?.post}
+              post={post}
               feedId={props.feed._id}
               setPost={setPost}
               feedOption={feedOption}
@@ -721,7 +772,7 @@ const FeedItem = (props) => {
                   currentTheme={currentTheme}
                   numLines={numLines}
                   setNumLines={setNumLines}
-                  text={post}
+                  postItem={post}
                 />
               </View>
             )}
@@ -987,7 +1038,19 @@ const FeedItem = (props) => {
                   height: inputHeight,
                 },
               ]}
-              placeholder="Write text.."
+              onFocus={() =>
+                props?.scrollViewRef.current.scrollTo({
+                  y: props?.scrollY + 250,
+                  animated: true,
+                })
+              }
+              onBlur={() =>
+                props?.scrollViewRef.current.scrollTo({
+                  y: props?.scrollY - 250,
+                  animated: true,
+                })
+              }
+              placeholder={props?.language?.language.Main.feedCard.writeText}
               placeholderTextColor="#ccc"
               onChangeText={(text) => setReviewInput(text)}
               value={reviewInput}
@@ -1025,7 +1088,9 @@ const FeedItem = (props) => {
               })
             ) : (
               <View style={{ padding: 20, paddingVertical: 10 }}>
-                <Text style={{ color: "#888", fontSize: 12 }}>No comments</Text>
+                <Text style={{ color: "#888", fontSize: 12 }}>
+                  {props.language?.language.Main.feedCard.noComments}
+                </Text>
               </View>
             )}
             {reviewLength > 10 && (
@@ -1074,7 +1139,7 @@ const ReviewItem = ({
     const GetUser = async () => {
       try {
         const response = await axios.get(
-          "https://beautyverse.herokuapp.com/api/v1/users/" + item.reviewer.id
+          backendUrl + "/api/v1/users/" + item.reviewer.id
         );
         setUser(response.data.data.user);
       } catch (error) {

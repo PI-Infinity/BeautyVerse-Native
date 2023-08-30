@@ -45,6 +45,12 @@ export const Login = ({ navigation }) => {
   // defines loading backdrop
   const [loading, setLoading] = useState(false);
 
+  // defines location
+  const location = useSelector((state) => state.storeApp.location);
+
+  // backend url
+  const backendUrl = useSelector((state) => state.storeApp.backendUrl);
+
   /**
    * Login function
    */
@@ -53,7 +59,7 @@ export const Login = ({ navigation }) => {
     try {
       // post login to backend
       await axios
-        .post("https://beautyverse.herokuapp.com/api/v1/login", {
+        .post(backendUrl + "/api/v1/login", {
           email: email,
           password: password,
         })
@@ -66,6 +72,7 @@ export const Login = ({ navigation }) => {
               "Beautyverse:currentUser",
               JSON.stringify(data.data.filteredUser)
             );
+
             // after save user to async storage, rerender user info to complete login and navigate to main content
             dispatch(setRerenderCurrentUser());
             setTimeout(() => {
@@ -97,7 +104,7 @@ export const Login = ({ navigation }) => {
   // async function Verify() {
   //   try {
   //     const response = await axios.post(
-  //       "https://beautyverse.herokuapp.com/api/v1/verifyEmail",
+  //       backendUrl + "/api/v1/verifyEmail",
   //       {
   //         email: email,
   //         code: code,
@@ -142,12 +149,9 @@ export const Login = ({ navigation }) => {
 
   async function SendEmail() {
     try {
-      await axios.post(
-        "https://beautyverse.herokuapp.com/api/v1/forgotPassword",
-        {
-          email: emailInput,
-        }
-      );
+      await axios.post(backendUrl + "/api/v1/forgotPassword", {
+        email: emailInput,
+      });
       // If the email is sent successfully, handle the response here
       setAlert({
         active: true,
@@ -254,8 +258,18 @@ export const Login = ({ navigation }) => {
           onFocus={() => setPasswordFocused(true)}
           onBlur={() => setPasswordFocused(false)}
         />
-        <TouchableOpacity style={styles.button} onPress={Login}>
-          <Text style={styles.buttonText}>
+        <TouchableOpacity
+          style={[
+            styles.button,
+            {
+              backgroundColor: currentTheme.background,
+              borderWidth: 1,
+              borderColor: currentTheme.line,
+            },
+          ]}
+          onPress={Login}
+        >
+          <Text style={[styles.buttonText, { color: currentTheme.pink }]}>
             {language?.language?.Auth?.auth?.login}
           </Text>
         </TouchableOpacity>
@@ -300,14 +314,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     borderBottomWidth: 1,
     letterSpacing: 0.2,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 3, // negative value places shadow on top
-    },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
   },
   button: {
     width: "45%",

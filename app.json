@@ -4,7 +4,7 @@
     "slug": "beautyverse-app",
     "owner": "beautyverse",
     "description": "Everything about Beauty and Care",
-    "version": "1.0.4",
+    "version": "1.0.5",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -17,7 +17,10 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.beautyverse.beautyverseapp",
-      "buildNumber": "1.0.22"
+      "buildNumber": "1.1.12",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "This app uses the location to show where you are on the map"
+      }
     },
     "android": {
       "package": "com.beautyverse.beautyverseapp",
@@ -25,7 +28,8 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#050505"
-      }
+      },
+      "permissions": ["ACCESS_COARSE_LOCATION", "ACCESS_FINE_LOCATION"]
     },
     "web": {
       "favicon": "./assets/favicon.png"

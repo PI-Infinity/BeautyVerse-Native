@@ -10,6 +10,7 @@ import Modal from "react-native-modal";
 import { useDispatch, useSelector } from "react-redux";
 import { setStatusFilter } from "../../redux/orders";
 import { setStatusFilterSentOrders } from "../../redux/sentOrders";
+import { Language } from "../../context/language";
 
 /**
  * orders status Sort popup
@@ -20,6 +21,10 @@ const { width: SCREEN_WIDTH } = Dimensions.get("window");
 export const SortPopup = ({ currentTheme, from, setPage }) => {
   // redux dispatch
   const dispatch = useDispatch();
+
+  // defines language
+  const language = Language();
+  const lang = useSelector((state) => state.storeApp.language);
 
   // filtered result
   const fOrders = useSelector((state) => state.storeOrders.statusFilter);
@@ -57,13 +62,25 @@ export const SortPopup = ({ currentTheme, from, setPage }) => {
   const [isPickerVisible, setPickerVisibility] = useState(false);
 
   const items = [
-    { label: "All", value: "" },
-    { label: "New", value: "new" },
-    { label: "Active", value: "active" },
-    { label: "Pending", value: "pending" },
-    { label: "Completed", value: "completed" },
-    { label: "Canceled", value: "canceled" },
-    { label: "Rejected", value: "rejected" },
+    { label: language?.language?.Bookings?.bookings?.all, value: "" },
+    { label: language?.language?.Bookings?.bookings?.new, value: "new" },
+    { label: language?.language?.Bookings?.bookings?.active, value: "active" },
+    {
+      label: language?.language?.Bookings?.bookings?.pending,
+      value: "pending",
+    },
+    {
+      label: language?.language?.Bookings?.bookings?.completed,
+      value: "completed",
+    },
+    {
+      label: language?.language?.Bookings?.bookings?.canceled,
+      value: "canceled",
+    },
+    {
+      label: language?.language?.Bookings?.bookings?.rejected,
+      value: "rejected",
+    },
   ];
 
   const openPicker = () => {
@@ -75,7 +92,6 @@ export const SortPopup = ({ currentTheme, from, setPage }) => {
     if (from === "orders") {
       dispatch(setStatusFilter(value));
     } else {
-      console.log(value);
       dispatch(setStatusFilterSentOrders(value));
     }
     setPickerVisibility(false);
@@ -115,8 +131,6 @@ export const SortPopup = ({ currentTheme, from, setPage }) => {
           width: "100%",
           alignItems: "center",
           flexDirection: "row",
-
-          paddingHorizontal: 15,
         }}
       >
         <TouchableOpacity
@@ -124,7 +138,7 @@ export const SortPopup = ({ currentTheme, from, setPage }) => {
           style={{
             padding: 5,
             borderWidth: 1.5,
-            borderColor: bg,
+            borderColor: currentTheme.line,
             width: "100%",
             borderRadius: 50,
             // padding: 5,
@@ -136,13 +150,50 @@ export const SortPopup = ({ currentTheme, from, setPage }) => {
         >
           <Text
             style={{
-              color: currentTheme.font,
+              color:
+                filter.toLowerCase() === "new"
+                  ? "green"
+                  : filter.toLowerCase() === "pending"
+                  ? "orange"
+                  : filter.toLowerCase() === "active"
+                  ? currentTheme.pink
+                  : filter.toLowerCase() === ""
+                  ? currentTheme.font
+                  : filter.toLowerCase() === "new"
+                  ? currentTheme.font
+                  : currentTheme.disabled,
               letterSpacing: 0.3,
               fontWeight: "bold",
             }}
           >
-            {filter ? filter : "All"}{" "}
+            {filter
+              ? items?.find((i) => i.value === filter).label
+              : language?.language?.Bookings?.bookings?.all}{" "}
           </Text>
+
+          {(from === "orders" ? newOrders > 0 : newSentOrders > 0) && (
+            <View
+              style={{
+                width: 15,
+                height: 15,
+                justifyContent: "center",
+                alignItems: "center",
+                borderRadius: 50,
+                backgroundColor: "green",
+              }}
+            >
+              <Text
+                style={{
+                  color: currentTheme.font,
+                  letterSpacing: 0.3,
+                  fontWeight: "bold",
+                  fontSize: 10,
+                }}
+              >
+                {from === "orders" ? newOrders : newSentOrders}
+              </Text>
+            </View>
+          )}
         </TouchableOpacity>
       </View>
       <Modal
@@ -153,8 +204,7 @@ export const SortPopup = ({ currentTheme, from, setPage }) => {
           width: SCREEN_WIDTH - 40,
           marginRight: 15,
         }}
-        animationIn="zoomIn"
-        animationOut="fadeOut"
+        animationType="slide"
         backdropColor="black"
         backdropOpacity={0.7}
       >
@@ -170,18 +220,17 @@ export const SortPopup = ({ currentTheme, from, setPage }) => {
               style={[
                 styles.item,
                 {
-                  backgroundColor:
+                  borderWidth: 1.5,
+                  borderColor:
                     filter === item.value
                       ? currentTheme.pink
-                      : currentTheme.background,
-                  borderWidth: 1,
-                  borderColor: currentTheme.line,
-                  color: filter === item.value ? "#ccc" : currentTheme.font,
+                      : currentTheme.line,
+
                   alignItems: "center",
                   flexDirection: "row",
                 },
               ]}
-              onPress={() => handleSelect(item.label)}
+              onPress={() => handleSelect(item.value)}
             >
               <Text
                 style={[
@@ -218,7 +267,23 @@ export const SortPopup = ({ currentTheme, from, setPage }) => {
                     right: 10,
                   }}
                 >
-                  <Text style={{ color: "#fff", fontSize: 12 }}>
+                  <Text
+                    style={{
+                      color:
+                        item.value === "active"
+                          ? currentTheme.pink
+                          : item.value === "completed"
+                          ? currentTheme.font
+                          : item.value === "new"
+                          ? "green"
+                          : item.value === "pending"
+                          ? "orange"
+                          : item.value === ""
+                          ? currentTheme.font
+                          : currentTheme.disabled,
+                      fontSize: 12,
+                    }}
+                  >
                     {from === "orders"
                       ? newOrders
                       : from === "sentOrders"
@@ -241,7 +306,23 @@ export const SortPopup = ({ currentTheme, from, setPage }) => {
                     right: 10,
                   }}
                 >
-                  <Text style={{ color: "#fff", fontSize: 12 }}>
+                  <Text
+                    style={{
+                      color:
+                        item.value === "active"
+                          ? currentTheme.pink
+                          : item.value === "completed"
+                          ? currentTheme.font
+                          : item.value === "new"
+                          ? "green"
+                          : item.value === "pending"
+                          ? "orange"
+                          : item.value === ""
+                          ? currentTheme.font
+                          : currentTheme.disabled,
+                      fontSize: 12,
+                    }}
+                  >
                     {from === "orders"
                       ? activeRecieved
                       : from === "sentOrders"
@@ -264,7 +345,23 @@ export const SortPopup = ({ currentTheme, from, setPage }) => {
                     right: 10,
                   }}
                 >
-                  <Text style={{ color: "#fff", fontSize: 12 }}>
+                  <Text
+                    style={{
+                      color:
+                        item.value === "active"
+                          ? currentTheme.pink
+                          : item.value === "completed"
+                          ? currentTheme.font
+                          : item.value === "new"
+                          ? "green"
+                          : item.value === "pending"
+                          ? "orange"
+                          : item.value === ""
+                          ? currentTheme.font
+                          : currentTheme.disabled,
+                      fontSize: 12,
+                    }}
+                  >
                     {from === "orders"
                       ? rejectedRecieved
                       : from === "sentOrders"
@@ -287,7 +384,23 @@ export const SortPopup = ({ currentTheme, from, setPage }) => {
                     right: 10,
                   }}
                 >
-                  <Text style={{ color: "#fff", fontSize: 12 }}>
+                  <Text
+                    style={{
+                      color:
+                        item.value === "active"
+                          ? currentTheme.pink
+                          : item.value === "completed"
+                          ? currentTheme.font
+                          : item.value === "new"
+                          ? "green"
+                          : item.value === "pending"
+                          ? "orange"
+                          : item.value === ""
+                          ? currentTheme.font
+                          : currentTheme.disabled,
+                      fontSize: 12,
+                    }}
+                  >
                     {from === "orders"
                       ? completedRecieved
                       : from === "sentOrders"
@@ -310,7 +423,23 @@ export const SortPopup = ({ currentTheme, from, setPage }) => {
                     right: 10,
                   }}
                 >
-                  <Text style={{ color: "#fff", fontSize: 12 }}>
+                  <Text
+                    style={{
+                      color:
+                        item.value === "active"
+                          ? currentTheme.pink
+                          : item.value === "completed"
+                          ? currentTheme.font
+                          : item.value === "new"
+                          ? "green"
+                          : item.value === "pending"
+                          ? "orange"
+                          : item.value === ""
+                          ? currentTheme.font
+                          : currentTheme.disabled,
+                      fontSize: 12,
+                    }}
+                  >
                     {from === "orders"
                       ? allRecieved
                       : from === "sentOrders"
@@ -333,7 +462,23 @@ export const SortPopup = ({ currentTheme, from, setPage }) => {
                     right: 10,
                   }}
                 >
-                  <Text style={{ color: "#fff", fontSize: 12 }}>
+                  <Text
+                    style={{
+                      color:
+                        item.value === "active"
+                          ? currentTheme.pink
+                          : item.value === "completed"
+                          ? currentTheme.font
+                          : item.value === "new"
+                          ? "green"
+                          : item.value === "pending"
+                          ? "orange"
+                          : item.value === ""
+                          ? currentTheme.font
+                          : currentTheme.disabled,
+                      fontSize: 12,
+                    }}
+                  >
                     {from === "orders"
                       ? pendingRecieved
                       : from === "sentOrders"
@@ -357,7 +502,23 @@ export const SortPopup = ({ currentTheme, from, setPage }) => {
                     right: 10,
                   }}
                 >
-                  <Text style={{ color: "#fff", fontSize: 12 }}>
+                  <Text
+                    style={{
+                      color:
+                        item.value === "active"
+                          ? currentTheme.pink
+                          : item.value === "completed"
+                          ? currentTheme.font
+                          : item.value === "new"
+                          ? "green"
+                          : item.value === "pending"
+                          ? "orange"
+                          : item.value === ""
+                          ? currentTheme.font
+                          : currentTheme.disabled,
+                      fontSize: 12,
+                    }}
+                  >
                     {from === "orders"
                       ? canceledRecieved
                       : from === "sentOrders"

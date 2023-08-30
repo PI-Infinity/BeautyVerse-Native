@@ -12,6 +12,7 @@ import { useSelector } from "react-redux";
 import { CacheableImage } from "../../components/cacheableImage";
 import { darkTheme, lightTheme } from "../../context/theme";
 import { AudienceList } from "../../screens/user/audienceList";
+import { Language } from "../../context/language";
 
 /**
  * audience component in user screen
@@ -25,6 +26,8 @@ export const Audience = ({
   renderCheck,
   setRenderCheck,
 }) => {
+  // defines language
+  const language = Language();
   // define theme
   const theme = useSelector((state) => state.storeApp.theme);
 
@@ -45,6 +48,9 @@ export const Audience = ({
   // define addational render state
   const [render, setRender] = useState(false);
 
+  // backend url
+  const backendUrl = useSelector((state) => state.storeApp.backendUrl);
+
   /**
    * Get Audience
    */
@@ -52,9 +58,7 @@ export const Audience = ({
   // get followings
   useEffect(() => {
     async function GetAudience(userId) {
-      await fetch(
-        `https://beautyverse.herokuapp.com/api/v1/users/${targetUser?._id}/followings`
-      )
+      await fetch(backendUrl + `/api/v1/users/${targetUser?._id}/followings`)
         .then((response) => response.json())
         .then((data) => {
           setFollowings({
@@ -75,9 +79,7 @@ export const Audience = ({
 
   useEffect(() => {
     async function GetAudience(userId) {
-      await fetch(
-        `https://beautyverse.herokuapp.com/api/v1/users/${targetUser?._id}/followers`
-      )
+      await fetch(backendUrl + `/api/v1/users/${targetUser?._id}/followers`)
         .then((response) => response.json())
         .then((data) => {
           setFollowers({
@@ -116,10 +118,10 @@ export const Audience = ({
         <View style={{ flex: 1, alignItems: "center", gap: 5, marginTop: 30 }}>
           <Pressable
             style={{
-              padding: 10,
+              padding: 15,
               paddingVertical: 10,
-              width: "80%",
-              borderRadius: 5,
+              width: "90%",
+              borderRadius: 50,
               borderWidth: 1,
               borderColor: currentTheme.background2,
               alignItems: "center",
@@ -129,7 +131,8 @@ export const Audience = ({
             onPress={() => setOpenFollowers(!openFollowers)}
           >
             <Text style={{ color: currentTheme.font, letterSpacing: 0.2 }}>
-              Followers ({followers?.length})
+              {language?.language?.User?.userPage?.followers} (
+              {followers?.length})
             </Text>
             <View style={{ flexDirection: "row", gap: -10 }}>
               {followers.list?.map((item, index) => {
@@ -144,32 +147,72 @@ export const Audience = ({
                       }
                     >
                       {item?.cover?.length > 0 ? (
-                        <CacheableImage
-                          source={{ uri: item?.cover }}
-                          style={{
-                            width: 40,
-                            height: 40,
-                            borderRadius: 50,
-                            borderWidth: 1,
-                            borderColor: "#ddd",
-                          }}
-                          manipulationOptions={[
-                            { resize: { width: 40, height: 40 } },
-                            { rotate: 90 },
-                          ]}
-                        />
+                        <View>
+                          {item.online && (
+                            <View
+                              style={{
+                                width: 10,
+                                height: 10,
+                                backgroundColor: "#3bd16f",
+                                borderRadius: 50,
+                                position: "absolute",
+                                zIndex: 100,
+                                right: 5,
+                                bottom: 1,
+                                borderWidth: 1.5,
+                                borderColor: currentTheme.background,
+                              }}
+                            ></View>
+                          )}
+                          <CacheableImage
+                            source={{ uri: item?.cover }}
+                            style={{
+                              width: 40,
+                              height: 40,
+                              borderRadius: 50,
+                              borderWidth: 3,
+                              borderColor: currentTheme.background,
+                            }}
+                            manipulationOptions={[
+                              { resize: { width: 40, height: 40 } },
+                              { rotate: 90 },
+                            ]}
+                          />
+                        </View>
                       ) : (
-                        <View
-                          style={{
-                            borderRadius: 100,
-                            width: 40,
-                            aspectRatio: 1,
-                            alignItems: "center",
-                            justifyContent: "center",
-                            backgroundColor: "rgba(255,255,255,0.1)",
-                          }}
-                        >
-                          <FontAwesome name="user" size={20} color="#e5e5e5" />
+                        <View>
+                          {item.online && (
+                            <View
+                              style={{
+                                width: 10,
+                                height: 10,
+                                backgroundColor: "#3bd16f",
+                                borderRadius: 50,
+                                position: "absolute",
+                                zIndex: 100,
+                                right: 5,
+                                bottom: 1,
+                                borderWidth: 1.5,
+                                borderColor: currentTheme.background,
+                              }}
+                            ></View>
+                          )}
+                          <View
+                            style={{
+                              borderRadius: 100,
+                              width: 40,
+                              aspectRatio: 1,
+                              alignItems: "center",
+                              justifyContent: "center",
+                              backgroundColor: "rgba(255,255,255,0.1)",
+                            }}
+                          >
+                            <FontAwesome
+                              name="user"
+                              size={20}
+                              color="#e5e5e5"
+                            />
+                          </View>
                         </View>
                       )}
                     </Pressable>
@@ -210,10 +253,10 @@ export const Audience = ({
           </Collapsible>
           <Pressable
             style={{
-              padding: 10,
+              padding: 15,
               paddingVertical: 10,
-              width: "80%",
-              borderRadius: 5,
+              width: "90%",
+              borderRadius: 50,
               borderWidth: 1,
               borderColor: currentTheme.background2,
               alignItems: "center",
@@ -223,7 +266,8 @@ export const Audience = ({
             onPress={() => setOpenFollowings(!openFollowings)}
           >
             <Text style={{ color: currentTheme.font, letterSpacing: 0.2 }}>
-              Followings ({followings?.length})
+              {language?.language?.User?.userPage?.followings} (
+              {followings?.length})
             </Text>
             <View style={{ flexDirection: "row", gap: -10 }}>
               {followings.list?.map((item, index) => {
@@ -238,33 +282,73 @@ export const Audience = ({
                       }
                     >
                       {item.cover?.length > 0 ? (
-                        <CacheableImage
-                          key={index}
-                          source={{ uri: item?.cover }}
-                          style={{
-                            width: 40,
-                            height: 40,
-                            borderRadius: 50,
-                            borderWidth: 1,
-                            borderColor: "#ddd",
-                          }}
-                          manipulationOptions={[
-                            { resize: { width: 40, height: 40 } },
-                            { rotate: 90 },
-                          ]}
-                        />
+                        <View>
+                          {item.online && (
+                            <View
+                              style={{
+                                width: 10,
+                                height: 10,
+                                backgroundColor: "#3bd16f",
+                                borderRadius: 50,
+                                position: "absolute",
+                                zIndex: 100,
+                                right: 5,
+                                bottom: 1,
+                                borderWidth: 1.5,
+                                borderColor: currentTheme.background,
+                              }}
+                            ></View>
+                          )}
+                          <CacheableImage
+                            key={index}
+                            source={{ uri: item?.cover }}
+                            style={{
+                              width: 40,
+                              height: 40,
+                              borderRadius: 50,
+                              borderWidth: 3,
+                              borderColor: currentTheme.background,
+                            }}
+                            manipulationOptions={[
+                              { resize: { width: 40, height: 40 } },
+                              { rotate: 90 },
+                            ]}
+                          />
+                        </View>
                       ) : (
-                        <View
-                          style={{
-                            borderRadius: 100,
-                            width: 40,
-                            aspectRatio: 1,
-                            alignItems: "center",
-                            justifyContent: "center",
-                            backgroundColor: "rgba(255,255,255,0.1)",
-                          }}
-                        >
-                          <FontAwesome name="user" size={20} color="#e5e5e5" />
+                        <View>
+                          {item.online && (
+                            <View
+                              style={{
+                                width: 10,
+                                height: 10,
+                                backgroundColor: "#3bd16f",
+                                borderRadius: 50,
+                                position: "absolute",
+                                zIndex: 100,
+                                right: 5,
+                                bottom: 1,
+                                borderWidth: 1.5,
+                                borderColor: currentTheme.background,
+                              }}
+                            ></View>
+                          )}
+                          <View
+                            style={{
+                              borderRadius: 100,
+                              width: 40,
+                              aspectRatio: 1,
+                              alignItems: "center",
+                              justifyContent: "center",
+                              backgroundColor: "rgba(255,255,255,0.1)",
+                            }}
+                          >
+                            <FontAwesome
+                              name="user"
+                              size={20}
+                              color="#e5e5e5"
+                            />
+                          </View>
                         </View>
                       )}
                     </Pressable>

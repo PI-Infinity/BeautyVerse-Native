@@ -3,9 +3,9 @@ import * as FileSystem from "expo-file-system";
 import * as ImageManipulator from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { BackDrop } from "../components/backDropLoader";
 import { storage } from "../firebase";
 import { setCleanUp, setRerenderCurrentUser } from "../redux/rerenders";
@@ -27,13 +27,13 @@ async function readImageData(uri) {
   }
 }
 
-const InputFile = ({ targetUser, setOpenPopup }) => {
+const InputFile = ({ targetUser, setOpenPopup, editPopup, setEditPopup }) => {
   const [file, setFile] = useState(null);
 
   const dispatch = useDispatch();
   //resize image
   const ResizeAndCompressImage = async (uri, originalWidth, originalHeight) => {
-    const wdth = 300;
+    const wdth = 500;
     const newMobHeight = (originalHeight / originalWidth) * wdth;
     try {
       const cover = await ImageManipulator.manipulateAsync(
@@ -85,6 +85,9 @@ const InputFile = ({ targetUser, setOpenPopup }) => {
     }
   }
 
+  // defines baclend url
+  const backendUrl = useSelector((state) => state.storeApp.backendUrl);
+
   async function FileUpload() {
     /* aadd cover
      */
@@ -100,7 +103,7 @@ const InputFile = ({ targetUser, setOpenPopup }) => {
           .then((url) => {
             const UploadCover = async () => {
               const response = await axios.patch(
-                `https://beautyverse.herokuapp.com/api/v1/users/${targetUser?._id}`,
+                `${backendUrl}/api/v1/users/${targetUser?._id}`,
                 {
                   cover: url,
                 }
@@ -120,7 +123,13 @@ const InputFile = ({ targetUser, setOpenPopup }) => {
     }
   }
 
+  const avoidFirstRender = useRef(true);
   React.useEffect(() => {
+    if (avoidFirstRender.current) {
+      avoidFirstRender.current = false;
+      return;
+    }
+    // setEditPopup(true);
     FileUpload();
   }, [file]);
 

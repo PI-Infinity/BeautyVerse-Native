@@ -27,6 +27,7 @@ import axios from "axios";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { FeedItem } from "../screens/feedScreen";
+import Product from "../Marketplace/screens/product";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -36,6 +37,7 @@ export function ChatStack({ navigation }) {
   const currentUser = useSelector((state) => state.storeUser.currentUser);
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
+  const language = Language();
 
   const dispatch = useDispatch();
 
@@ -57,8 +59,9 @@ export function ChatStack({ navigation }) {
         component={Chat}
         options={{
           headerBackTitleVisible: false,
-          title: "Chats",
+          title: language?.language?.Chat?.chat?.title,
           headerStyle: {
+            height: SCREEN_HEIGHT / 9,
             backgroundColor: currentTheme.background,
 
             elevation: 0,
@@ -91,8 +94,22 @@ export function ChatStack({ navigation }) {
         initialParams={{ screenHeight }}
         options={({ navigation, route }) => ({
           headerBackTitleVisible: false,
+          headerLeft: () => (
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => navigation.goBack()}
+              style={{ padding: 8, paddingLeft: 15 }}
+            >
+              <FontAwesome
+                name="arrow-left"
+                color={currentTheme.pink}
+                size={22}
+              />
+            </TouchableOpacity>
+          ),
           // title: "name",
           headerStyle: {
+            height: SCREEN_HEIGHT / 9,
             backgroundColor: currentTheme.background,
 
             elevation: 0,
@@ -116,31 +133,71 @@ export function ChatStack({ navigation }) {
                 }}
               >
                 {route.params.user?.cover?.length > 0 ? (
-                  <CacheableImage
-                    source={{ uri: route.params.user?.cover }}
-                    style={{
-                      height: 30,
-                      width: 30,
-                      borderRadius: 50,
-                      resizeMode: "cover",
-                    }}
-                    manipulationOptions={[
-                      { resize: { width: 30, height: 30 } },
-                      { rotate: 90 },
-                    ]}
-                  />
+                  <View>
+                    {route.params.user?.online && (
+                      <View
+                        style={{
+                          width: 10,
+                          height: 10,
+                          backgroundColor: "#3bd16f",
+                          borderRadius: 50,
+                          position: "absolute",
+                          zIndex: 100,
+                          right: 0,
+                          bottom: 0,
+                          borderWidth: 1.5,
+                          borderColor: currentTheme.background,
+                        }}
+                      ></View>
+                    )}
+                    <CacheableImage
+                      source={{ uri: route.params.user?.cover }}
+                      style={{
+                        height: 30,
+                        width: 30,
+                        borderRadius: 50,
+                        resizeMode: "cover",
+                      }}
+                      manipulationOptions={[
+                        { resize: { width: 30, height: 30 } },
+                        { rotate: 90 },
+                      ]}
+                    />
+                  </View>
                 ) : (
-                  <View
-                    style={{
-                      width: 45,
-                      height: 45,
-                      borderRadius: 50,
-                      alignItems: "center",
-                      justifyContent: "center",
-                      backgroundColor: currentTheme.line,
-                    }}
-                  >
-                    <FontAwesome name="user" size={24} color="#e5e5e5" />
+                  <View>
+                    {route.params.user?.online && (
+                      <View
+                        style={{
+                          width: 10,
+                          height: 10,
+                          backgroundColor: "#3bd16f",
+                          borderRadius: 50,
+                          position: "absolute",
+                          zIndex: 100,
+                          right: 1,
+                          bottom: 1,
+                          borderWidth: 1.5,
+                          borderColor: currentTheme.background,
+                        }}
+                      ></View>
+                    )}
+                    <View
+                      style={{
+                        width: 35,
+                        height: 35,
+                        borderRadius: 50,
+                        alignItems: "center",
+                        justifyContent: "center",
+                        backgroundColor: currentTheme.line,
+                      }}
+                    >
+                      <FontAwesome
+                        name="user"
+                        size={20}
+                        color={currentTheme.disabled}
+                      />
+                    </View>
                   </View>
                 )}
 
@@ -173,6 +230,19 @@ export function ChatStack({ navigation }) {
         component={User}
         options={({ route }) => ({
           headerBackTitleVisible: false,
+          headerLeft: () => (
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => navigation.goBack()}
+              style={{ padding: 8, paddingLeft: 15 }}
+            >
+              <FontAwesome
+                name="arrow-left"
+                color={currentTheme.pink}
+                size={22}
+              />
+            </TouchableOpacity>
+          ),
           headerTitleAlign: "center",
           headerTitle: (props) => (
             <View
@@ -201,7 +271,10 @@ export function ChatStack({ navigation }) {
             </View>
           ),
           headerRight: (props) => {
-            if (currentUser?.type.toLowerCase() !== "beautycenter") {
+            if (
+              currentUser?.type.toLowerCase() !== "beautycenter" &&
+              currentUser?.type.toLowerCase() !== "shop"
+            ) {
               return (
                 <View style={{ marginRight: 20 }}>
                   {route.params.user._id !== currentUser._id && (
@@ -225,6 +298,7 @@ export function ChatStack({ navigation }) {
             }
           },
           headerStyle: {
+            height: SCREEN_HEIGHT / 9,
             backgroundColor: currentTheme.background,
 
             elevation: 0,
@@ -247,6 +321,19 @@ export function ChatStack({ navigation }) {
         component={User}
         options={({ route }) => ({
           headerBackTitleVisible: false,
+          headerLeft: () => (
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => navigation.goBack()}
+              style={{ padding: 8, paddingLeft: 15 }}
+            >
+              <FontAwesome
+                name="arrow-left"
+                color={currentTheme.pink}
+                size={22}
+              />
+            </TouchableOpacity>
+          ),
           headerTitleAlign: "center",
           headerTitle: (props) => (
             <View
@@ -275,7 +362,10 @@ export function ChatStack({ navigation }) {
             </View>
           ),
           headerRight: (props) => {
-            if (currentUser?.type.toLowerCase() !== "beautycenter") {
+            if (
+              currentUser?.type.toLowerCase() !== "beautycenter" &&
+              currentUser?.type.toLowerCase() !== "shop"
+            ) {
               return (
                 <View style={{ marginRight: 20 }}>
                   {route.params.user._id !== currentUser._id && (
@@ -300,6 +390,7 @@ export function ChatStack({ navigation }) {
           },
 
           headerStyle: {
+            height: SCREEN_HEIGHT / 9,
             backgroundColor: currentTheme.background,
 
             elevation: 0,
@@ -322,8 +413,22 @@ export function ChatStack({ navigation }) {
         component={FeedItem}
         options={({ route }) => ({
           headerBackTitleVisible: false,
-          title: "Feed",
+          headerLeft: () => (
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => navigation.goBack()}
+              style={{ padding: 8, paddingLeft: 15 }}
+            >
+              <FontAwesome
+                name="arrow-left"
+                color={currentTheme.pink}
+                size={22}
+              />
+            </TouchableOpacity>
+          ),
+          title: language?.language?.Main?.feedCard?.feed,
           headerStyle: {
+            height: SCREEN_HEIGHT / 9,
             backgroundColor: currentTheme.background,
 
             elevation: 0,
@@ -346,8 +451,22 @@ export function ChatStack({ navigation }) {
         component={SendOrder}
         options={({ route }) => ({
           headerBackTitleVisible: false,
-          title: "Booking",
+          headerLeft: () => (
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => navigation.goBack()}
+              style={{ padding: 8, paddingLeft: 15 }}
+            >
+              <FontAwesome
+                name="arrow-left"
+                color={currentTheme.pink}
+                size={22}
+              />
+            </TouchableOpacity>
+          ),
+          title: language?.language?.Bookings?.bookings?.createBooking,
           headerStyle: {
+            height: SCREEN_HEIGHT / 9,
             backgroundColor: currentTheme.background,
             elevation: 0,
             shadowOpacity: 0,
@@ -369,9 +488,62 @@ export function ChatStack({ navigation }) {
         component={SentOrders}
         options={({ route }) => ({
           headerBackTitleVisible: false,
-          title: "My Bookings",
+          headerLeft: () => (
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => navigation.goBack()}
+              style={{ padding: 8, paddingLeft: 15 }}
+            >
+              <FontAwesome
+                name="arrow-left"
+                color={currentTheme.pink}
+                size={22}
+              />
+            </TouchableOpacity>
+          ),
+          title: language?.language?.User?.userPage?.sentBookings,
           headerStyle: {
+            height: SCREEN_HEIGHT / 9,
             backgroundColor: currentTheme.background,
+            elevation: 0,
+            shadowOpacity: 0,
+            borderBottomWidth: 0,
+          },
+          headerTintColor: currentTheme.font,
+          headerTitleStyle: {
+            fontWeight: "bold",
+            fontSize: 18,
+            letterSpacing: 0.5,
+          },
+          cardStyle: {
+            backgroundColor: currentTheme.background,
+          },
+        })}
+      />
+      {/* product screen */}
+      <Stack.Screen
+        name="Product"
+        component={Product}
+        options={({ route }) => ({
+          headerBackTitleVisible: false,
+          headerLeft: () => (
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => navigation.goBack()}
+              style={{ padding: 8, paddingLeft: 15 }}
+            >
+              <FontAwesome
+                name="arrow-left"
+                color={currentTheme.pink}
+                size={22}
+              />
+            </TouchableOpacity>
+          ),
+          title: route.params.product.title,
+          headerStyle: {
+            height: SCREEN_HEIGHT / 9,
+            backgroundColor: currentTheme.background,
+
             elevation: 0,
             shadowOpacity: 0,
             borderBottomWidth: 0,

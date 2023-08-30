@@ -15,7 +15,8 @@ import { useDispatch, useSelector } from "react-redux";
 import AnimatedButton from "../components/animatedButton";
 import { Language } from "../context/language";
 import { darkTheme, lightTheme } from "../context/theme";
-import { setLanguage } from "../redux/app";
+import { setLanguage, setTheme } from "../redux/app";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 /**
  * Welcome screen
@@ -106,7 +107,7 @@ const Welcome = ({ navigation }) => {
         currentTheme={currentTheme}
         title={language?.language?.Auth?.auth?.authentication}
       />
-      {/* <View style={{ width: "100%", position: "relative", bottom: 15 }}>
+      <View style={{ width: "100%", position: "relative", bottom: 15 }}>
         <Text
           style={[
             styles.sectionTitle,
@@ -136,7 +137,7 @@ const Welcome = ({ navigation }) => {
             style={styles.themeModeButton1}
           >
             {theme && (
-              <MaterialIcons name="done" color={currentTheme.pink} size={22} />
+              <MaterialIcons name="done" color={currentTheme.pink} size={18} />
             )}
             <Text style={{ color: "#fff" }}>
               {language?.language?.Auth?.auth?.dark}
@@ -152,16 +153,18 @@ const Welcome = ({ navigation }) => {
             }}
             style={[
               styles.themeModeButton2,
-              { backgroundColor: "rgba(230,227,234,1)" },
+              {
+                backgroundColor: "#F3EEF9",
+              },
             ]}
           >
             <Text>{language?.language?.Auth?.auth?.light}</Text>
             {!theme && (
-              <MaterialIcons name="done" color={currentTheme.pink} size={22} />
+              <MaterialIcons name="done" color={currentTheme.pink} size={18} />
             )}
           </Pressable>
         </View>
-      </View> */}
+      </View>
       <View
         style={{
           width: "100%",
@@ -185,10 +188,11 @@ const Welcome = ({ navigation }) => {
           style={[
             styles.languageBtn,
             {
-              borderWidth: 1.5,
+              borderWidth: 1,
               borderColor: currentTheme.line,
               flexDirection: "row",
               justifyContent: "space-between",
+              backgroundColor: currentTheme.background,
             },
           ]}
           onPress={() => dispatch(setLanguage("en"))}
@@ -208,10 +212,11 @@ const Welcome = ({ navigation }) => {
           style={[
             styles.languageBtn,
             {
-              borderWidth: 1.5,
+              borderWidth: 1,
               borderColor: currentTheme.line,
               flexDirection: "row",
               justifyContent: "space-between",
+              backgroundColor: currentTheme.background,
             },
           ]}
           onPress={() => dispatch(setLanguage("ka"))}
@@ -231,10 +236,11 @@ const Welcome = ({ navigation }) => {
           style={[
             styles.languageBtn,
             {
-              borderWidth: 1.5,
+              borderWidth: 1,
               borderColor: currentTheme.line,
               flexDirection: "row",
               justifyContent: "space-between",
+              backgroundColor: currentTheme.background,
             },
           ]}
           onPress={() => dispatch(setLanguage("ru"))}
@@ -344,7 +350,7 @@ const styles = StyleSheet.create({
   themeModeButton1: {
     width: "40%",
     padding: 7.5,
-    backgroundColor: "#111",
+    backgroundColor: "#050505",
     borderTopLeftRadius: 50,
     borderBottomLeftRadius: 50,
     alignItems: "center",
@@ -355,7 +361,7 @@ const styles = StyleSheet.create({
   themeModeButton2: {
     width: "40%",
     padding: 7.5,
-    backgroundColor: "#fff",
+    backgroundColor: "#050505",
     borderTopRightRadius: 50,
     borderBottomRightRadius: 50,
     alignItems: "center",
@@ -369,14 +375,6 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     borderRadius: 50,
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 1, // negative value places shadow on top
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 1,
-    elevation: 1,
   },
   item: {
     width: "100%",

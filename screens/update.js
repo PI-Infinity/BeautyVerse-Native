@@ -3,6 +3,7 @@ import React from "react";
 import { useSelector } from "react-redux";
 import { lightTheme, darkTheme } from "../context/theme";
 import { TouchableOpacity } from "react-native-gesture-handler";
+import { Language } from "../context/language";
 
 /**
  * component defines update app screen if user doesnt have new version of app
@@ -14,6 +15,9 @@ export const Update = (props) => {
   // theme state, from redux
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
+
+  // defines language
+  const language = Language();
 
   const handlePress = () => {
     const url = "https://apps.apple.com/app/6448795980";
@@ -55,7 +59,7 @@ export const Update = (props) => {
         >
           <Text
             style={{
-              color: "#F866B1",
+              color: currentTheme.pink,
               fontSize: 28,
               fontWeight: "bold",
               letterSpacing: 0.5,
@@ -90,7 +94,7 @@ export const Update = (props) => {
         }}
       >
         <Text style={{ color: currentTheme.font, letterSpacing: 0.3 }}>
-          You are using old ({props.currentVersion}) version of the App!
+          {language?.language?.Auth?.auth?.oldVersion} ({props.currentVersion})
         </Text>
       </View>
       <TouchableOpacity
@@ -112,7 +116,7 @@ export const Update = (props) => {
             letterSpacing: 0.3,
           }}
         >
-          Update now ({props.appVersion})
+          {language?.language?.Auth?.auth?.updateNow} ({props.appVersion})
         </Text>
       </TouchableOpacity>
     </View>

@@ -19,6 +19,10 @@ import { darkTheme, lightTheme } from "../../context/theme";
 import { setRerenderOrders } from "../../redux/rerenders";
 import { Calendar } from "../../screens/orders/calendar";
 import { ProceduresList } from "../../screens/orders/procedures";
+import { Language } from "../../context/language";
+import { ProceduresOptions } from "../../datas/registerDatas";
+import { BackDrop } from "../../components/backDropLoader";
+import { sendNotification } from "../../components/pushNotifications";
 
 /**
  * Send order component to specialist or to salon
@@ -40,9 +44,15 @@ export const SendOrder = ({ route }) => {
   // defines socket server
   const socket = useSocket();
 
+  // defines language
+  const language = Language();
+
   // defines theme
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
+
+  // loading when sending request
+  const [sending, setSending] = useState(false);
 
   // defines current user
   const currentUser = useSelector((state) => state.storeUser.currentUser);
@@ -71,6 +81,9 @@ export const SendOrder = ({ route }) => {
   /// get orders by date
   const [orders, setOrders] = useState([]);
 
+  // backend url
+  const backendUrl = useSelector((state) => state.storeApp.backendUrl);
+
   /**
    * Get orders function
    */
@@ -78,9 +91,7 @@ export const SendOrder = ({ route }) => {
     setTimeLoader(true);
     try {
       const response = await axios.get(
-        "https://beautyverse.herokuapp.com/api/v1/users/" +
-          targetUser._id +
-          `/orders?date=${date}`
+        backendUrl + "/api/v1/users/" + targetUser._id + `/orders?date=${date}`
       );
       setOrders(response.data.data.orders);
     } catch (error) {
@@ -101,13 +112,18 @@ export const SendOrder = ({ route }) => {
     .toLocaleDateString("en-US", {
       weekday: "long",
     })
+    ?.split(",")[1];
+  const isTodayDay = td
+    .toLocaleDateString("en-US", {
+      weekday: "long",
+    })
     ?.split(",")[0];
 
   const wDay = targetUser?.workingDays.find(
     (item) =>
       item.value.toLowerCase() === "everyday" ||
       item.value.toLowerCase() === "workingdays" ||
-      item.value.toLowerCase() === isToday.toLowerCase()
+      item.value.toLowerCase() === isTodayDay.toLowerCase()
   );
 
   let workingHoursInThisDay;
@@ -181,7 +197,7 @@ export const SendOrder = ({ route }) => {
       .toLocaleDateString("en-US", {
         weekday: "long",
       })
-      ?.split(",")[0]
+      ?.split(",")[1]
   ) {
     timeList = tmlst.filter((time) => {
       var [hours, minutes] = time.split(":"); // Split the time string into hours and minutes
@@ -192,8 +208,6 @@ export const SendOrder = ({ route }) => {
   } else {
     timeList = tmlst;
   }
-
-  console.log(timeList);
 
   let result = timeList.map((time) => {
     // Check if the time is within any active hour plus its duration
@@ -225,12 +239,21 @@ export const SendOrder = ({ route }) => {
 
     // If it is, mark it as booked
     if (isBooked) {
-      return { time: time, status: "Not Available" };
+      return {
+        time: time,
+        status: language?.language?.Bookings?.bookings?.notAvailable,
+      };
     } else {
       // If it isn't, leave it as available
-      return { time: time, status: "Available" };
+      return {
+        time: time,
+        status: language?.language?.Bookings?.bookings?.available,
+      };
     }
   });
+
+  // defines beautyverse procedures list
+  const proceduresOptions = ProceduresOptions();
 
   /// send order request function
   const SendOrderRequest = async () => {
@@ -247,12 +270,10 @@ export const SendOrder = ({ route }) => {
       newDate.setUTCHours(hours, minutes);
 
       let orderId = uuid.v4();
-
+      setSending(true);
       try {
         await axios.post(
-          "https://beautyverse.herokuapp.com/api/v1/users/" +
-            targetUser._id +
-            "/orders",
+          backendUrl + "/api/v1/users/" + targetUser._id + "/orders",
           {
             orderNumber: orderId,
             user: {
@@ -271,9 +292,7 @@ export const SendOrder = ({ route }) => {
           }
         );
         await axios.post(
-          "https://beautyverse.herokuapp.com/api/v1/users/" +
-            currentUser._id +
-            "/sentorders",
+          backendUrl + "/api/v1/users/" + currentUser._id + "/sentorders",
           {
             orderNumber: orderId,
             user: {
@@ -291,14 +310,27 @@ export const SendOrder = ({ route }) => {
             comment: "",
           }
         );
+
+        let lab = proceduresOptions?.find(
+          (it) => it?.value?.toLowerCase() === procedure?.value?.toLowerCase()
+        );
+        if (targetUser?.pushNotificationToken) {
+          await sendNotification(
+            targetUser?.pushNotificationToken,
+            currentUser.name,
+            "sent you an appointment request",
+            targetUser
+          );
+        }
         socket.emit("updateOrders", {
           targetId: targetUser?._id,
         });
         dispatch(setRerenderOrders());
         Alert.alert("The request has been sent successfully!");
         setTimeout(() => {
-          navigation.navigate("Sent Orders");
+          navigation.navigate("BMSSent");
         }, 200);
+        setSending(false);
       } catch (error) {
         console.log(error.response.data.message);
       }
@@ -314,6 +346,7 @@ export const SendOrder = ({ route }) => {
 
   return (
     <>
+      {sending && <BackDrop loading={sending} setLoading={setSending} />}
       {isLoaded ? (
         <View
           style={{
@@ -354,7 +387,7 @@ export const SendOrder = ({ route }) => {
                 letterSpacing: 0.3,
               }}
             >
-              Choice Procedure:
+              {language?.language?.Bookings?.bookings?.choiceProcedure}:
             </Text>
           </View>
           <ProceduresList
@@ -396,7 +429,7 @@ export const SendOrder = ({ route }) => {
                 letterSpacing: 0.3,
               }}
             >
-              Choice Date:
+              {language?.language?.Bookings?.bookings?.choiceDate}:
             </Text>
           </View>
 
@@ -434,7 +467,7 @@ export const SendOrder = ({ route }) => {
                   letterSpacing: 0.3,
                 }}
               >
-                Choice Time:
+                {language?.language?.Bookings?.bookings?.choiceTime}:
               </Text>
             </View>
           )}
@@ -547,7 +580,7 @@ export const SendOrder = ({ route }) => {
                       fontWeight: "bold",
                     }}
                   >
-                    Cancel
+                    {language?.language?.Bookings?.bookings?.cancel}
                   </Text>
                 </Pressable>
               </View>
@@ -577,7 +610,7 @@ export const SendOrder = ({ route }) => {
               }}
             >
               <Text style={{ fontWeight: "bold", color: "#f1f1f1" }}>
-                Send request
+                {language?.language?.Bookings?.bookings?.send}
               </Text>
             </Pressable>
           </View>

@@ -39,6 +39,9 @@ export const AudienceList = ({
   // define current user
   const currentTheme = theme ? darkTheme : lightTheme;
 
+  // backend url
+  const backendUrl = useSelector((state) => state.storeApp.backendUrl);
+
   /**
    * Unfollow user
    */
@@ -46,14 +49,14 @@ export const AudienceList = ({
   const DeleteUser = async (followerId, followingId) => {
     //
     try {
-      const url = `https://beautyverse.herokuapp.com/api/v1/users/${followerId}/followings/${followingId}`;
+      const url = `${backendUrl}/api/v1/users/${followerId}/followings/${followingId}`;
       await fetch(url, { method: "DELETE" })
         .then((response) => response.json())
         .then(async (data) => {})
         .catch((error) => {
           console.log("Error fetching data:", error);
         });
-      const url2 = `https://beautyverse.herokuapp.com/api/v1/users/${followingId}/followers/${followerId}`;
+      const url2 = `${backendUrl}/api/v1/users/${followingId}/followers/${followerId}`;
       await fetch(url2, { method: "DELETE" })
         .then((response) => response.json())
         .then(async (data) => {})
@@ -70,7 +73,7 @@ export const AudienceList = ({
   };
 
   return (
-    <View style={{ width: "100%" }}>
+    <View style={{ width: "100%", gap: 8 }}>
       {list?.map((item, index) => {
         const t = capitalizeFirstLetter(item.type);
         return (
@@ -80,11 +83,11 @@ export const AudienceList = ({
               flexDirection: "row",
               alignItems: "center",
               gap: 15,
-              borderRadius: 5,
-              backgroundColor: currentTheme.background2,
+              borderRadius: 50,
+              borderWidth: 1,
+              borderColor: currentTheme.line,
               width: (SCREEN_WIDTH / 100) * 80,
-              padding: 10,
-              paddingHorizontal: 15,
+              padding: 8,
             }}
             onPress={() => navigation.navigate("UserVisit", { user: item })}
             onLongPress={
@@ -104,30 +107,66 @@ export const AudienceList = ({
               style={{ flexDirection: "row", alignItems: "center", gap: 15 }}
             >
               {item?.cover ? (
-                <CacheableImage
-                  source={{ uri: item.cover }}
-                  style={{ width: 40, height: 40, borderRadius: 50 }}
-                  manipulationOptions={[
-                    { resize: { width: 40, height: 40 } },
-                    { rotate: 90 },
-                  ]}
-                />
-              ) : (
-                <View
-                  style={{
-                    alignItems: "center",
-                    justifyContent: "center",
-                    width: 40,
-                    height: 40,
-                    backgroundColor: currentTheme.disabled,
-                    borderRadius: 50,
-                  }}
-                >
-                  <FontAwesome
-                    name="user"
-                    size={22}
-                    color={currentTheme.font}
+                <View>
+                  {item.online && (
+                    <View
+                      style={{
+                        width: 10,
+                        height: 10,
+                        backgroundColor: "#3bd16f",
+                        borderRadius: 50,
+                        position: "absolute",
+                        zIndex: 100,
+                        right: 1,
+                        bottom: 1,
+                        borderWidth: 1.5,
+                        borderColor: currentTheme.background,
+                      }}
+                    ></View>
+                  )}
+                  <CacheableImage
+                    source={{ uri: item.cover }}
+                    style={{ width: 40, height: 40, borderRadius: 50 }}
+                    manipulationOptions={[
+                      { resize: { width: 40, height: 40 } },
+                      { rotate: 90 },
+                    ]}
                   />
+                </View>
+              ) : (
+                <View>
+                  {item.online && (
+                    <View
+                      style={{
+                        width: 10,
+                        height: 10,
+                        backgroundColor: "#3bd16f",
+                        borderRadius: 50,
+                        position: "absolute",
+                        zIndex: 100,
+                        right: 1,
+                        bottom: 1,
+                        borderWidth: 1.5,
+                        borderColor: currentTheme.background,
+                      }}
+                    ></View>
+                  )}
+                  <View
+                    style={{
+                      alignItems: "center",
+                      justifyContent: "center",
+                      width: 40,
+                      height: 40,
+                      backgroundColor: currentTheme.disabled,
+                      borderRadius: 50,
+                    }}
+                  >
+                    <FontAwesome
+                      name="user"
+                      size={22}
+                      color={currentTheme.font}
+                    />
+                  </View>
                 </View>
               )}
 
@@ -142,7 +181,7 @@ export const AudienceList = ({
               </Text>
               <Text
                 style={{
-                  color: "#e5e5e5",
+                  color: currentTheme.disabled,
                   fontWeight: "normal",
                   fontSize: 12,
                   letterSpacing: 0.2,

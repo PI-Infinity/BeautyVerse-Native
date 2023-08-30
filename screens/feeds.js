@@ -11,6 +11,8 @@ import SkeletonComponent from "../components/skelton";
 import { darkTheme, lightTheme } from "../context/theme";
 import { setSendReport } from "../redux/alerts";
 import { setCleanUp, setFeedRefreshControl } from "../redux/rerenders";
+import { setLoading } from "../redux/app";
+import * as Location from "expo-location";
 
 /**
  * Feeds screen
@@ -18,12 +20,16 @@ import { setCleanUp, setFeedRefreshControl } from "../redux/rerenders";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
-export const Feeds = ({ navigation, setScrollY }) => {
+export const Feeds = ({
+  navigation,
+  setScrollY,
+  firstLoading,
+  setFirstLoading,
+}) => {
   // refresh state
   const refresh = useSelector(
     (state) => state.storeRerenders.feedRefreshControl
   );
-  const [firstLoading, setFirstLoading] = useState(true);
 
   // defines when screen focused
   const isFocused = useIsFocused();
@@ -58,8 +64,18 @@ export const Feeds = ({ navigation, setScrollY }) => {
   const city = useSelector((state) => state.storeFilter.city);
   const district = useSelector((state) => state.storeFilter.district);
 
+  // defines location
+  const location = useSelector((state) => state.storeApp.location);
+
   // Selector for the cleanup state
   const cleanUp = useSelector((state) => state.storeRerenders.cleanUp);
+
+  // define active app language
+  const lang = useSelector((state) => state.storeApp.language);
+
+  // defines backend url
+  const backendUrl = useSelector((state) => state.storeApp.backendUrl);
+
   /**
    * Get users function when screen loads
    */
@@ -68,25 +84,32 @@ export const Feeds = ({ navigation, setScrollY }) => {
     const Getting = async () => {
       try {
         const response = await axios.get(
-          `https://beautyverse.herokuapp.com/api/v1/feeds?search=${search}&filter=${filter}&type=${
+          `${backendUrl}/api/v1/feeds?search=${search}&filter=${filter}&type=${
             specialists ? "specialist" : ""
           }${
             salons ? "beautycenter" : ""
-          }&city=${city}&district=${district}&page=1`
+          }&city=${city}&district=${district}&page=1&country=${
+            location.country ? location.country : currentUser.address[0].country
+          }`
         );
         setUsers(response.data.data.feedList);
-
+        // let { status } = await Location.requestForegroundPermissionsAsync();
+        // if (status === "denied" && response.data.data.feedList?.length < 1) {
+        //   dispatch(setLoading(false));
+        // }
         setTimeout(() => {
           dispatch(setFeedRefreshControl(false));
           setFirstLoading(false);
-        }, 1000);
+          setPage(1);
+        }, 500);
       } catch (error) {
         console.log(error.response.data.message);
         dispatch(setFeedRefreshControl(false));
+        setPage(1);
       }
     };
     Getting();
-  }, [cleanUp]);
+  }, [cleanUp, city]);
 
   const flatListRef = useRef();
 
@@ -96,13 +119,15 @@ export const Feeds = ({ navigation, setScrollY }) => {
   const AddUsersWithFeeds = async (currentPage) => {
     try {
       const response = await axios.get(
-        `https://beautyverse.herokuapp.com/api/v1/feeds?search=${search}&filter=${filter}&type=${
+        `${backendUrl}/api/v1/feeds?search=${search}&filter=${filter}&type=${
           specialists ? "specialist" : ""
         }${
           salons ? "beautycenter" : ""
         }&city=${city}&district=${district}&check=${
           currentUser !== null ? currentUser._id : ""
-        }}&page=${currentPage}`
+        }}&page=${currentPage}&country=${
+          location.country ? location.country : currentUser.address[0].country
+        }`
       );
 
       // Update users' state with new feed data
@@ -186,7 +211,7 @@ export const Feeds = ({ navigation, setScrollY }) => {
   }, [zoomToTop]);
 
   return (
-    <View>
+    <View style={{ flex: 1 }}>
       {firstLoading && (
         <View
           style={{
@@ -209,7 +234,7 @@ export const Feeds = ({ navigation, setScrollY }) => {
       />
       {users?.length > 0 ? (
         <FlatList
-          contentContainerStyle={{}}
+          contentContainerStyle={{ minHeight: SCREEN_HEIGHT }}
           style={{}}
           showsVerticalScrollIndicator={false}
           ref={flatListRef}
@@ -232,22 +257,27 @@ export const Feeds = ({ navigation, setScrollY }) => {
                 feeds={users}
                 currentIndex={currentIndex}
                 isFocused={isFocused}
+                feedsLength={users?.length}
               />
             );
           }}
           onEndReached={() => {
-            console.log("end");
             AddUsersWithFeeds(page + 1);
             setPage(page + 1);
           }}
-          onEndReachedThreshold={1}
+          onEndReachedThreshold={0.5}
           keyExtractor={(item) => item?._id}
           onViewableItemsChanged={onViewableItemsChangedRef.current}
           viewabilityConfig={viewabilityConfig}
         />
       ) : (
         <View
-          style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
+          style={{
+            flex: 1,
+
+            alignItems: "center",
+            justifyContent: "center",
+          }}
         >
           <Text style={{ color: currentTheme.disabled }}>No Feeds found</Text>
         </View>
