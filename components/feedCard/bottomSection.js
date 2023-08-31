@@ -25,17 +25,6 @@ import { useSocket } from "../../context/socketContext";
  * Feed card's bottom section
  */
 
-const showNotification = async () => {
-  await Notifications.scheduleNotificationAsync({
-    content: {
-      title: "Welcome to BeautyVerse!",
-      body: "Discover the latest trends, tips, and more...",
-      data: { someData: "goes here" },
-    },
-    trigger: null, // This means the notification will be sent right away
-  });
-};
-
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 export const BottomSection = (props) => {
@@ -101,7 +90,7 @@ export const BottomSection = (props) => {
               props.user?.pushNotificationToken,
               currentUser.name,
               "shared your feed!",
-              props.feed
+              { feed: props.feed }
             );
           }
         }
@@ -110,7 +99,7 @@ export const BottomSection = (props) => {
       }
     };
     try {
-      const canOpen = await Linking.canOpenURL(url);
+      const canOpen = await Linking.openURL(url);
 
       if (!canOpen) {
         console.log(`Can't open URL: ${url}`);
@@ -118,8 +107,7 @@ export const BottomSection = (props) => {
       }
 
       const result = await Share.share({
-        message: "Check out my app! BeautyVerse",
-        url: url,
+        message: `Check out my app! BeautyVerse\n${canOpen}`,
       });
 
       if (result.action === Share.sharedAction) {
@@ -356,7 +344,7 @@ export const BottomSection = (props) => {
           <Pressable
             onPress={() =>
               shareAndOpenURL(
-                "https://apps.apple.com/app/6448795980",
+                "exp://192.168.0.101:19000",
                 props.user._id,
                 props.feed._id,
                 shares ? shares : 0

@@ -49,6 +49,7 @@ export const Cards = ({ navigation, setScrollY }) => {
   const filter = useSelector((state) => state.storeFilter.filter);
   const specialists = useSelector((state) => state.storeFilter.specialists);
   const salons = useSelector((state) => state.storeFilter.salons);
+  const shops = useSelector((state) => state.storeFilter.shops);
   const city = useSelector((state) => state.storeFilter.city);
   const district = useSelector((state) => state.storeFilter.district);
 
@@ -64,13 +65,12 @@ export const Cards = ({ navigation, setScrollY }) => {
   // useEffect hook to get data from the API
   useEffect(() => {
     const Getting = async () => {
-      console.log(currentUser.address[0].country);
       try {
         const response = await axios.get(
           `${backendUrl}/api/v1/cards?search=${search}&filter=${filter}&type=${
             specialists ? "specialist" : ""
-          }${
-            salons ? "beautyCenter" : ""
+          }${salons ? "beautyCenter" : ""}${
+            shops ? "shop" : ""
           }&city=${city}&district=${district}&check=${
             currentUser !== null ? currentUser._id : ""
           }&page=${1}&limit=8&country=${
@@ -113,8 +113,8 @@ export const Cards = ({ navigation, setScrollY }) => {
       const response = await axios.get(
         `${backendUrl}/api/v1/cards?search=${search}&filter=${filter}&type=${
           specialists ? "specialist" : ""
-        }${
-          salons ? "beautyCenter" : ""
+        }${salons ? "beautyCenter" : ""}${
+          shops ? "shop" : ""
         }&city=${city}&district=${district}&check=${
           currentUser !== null ? currentUser._id : ""
         }&page=${currentPage}&limit=8&country=${

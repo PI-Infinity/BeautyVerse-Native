@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Dimensions,
   StyleSheet,
@@ -128,7 +128,7 @@ export const SortPopup = ({ currentTheme, from, setPage }) => {
     >
       <View
         style={{
-          width: "100%",
+          width: "130%",
           alignItems: "center",
           flexDirection: "row",
         }}

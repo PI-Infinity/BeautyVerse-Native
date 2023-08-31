@@ -250,7 +250,7 @@ export const Feed = (props) => {
             props.user?.pushNotificationToken,
             currentUser.name,
             "added star to your feed!",
-            props.feed
+            { feed: userFeeds[activeFeed] }
           );
         }
         socket.emit("updateUser", {

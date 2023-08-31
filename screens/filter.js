@@ -2,6 +2,7 @@ import {
   FontAwesome5,
   MaterialCommunityIcons,
   MaterialIcons,
+  Fontisto,
 } from "@expo/vector-icons";
 import React, { useEffect, useState, useContext } from "react";
 import {
@@ -22,7 +23,12 @@ import { Search } from "../components/search";
 import { Language } from "../context/language";
 import { darkTheme, lightTheme } from "../context/theme";
 import { VerseCategories } from "../datas/categories";
-import { setFilter, setSalons, setSpecialists } from "../redux/filter";
+import {
+  setFilter,
+  setSalons,
+  setShops,
+  setSpecialists,
+} from "../redux/filter";
 import { setCleanUp } from "../redux/rerenders";
 import { MapFilter } from "../components/mapFilter";
 import axios from "axios";
@@ -53,6 +59,7 @@ export const Filter = ({ navigation }) => {
   const filter = useSelector((state) => state.storeFilter.filter);
   const specialists = useSelector((state) => state.storeFilter.specialists);
   const salons = useSelector((state) => state.storeFilter.salons);
+  const shops = useSelector((state) => state.storeFilter.shops);
   const city = useSelector((state) => state.storeFilter.city);
   const district = useSelector((state) => state.storeFilter.district);
 
@@ -127,8 +134,8 @@ export const Filter = ({ navigation }) => {
         const response = await axios.get(
           `${backendUrl}/api/v1/cards?search=${search}&filter=${filter}&type=${
             specialists ? "specialist" : ""
-          }${
-            salons ? "beautycenter" : ""
+          }${salons ? "beautycenter" : ""}${
+            shops ? "shop" : ""
           }&city=${city}&district=${district}&page=1&country=${
             location.country ? location.country : currentUser.address[0].country
           }`
@@ -156,8 +163,8 @@ export const Filter = ({ navigation }) => {
       const response = await axios.get(
         `${backendUrl}/api/v1/cards?search=${search}&filter=${filter}&type=${
           specialists ? "specialist" : ""
-        }${
-          salons ? "beautycenter" : ""
+        }${salons ? "beautycenter" : ""}${
+          shops ? "shop" : ""
         }&city=${city}&district=${district}&check=${
           currentUser !== null ? currentUser._id : ""
         }}&page=${currentPage}&country=${
@@ -267,6 +274,28 @@ export const Filter = ({ navigation }) => {
                 name="home-variant-outline"
                 size={20}
                 color={salons ? currentTheme.pink : "#ccc"}
+                style={{ position: "relative", left: 0.5 }}
+              />
+            </Pressable>
+            <Pressable
+              onPress={() => {
+                dispatch(setShops(!shops));
+                dispatch(setCleanUp());
+              }}
+              style={{
+                backgroundColor: currentTheme.background,
+
+                borderRadius: 50,
+                width: 30,
+                height: 30,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Fontisto
+                name="shopping-bag-1"
+                size={15}
+                color={shops ? currentTheme.pink : "#ccc"}
                 style={{ position: "relative", left: 0.5 }}
               />
             </Pressable>

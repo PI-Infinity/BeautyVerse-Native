@@ -53,7 +53,6 @@ export const AddNewProcedures = () => {
     if (ifInclude) {
       Alert.alert("Procedure already defined in your list!");
     } else {
-      console.log("added");
       try {
         dispatch(AddCurrentUserProcedure({ value: val }));
         await axios.post(
@@ -83,7 +82,6 @@ export const AddNewProcedures = () => {
         .catch((error) => {
           console.log("Error fetching data:", error);
         });
-      console.log("doone");
     } else {
       Alert.alert("You cant delete last procedure");
     }

@@ -13,6 +13,7 @@ import { useSelector } from "react-redux";
 import { CacheableImage } from "../../components/cacheableImage";
 import { CacheableVideo } from "../../components/cacheableVideo";
 import { darkTheme, lightTheme } from "../../context/theme";
+import { Circle } from "../../components/skeltons";
 
 /**
  * File includes 2 components (list, item)
@@ -299,7 +300,7 @@ const FeedItem = (props) => {
             justifyContent: "center",
           }}
         >
-          <ActivityIndicator color={props.currentTheme.pink} />
+          <Circle />
         </View>
         <Animated.View style={{ opacity: fadeAnim }}>
           {props?.feed.fileFormat === "video" ? (

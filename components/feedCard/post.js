@@ -5,12 +5,16 @@ import React, { useEffect, useRef, useState } from "react";
 import { View, Pressable, Text } from "react-native";
 import { useSelector, useDispatch } from "react-redux";
 import { setFeedPost } from "../../redux/feed";
+import { Language } from "../../context/language";
+
 /**
  * Post component
  */
 
 export const Post = (props) => {
   const [loading, setLoading] = useState(true);
+
+  const language = Language();
 
   const [post, setPost] = useState(null);
   const [original, setOriginal] = useState(false);
@@ -96,7 +100,7 @@ export const Post = (props) => {
               marginLeft: 10,
               flexDirection: "row",
               alignItems: "center",
-              width: 120,
+              width: 180,
               gap: 8,
               padding: post?.original?.length > 0 ? 5 : 0,
             }}
@@ -116,7 +120,7 @@ export const Post = (props) => {
                   : props.currentTheme.disabled,
               }}
             >
-              See original
+              {language?.language.Main.feedCard.seeOriginal}
             </Text>
           </Pressable>
         )}

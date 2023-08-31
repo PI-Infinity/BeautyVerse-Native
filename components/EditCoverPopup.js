@@ -108,12 +108,6 @@ const EditCoverPopup = ({ image, setFile, setEditPopup, FileUpload }) => {
   const xInPercent = translateXValue / (SCREEN_WIDTH / 100);
   const yInPercent = translateYValue / (SCREEN_WIDTH / 100);
 
-  console.log(scale);
-  console.log(translateX);
-  console.log(translateY);
-  console.log(xInPercent);
-  console.log(yInPercent);
-
   let difference = SCREEN_WIDTH - image?.cover?.width;
 
   return (

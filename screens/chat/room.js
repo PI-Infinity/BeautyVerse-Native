@@ -1,7 +1,7 @@
 // screens/ChatRoomScreen.js
 import axios from "axios";
 import React, { useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Alert, View } from "react-native";
+import { ActivityIndicator, Alert, Platform, View } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 import {
   setRerederRooms,
@@ -83,31 +83,31 @@ export const Room = ({ route }) => {
    */
   useEffect(() => {
     const GetMessages = async () => {
-      const response = await axios.get(
-        backendUrl + "/api/v1/chats/messages/" + currentChat.room + "?page=1"
-      );
-      if (response && response.data) {
-        // handle the response
-        setMessagesLength(response.data.length);
-        setMessages(response.data.data.chats);
-        setTimeout(() => {
-          setLoading(false);
-          setTimeout(() => {
-            dispatch(setRerenderScroll());
-          }, 300);
-        }, 200);
-      } else {
-        console.error(
-          "The response or the data from the server was undefined."
+      try {
+        const response = await axios.get(
+          backendUrl + "/api/v1/chats/messages/" + currentChat.room + "?page=1"
         );
+        if (response && response.data) {
+          // handle the response
+          setMessagesLength(response.data.length);
+          setMessages(response.data.data.chats);
+          setTimeout(() => {
+            setLoading(false);
+            setTimeout(() => {
+              dispatch(setRerenderScroll());
+            }, 300);
+          }, 200);
+        } else {
+          console.error(
+            "The response or the data from the server was undefined."
+          );
+        }
+      } catch (error) {
+        Alert.alert(error.response.data.message);
       }
     };
-    try {
-      if (currentChat?.room) {
-        GetMessages();
-      }
-    } catch (error) {
-      Alert.alert(error.response.data.message);
+    if (currentChat?.room) {
+      GetMessages();
     }
   }, [rerenderMessages, currentChat?.room]);
 
@@ -118,7 +118,6 @@ export const Room = ({ route }) => {
    * Add old messages on scroll to top
    */
   const AddMessages = async () => {
-    console.log("run");
     setLoadingMore(true);
     try {
       const response = await axios.get(
@@ -129,7 +128,6 @@ export const Room = ({ route }) => {
           page
       );
       setMessagesLength(response.data.length);
-      console.log(response.data.data.chats?.length);
       setMessages((prev) => {
         const newMessages = response.data.data.chats;
         return newMessages.reduce((acc, curr) => {
@@ -212,7 +210,7 @@ export const Room = ({ route }) => {
             justifyContent: "space-between",
             alignItems: "center",
             zIndex: 100,
-            height: screenHeight,
+            height: Platform.OS === "ios" ? screenHeight : screenHeight - 410,
           }}
         >
           <Messages

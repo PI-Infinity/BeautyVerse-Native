@@ -163,7 +163,7 @@ const Variants = ({
           >
             {list?.length > 0 ? (
               list?.map((i, x) => {
-                if (i._id === currentProduct._id) {
+                if (i._id === currentProduct?._id) {
                   return;
                 }
                 let isDefined = variants?.find((it) => it === i);

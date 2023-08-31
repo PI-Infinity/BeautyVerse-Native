@@ -27,6 +27,8 @@ PODS:
     - EXJSONUtils
   - EXNotifications (0.18.1):
     - ExpoModulesCore
+  - EXPermissions (14.2.1):
+    - ExpoModulesCore
   - Expo (48.0.19):
     - ExpoModulesCore
   - ExpoClipboard (4.1.2):
@@ -464,6 +466,7 @@ DEPENDENCIES:
   - EXLocation (from `../node_modules/expo-location/ios`)
   - EXManifests (from `../node_modules/expo-manifests/ios`)
   - EXNotifications (from `../node_modules/expo-notifications/ios`)
+  - EXPermissions (from `../node_modules/expo-permissions/ios`)
   - Expo (from `../node_modules/expo`)
   - ExpoClipboard (from `../node_modules/expo-clipboard/ios`)
   - ExpoCrypto (from `../node_modules/expo-crypto/ios`)
@@ -563,6 +566,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/expo-manifests/ios"
   EXNotifications:
     :path: "../node_modules/expo-notifications/ios"
+  EXPermissions:
+    :path: "../node_modules/expo-permissions/ios"
   Expo:
     :path: "../node_modules/expo"
   ExpoClipboard:
@@ -702,6 +707,7 @@ SPEC CHECKSUMS:
   EXLocation: 74a0ba446f54fd585ea6cfcd19a25644bf22c30d
   EXManifests: 500666d48e8dd7ca5a482c9e729e4a7a6c34081b
   EXNotifications: dd628737af60fc8cc62dccebacd326b0fbbc0dcb
+  EXPermissions: 4f80cf527001aa408a22eddf076e61465ea71d5a
   Expo: 8448e3a2aa1b295f029c81551e1ab6d986517fdb
   ExpoClipboard: 9b87df0ad145e3aa841614fab6aea54b7a604850
   ExpoCrypto: 9105610a09cd6290b900bd82fc5d190e489125a3

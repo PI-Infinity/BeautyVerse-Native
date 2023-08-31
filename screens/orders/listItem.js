@@ -103,7 +103,7 @@ export const ListItem = ({ item, currentUser, currentTheme, setLoader }) => {
           item.user?.pushNotificationToken,
           currentUser.name,
           "has changed order status to - " + val,
-          item.user
+          { type: "order", status: val }
         );
       }
       socket.emit("updateOrders", {

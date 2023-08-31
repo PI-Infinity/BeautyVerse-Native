@@ -227,7 +227,7 @@ export function MarketplaceStack({ navigation, setScrollY }) {
         component={List}
         options={({ route }) => ({
           headerBackTitleVisible: false,
-          title: route.params.title + " List",
+          title: language?.language?.Marketplace?.marketplace?.popularProducts,
           headerStyle: {
             backgroundColor: currentTheme.background,
             height: SCREEN_HEIGHT / 9,
@@ -326,22 +326,26 @@ export function MarketplaceStack({ navigation, setScrollY }) {
             if (currentUser?.type.toLowerCase() !== "beautycenter") {
               return (
                 <View style={{ marginRight: 20 }}>
-                  {route.params.user._id !== currentUser._id && (
-                    <TouchableOpacity
-                      acitveOpacity={0.3}
-                      onPress={() =>
-                        navigation.navigate("Send Order", {
-                          user: route.params.user,
-                        })
-                      }
-                    >
-                      <FontAwesome
-                        name="calendar"
-                        size={18}
-                        color={currentTheme.font}
-                      />
-                    </TouchableOpacity>
-                  )}
+                  {route.params?.user?._id !== currentUser._id &&
+                    currentUser.type !== "beautycenter" &&
+                    currentUser?.type !== "shop" &&
+                    route.params?.user.type !== "shop" &&
+                    route.params?.user.type !== "user" && (
+                      <TouchableOpacity
+                        acitveOpacity={0.3}
+                        onPress={() =>
+                          navigation.navigate("Send Order", {
+                            user: route.params.user,
+                          })
+                        }
+                      >
+                        <FontAwesome
+                          name="calendar"
+                          size={18}
+                          color={currentTheme.font}
+                        />
+                      </TouchableOpacity>
+                    )}
                 </View>
               );
             }
@@ -397,22 +401,26 @@ export function MarketplaceStack({ navigation, setScrollY }) {
             if (currentUser?.type.toLowerCase() !== "beautycenter") {
               return (
                 <View style={{ marginRight: 20 }}>
-                  {route.params.user._id !== currentUser._id && (
-                    <TouchableOpacity
-                      acitveOpacity={0.3}
-                      onPress={() =>
-                        navigation.navigate("Send Order", {
-                          user: route.params.user,
-                        })
-                      }
-                    >
-                      <FontAwesome
-                        name="calendar"
-                        size={18}
-                        color={currentTheme.font}
-                      />
-                    </TouchableOpacity>
-                  )}
+                  {route.params?.user?._id !== currentUser._id &&
+                    currentUser.type !== "beautycenter" &&
+                    currentUser?.type !== "shop" &&
+                    route.params?.user.type !== "shop" &&
+                    route.params?.user.type !== "user" && (
+                      <TouchableOpacity
+                        acitveOpacity={0.3}
+                        onPress={() =>
+                          navigation.navigate("Send Order", {
+                            user: route.params.user,
+                          })
+                        }
+                      >
+                        <FontAwesome
+                          name="calendar"
+                          size={18}
+                          color={currentTheme.font}
+                        />
+                      </TouchableOpacity>
+                    )}
                 </View>
               );
             }

@@ -140,7 +140,7 @@ export const Card = ({
           item.user?.pushNotificationToken,
           currentUser.name,
           "has changed order status to - " + val,
-          item.user
+          { type: "order", status: val }
         );
       }
       socket.emit("updateOrders", {
@@ -218,7 +218,7 @@ export const Card = ({
           item.user?.pushNotificationToken,
           currentUser.name,
           "return you an appointment request! - " + lab.label,
-          item.user
+          { type: "order", status: "new" }
         );
       }
       dispatch(setRerenderOrders());

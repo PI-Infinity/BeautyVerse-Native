@@ -91,7 +91,7 @@ const CategoryList = ({
             </Pressable>
             <TextInput
               value={search}
-              placeholder="Search..."
+              placeholder={language?.language?.Marketplace?.marketplace?.search}
               placeholderTextColor={currentTheme.disabled}
               onChangeText={(value) => setSearch(value)}
               style={{

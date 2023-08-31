@@ -117,7 +117,7 @@ export const FeedItem = ({ route }) => {
               props.user?.pushNotificationToken,
               currentUser.name,
               "added star to your feed!",
-              props.feed
+              { feed: props.feed }
             );
           }
         }
@@ -276,7 +276,7 @@ export const FeedItem = ({ route }) => {
               props.user?.pushNotificationToken,
               currentUser.name,
               "added comment to your feed!",
-              props.feed
+              { feed: props.feed }
             );
           }
         }

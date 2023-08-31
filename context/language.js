@@ -11,6 +11,7 @@ import Chat from "../languages/pages/chat/chat";
 import Bookings from "../languages/pages/bookings/bookings";
 import Auth from "../languages/pages/auth/auth";
 import Pages from "../languages/pages/pages";
+import Marketplace from "../languages/pages/marketplace/marketplace";
 
 export const Language = () => {
   const lang = useSelector((state) => state.storeApp.language);
@@ -42,6 +43,9 @@ export const Language = () => {
         Pages: {
           pages: Pages.en,
         },
+        Marketplace: {
+          marketplace: Marketplace.en,
+        },
       },
     };
   } else if (lang === "ka") {
@@ -71,6 +75,9 @@ export const Language = () => {
         Pages: {
           pages: Pages.ka,
         },
+        Marketplace: {
+          marketplace: Marketplace.ka,
+        },
       },
     };
   } else if (lang === "ru") {
@@ -99,6 +106,9 @@ export const Language = () => {
         },
         Pages: {
           pages: Pages.ru,
+        },
+        Marketplace: {
+          marketplace: Marketplace.ru,
         },
       },
     };

@@ -253,7 +253,6 @@ export const BottomTabNavigator = () => {
 
   useEffect(() => {
     socket.on("chatUpdate", (data) => {
-      console.log(data);
       // setRerenderChatRooms(!rerenderChatRooms);
       dispatch(setRerederRooms());
     });

@@ -224,7 +224,7 @@ const NotificationItem = ({
   useEffect(() => {
     GetFeedObj();
     GetUser();
-  }, [rerenderUserFeed]);
+  }, [rerenderUserFeed, item]);
 
   // delete notification
   const DeleteNotification = async () => {
@@ -295,10 +295,13 @@ const NotificationItem = ({
         >
           <TouchableOpacity
             activeOpacity={0.3}
-            onPress={() =>
-              navigation.navigate("UserVisit", {
-                user: user,
-              })
+            onPress={
+              user
+                ? () =>
+                    navigation.navigate("UserVisit", {
+                      user: user,
+                    })
+                : undefined
             }
           >
             {loadCover && item?.senderCover?.length > 10 && (

@@ -64,7 +64,7 @@ const Main = () => {
         list={randomList}
         navigation={navigation}
         currentTheme={currentTheme}
-        title="Popular Products"
+        title={language?.language?.Marketplace?.marketplace?.popularProducts}
       />
 
       {/* <ListComponent

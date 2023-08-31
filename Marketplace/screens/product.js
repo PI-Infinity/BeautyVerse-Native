@@ -108,7 +108,7 @@ const Product = ({ route }) => {
               color: currentTheme.font,
             }}
           >
-            Brand:
+            {language?.language?.Marketplace?.marketplace?.brand}:
           </Text>
           <Text
             style={{
@@ -139,7 +139,7 @@ const Product = ({ route }) => {
               color: currentTheme.font,
             }}
           >
-            Categories:
+            {language?.language?.Marketplace?.marketplace?.categories}:
           </Text>
           {product.categories?.map((i, x) => {
             let lab = categoriesList?.find((it, ix) => it.value === i).label;
@@ -181,7 +181,7 @@ const Product = ({ route }) => {
               // marginRight: 8,
             }}
           >
-            Price:
+            {language?.language?.Marketplace?.marketplace?.price}:
           </Text>
           <Text
             style={{
@@ -272,7 +272,7 @@ const Product = ({ route }) => {
                 color: currentTheme.font,
               }}
             >
-              In Stock:
+              {language?.language?.Marketplace?.marketplace?.inStock}:
             </Text>
             <Text
               style={{
@@ -306,7 +306,7 @@ const Product = ({ route }) => {
                 color: currentTheme.pink,
               }}
             >
-              For Professionals
+              {language?.language?.Marketplace?.marketplace?.forProfessionals}
             </Text>
           </View>
         )}
@@ -331,7 +331,7 @@ const Product = ({ route }) => {
                 color: currentTheme.font,
               }}
             >
-              Short Description:
+              {language?.language?.Marketplace?.marketplace?.shortDescription}:
             </Text>
             <Text
               style={{
@@ -368,7 +368,7 @@ const Product = ({ route }) => {
                 color: currentTheme.font,
               }}
             >
-              Variantss:
+              {language?.language?.Marketplace?.marketplace?.variants}:
             </Text>
             <View
               style={{
@@ -434,7 +434,7 @@ const Product = ({ route }) => {
                 color: currentTheme.font,
               }}
             >
-              Full Description:
+              {language?.language?.Marketplace?.marketplace?.fullDescription}:
             </Text>
             <Text
               style={{
@@ -473,7 +473,7 @@ const Product = ({ route }) => {
                 color: currentTheme.font,
               }}
             >
-              How to use:
+              {language?.language?.Marketplace?.marketplace?.howToUse}:
             </Text>
             <Text
               style={{
@@ -512,7 +512,7 @@ const Product = ({ route }) => {
                 color: currentTheme.font,
               }}
             >
-              Compositions:
+              {language?.language?.Marketplace?.marketplace?.compositions}:
             </Text>
             <Text
               style={{

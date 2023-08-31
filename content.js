@@ -15,6 +15,7 @@ import {
   Text,
   View,
   Animated,
+  ImageBackground,
 } from "react-native";
 import { TouchableOpacity } from "react-native-gesture-handler";
 import { useDispatch, useSelector } from "react-redux";
@@ -331,7 +332,10 @@ const Content = () => {
   const currentTheme = theme ? darkTheme : lightTheme;
 
   return (
-    <>
+    <View
+      style={{ flex: 1, width: "100%", height: "100%", backgroundColor: "red" }}
+      // source={require("./assets/background.jpg")}
+    >
       {currentVersion !== appVersion && (
         <Update currentVersion={currentVersion} appVersion={appVersion} />
       )}
@@ -537,7 +541,7 @@ const Content = () => {
           </View>
         </View>
       )}
-    </>
+    </View>
   );
 };
 

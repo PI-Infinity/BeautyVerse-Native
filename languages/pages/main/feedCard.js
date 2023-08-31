@@ -22,6 +22,10 @@ const FeedCard = {
     feed: "Feed",
     writeText: "Write text...",
     noComments: "No comments",
+    star: "Star",
+    comment: "Comment",
+    share: "Share",
+    seeOriginal: "See original",
   },
   ka: {
     specialist: "სპეციალისტი",
@@ -46,6 +50,10 @@ const FeedCard = {
     feed: "პოსტი",
     writeText: "დაწერე ტექსტი...",
     noComments: "კომენტარი არ მოიძებნა",
+    star: "ვარსკვლავი",
+    comment: "კომენტარი",
+    share: "გაზიარება",
+    seeOriginal: "ორიგინალის ნახვა",
   },
   ru: {
     specialist: "Специалист",
@@ -70,6 +78,10 @@ const FeedCard = {
     feed: "Пост",
     writeText: "Напишите текст...",
     noComments: "Нет комментариев",
+    star: "Звезда",
+    comment: "Комментарий",
+    share: "Делиться",
+    seeOriginal: "Посмотреть оригинал",
   },
 };
 

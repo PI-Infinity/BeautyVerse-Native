@@ -3,12 +3,14 @@ import * as FileSystem from "expo-file-system";
 import * as ImageManipulator from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
 import React from "react";
-import { Alert, StyleSheet, Text, TouchableOpacity } from "react-native";
+import {
+  Alert,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  Platform,
+} from "react-native";
 import { Language } from "../../context/language";
-
-/**
- * Image input on ios
- */
 
 async function readImageData(uri) {
   try {
@@ -23,11 +25,27 @@ async function readImageData(uri) {
   }
 }
 
+const getCameraPermissions = async () => {
+  try {
+    const { status } = await ImagePicker.getMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      const response = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!response.granted) {
+        alert("Sorry, we need camera roll permissions to make this work!");
+        return false;
+      }
+    }
+    return true;
+  } catch (error) {
+    console.error("Failed to get permissions:", error);
+    return false;
+  }
+};
+
 const InputFile = ({ setFiles, files, currentTheme, title, from }) => {
   const language = Language();
   const maxImageCount = 10;
 
-  //resize image
   const ResizeAndCompressImage = async (uri, originalWidth, originalHeight) => {
     const wdth = 640;
     const hght = (originalHeight / originalWidth) * wdth;
@@ -45,31 +63,42 @@ const InputFile = ({ setFiles, files, currentTheme, title, from }) => {
         {
           // compress: 1,
           format: ImageManipulator.SaveFormat.JPEG,
+          base64: true, // Add this line
         }
       );
-      const mobileImageData = await readImageData(mobile.uri);
 
-      let m = { ...mobile, base64: mobileImageData };
-
-      setFiles((prevFiles) => [...prevFiles, m]);
+      if (mobile.base64) {
+        let m = {
+          ...mobile,
+          base64: `data:image/jpeg;base64,${mobile.base64}`,
+        };
+        setFiles((prevFiles) => [...prevFiles, m]);
+      } else {
+        console.error("Failed to obtain base64 data");
+      }
     } catch (err) {
       console.error("Failed to resize image:", err);
-      return uri;
     }
   };
+
   const selectImage = async () => {
+    const hasPermission = await getCameraPermissions();
+    if (!hasPermission) {
+      return;
+    }
+
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsMultipleSelection: from === "chat" ? false : true, // Allow multiple selection
+      allowsMultipleSelection: from === "chat" ? false : true,
     });
-    // setFiles([]);
+
+    if (result.canceled) {
+      return;
+    }
+
     if (result.assets?.length > 0 && result.assets?.length < 11) {
       for (const asset of result.assets) {
-        const resizedImage = await ResizeAndCompressImage(
-          asset?.uri,
-          asset?.width,
-          asset?.height
-        );
+        await ResizeAndCompressImage(asset?.uri, asset?.width, asset?.height);
       }
     } else if (result.assets?.length > 10) {
       Alert.alert("You can upload only 10 images at once time");
@@ -77,21 +106,18 @@ const InputFile = ({ setFiles, files, currentTheme, title, from }) => {
   };
 
   return (
-    // <View style={styles.container}>
     <TouchableOpacity onPress={selectImage} style={styles.button}>
       <MaterialIcons name="image" size={50} color={currentTheme.font} />
       <Text style={[styles.buttonText, { color: currentTheme.font }]}>
         {title}
       </Text>
     </TouchableOpacity>
-    // </View>
   );
 };
 
 const styles = StyleSheet.create({
   button: {
     flexDirection: "row",
-    // justifyContent: "center",
     alignItems: "center",
     gap: 10,
     paddingHorizontal: 15,

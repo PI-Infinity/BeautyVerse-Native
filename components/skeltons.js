@@ -39,7 +39,7 @@ export const Circle = () => {
   };
 
   return (
-    <View style={{ gap: 8 }}>
+    <View style={{ gap: 8, opacity: 0.5 }}>
       <Animated.View
         style={[
           styles.circle,
@@ -59,8 +59,8 @@ const styles = StyleSheet.create({
     opacity: 0.3,
   },
   circle: {
-    width: 100,
-    height: 100,
-    borderRadius: 100,
+    width: "100%",
+    aspectRatio: 1,
+    // borderRadius: 100,
   },
 });

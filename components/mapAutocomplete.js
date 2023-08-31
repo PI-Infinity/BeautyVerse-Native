@@ -109,16 +109,6 @@ const GoogleAutocomplete = ({ address, setAddress, currentTheme }) => {
             latitude,
             longitude,
           });
-          console.log({
-            country,
-            region,
-            city,
-            district,
-            street,
-            streetNumber,
-            latitude,
-            longitude,
-          });
         }}
         query={{
           key: "AIzaSyBxx8CORlQQBBkbGc-F0yu95DMZaiJkMmo",

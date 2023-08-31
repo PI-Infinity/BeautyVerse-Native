@@ -319,7 +319,7 @@ export const SendOrder = ({ route }) => {
             targetUser?.pushNotificationToken,
             currentUser.name,
             "sent you an appointment request",
-            targetUser
+            { type: "order", status: "new" }
           );
         }
         socket.emit("updateOrders", {

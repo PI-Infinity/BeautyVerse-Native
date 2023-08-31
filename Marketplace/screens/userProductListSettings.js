@@ -26,6 +26,7 @@ import {
   setUserProducts,
 } from "../../redux/Marketplace";
 import { ActivityIndicator } from "react-native";
+import { Circle } from "../../components/skeltons";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -158,7 +159,7 @@ const Products = () => {
         >
           <TextInput
             value={search}
-            placeholder="Search..."
+            placeholder={language.language.Marketplace.marketplace.search}
             placeholderTextColor={currentTheme.disabled}
             style={{
               width: "90%",
@@ -191,172 +192,14 @@ const Products = () => {
             data={userProducts}
             keyExtractor={(item) => item._id}
             renderItem={({ item, index }) => {
-              console.log(item.gallery[item.cover]?.url);
               return (
-                <TouchableOpacity
-                  activeOpacity={0.8}
-                  onPress={() =>
-                    navigation.navigate("EditProduct", {
-                      product: item,
-                    })
-                  }
+                <ProductItem
                   key={index}
-                  style={{
-                    width: "100%",
-                    borderWidth: 1,
-                    borderColor: currentTheme.line,
-                    padding: 15,
-                    borderRadius: 10,
-                    flexDirection: "row",
-                  }}
-                >
-                  <CacheableImage
-                    key={item.gallery[item.cover]?.url}
-                    style={{ flex: 1, aspectRatio: 1, borderRadius: 5 }}
-                    source={{ uri: item.gallery[item.cover]?.url }}
-                  />
-                  <View style={{ flex: 2, paddingHorizontal: 15, gap: 8 }}>
-                    <View
-                      style={{
-                        flexDirection: "row",
-                        justifyContent: "space-between",
-                      }}
-                    >
-                      <Text
-                        style={{
-                          color: item.active
-                            ? currentTheme.pink
-                            : currentTheme.disabled,
-                          letterSpacing: 0.3,
-                          fontSize: 16,
-                          fontWeight: "bold",
-                        }}
-                      >
-                        {item.title}
-                      </Text>
-                      <Octicons
-                        name={item.active ? "eye" : "eye-closed"}
-                        size={16}
-                        color={
-                          item.active
-                            ? currentTheme.pink
-                            : currentTheme.disabled
-                        }
-                      />
-                    </View>
-                    <View>
-                      <Text
-                        style={{
-                          color: currentTheme.font,
-                          letterSpacing: 0.3,
-                          fontSize: 12,
-                        }}
-                      >
-                        {item.brand}
-                      </Text>
-                    </View>
-                    <View>
-                      {item.categories?.map((it, x) => {
-                        let lab = categoriesList?.find(
-                          (itm) => itm.value === it
-                        );
-                        if (x === 0) {
-                          return (
-                            <Text
-                              key={x}
-                              style={{
-                                color: currentTheme.disabled,
-                                letterSpacing: 0.3,
-                                fontSize: 12,
-                              }}
-                            >
-                              {lab.label}
-                            </Text>
-                          );
-                        }
-                      }, [])}
-                    </View>
-                    <View style={{ flexDirection: "row" }}>
-                      <Text
-                        style={{
-                          color: currentTheme.font,
-                          letterSpacing: 0.3,
-                          fontSize: 16,
-                          fontWeight: "bold",
-                        }}
-                      >
-                        {item?.sale
-                          ? (
-                              item?.price -
-                              (item.price / 100) * item.sale
-                            ).toFixed(2)
-                          : item.price}
-                      </Text>
-                      {item.currency === "dollar" ? (
-                        <FontAwesome
-                          name="dollar"
-                          color={currentTheme.font}
-                          size={16}
-                        />
-                      ) : item.currency === "euro" ? (
-                        <FontAwesome
-                          name="euro"
-                          color={currentTheme.font}
-                          size={16}
-                        />
-                      ) : (
-                        <Text
-                          style={{
-                            fontWeight: "bold",
-                            color: currentTheme.font,
-                            fontSize: 16,
-                          }}
-                        >
-                          {"\u20BE"}
-                        </Text>
-                      )}
-
-                      {item?.sale && (
-                        <View style={{ flexDirection: "row", marginLeft: 4 }}>
-                          <Text
-                            style={{
-                              color: currentTheme.disabled,
-                              textDecorationLine: "line-through",
-                              letterSpacing: 0.3,
-                              fontSize: 16,
-                              fontWeight: "bold",
-                            }}
-                          >
-                            {item.price}
-                            {item.currency === "dollar" ? (
-                              <FontAwesome
-                                name="dollar"
-                                color={currentTheme.disabled}
-                                size={16}
-                              />
-                            ) : item.currency === "euro" ? (
-                              <FontAwesome
-                                name="euro"
-                                color={currentTheme.disabled}
-                                size={16}
-                              />
-                            ) : (
-                              <Text
-                                style={{
-                                  fontWeight: "bold",
-                                  color: currentTheme.disabled,
-                                  fontSize: 16,
-                                }}
-                              >
-                                {"\u20BE"}
-                              </Text>
-                            )}
-                          </Text>
-                        </View>
-                      )}
-                    </View>
-                  </View>
-                </TouchableOpacity>
+                  item={item}
+                  navigation={navigation}
+                  currentTheme={currentTheme}
+                  categoriesList={categoriesList}
+                />
               );
             }}
             onEndReached={AddUserProducts} // Triggered when reaching the end of the list
@@ -391,3 +234,168 @@ const Products = () => {
 export default Products;
 
 const styles = StyleSheet.create({});
+
+const ProductItem = ({ item, navigation, currentTheme, categoriesList }) => {
+  const [loading, setLoading] = useState(true);
+  // backend url
+
+  return (
+    <TouchableOpacity
+      activeOpacity={0.8}
+      onPress={() =>
+        navigation.navigate("EditProduct", {
+          product: item,
+        })
+      }
+      style={{
+        width: "100%",
+        borderWidth: 1,
+        borderColor: currentTheme.line,
+        padding: 15,
+        borderRadius: 10,
+        flexDirection: "row",
+      }}
+    >
+      {
+        <View
+          style={{
+            width: 130,
+            aspectRatio: 1,
+            borderRadius: 5,
+            overflow: "hidden",
+          }}
+        >
+          {loading && <Circle />}
+          <CacheableImage
+            key={item.gallery[item.cover]?.url}
+            style={{ width: 130, aspectRatio: 1, borderRadius: 5 }}
+            source={{ uri: item.gallery[item.cover]?.url }}
+            onLoad={() => setLoading(false)}
+          />
+        </View>
+      }
+      <View style={{ flex: 2, paddingHorizontal: 15, gap: 8 }}>
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+          }}
+        >
+          <Text
+            style={{
+              color: item.active ? currentTheme.pink : currentTheme.disabled,
+              letterSpacing: 0.3,
+              fontSize: 16,
+              fontWeight: "bold",
+            }}
+          >
+            {item.title}
+          </Text>
+          <Octicons
+            name={item.active ? "eye" : "eye-closed"}
+            size={16}
+            color={item.active ? currentTheme.pink : currentTheme.disabled}
+          />
+        </View>
+        <View>
+          <Text
+            style={{
+              color: currentTheme.font,
+              letterSpacing: 0.3,
+              fontSize: 12,
+            }}
+          >
+            {item.brand}
+          </Text>
+        </View>
+        <View>
+          {item.categories?.map((it, x) => {
+            let lab = categoriesList?.find((itm) => itm.value === it);
+            if (x === 0) {
+              return (
+                <Text
+                  key={x}
+                  style={{
+                    color: currentTheme.disabled,
+                    letterSpacing: 0.3,
+                    fontSize: 12,
+                  }}
+                >
+                  {lab.label}
+                </Text>
+              );
+            }
+          }, [])}
+        </View>
+        <View style={{ flexDirection: "row" }}>
+          <Text
+            style={{
+              color: currentTheme.font,
+              letterSpacing: 0.3,
+              fontSize: 16,
+              fontWeight: "bold",
+            }}
+          >
+            {item?.sale
+              ? (item?.price - (item.price / 100) * item.sale).toFixed(2)
+              : item.price}
+          </Text>
+          {item.currency === "dollar" ? (
+            <FontAwesome name="dollar" color={currentTheme.font} size={16} />
+          ) : item.currency === "euro" ? (
+            <FontAwesome name="euro" color={currentTheme.font} size={16} />
+          ) : (
+            <Text
+              style={{
+                fontWeight: "bold",
+                color: currentTheme.font,
+                fontSize: 16,
+              }}
+            >
+              {"\u20BE"}
+            </Text>
+          )}
+
+          {item?.sale && (
+            <View style={{ flexDirection: "row", marginLeft: 4 }}>
+              <Text
+                style={{
+                  color: currentTheme.disabled,
+                  textDecorationLine: "line-through",
+                  letterSpacing: 0.3,
+                  fontSize: 16,
+                  fontWeight: "bold",
+                }}
+              >
+                {item.price}
+                {item.currency === "dollar" ? (
+                  <FontAwesome
+                    name="dollar"
+                    color={currentTheme.disabled}
+                    size={16}
+                  />
+                ) : item.currency === "euro" ? (
+                  <FontAwesome
+                    name="euro"
+                    color={currentTheme.disabled}
+                    size={16}
+                  />
+                ) : (
+                  <Text
+                    style={{
+                      fontWeight: "bold",
+                      color: currentTheme.disabled,
+                      fontSize: 16,
+                    }}
+                  >
+                    {"\u20BE"}
+                  </Text>
+                )}
+              </Text>
+            </View>
+          )}
+        </View>
+      </View>
+    </TouchableOpacity>
+  );
+};

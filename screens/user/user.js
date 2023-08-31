@@ -54,6 +54,7 @@ import ConfirmPopup from "../../components/confirmDialog";
 import { sendNotification } from "../../components/pushNotifications";
 import Showroom from "../../Marketplace/components/shworoom";
 import { setRerenderProducts } from "../../redux/Marketplace";
+import { useSocket } from "../../context/socketContext";
 
 /**
  * User Profile Screen
@@ -67,6 +68,9 @@ export const User = ({ navigation, user, variant, setScrollY }) => {
   const dispatch = useDispatch();
   // Get current route for navigation
   const route = useRoute();
+
+  // socket
+  const socket = useSocket();
 
   // zoom to top on change dependency
   const zoomToTop = useSelector((state) => state.storeApp.zoomToTop);
@@ -178,6 +182,8 @@ export const User = ({ navigation, user, variant, setScrollY }) => {
   let userType;
   if (tp === "Beautycenter") {
     userType = language?.language?.Auth?.auth?.beautySalon;
+  } else if (tp === "Shop") {
+    userType = language.language.Marketplace.marketplace.shop;
   } else {
     userType = tp;
   }
@@ -334,14 +340,19 @@ export const User = ({ navigation, user, variant, setScrollY }) => {
             feed: `/api/v1/users/${currentUser?._id}/`,
           }
         );
-      }
-      if (targetUser?.pushNotificationToken) {
-        await sendNotification(
-          targetUser?.pushNotificationToken,
-          currentUser.name,
-          "saved your profile!",
-          targetUser
-        );
+        socket.emit("updateUser", {
+          targetId: targetUser?._id,
+        });
+        if (targetUser?.pushNotificationToken) {
+          await sendNotification(
+            targetUser?.pushNotificationToken,
+            currentUser.name,
+            "saved your profile!",
+            {
+              user: JSON.stringify(currentUser),
+            }
+          );
+        }
       }
 
       // const data = await response.data;

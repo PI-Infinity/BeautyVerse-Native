@@ -18,6 +18,7 @@ import axios from "axios";
 import { ProceduresOptions } from "../../datas/registerDatas";
 import { CacheableImage } from "../../components/cacheableImage";
 import FilterPopup from "./marketplaceFilter";
+import { Circle } from "../../components/skeltons";
 
 const Search = () => {
   // language state
@@ -249,7 +250,9 @@ const Search = () => {
               <FontAwesome name="search" size={20} color={currentTheme.pink} />
               <TextInput
                 value={search}
-                placeholder="Search..."
+                placeholder={
+                  language?.language?.Marketplace?.marketplace?.search
+                }
                 placeholderTextColor={currentTheme.disabled}
                 autoFocus
                 style={{
@@ -332,6 +335,8 @@ const styles = StyleSheet.create({});
 const ProductItem = ({ item, navigation, currentTheme }) => {
   // categories
   const categoriesList = ProceduresOptions();
+
+  const [loading, setLoading] = useState(true);
   return (
     <TouchableOpacity
       activeOpacity={0.8}
@@ -417,11 +422,22 @@ const ProductItem = ({ item, navigation, currentTheme }) => {
         </Pressable>
       </View>
       <View style={{ flexDirection: "row" }}>
-        <CacheableImage
-          key={item.gallery[item.cover]?.url}
-          style={{ width: 130, aspectRatio: 1, borderRadius: 5 }}
-          source={{ uri: item.gallery[item.cover]?.url }}
-        />
+        <View
+          style={{
+            width: 130,
+            aspectRatio: 1,
+            borderRadius: 5,
+            overflow: "hidden",
+          }}
+        >
+          {loading && <Circle />}
+          <CacheableImage
+            key={item.gallery[item.cover]?.url}
+            style={{ width: 130, aspectRatio: 1, borderRadius: 5 }}
+            source={{ uri: item.gallery[item.cover]?.url }}
+            onLoad={() => setLoading(false)}
+          />
+        </View>
         <View style={{ flex: 2, paddingHorizontal: 15, gap: 8 }}>
           <Text
             style={{

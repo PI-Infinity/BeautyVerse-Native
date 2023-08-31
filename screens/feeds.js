@@ -13,7 +13,6 @@ import { setSendReport } from "../redux/alerts";
 import { setCleanUp, setFeedRefreshControl } from "../redux/rerenders";
 import { setLoading } from "../redux/app";
 import * as Location from "expo-location";
-
 /**
  * Feeds screen
  */
@@ -61,6 +60,7 @@ export const Feeds = ({
   const filter = useSelector((state) => state.storeFilter.filter);
   const specialists = useSelector((state) => state.storeFilter.specialists);
   const salons = useSelector((state) => state.storeFilter.salons);
+  const shops = useSelector((state) => state.storeFilter.shops);
   const city = useSelector((state) => state.storeFilter.city);
   const district = useSelector((state) => state.storeFilter.district);
 
@@ -86,8 +86,8 @@ export const Feeds = ({
         const response = await axios.get(
           `${backendUrl}/api/v1/feeds?search=${search}&filter=${filter}&type=${
             specialists ? "specialist" : ""
-          }${
-            salons ? "beautycenter" : ""
+          }${salons ? "beautycenter" : ""}${
+            shops ? "shop" : ""
           }&city=${city}&district=${district}&page=1&country=${
             location.country ? location.country : currentUser.address[0].country
           }`
@@ -121,8 +121,8 @@ export const Feeds = ({
       const response = await axios.get(
         `${backendUrl}/api/v1/feeds?search=${search}&filter=${filter}&type=${
           specialists ? "specialist" : ""
-        }${
-          salons ? "beautycenter" : ""
+        }${salons ? "beautycenter" : ""}${
+          shops ? "shop" : ""
         }&city=${city}&district=${district}&check=${
           currentUser !== null ? currentUser._id : ""
         }}&page=${currentPage}&country=${

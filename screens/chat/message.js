@@ -83,7 +83,6 @@ export const Message = (props) => {
 
   // read message
   const ReadMessage = async () => {
-    console.log(props?.data?.messageUniqueId);
     try {
       await axios.patch(
         backendUrl + "/api/v1/chats/seen/" + props?.data?.messageUniqueId,

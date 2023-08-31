@@ -116,7 +116,7 @@ const FilterPopup = ({
                 fontSize: 16,
               }}
             >
-              Categories:
+              {language?.language?.Marketplace?.marketplace?.categories}:
             </Text>
           </View>
           <View style={{ alignItems: "center", gap: 8, marginTop: 15 }}>
@@ -176,7 +176,7 @@ const FilterPopup = ({
                 fontSize: 16,
               }}
             >
-              Brands:
+              {language?.language?.Marketplace?.marketplace?.brands}:
             </Text>
           </View>
           <View
@@ -246,7 +246,7 @@ const FilterPopup = ({
                 fontSize: 16,
               }}
             >
-              Price Range:
+              {language?.language?.Marketplace?.marketplace?.priceRange}:
             </Text>
           </View>
           <View style={styles.priceInputContainer}>
@@ -260,7 +260,9 @@ const FilterPopup = ({
                 },
               ]}
               keyboardType="number-pad"
-              placeholder="Min Price"
+              placeholder={
+                language?.language?.Marketplace?.marketplace?.minPrice
+              }
               value={minPrice}
               onChangeText={(val) => setMinPrice(val)}
               placeholderTextColor={currentTheme.disabled}
@@ -275,7 +277,9 @@ const FilterPopup = ({
                 },
               ]}
               keyboardType="number-pad"
-              placeholder="Max Price"
+              placeholder={
+                language?.language?.Marketplace?.marketplace?.maxPrice
+              }
               value={maxPrice}
               onChangeText={(val) => setMaxPrice(val)}
               placeholderTextColor={currentTheme.disabled}
@@ -301,7 +305,7 @@ const FilterPopup = ({
                 fontSize: 16,
               }}
             >
-              Discounts:
+              {language?.language?.Marketplace?.marketplace?.discounts}:
             </Text>
           </View>
           <View style={styles.priceInputContainer}>
@@ -321,8 +325,12 @@ const FilterPopup = ({
                 alignItems: "center",
               }}
             >
-              <Text style={{ color: currentTheme.font, letterSpacing: 0.3 }}>
-                Only with
+              <Text
+                style={{ color: currentTheme.font, letterSpacing: 0.3 }}
+                numberOfLines={1}
+                ellipsizeMode={"tail"}
+              >
+                {language?.language?.Marketplace?.marketplace?.onlyWith}
               </Text>
             </Pressable>
             <Pressable
@@ -343,8 +351,12 @@ const FilterPopup = ({
                 alignItems: "center",
               }}
             >
-              <Text style={{ color: currentTheme.font, letterSpacing: 0.3 }}>
-                Only without
+              <Text
+                style={{ color: currentTheme.font, letterSpacing: 0.3 }}
+                numberOfLines={1}
+                ellipsizeMode={"tail"}
+              >
+                {language?.language?.Marketplace?.marketplace?.onlyWithout}
               </Text>
             </Pressable>
           </View>
@@ -367,7 +379,7 @@ const FilterPopup = ({
                 fontSize: 16,
               }}
             >
-              Sex:
+              {language?.language?.Marketplace?.marketplace?.sex}:
             </Text>
           </View>
           <View style={styles.priceInputContainer}>
@@ -386,7 +398,7 @@ const FilterPopup = ({
               }}
             >
               <Text style={{ color: currentTheme.font, letterSpacing: 0.3 }}>
-                Women
+                {language?.language?.Marketplace?.marketplace?.women}
               </Text>
             </Pressable>
             <Pressable
@@ -404,7 +416,7 @@ const FilterPopup = ({
               }}
             >
               <Text style={{ color: currentTheme.font, letterSpacing: 0.3 }}>
-                Men
+                {language?.language?.Marketplace?.marketplace?.men}
               </Text>
             </Pressable>
           </View>
@@ -427,7 +439,7 @@ const FilterPopup = ({
                 fontSize: 16,
               }}
             >
-              Type:
+              {language?.language?.Marketplace?.marketplace?.type}:
             </Text>
           </View>
           <View style={styles.priceInputContainer}>
@@ -447,8 +459,12 @@ const FilterPopup = ({
                 alignItems: "center",
               }}
             >
-              <Text style={{ color: currentTheme.font, letterSpacing: 0.3 }}>
-                For Everyone
+              <Text
+                style={{ color: currentTheme.font, letterSpacing: 0.3 }}
+                numberOfLines={1}
+                ellipsizeMode={"tail"}
+              >
+                {language?.language?.Marketplace?.marketplace?.forEveryone}
               </Text>
             </Pressable>
             <Pressable
@@ -469,8 +485,12 @@ const FilterPopup = ({
                 alignItems: "center",
               }}
             >
-              <Text style={{ color: currentTheme.font, letterSpacing: 0.3 }}>
-                For Professionals
+              <Text
+                style={{ color: currentTheme.font, letterSpacing: 0.3 }}
+                numberOfLines={1}
+                ellipsizeMode={"tail"}
+              >
+                {language?.language?.Marketplace?.marketplace?.forProfessionals}
               </Text>
             </Pressable>
           </View>
@@ -510,7 +530,7 @@ const FilterPopup = ({
               fontSize: 16,
             }}
           >
-            Clear
+            {language?.language?.Marketplace?.marketplace?.clear}
           </Text>
           {total > 0 && (
             <View

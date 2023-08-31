@@ -8,6 +8,17 @@ import { setCurrentUser } from "../redux/user";
 import { setLoading } from "../redux/app";
 import * as Location from "expo-location";
 import { RouteNameContext } from "../context/routName";
+import Constants from "expo-constants";
+import { useNavigation } from "@react-navigation/native";
+import { setCurrentChat } from "../redux/chat";
+import { setDate, setStatusFilter } from "../redux/orders";
+import {
+  setDateSentOrders,
+  setStatusFilterSentOrders,
+} from "../redux/sentOrders";
+import moment from "moment";
+import "moment-timezone";
+import * as Localization from "expo-localization";
 
 export default function App({ currentUser }) {
   const routeName = useContext(RouteNameContext);
@@ -35,6 +46,8 @@ export default function App({ currentUser }) {
 
   // defines backend url
   const backendUrl = useSelector((state) => state.storeApp.backendUrl);
+
+  const navigation = useNavigation();
 
   useEffect(() => {
     if (currentUser) {
@@ -66,7 +79,81 @@ export default function App({ currentUser }) {
 
       responseListener.current =
         Notifications.addNotificationResponseReceivedListener((response) => {
-          console.log(response);
+          if (response.notification.request.content.data.someData) {
+            // navigate to target feed after getting notification
+            if (response.notification.request.content.data.someData.feed) {
+              navigation.navigate("UserFeed", {
+                feed: response.notification.request.content.data.someData.feed,
+                user: currentUser,
+              });
+            }
+            // navigate to target user page after getting notification
+            if (
+              response.notification.request.content.data.someData.user &&
+              !response.notification.request.content.data.someData.user
+            ) {
+              const parsed = JSON.parse(
+                response.notification.request.content.data.someData.user
+              );
+
+              navigation.navigate("User" || "UserVisit", {
+                user: parsed,
+              });
+            }
+            // navigate to target chat after getting notification
+            if (response.notification.request.content.data.someData.room) {
+              const parsedChat = JSON.parse(
+                response.notification.request.content.data.someData.room
+              );
+              const parsedUser = JSON.parse(
+                response.notification.request.content.data.someData.user
+              );
+              dispatch(setCurrentChat(parsedChat));
+              navigation.navigate("Room", {
+                user: parsedUser,
+              });
+            }
+            // navigate to orders after getting notification
+            if (
+              response.notification.request.content.data.someData.type ===
+              "order"
+            ) {
+              let newdate = new Date();
+              let formattedDateInTimezone = moment(newdate)
+                .tz(Localization.timezone)
+                .format("YYYY-MM-DDTHH:mm:ss.SSS[Z]");
+
+              // recieved orders
+              if (
+                currentUser?.type === "specialist" ||
+                currentUser?.type === "beautycenter"
+              ) {
+                dispatch(
+                  setStatusFilter(
+                    response.notification.request.content.data.someData.status
+                  )
+                );
+                dispatch(
+                  setDate({ active: false, date: formattedDateInTimezone })
+                );
+                navigation.navigate("BMS");
+              } else {
+                // sent orders
+                dispatch(
+                  setStatusFilterSentOrders(
+                    response.notification.request.content.data.someData.status
+                  )
+                );
+                dispatch(
+                  setDateSentOrders({
+                    active: false,
+                    date: formattedDateInTimezone,
+                  })
+                );
+                navigation.navigate("BMSSent");
+              }
+            }
+          }
         });
 
       return () => {
@@ -95,17 +182,21 @@ async function registerForPushNotificationsAsync(currentUser) {
     const { status: existingStatus } =
       await Notifications.getPermissionsAsync();
     let finalStatus = existingStatus;
-    console.log("final: " + finalStatus);
+
     if (existingStatus !== "granted") {
       const { status } = await Notifications.requestPermissionsAsync();
-      console.log("request");
+
       finalStatus = status;
     }
     if (finalStatus !== "granted") {
       console.log("Failed to get push token for push notification!");
       return;
     }
-    token = (await Notifications.getExpoPushTokenAsync()).data;
+    token = (
+      await Notifications.getExpoPushTokenAsync({
+        projectId: Constants.expoConfig.extra.eas.projectId,
+      })
+    ).data;
   } else {
     console.log("Must use physical device for Push Notifications");
   }
@@ -132,7 +223,6 @@ export const sendNotification = async (expoPushToken, title, body, feed) => {
       body: JSON.stringify(message),
     });
     const responseData = await response.json();
-    console.log(responseData);
   } catch (error) {
     console.log(error);
   }

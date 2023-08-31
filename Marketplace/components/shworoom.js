@@ -27,6 +27,7 @@ import {
 } from "../../redux/Marketplace";
 import { ActivityIndicator } from "react-native";
 import FilterPopup from "./showroomFilter";
+import { Circle } from "../../components/skeltons";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -101,6 +102,7 @@ const Showroom = ({
         categories={categories}
         brands={brands}
       />
+
       <View
         style={{
           paddingHorizontal: 15,
@@ -173,6 +175,7 @@ const Showroom = ({
           <MaterialIcons color={currentTheme.disabled} name="list" size={22} />
         </TouchableOpacity>
       </View>
+
       {loading ? (
         <View
           style={{
@@ -224,6 +227,7 @@ export default Showroom;
 const styles = StyleSheet.create({});
 
 const ProductItem = ({ item, navigation, currentTheme, categoriesList }) => {
+  const [loading, setLoading] = useState(true);
   // backend url
 
   return (
@@ -243,11 +247,22 @@ const ProductItem = ({ item, navigation, currentTheme, categoriesList }) => {
         flexDirection: "row",
       }}
     >
-      <CacheableImage
-        key={item.gallery[item.cover]?.url}
-        style={{ flex: 1, aspectRatio: 1, borderRadius: 5 }}
-        source={{ uri: item.gallery[item.cover]?.url }}
-      />
+      <View
+        style={{
+          width: 130,
+          aspectRatio: 1,
+          borderRadius: 5,
+          overflow: "hidden",
+        }}
+      >
+        {loading && <Circle />}
+        <CacheableImage
+          key={item.gallery[item.cover]?.url}
+          style={{ width: 130, aspectRatio: 1, borderRadius: 5 }}
+          source={{ uri: item.gallery[item.cover]?.url }}
+          onLoad={() => setLoading(false)}
+        />
+      </View>
       <View style={{ flex: 2, paddingHorizontal: 15, gap: 8 }}>
         <Text
           style={{

@@ -268,7 +268,10 @@ export const Input = ({
           targetUser?.pushNotificationToken,
           currentUser.name,
           text,
-          targetUser
+          {
+            room: JSON.stringify(currentChat),
+            user: JSON.stringify(currentUser),
+          }
         );
       }
 
@@ -305,6 +308,7 @@ export const Input = ({
           placeholderTextColor={currentTheme.disabled}
           onChangeText={setText}
           value={text}
+          autoFocus
           onFocus={() => {
             setMbottom(0);
             flatListRef.current.scrollToEnd({ animated: true });
@@ -313,7 +317,7 @@ export const Input = ({
           multiline
           style={{
             flex: 1.6,
-            color: "#e5e5e5",
+            color: currentTheme.font,
           }}
           ref={inputRef}
         />

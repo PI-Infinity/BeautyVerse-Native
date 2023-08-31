@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { darkTheme, lightTheme } from "../../context/theme";
 import { useSelector } from "react-redux";
+import { Circle } from "../../components/skeltons";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -69,10 +70,15 @@ const CoverSlider = () => {
         scrollEventThrottle={16}
       >
         {images.map((image, index) => (
-          <Image key={index} source={image} style={styles.image} />
+          <Img image={image} key={index} />
         ))}
         {/* Duplicate First Image */}
-        <Image source={images[0]} style={styles.image} />
+        <View style={{ width: SCREEN_WIDTH, height: SCREEN_WIDTH }}>
+          <Image
+            source={images[0]}
+            style={{ width: SCREEN_WIDTH, height: SCREEN_WIDTH }}
+          />
+        </View>
       </ScrollView>
       <View style={styles.dotContainer}>
         {images.map((_, i) => (
@@ -100,6 +106,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     width: "100%",
     paddingBottom: 0,
+    overflow: "hidden",
   },
   image: {
     width: SCREEN_WIDTH,
@@ -119,3 +126,19 @@ const styles = StyleSheet.create({
 });
 
 export default CoverSlider;
+
+const Img = ({ image }) => {
+  const [loading, setLoading] = useState(true);
+  return (
+    <View
+      style={{ width: SCREEN_WIDTH, height: SCREEN_WIDTH, overflow: "hidden" }}
+    >
+      {loading && <Circle />}
+      <Image
+        source={image}
+        style={{ width: SCREEN_WIDTH, height: SCREEN_WIDTH }}
+        onLoad={() => setLoading(false)}
+      />
+    </View>
+  );
+};

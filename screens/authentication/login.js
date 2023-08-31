@@ -262,14 +262,14 @@ export const Login = ({ navigation }) => {
           style={[
             styles.button,
             {
-              backgroundColor: currentTheme.background,
+              backgroundColor: currentTheme.pink,
               borderWidth: 1,
               borderColor: currentTheme.line,
             },
           ]}
           onPress={Login}
         >
-          <Text style={[styles.buttonText, { color: currentTheme.pink }]}>
+          <Text style={[styles.buttonText, { color: "#fff" }]}>
             {language?.language?.Auth?.auth?.login}
           </Text>
         </TouchableOpacity>

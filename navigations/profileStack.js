@@ -380,9 +380,9 @@ export function ProfileStack({
                   fontWeight: "bold",
                 }}
               >
-                {route.params.user.name}
+                {route.params.user?.name}
               </Text>
-              {route.params.user.subscription.status === "active" && (
+              {route.params.user?.subscription.status === "active" && (
                 <MaterialIcons name="verified" size={14} color="#F866B1" />
               )}
             </View>
@@ -390,8 +390,11 @@ export function ProfileStack({
           headerRight: (props) => {
             return (
               <View style={{ marginRight: 20 }}>
-                {route.params.user._id !== currentUser._id &&
-                  currentUser.type !== "beautycenter" && (
+                {route.params?.user?._id !== currentUser._id &&
+                  currentUser.type !== "beautycenter" &&
+                  currentUser?.type !== "shop" &&
+                  route.params?.user.type !== "shop" &&
+                  route.params?.user.type !== "user" && (
                     <TouchableOpacity
                       acitveOpacity={0.3}
                       onPress={() =>
@@ -913,7 +916,7 @@ export function ProfileStack({
               />
             </TouchableOpacity>
           ),
-          title: language?.language?.User?.userPage?.edit,
+          title: language?.language?.Marketplace?.marketplace?.editProduct,
           headerStyle: {
             height: SCREEN_HEIGHT / 9,
             backgroundColor: currentTheme.background,

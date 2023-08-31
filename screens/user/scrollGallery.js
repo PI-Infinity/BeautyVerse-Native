@@ -371,7 +371,7 @@ const FeedItem = (props) => {
               props.user?.pushNotificationToken,
               currentUser.name,
               "added start to your feed!",
-              props.feed
+              { feed: props.feed }
             );
           }
         }
@@ -524,7 +524,7 @@ const FeedItem = (props) => {
               props.user?.pushNotificationToken,
               currentUser.name,
               "added comment to your feed!",
-              props.feed
+              { feed: props.feed }
             );
           }
         }

@@ -29,6 +29,7 @@ import {
   setRerenderScroll,
 } from "../redux/chat";
 import axios from "axios";
+import { Circle } from "../components/skeltons";
 
 export const MapFilter = ({ users }) => {
   // defines dispatch for redux
@@ -52,40 +53,40 @@ export const MapFilter = ({ users }) => {
 
   const mapRef = useRef(null);
 
-  // useEffect(() => {
-  //   // ...rest of your code
+  useEffect(() => {
+    // ...rest of your code
 
-  //   // This will recenter the map to the currentUser's location
-  //   if (mapRef.current && users[0]?.address[0]) {
-  //     mapRef.current.animateToRegion(
-  //       {
-  //         latitude: users[0]?.address.find(
-  //           (a) =>
-  //             a.city?.replace("'", "")?.toLocaleLowerCase() ===
-  //             city?.toLocaleLowerCase()
-  //         )?.latitude,
-  //         longitude: users[0]?.address.find(
-  //           (a) =>
-  //             a.city?.replace("'", "")?.toLocaleLowerCase() ===
-  //             city?.toLocaleLowerCase()
-  //         )?.longitude,
-  //         latitudeDelta: 0.0922,
-  //         longitudeDelta: 0.0421,
-  //       },
-  //       500
-  //     ); // Duration of animation in ms
-  //   } else {
-  //     mapRef.current.animateToRegion(
-  //       {
-  //         latitude: currentUser.address[0]?.latitude,
-  //         longitude: currentUser.address[0]?.longitude,
-  //         latitudeDelta: 0.0922,
-  //         longitudeDelta: 0.0421,
-  //       },
-  //       500
-  //     ); //
-  //   }
-  // }, [users]);
+    // This will recenter the map to the currentUser's location
+    if (mapRef.current && users[0]?.address[0]) {
+      mapRef.current.animateToRegion(
+        {
+          latitude: users[0]?.address.find(
+            (a) =>
+              a.city?.replace("'", "")?.toLocaleLowerCase() ===
+              city?.toLocaleLowerCase()
+          )?.latitude,
+          longitude: users[0]?.address.find(
+            (a) =>
+              a.city?.replace("'", "")?.toLocaleLowerCase() ===
+              city?.toLocaleLowerCase()
+          )?.longitude,
+          latitudeDelta: 0.0922,
+          longitudeDelta: 0.0421,
+        },
+        500
+      ); // Duration of animation in ms
+    } else {
+      mapRef.current.animateToRegion(
+        {
+          latitude: currentUser.address[0]?.latitude,
+          longitude: currentUser.address[0]?.longitude,
+          latitudeDelta: 0.0922,
+          longitudeDelta: 0.0421,
+        },
+        500
+      ); //
+    }
+  }, [users]);
 
   // user modal
   // select user
@@ -193,15 +194,15 @@ export const MapFilter = ({ users }) => {
 
   return (
     <>
-      {/* <MapView
+      <MapView
         ref={mapRef} // Add this line
         style={{ height: "110%" }}
-        initialRegion={{
-          latitude: users[0]?.address[0].latitude,
-          longitude: users[0]?.address[0].longitude,
-          latitudeDelta: 0.0922,
-          longitudeDelta: 0.0421,
-        }}
+        // initialRegion={{
+        //   latitude: users[0]?.address[0].latitude,
+        //   longitude: users[0]?.address[0].longitude,
+        //   latitudeDelta: 0.0922,
+        //   longitudeDelta: 0.0421,
+        // }}
         customMapStyle={[
           {
             featureType: "poi.business",
@@ -235,7 +236,7 @@ export const MapFilter = ({ users }) => {
             </Marker>
           );
         })}
-      </MapView> */}
+      </MapView>
       <Modal
         animationType="slide"
         transparent={true}
@@ -550,11 +551,11 @@ const styles = StyleSheet.create({
 
 const MarkerItem = ({ item, currentTheme }) => {
   const [loading, setLoading] = useState(true);
+
   useEffect(() => {
-    if (item.cover.length < 1) {
-      setLoading(false);
-    }
-  }, [item.cover]);
+    setLoading(true);
+  }, [item]);
+
   return (
     <View
       style={{
@@ -568,28 +569,32 @@ const MarkerItem = ({ item, currentTheme }) => {
         justifyContent: "center",
       }}
     >
-      {loading && (
-        <ActivityIndicator
-          size="small"
-          color={currentTheme.pink}
-          style={{ position: "absolute" }}
-        />
-      )}
       {item?.cover.length > 0 ? (
-        <CacheableImage
+        <View
           style={{
             width: 30,
             height: 30,
             borderRadius: 50,
-            borderWidth: 2,
-            borderColor: currentTheme.pink,
+            overflow: "hidden",
           }}
-          key={item?._id}
-          source={{
-            uri: item?.cover,
-            cache: "reload",
-          }}
-        />
+        >
+          {loading && <Circle />}
+          <CacheableImage
+            style={{
+              width: 30,
+              height: 30,
+              borderRadius: 50,
+              borderWidth: 2,
+              borderColor: currentTheme.pink,
+            }}
+            onLoad={() => setLoading(false)}
+            key={item?._id}
+            source={{
+              uri: item?.cover,
+              cache: "reload",
+            }}
+          />
+        </View>
       ) : (
         <FontAwesome name="user" size={16} color={currentTheme.pink} />
       )}

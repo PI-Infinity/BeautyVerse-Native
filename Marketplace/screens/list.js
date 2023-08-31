@@ -16,6 +16,7 @@ import { useNavigation } from "@react-navigation/native";
 import { ProceduresOptions } from "../../datas/registerDatas";
 import axios from "axios";
 import { setRandomProductsList } from "../../redux/Marketplace";
+import { Circle } from "../../components/skeltons";
 
 const List = ({ route }) => {
   const [list, setList] = useState([]);
@@ -54,10 +55,8 @@ const List = ({ route }) => {
       );
       if (response.data.data.products.random) {
         const newProducts = response.data.data.products.random;
-        console.log("new: " + newProducts?.length);
         if (newProducts?.length > 0) {
           const updatedUserProducts = mergeUniqueProducts(list, newProducts);
-          console.log("merged: " + updatedUserProducts?.length);
           setList(updatedUserProducts);
           setPage(page + 1);
         }
@@ -89,7 +88,6 @@ const List = ({ route }) => {
     // if (route.name === "UserProfile") {
     //   setScrollY(offsetY);
     // }
-    console.log(isBottom);
     if (isBottom) {
       AddProducts();
     }
@@ -127,6 +125,10 @@ const styles = StyleSheet.create({});
 const ProductItem = ({ item, navigation, currentTheme }) => {
   // categories
   const categoriesList = ProceduresOptions();
+
+  //
+  const [loading, setLoading] = useState(true);
+
   return (
     <TouchableOpacity
       activeOpacity={0.8}
@@ -222,11 +224,24 @@ const ProductItem = ({ item, navigation, currentTheme }) => {
           flexDirection: "row",
         }}
       >
-        <CacheableImage
-          key={item.gallery[item.cover]?.url}
-          style={{ width: 130, aspectRatio: 1, borderRadius: 5 }}
-          source={{ uri: item.gallery[item.cover]?.url }}
-        />
+        <View
+          style={{
+            width: 130,
+            aspectRatio: 1,
+            overflow: "hidden",
+            borderRadius: 5,
+          }}
+        >
+          {loading && <Circle />}
+
+          <CacheableImage
+            key={item.gallery[item.cover]?.url}
+            style={{ width: 130, aspectRatio: 1, borderRadius: 5 }}
+            source={{ uri: item.gallery[item.cover]?.url }}
+            onLoad={() => setLoading(false)}
+          />
+        </View>
+
         <View style={{ flex: 2, paddingHorizontal: 15, gap: 8 }}>
           <Text
             style={{

@@ -12,7 +12,8 @@ const initialState = {
   cardsResult: 0,
   machineId: null,
   zoomToTop: false,
-  backendUrl: "http://192.168.0.108:5000",
+  backendUrl: "https://beautyverse.herokuapp.com",
+  // backendUrl: "http://192.168.0.108:5000",
   devicePushToken: null,
 
   location: { country: null, city: null, latitude: null, longitude: null },

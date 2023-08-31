@@ -29,6 +29,7 @@ import { BackDrop } from "../../components/backDropLoader";
 import { useNavigation } from "@react-navigation/native";
 import { setRerenderProducts } from "../../redux/Marketplace";
 import CountryFlag from "react-native-country-flag";
+import { Circle } from "../../components/skeltons";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -335,7 +336,7 @@ const AddNewProduct = () => {
             style={{ position: "relative" }}
           >
             <Text style={{ color: "red", letterSpacing: 0.3 }}>
-              Clear All fields
+              {language?.language?.Marketplace?.marketplace?.clearAllFields}
             </Text>
           </Pressable>
         )}
@@ -358,7 +359,7 @@ const AddNewProduct = () => {
             }}
           >
             <Text style={[styles.fieldTitle, { color: currentTheme.font }]}>
-              Files
+              {language?.language?.Marketplace?.marketplace?.files}
             </Text>
           </View>
           <ScrollView
@@ -398,7 +399,7 @@ const AddNewProduct = () => {
                           fontWeight: "bold",
                         }}
                       >
-                        Cover
+                        {language?.language?.Marketplace?.marketplace?.cover}
                       </Text>
                     </View>
                   )}
@@ -428,19 +429,7 @@ const AddNewProduct = () => {
                       </Text>
                     </Pressable>
                   )}
-                  <Image
-                    style={{
-                      height: 170,
-                      width: 150,
-                      borderRadius: 10,
-                      resizeMode: "cover",
-                      borderWidth: 2,
-                      borderColor:
-                        x === cover ? currentTheme.pink : "transparent",
-                      borderRadius: 10,
-                    }}
-                    source={{ uri: i.uri }}
-                  />
+                  <Img x={x} i={i} currentTheme={currentTheme} cover={cover} />
                 </Pressable>
               );
             })}
@@ -457,13 +446,15 @@ const AddNewProduct = () => {
         >
           <View style={{ flex: 3 }}>
             <Text style={[styles.fieldTitle, { color: currentTheme.font }]}>
-              Title
+              {language?.language?.Marketplace?.marketplace?.title}
             </Text>
           </View>
 
           <TextInput
             value={title}
-            placeholder="Add product name"
+            placeholder={
+              language?.language?.Marketplace?.marketplace?.addProductName
+            }
             placeholderTextColor={currentTheme.disabled}
             style={[
               styles.inputField,
@@ -487,7 +478,7 @@ const AddNewProduct = () => {
           ]}
         >
           <Text style={[styles.fieldTitle, { color: currentTheme.font }]}>
-            Type
+            {language?.language?.Marketplace?.marketplace?.type}
           </Text>
           <View style={{ flexDirection: "row", gap: 15 }}>
             <TouchableOpacity
@@ -500,8 +491,7 @@ const AddNewProduct = () => {
                   type !== "professionals"
                     ? currentTheme.pink
                     : currentTheme.line,
-                width: "40%",
-                width: "40%",
+                width: "45%",
                 alignItems: "center",
               }}
             >
@@ -513,8 +503,10 @@ const AddNewProduct = () => {
                       : currentTheme.pink,
                   letterSpacing: 0.3,
                 }}
+                numberOfLines={1}
+                ellipsizeMode={"tail"}
               >
-                For Everyone
+                {language?.language?.Marketplace?.marketplace?.forEveryone}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -527,7 +519,7 @@ const AddNewProduct = () => {
                   type === "professionals"
                     ? currentTheme.pink
                     : currentTheme.line,
-                width: "40%",
+                width: "45%",
                 alignItems: "center",
               }}
             >
@@ -539,8 +531,10 @@ const AddNewProduct = () => {
                       : currentTheme.pink,
                   letterSpacing: 0.3,
                 }}
+                numberOfLines={1}
+                ellipsizeMode={"tail"}
               >
-                For Professionals
+                {language?.language?.Marketplace?.marketplace?.forProfessionals}
               </Text>
             </TouchableOpacity>
           </View>
@@ -555,7 +549,7 @@ const AddNewProduct = () => {
           ]}
         >
           <Text style={[styles.fieldTitle, { color: currentTheme.font }]}>
-            Sex
+            {language?.language?.Marketplace?.marketplace?.sex}
           </Text>
           <View style={{ flexDirection: "row", gap: 15 }}>
             <TouchableOpacity
@@ -576,7 +570,7 @@ const AddNewProduct = () => {
                   letterSpacing: 0.3,
                 }}
               >
-                All
+                {language?.language?.Marketplace?.marketplace?.all}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -598,7 +592,7 @@ const AddNewProduct = () => {
                   letterSpacing: 0.3,
                 }}
               >
-                Women
+                {language?.language?.Marketplace?.marketplace?.women}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -619,7 +613,7 @@ const AddNewProduct = () => {
                   letterSpacing: 0.3,
                 }}
               >
-                Men
+                {language?.language?.Marketplace?.marketplace?.men}
               </Text>
             </TouchableOpacity>
           </View>
@@ -633,7 +627,7 @@ const AddNewProduct = () => {
           ]}
         >
           <Text style={[styles.fieldTitle, { color: currentTheme.font }]}>
-            Category
+            {language?.language?.Marketplace?.marketplace?.categories}
           </Text>
           <View
             style={{
@@ -689,7 +683,7 @@ const AddNewProduct = () => {
                     : currentTheme.font,
               }}
             >
-              Choice category...
+              {language?.language?.Marketplace?.marketplace?.choiceCategory}...
             </Text>
           </TouchableOpacity>
         </View>
@@ -702,12 +696,14 @@ const AddNewProduct = () => {
           ]}
         >
           <Text style={[styles.fieldTitle, { color: currentTheme.font }]}>
-            Brand
+            {language?.language?.Marketplace?.marketplace?.brand}
           </Text>
           <TextInput
             value={brand}
             ref={brandRef}
-            placeholder="Add brand name..."
+            placeholder={
+              language?.language?.Marketplace?.marketplace?.addBrandName
+            }
             placeholderTextColor={currentTheme.disabled}
             style={[
               styles.inputField,
@@ -725,7 +721,7 @@ const AddNewProduct = () => {
           style={[styles.fieldContainer, { borderColor: currentTheme.line }]}
         >
           <Text style={[styles.fieldTitle, { color: currentTheme.font }]}>
-            Price
+            {language?.language?.Marketplace?.marketplace?.price}
           </Text>
           <View
             style={{
@@ -740,7 +736,9 @@ const AddNewProduct = () => {
               value={price}
               keyboardType="numeric"
               ref={priceRef}
-              placeholder="add price.."
+              placeholder={
+                language?.language?.Marketplace?.marketplace?.addPrice
+              }
               placeholderTextColor={currentTheme.disabled}
               style={[
                 styles.inputField,
@@ -815,13 +813,14 @@ const AddNewProduct = () => {
           ]}
         >
           <Text style={[styles.fieldTitle, { color: currentTheme.font }]}>
-            Sale % (Optional)
+            {language?.language?.Marketplace?.marketplace?.sale} % (
+            {language?.language?.Marketplace?.marketplace?.optional})
           </Text>
           <TextInput
             value={sale}
             keyboardType="numeric"
             ref={saleRef}
-            placeholder="add sale in %.."
+            placeholder={language?.language?.Marketplace?.marketplace?.addSale}
             placeholderTextColor={currentTheme.disabled}
             style={[
               styles.inputField,
@@ -845,13 +844,16 @@ const AddNewProduct = () => {
           ]}
         >
           <Text style={[styles.fieldTitle, { color: currentTheme.font }]}>
-            In Stock (Optional)
+            {language?.language?.Marketplace?.marketplace?.inStock} (
+            {language?.language?.Marketplace?.marketplace?.optional})
           </Text>
           <TextInput
             keyboardType="numeric"
             value={inStock}
             ref={stockRef}
-            placeholder="Add total in stock.."
+            placeholder={
+              language?.language?.Marketplace?.marketplace?.addInStock
+            }
             placeholderTextColor={currentTheme.disabled}
             style={[
               styles.inputField,
@@ -875,7 +877,8 @@ const AddNewProduct = () => {
           ]}
         >
           <Text style={[styles.fieldTitle, { color: currentTheme.font }]}>
-            Variants (Optional)
+            {language?.language?.Marketplace?.marketplace?.variants} (
+            {language?.language?.Marketplace?.marketplace?.optional})
           </Text>
           <View
             style={{
@@ -950,7 +953,7 @@ const AddNewProduct = () => {
                   variants?.length > 0 ? currentTheme.pink : currentTheme.font,
               }}
             >
-              Choice variants...
+              {language?.language?.Marketplace?.marketplace?.choiceVariants}...
             </Text>
           </TouchableOpacity>
         </View>
@@ -972,7 +975,7 @@ const AddNewProduct = () => {
           >
             <View style={{ flex: 3 }}>
               <Text style={[styles.fieldTitle, { color: currentTheme.font }]}>
-                Short Description
+                {language?.language?.Marketplace?.marketplace?.shortDescription}
               </Text>
             </View>
             <View style={{ flexDirection: "row", gap: 4, flex: 1 }}>
@@ -1017,7 +1020,9 @@ const AddNewProduct = () => {
                 : shortDescriptionKa
             }
             ref={shortDescRef}
-            placeholder="Add short Description"
+            placeholder={
+              language?.language?.Marketplace?.marketplace?.addShortDescriptions
+            }
             placeholderTextColor={currentTheme.disabled}
             multiline
             numberOfLines={15}
@@ -1062,7 +1067,8 @@ const AddNewProduct = () => {
           >
             <View style={{ flex: 3 }}>
               <Text style={[styles.fieldTitle, { color: currentTheme.font }]}>
-                Full Description (Optional)
+                {language?.language?.Marketplace?.marketplace?.fullDescription}{" "}
+                ({language?.language?.Marketplace?.marketplace?.optional})
               </Text>
             </View>
             <View style={{ flexDirection: "row", gap: 4, flex: 1 }}>
@@ -1115,7 +1121,9 @@ const AddNewProduct = () => {
                 : (val) => setFullDescriptionKa(val)
             }
             ref={fullDescRef}
-            placeholder="Add full description"
+            placeholder={
+              language?.language?.Marketplace?.marketplace?.addFullDescription
+            }
             placeholderTextColor={currentTheme.disabled}
             multiline
             numberOfLines={15}
@@ -1153,7 +1161,8 @@ const AddNewProduct = () => {
           >
             <View style={{ flex: 3 }}>
               <Text style={[styles.fieldTitle, { color: currentTheme.font }]}>
-                How to use? (Optional)
+                {language?.language?.Marketplace?.marketplace?.howToUse} (
+                {language?.language?.Marketplace?.marketplace?.optional})
               </Text>
             </View>
             <View style={{ flexDirection: "row", gap: 4, flex: 1 }}>
@@ -1206,7 +1215,9 @@ const AddNewProduct = () => {
                 : (val) => setHowToUseKa(val)
             }
             ref={howToUseRef}
-            placeholder="Add how to use.."
+            placeholder={
+              language?.language?.Marketplace?.marketplace?.addHowToUse
+            }
             placeholderTextColor={currentTheme.disabled}
             multiline
             numberOfLines={15}
@@ -1245,7 +1256,8 @@ const AddNewProduct = () => {
           >
             <View style={{ flex: 3 }}>
               <Text style={[styles.fieldTitle, { color: currentTheme.font }]}>
-                Compositions (Optional)
+                {language?.language?.Marketplace?.marketplace?.compositions} (
+                {language?.language?.Marketplace?.marketplace?.optional})
               </Text>
             </View>
             <View style={{ flexDirection: "row", gap: 4, flex: 1 }}>
@@ -1298,7 +1310,9 @@ const AddNewProduct = () => {
                 : (val) => setCompositionsKa(val)
             }
             ref={compositionsRef}
-            placeholder="Add product composition.."
+            placeholder={
+              language?.language?.Marketplace?.marketplace?.addCompositions
+            }
             placeholderTextColor={currentTheme.disabled}
             multiline
             numberOfLines={15}
@@ -1332,7 +1346,9 @@ const AddNewProduct = () => {
             marginVertical: 20,
           }}
         >
-          <Text style={{ color: "#fff" }}>Upload</Text>
+          <Text style={{ color: "#fff" }}>
+            {language?.language?.Marketplace?.marketplace?.upload}
+          </Text>
         </TouchableOpacity>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -1360,3 +1376,32 @@ const styles = StyleSheet.create({
     padding: 15,
   },
 });
+
+const Img = ({ x, cover, currentTheme, i }) => {
+  const [loading, setLoading] = useState(true);
+  return (
+    <View
+      style={{
+        width: 150,
+        aspectRatio: 1,
+        borderRadius: 5,
+        overflow: "hidden",
+      }}
+    >
+      {loading && <Circle />}
+      <Image
+        style={{
+          aspectRatio: 1,
+          width: 150,
+          borderRadius: 5,
+          resizeMode: "cover",
+          borderWidth: 2,
+          borderColor: x === cover ? currentTheme.pink : "transparent",
+          borderRadius: 10,
+        }}
+        source={{ uri: i.uri }}
+        onLoad={() => setLoading(false)}
+      />
+    </View>
+  );
+};

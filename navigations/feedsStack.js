@@ -168,16 +168,9 @@ export function FeedsStack({ navigation, setScrollY }) {
           headerBackTitleVisible: false,
           headerStyle: {
             backgroundColor: currentTheme.background,
-            // shadowColor: "#000",
+            shadowColor: "#000",
             height: SCREEN_HEIGHT / 9,
 
-            shadowOffset: {
-              width: 0,
-              height: !theme ? 1 : 0, // negative value places shadow on top
-            },
-            shadowOpacity: 0,
-            shadowRadius: 5,
-            elevation: 5, // required for android
             borderBottomWidth: 0,
           },
           headerTintColor: currentTheme.font,
@@ -379,22 +372,26 @@ export function FeedsStack({ navigation, setScrollY }) {
             ) {
               return (
                 <View style={{ marginRight: 20 }}>
-                  {route.params.user._id !== currentUser._id && (
-                    <TouchableOpacity
-                      acitveOpacity={0.3}
-                      onPress={() =>
-                        navigation.navigate("Send Order", {
-                          user: route.params.user,
-                        })
-                      }
-                    >
-                      <FontAwesome
-                        name="calendar"
-                        size={18}
-                        color={currentTheme.font}
-                      />
-                    </TouchableOpacity>
-                  )}
+                  {route.params?.user?._id !== currentUser._id &&
+                    currentUser.type !== "beautycenter" &&
+                    currentUser?.type !== "shop" &&
+                    route.params?.user.type !== "shop" &&
+                    route.params?.user.type !== "user" && (
+                      <TouchableOpacity
+                        acitveOpacity={0.3}
+                        onPress={() =>
+                          navigation.navigate("Send Order", {
+                            user: route.params.user,
+                          })
+                        }
+                      >
+                        <FontAwesome
+                          name="calendar"
+                          size={18}
+                          color={currentTheme.font}
+                        />
+                      </TouchableOpacity>
+                    )}
                 </View>
               );
             }
@@ -469,22 +466,26 @@ export function FeedsStack({ navigation, setScrollY }) {
             ) {
               return (
                 <View style={{ marginRight: 20 }}>
-                  {route.params.user._id !== currentUser._id && (
-                    <TouchableOpacity
-                      acitveOpacity={0.3}
-                      onPress={() =>
-                        navigation.navigate("Send Order", {
-                          user: route.params.user,
-                        })
-                      }
-                    >
-                      <FontAwesome
-                        name="calendar"
-                        size={18}
-                        color={currentTheme.font}
-                      />
-                    </TouchableOpacity>
-                  )}
+                  {route.params?.user?._id !== currentUser._id &&
+                    currentUser.type !== "beautycenter" &&
+                    currentUser?.type !== "shop" &&
+                    route.params?.user.type !== "shop" &&
+                    route.params?.user.type !== "user" && (
+                      <TouchableOpacity
+                        acitveOpacity={0.3}
+                        onPress={() =>
+                          navigation.navigate("Send Order", {
+                            user: route.params.user,
+                          })
+                        }
+                      >
+                        <FontAwesome
+                          name="calendar"
+                          size={18}
+                          color={currentTheme.font}
+                        />
+                      </TouchableOpacity>
+                    )}
                 </View>
               );
             }
@@ -796,6 +797,7 @@ export function FeedsStack({ navigation, setScrollY }) {
             height: SCREEN_HEIGHT / 9,
             backgroundColor: currentTheme.background,
             shadowOpacity: 0,
+            shadowColor: "#000",
             borderBottomWidth: 0,
           },
           headerTintColor: currentTheme.font,

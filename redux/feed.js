@@ -42,7 +42,6 @@ export const Feed = createSlice({
       }
     },
     removeFeedPost: (state, action) => {
-      console.log("remove: " + action.payload);
       state.feedPosts = state.feedPosts.filter(
         (post) => post.id !== action.payload
       );
