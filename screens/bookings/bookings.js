@@ -15,33 +15,37 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import { darkTheme, lightTheme } from "../../context/theme";
 import {
-  addSentOrders,
-  reduceSentOrders,
-  setActiveSentOrders,
-  setCanceledSentOrders,
-  setCompletedSentOrders,
-  setLoaderSentOrders,
-  setNewSentOrders,
-  setPendingSentOrders,
-  setRejectedSentOrders,
-  setSentOrdersFilterResult,
-  setSentOrdersTotalResult,
-} from "../../redux/sentOrders";
-import DatePicker from "../../screens/orders/datePicker";
-import { ListItem } from "../../screens/orders/listItem";
-import { SortPopup } from "../../screens/orders/sortPopup";
-import { Card } from "../../screens/sentOrders/cardItem";
+  addBookings,
+  reduceBookings,
+  setActiveBookings,
+  setCanceledBookings,
+  setCompletedBookings,
+  setFilterResult,
+  setLoader,
+  setNewBookings,
+  setPendingBookings,
+  setRejectedBookings,
+  setTotalResult,
+} from "../../redux/bookings";
+import { Card } from "../../screens/bookings/cardItem";
+import DatePicker from "../../screens/bookings/datePicker";
+import { ListItem } from "../../screens/bookings/listItem";
+import { SortPopup } from "../../screens/bookings/sortPopup";
+import { Language } from "../../context/language";
 
 /**
- * Defines sent orders list in user settings
+ * Defines bookings list
  */
 
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
-export const SentOrders = ({ navigation }) => {
+export const Bookings = ({ navigation }) => {
   // defines theme
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
+
+  // defines language
+  const language = Language();
 
   // defines loading state
   const [isLoaded, setIsLoaded] = useState(true); // new state variable
@@ -52,89 +56,89 @@ export const SentOrders = ({ navigation }) => {
   // defines current user
   const currentUser = useSelector((state) => state.storeUser.currentUser);
 
-  // defines orders from redux
-  const ORDERS = useSelector((state) => state.storeSentOrders.orders);
-  // defines orders state
-  const [orders, setOrders] = useState([]);
-  // defines sort direction state
+  // defines bookings list
+  const BOOKINGS = useSelector((state) => state.storeBookings.bookings);
+  const totalResult = useSelector((state) => state.storeBookings.totalResult);
+
+  // defines bookings state
+  const [bookings, setBookings] = useState([]);
+  // defines list sort direction
   const [sortDirection, setSortDirection] = useState("desc");
+  // defines page for backend to add more bookings
+  const [page, setPage] = useState(1); // Use 'asc' for ascending, 'desc' for descending
 
   // sorting function
-  const sortOrders = (direction) => {
-    let sortedOrders;
+  const sortBookings = (direction) => {
+    let sortedBookings;
     if (direction === "desc") {
-      sortedOrders = [...ORDERS].sort(
+      sortedBookings = [...BOOKINGS].sort(
         (a, b) => new Date(a.date) - new Date(b.date)
       );
     } else {
-      sortedOrders = [...ORDERS].sort(
+      sortedBookings = [...BOOKINGS].sort(
         (a, b) => new Date(b.date) - new Date(a.date)
       );
     }
 
-    setOrders(sortedOrders);
+    setBookings(sortedBookings);
   };
 
   useEffect(() => {
-    sortOrders(sortDirection);
-  }, [sortDirection, ORDERS]);
+    sortBookings(sortDirection);
+  }, [sortDirection, BOOKINGS]);
+  useEffect(() => {
+    setPage(1);
+  }, [BOOKINGS]);
 
   // defines filter result
-  const filterResult = useSelector(
-    (state) => state.storeSentOrders.filterResult
-  );
+  const filterResult = useSelector((state) => state.storeBookings.filterResult);
   // defines status filter value
-  const statusFilter = useSelector(
-    (state) => state.storeSentOrders.statusFilter
-  );
+  const statusFilter = useSelector((state) => state.storeBookings.statusFilter);
   // defines filter date
-  const date = useSelector((state) => state.storeSentOrders.date);
-  // defines when created state
-  const createdAt = useSelector((state) => state.storeSentOrders.createdAt);
-  // defines procedure state
-  const procedure = useSelector((state) => state.storeSentOrders.procedure);
-
-  // defines page to get more orders
-  const [page, setPage] = useState(1);
+  const date = useSelector((state) => state.storeBookings.date);
+  // defines when booking created
+  const createdAt = useSelector((state) => state.storeBookings.createdAt);
+  // defines procedure
+  const procedure = useSelector((state) => state.storeBookings.procedure);
 
   // defines loader
-  const loader = useSelector((state) => state.storeSentOrders.loader);
+  const loader = useSelector((state) => state.storeBookings.loader);
 
-  // defines loader on load more button
+  // defines bottom loader when adding new bookings
   const [bottomLoader, setBottomLoader] = useState(false);
 
   // backend url
   const backendUrl = useSelector((state) => state.storeApp.backendUrl);
+  /**
+   * Load more bookings
+   */
 
-  const loadMoreOrders = async () => {
+  const loadMoreBookings = async () => {
     // Increment the page number in the state
     setPage(page + 1);
 
-    // Fetch new orders
+    // Fetch new bookings
     try {
-      setBottomLoader(true);
       const response = await axios.get(
         backendUrl +
-          "/api/v1/users/" +
+          "/api/v1/bookings/" +
           currentUser._id +
-          `/sentorders?page=${page + 1}&status=${
+          `?page=${page + 1}&status=${
             statusFilter === "All" ? "" : statusFilter?.toLowerCase()
           }&date=${
             date.active ? date.date : ""
           }&createdAt=${createdAt}&procedure=${procedure}`
       );
-      dispatch(addSentOrders(response.data.data.sentOrders));
-      dispatch(setSentOrdersTotalResult(response.data.totalResult));
-      dispatch(setSentOrdersFilterResult(response.data.filterResult));
-      dispatch(setNewSentOrders(response.data.new));
-      dispatch(setActiveSentOrders(response.data.active));
-      dispatch(setPendingSentOrders(response.data.pending));
-      dispatch(setCanceledSentOrders(response.data.canceled));
-      dispatch(setRejectedSentOrders(response.data.rejected));
-      dispatch(setCompletedSentOrders(response.data.completed));
-      setTimeout(() => {
-        setBottomLoader(false);
-      }, 100);
+
+      dispatch(addBookings(response.data.data.bookings));
+      dispatch(setTotalResult(response.data.totalResult));
+      dispatch(setFilterResult(response.data.filterResult));
+      dispatch(setNewBookings(response.data.new));
+      dispatch(setPendingBookings(response.data.pending));
+      dispatch(setActiveBookings(response.data.active));
+      dispatch(setCompletedBookings(response.data.completed));
+      dispatch(setRejectedBookings(response.data.rejected));
+      dispatch(setCanceledBookings(response.data.canceled));
     } catch (error) {
       console.log(error.response.data.message);
     }
@@ -145,15 +149,15 @@ export const SentOrders = ({ navigation }) => {
    *  */
   const [view, setView] = useState(true);
 
-  // order item
-  const OrderCard = ({ item }) => {
+  // booking item
+  const BookingCard = ({ item }) => {
     return view ? (
       <Card
         item={item}
         currentUser={currentUser}
         currentTheme={currentTheme}
         navigation={navigation}
-        setLoader={setLoaderSentOrders}
+        setLoader={setLoader}
         setPage={setPage}
       />
     ) : (
@@ -162,59 +166,10 @@ export const SentOrders = ({ navigation }) => {
         currentUser={currentUser}
         currentTheme={currentTheme}
         navigation={navigation}
-        setLoader={setLoaderSentOrders}
+        setLoader={setLoader}
         setPage={setPage}
       />
     );
-  };
-
-  // load more/less btn
-  const renderLoadMoreButton = () => {
-    if (bottomLoader) {
-      return (
-        <ActivityIndicator color={currentTheme.pink} style={{ padding: 8 }} />
-      );
-    } else {
-      return (
-        <Pressable
-          style={{
-            width: "100%",
-            alignItems: "center",
-            padding: filterResult > 5 ? 7.5 : 0,
-            backgroundColor: currentTheme.background2,
-            marginTop: filterResult > 5 ? 10 : 0,
-            borderRadius: 50,
-            borderWidth: 1,
-            borderColor: currentTheme.line,
-            opacity: filterResult > 5 ? 1 : 0,
-          }}
-          onPress={
-            filterResult > orders?.length && filterResult > 5
-              ? () => loadMoreOrders()
-              : filterResult <= orders?.length && filterResult > 5
-              ? () => {
-                  setBottomLoader(true);
-                  dispatch(reduceSentOrders());
-                  setPage(1);
-                  setTimeout(() => {
-                    setBottomLoader(false);
-                  }, 200);
-                }
-              : () => console.log("less")
-          }
-        >
-          {filterResult > orders?.length && filterResult > 5 ? (
-            <Text style={{ color: currentTheme.pink, fontWeight: "bold" }}>
-              Load More
-            </Text>
-          ) : filterResult <= orders?.length && filterResult > 5 ? (
-            <Text style={{ color: currentTheme.disabled, fontWeight: "bold" }}>
-              Load Less
-            </Text>
-          ) : null}
-        </Pressable>
-      );
-    }
   };
 
   useEffect(() => {
@@ -242,7 +197,7 @@ export const SentOrders = ({ navigation }) => {
               marginHorizontal: 0,
               paddingHorizontal: 15,
               paddingVertical: 10,
-              // backgroundColor: currentTheme.background2,
+
               flexDirection: "row",
               justifyContent: "space-between",
               alignItems: "center",
@@ -264,15 +219,15 @@ export const SentOrders = ({ navigation }) => {
                   fontSize: 14,
                 }}
               >
-                Result: {filterResult}
+                {language?.language?.Bookings?.bookings?.result}: {filterResult}
               </Text>
             </View>
             <View style={{ flex: 1, alignItems: "center" }}>
               <SortPopup
                 currentTheme={currentTheme}
                 setPage={setPage}
-                from="sentOrders"
-                setOrders={setOrders}
+                from="bookings"
+                setBookings={setBookings}
               />
             </View>
             <View
@@ -332,7 +287,7 @@ export const SentOrders = ({ navigation }) => {
             </View>
           </View>
 
-          <DatePicker from="sentOrders" />
+          <DatePicker from="bookings" />
 
           <View
             style={{
@@ -358,15 +313,14 @@ export const SentOrders = ({ navigation }) => {
             </View>
           ) : (
             <>
-              {orders?.length > 0 ? (
+              {bookings?.length > 0 ? (
                 <FlatList
                   contentContainerStyle={styles.container}
-                  bounces={Platform.OS === "ios" ? false : undefined}
-                  overScrollMode={Platform.OS === "ios" ? "never" : "always"}
-                  data={orders}
+                  data={bookings}
                   keyExtractor={(item) => item._id.toString()}
-                  renderItem={({ item }) => <OrderCard item={item} />}
-                  ListFooterComponent={renderLoadMoreButton}
+                  renderItem={({ item }) => <BookingCard item={item} />}
+                  scrollEventThrottle={16}
+                  onEndReached={loadMoreBookings}
                 />
               ) : (
                 <View
@@ -378,7 +332,7 @@ export const SentOrders = ({ navigation }) => {
                   }}
                 >
                   <Text style={{ color: currentTheme.disabled }}>
-                    No orders found!
+                    {language?.language?.Bookings?.bookings?.notFound}
                   </Text>
                 </View>
               )}
@@ -394,7 +348,7 @@ const styles = StyleSheet.create({
   container: {
     padding: 15,
     paddingTop: 0,
-    paddingBottom: 100,
+    paddingBottom: 150,
     gap: 5,
   },
 });

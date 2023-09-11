@@ -66,22 +66,23 @@ export const DateScreen = ({ route }) => {
     setHoursList(list);
   }, [startHour, endHour]);
 
-  // get orders in this date
+  // get bookings in this date
   const [loader, setLoader] = useState(true);
-  const [orders, setOrders] = useState([]);
-  const [ordersResult, setOrdersResult] = useState(null);
+  const [bookings, setBookings] = useState([]);
+  const [bookingsResult, setBookingsResult] = useState(null);
+  const backendUrl = useSelector((state) => state.storeApp.backendUrl);
   useEffect(() => {
-    const GetOrders = async () => {
+    const GetBookings = async () => {
       try {
         setLoader(true);
         const response = await axios.get(
           backendUrl +
-            "/api/v1/users/" +
+            "/api/v1/bookings/" +
             currentUser._id +
-            `/orders?date=${activedate}&page=1`
+            `?date=${activedate}&page=1`
         );
-        setOrders(response.data.data.orders);
-        setOrdersResult(response.data.filterResult);
+        setBookings(response.data.data.bookings);
+        setBookingsResult(response.data.filterResult);
         setTimeout(() => {
           setLoader(false);
         }, 200);
@@ -91,7 +92,7 @@ export const DateScreen = ({ route }) => {
     };
 
     if (currentUser) {
-      GetOrders();
+      GetBookings();
     }
   }, []);
 
@@ -117,7 +118,7 @@ export const DateScreen = ({ route }) => {
           }}
         >
           <Text style={{ color: currentTheme.font, marginVertical: 8 }}>
-            Total orders: {ordersResult}
+            Total Bookings: {bookingsResult}
           </Text>
           <ScrollView
             showsVerticalScrollIndicator={false}
@@ -127,7 +128,7 @@ export const DateScreen = ({ route }) => {
             {hoursList.map((hour) => {
               const [hours, minutes] = hour.split(":");
 
-              const foundItem = orders?.find((item) => {
+              const foundItem = bookings?.find((item) => {
                 const itemDate = new Date(item.date);
                 const itemHours = itemDate.getHours();
                 const itemMinutes = itemDate.getMinutes();
@@ -144,7 +145,7 @@ export const DateScreen = ({ route }) => {
                 let lab = proceduresOptions?.find(
                   (pr) =>
                     pr.value?.toLowerCase() ===
-                    foundItem.orderedProcedure?.value?.toLowerCase()
+                    foundItem.bookingProcedure?.value?.toLowerCase()
                 );
                 return (
                   <View

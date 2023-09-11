@@ -12,15 +12,16 @@ import {
   Vibration,
   View,
   Dimensions,
+  Pressable,
 } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 import { CacheableImage } from "../../components/cacheableImage";
 import DeleteConfirm from "../../components/confirmDialog";
 import { useSocket } from "../../context/socketContext";
 import { ProceduresOptions } from "../../datas/registerDatas";
-import { setRerenderOrders } from "../../redux/rerenders";
-import ItemDateAndTimePicker from "../../screens/orders/itemDateAndTimePicker";
-import { StatusPopup } from "../../screens/orders/statusPopup";
+import { setRerenderBookings } from "../../redux/rerenders";
+import ItemDateAndTimePicker from "../bookings/itemDateAndTimePicker";
+import { StatusPopup } from "../bookings/statusPopup";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   setRooms,
@@ -30,11 +31,12 @@ import {
 } from "../../redux/chat";
 import { useNavigation } from "@react-navigation/native";
 import { sendNotification } from "../../components/pushNotifications";
-import { setSentOrders } from "../../redux/sentOrders";
+import { setSentBookings } from "../../redux/sentBookings";
 import { Language } from "../../context/language";
+import * as Haptics from "expo-haptics";
 
 /**
- * Card item for sent orders
+ * Card item for sent bookings
  */
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -66,7 +68,7 @@ export const Card = ({
   // copy id
   const [copySuccess, setCopySuccess] = useState(null);
   const copyToClipboard = () => {
-    Clipboard.setString(item?.orderNumber);
+    Clipboard.setString(item?.bookingNumber);
     setCopySuccess("Id copied!");
   };
 
@@ -92,19 +94,19 @@ export const Card = ({
   const backendUrl = useSelector((state) => state.storeApp.backendUrl);
 
   /**
-   * Delete order function
+   * Delete booking function
    */
-  const DeleteOrder = async () => {
+  const DeleteBooking = async () => {
     try {
       setLoader(true);
       await axios.delete(
         backendUrl +
-          "/api/v1/users/" +
-          currentUser._id +
-          "/sentOrders/" +
-          item._id
+          "/api/v1/bookings/booking/" +
+          item.bookingNumber +
+          "?user=" +
+          currentUser._id
       );
-      dispatch(setRerenderOrders());
+      dispatch(setRerenderBookings());
       setTimeout(() => {
         setLoader(false);
       }, 200);
@@ -113,126 +115,99 @@ export const Card = ({
     }
   };
   // change status
-  const UpdateOrder = async (val) => {
+  const UpdateBooking = async (body) => {
     try {
       await axios.patch(
-        backendUrl +
-          "/api/v1/users/" +
-          item.user._id +
-          "/orders/" +
-          item.orderNumber,
-        {
-          status: val,
-        }
+        backendUrl + "/api/v1/bookings/booking/" + item.bookingNumber,
+        body
       );
-      await axios.patch(
-        backendUrl +
-          "/api/v1/users/" +
-          currentUser._id +
-          "/sentorders/" +
-          item.orderNumber,
-        {
-          status: val,
+
+      if (item.seller?.pushNotificationToken) {
+        if (body?.status.seller) {
+          await sendNotification(
+            item.seller?.pushNotificationToken,
+            currentUser.name,
+            "has changed booking status to - " + body.status.seller,
+            { type: "booking", status: body.status.seller }
+          );
         }
-      );
-      if (item.user?.pushNotificationToken) {
-        await sendNotification(
-          item.user?.pushNotificationToken,
-          currentUser.name,
-          "has changed order status to - " + val,
-          { type: "order", status: val }
-        );
+        socket.emit("updateBookings", {
+          targetId: item.seller?._id,
+        });
       }
-      socket.emit("updateOrders", {
-        targetId: item.user?._id,
-      });
-      dispatch(setRerenderOrders());
+      dispatch(setRerenderBookings());
     } catch (error) {
       console.log(error.response.data.message);
     }
   };
 
   /**
-   * Edit returned order
+   * Edit returned booking
    */
 
-  // defines all orders
-  const orders = useSelector((state) => state.storeSentOrders.orders);
+  // defines all bookings
+  const bookings = useSelector((state) => state.storeSentBookings.sentBookings);
 
   const ReturnRequest = async (val) => {
     try {
       dispatch(
-        setSentOrders(
-          orders.map((order) =>
-            order._id === item._id
-              ? { ...order, date: dateAndTime.date, status: "pending" }
-              : order
+        setSentBookings(
+          bookings.map((booking) =>
+            booking._id === item._id
+              ? {
+                  ...booking,
+                  date: dateAndTime.date,
+                  status: { client: "pending", seller: "new" },
+                }
+              : booking
           )
         )
       );
       await axios.patch(
         backendUrl +
-          "/api/v1/users/" +
-          item.user._id +
-          "/orders/" +
-          item.orderNumber +
+          "/api/v1/bookings/booking/" +
+          item.bookingNumber +
           "?return=true",
         {
           ...item,
-          user: {
+          client: {
             id: currentUser._id,
             phone: currentUser.phone,
             name: currentUser.name,
           },
-
-          date: dateAndTime,
-          status: "new",
-        }
-      );
-      await axios.patch(
-        backendUrl +
-          "/api/v1/users/" +
-          currentUser._id +
-          "/sentorders/" +
-          item.orderNumber +
-          "?return=true",
-        {
-          ...item,
-          user: {
-            id: item.user._id,
-            phone: item.user.phone,
-            name: item.user.name,
+          seller: {
+            id: item.seller?._id,
+            phone: item.seller?.phone,
+            name: item.seller?.name,
           },
-
           date: dateAndTime,
-          status: "pending",
+          status: { client: "pending", seller: "new" },
         }
       );
 
       let lab = proceduresOptions?.find(
         (it) =>
-          it?.value?.toLowerCase() === item?.orderedProcedure?.toLowerCase()
+          it?.value?.toLowerCase() === item?.bookingProcedure?.toLowerCase()
       );
-      if (item.user?.pushNotificationToken) {
+      if (item.seller?.pushNotificationToken) {
         await sendNotification(
-          item.user?.pushNotificationToken,
+          item.seller?.pushNotificationToken,
           currentUser.name,
-          "return you an appointment request! - " + lab.label,
-          { type: "order", status: "new" }
+          "return you an appointment request!",
+          { type: "booking", status: "new" }
         );
       }
-      dispatch(setRerenderOrders());
-      socket.emit("updateOrders", {
-        targetId: item.user?._id,
+      dispatch(setRerenderBookings());
+      socket.emit("updateBookings", {
+        targetId: item.seller._id,
       });
-      // dispatch(setRerenderOrders());
     } catch (error) {
       console.log(error.response.data.message);
     }
   };
 
   // status option
-  const [selectedItem, setSelectedItem] = useState(item.status);
+  const [selectedItem, setSelectedItem] = useState(item.status.client);
   const [openStatusOption, setOpenStatusOption] = useState(false);
 
   // define some style
@@ -243,24 +218,24 @@ export const Card = ({
   const rooms = useSelector((state) => state.storeChat.rooms);
 
   let chatDefined =
-    currentUser._id !== item.user?._id &&
+    currentUser._id !== item.seller._id &&
     rooms.find(
       (r) =>
         (r.members.member1 === currentUser._id ||
-          r.members.member1 === item.user?._id) &&
+          r.members.member1 === item.seller._id) &&
         (r.members.member2 === currentUser._id ||
-          r.members.member2 === item.user?._id)
+          r.members.member2 === item.seller._id)
     );
 
   // get chat room
   const GetNewChatRoom = async () => {
     let newChat = {
-      room: currentUser?._id + item.user?._id,
+      room: currentUser?._id + item.seller._id,
       members: {
         member1: currentUser._id,
-        member2: item.user?._id,
-        member2Cover: item.user?.cover,
-        member2Name: item.user?.name,
+        member2: item.seller._id,
+        member2Cover: item.seller.cover,
+        member2Name: item.seller.name,
       },
       lastMessage: "",
       lastSender: "",
@@ -270,13 +245,13 @@ export const Card = ({
     try {
       navigation.navigate("Room", {
         newChat,
-        user: item.user,
+        user: item.seller,
       });
       const response = await axios.post(backendUrl + "/api/v1/chats/", {
-        room: currentUser?._id + item.user?._id,
+        room: currentUser?._id + item.seller._id,
         members: {
           member1: currentUser._id,
-          member2: item.user?._id,
+          member2: item.seller._id,
         },
         lastMessage: "",
         lastSender: "",
@@ -314,7 +289,7 @@ export const Card = ({
     try {
       dispatch(setCurrentChat(Room));
       navigation.navigate("Room", {
-        user: item?.user,
+        user: item?.seller,
         screenHeight: screenHeight,
       });
       if (Room.lastSender !== currentUser._id) {
@@ -342,17 +317,44 @@ export const Card = ({
     }
   };
 
+  /**
+   * Give rating function
+   */
+  const [rating, setRating] = useState(0);
+  useEffect(() => {
+    setRating(item?.rating);
+  }, []);
+  const GiveRating = async (val) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+
+    try {
+      setRating(val);
+      await axios.patch(
+        backendUrl +
+          "/api/v1/bookings/booking/" +
+          item.bookingNumber +
+          "?user=" +
+          item.seller._id,
+        {
+          rating: val,
+        }
+      );
+    } catch (error) {
+      console.log(error.response.data.message);
+    }
+  };
+
   return (
     <>
       {openDeleteDialog && (
         <View style={{ zIndex: 1000, position: "absolute" }}>
           <DeleteConfirm
-            title="Are you sure to want to delete this order?"
+            title="Are you sure to want to delete this booking?"
             isVisible={openDeleteDialog}
             cancel="Cancel"
             delet="Delete"
             onClose={() => setOpenDeleteDialog(false)}
-            onDelete={DeleteOrder}
+            onDelete={DeleteBooking}
           />
         </View>
       )}
@@ -367,9 +369,9 @@ export const Card = ({
           padding: 15,
           paddingVertical: 10,
           borderRadius: 10,
-          // backgroundColor: bg,
+          height: 420,
           gap: 5,
-          borderWidth: 2,
+          borderWidth: 1,
           borderColor: currentTheme.line,
         }}
       >
@@ -387,12 +389,12 @@ export const Card = ({
           {editRequest ? (
             <View style={{ width: "100%", alignItems: "center" }}>
               <ItemDateAndTimePicker
-                targetUser={item.user}
+                targetUser={item.seller}
                 dateAndTime={dateAndTime}
                 setDateAndTime={setDateAndTime}
-                orderId={item.orderNumber}
-                orderDuration={item.duration}
-                orderDate={item.date}
+                bookingId={item.bookingNumber}
+                bookingDuration={item.duration}
+                bookingDate={item.date}
               />
             </View>
           ) : (
@@ -403,9 +405,6 @@ export const Card = ({
                 Date:{" "}
               </Text>
               {(() => {
-                // let formattedDateWithMonthName = moment
-                //   .utc(item.date)
-                //   .format("DD MMMM YYYY - HH:mm");
                 let dt = moment.utc(item?.date).format("DD MMMM YYYY");
                 let tm = moment.utc(item?.date).format("HH:mm");
 
@@ -455,14 +454,15 @@ export const Card = ({
               })()}
             </View>
           )}
+
           {!editRequest && (
             <StatusPopup
               currentTheme={currentTheme}
               selectedItem={selectedItem}
               setSelectedItem={setSelectedItem}
-              UpdateOrder={UpdateOrder}
-              Delete={DeleteOrder}
-              from="sentOrders"
+              UpdateBooking={UpdateBooking}
+              Delete={DeleteBooking}
+              from="sentBookings"
               setEditRequest={setEditRequest}
             />
           )}
@@ -487,7 +487,7 @@ export const Card = ({
               let lab = proceduresOptions?.find(
                 (it) =>
                   it?.value?.toLowerCase() ===
-                  item?.orderedProcedure?.toLowerCase()
+                  item?.bookingProcedure?.toLowerCase()
               );
 
               return lab?.label;
@@ -510,15 +510,19 @@ export const Card = ({
           <Text style={{ fontWeight: "bold", color: font, letterSpacing: 0.2 }}>
             Price:{" "}
           </Text>
-          {item.orderSum ? (
+          {item.bookingSum ? (
             <>
               <Text style={{ color: font, letterSpacing: 0.2 }}>
-                {item.orderSum}{" "}
+                {item.bookingSum}{" "}
               </Text>
               {item?.currency === "Dollar" ? (
-                <FontAwesome name="dollar" color={"#111"} size={14} />
+                <FontAwesome
+                  name="dollar"
+                  color={currentTheme.font}
+                  size={14}
+                />
               ) : item?.currency === "Euro" ? (
-                <FontAwesome name="euro" color={"#111"} size={14} />
+                <FontAwesome name="euro" color={currentTheme.font} size={14} />
               ) : (
                 <Text
                   style={{
@@ -582,9 +586,9 @@ export const Card = ({
           <Text style={{ color: font, letterSpacing: 0.3, fontWeight: "bold" }}>
             Id:{" "}
             <Text style={{ fontWeight: "normal" }}>
-              {item.orderNumber.length > 5
-                ? item.orderNumber.substring(0, 10) + "..."
-                : item.orderNumber}
+              {item.bookingNumber.length > 5
+                ? item.bookingNumber.substring(0, 10) + "..."
+                : item.bookingNumber}
             </Text>
           </Text>
           {copySuccess ? (
@@ -612,6 +616,7 @@ export const Card = ({
             </View>
           ) : null}
         </TouchableOpacity>
+
         <View style={{ marginTop: 10, gap: 10 }}>
           <Text style={{ color: font, letterSpacing: 0.3, fontWeight: "bold" }}>
             Specialist:
@@ -619,7 +624,8 @@ export const Card = ({
           <View
             style={{
               width: "100%",
-              backgroundColor: "rgba(255,255,255,0.1)",
+              borderWidth: 1,
+              borderColor: currentTheme.line,
               padding: 10,
               paddingVertical: 5,
               borderRadius: 50,
@@ -632,10 +638,10 @@ export const Card = ({
             <TouchableOpacity
               activeOpacity={0.3}
               onPress={
-                item.user?._id
+                item.seller?._id
                   ? () =>
-                      navigation.navigate("UserVisit", {
-                        user: item.user,
+                      navigation.navigate("User", {
+                        user: item.seller,
                       })
                   : undefined
               }
@@ -645,7 +651,7 @@ export const Card = ({
                 gap: 10,
               }}
             >
-              {item.user.cover ? (
+              {item.seller.cover ? (
                 <CacheableImage
                   style={{
                     width: 40,
@@ -654,7 +660,7 @@ export const Card = ({
                     borderRadius: 50,
                   }}
                   source={{
-                    uri: item?.user?.cover,
+                    uri: item?.seller?.cover,
                   }}
                   manipulationOptions={[
                     {
@@ -684,10 +690,10 @@ export const Card = ({
               <Text
                 style={{ color: font, letterSpacing: 0.3, fontWeight: "bold" }}
               >
-                {item.user.name}
+                {item.seller.name}
               </Text>
             </TouchableOpacity>
-            {item.user?._id && (
+            {item.seller?._id && (
               <TouchableOpacity
                 style={{ padding: 5, paddingHorizontal: 10 }}
                 activeOpacity={0.3}
@@ -703,19 +709,70 @@ export const Card = ({
               </TouchableOpacity>
             )}
           </View>
-          {item?.user?.phone && (
+          {item?.seller?.phone && (
             <TouchableOpacity
               activeOpacity={0.3}
-              onPress={() => handleLinkPress(`tel:${item?.user?.phone}`)}
+              onPress={() =>
+                handleLinkPress(`tel:${item?.seller?.phone.phone}`)
+              }
               style={{ flexDirection: "row", alignItems: "center", gap: 5 }}
             >
               <MaterialCommunityIcons name="phone" size={22} color={font} />
               <Text style={{ color: font, letterSpacing: 0.3 }}>
-                {item?.user?.phone}
+                {item?.seller?.phone.phone}
               </Text>
             </TouchableOpacity>
           )}
         </View>
+        {selectedItem === "completed" && (
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 10,
+              justifyContent: "center",
+              width: "100%",
+              paddingVertical: 8,
+            }}
+          >
+            <Pressable onPress={() => GiveRating(1)}>
+              <FontAwesome
+                name="heart"
+                size={22}
+                color={rating > 0 ? currentTheme.pink : currentTheme.disabled}
+              />
+            </Pressable>
+            <Pressable onPress={() => GiveRating(2)}>
+              <FontAwesome
+                name="heart"
+                size={22}
+                color={rating > 1 ? currentTheme.pink : currentTheme.disabled}
+              />
+            </Pressable>
+            <Pressable onPress={() => GiveRating(3)}>
+              <FontAwesome
+                name="heart"
+                size={22}
+                color={rating > 2 ? currentTheme.pink : currentTheme.disabled}
+              />
+            </Pressable>
+            <Pressable onPress={() => GiveRating(4)}>
+              <FontAwesome
+                name="heart"
+                size={22}
+                color={rating > 3 ? currentTheme.pink : currentTheme.disabled}
+              />
+            </Pressable>
+            <Pressable onPress={() => GiveRating(5)}>
+              <FontAwesome
+                name="heart"
+                size={22}
+                color={rating > 4 ? currentTheme.pink : currentTheme.disabled}
+              />
+            </Pressable>
+          </View>
+        )}
+
         <View
           style={{
             // flexDirection: "row",
@@ -745,7 +802,7 @@ export const Card = ({
                 fontStyle: "italic",
               }}
             >
-              Ordered At:{" "}
+              Bookinged At:{" "}
               <Text
                 style={{
                   color: font,
@@ -755,7 +812,7 @@ export const Card = ({
                 }}
               >
                 {(() => {
-                  let formattedDateInTimezone = moment(item.orderdAt)
+                  let formattedDateInTimezone = moment(item.bookingAt)
                     .tz(Localization.timezone)
                     .format("DD MMMM YYYY - HH:mm");
 
@@ -764,7 +821,8 @@ export const Card = ({
               </Text>
             </Text>
           </View>
-          {item.status === "new" && !editRequest ? (
+
+          {item.status.client === "new" && !editRequest ? (
             <View
               style={{
                 flexDirection: "row",
@@ -781,8 +839,10 @@ export const Card = ({
               <TouchableOpacity
                 activeOpacity={0.8}
                 onPress={() => {
-                  UpdateOrder("rejected");
-                  dispatch(setRerenderOrders());
+                  UpdateBooking({
+                    status: { client: "rejected", seller: "rejected" },
+                  });
+                  dispatch(setRerenderBookings());
                 }}
               >
                 <FontAwesome size={20} name="remove" color="red" />
@@ -803,7 +863,9 @@ export const Card = ({
               <TouchableOpacity
                 activeOpacity={0.8}
                 onPress={() => {
-                  UpdateOrder("active");
+                  UpdateBooking({
+                    status: { client: "active", seller: "active" },
+                  });
                 }}
               >
                 <FontAwesome size={20} name="check" color="green" />
@@ -837,7 +899,7 @@ export const Card = ({
                 activeOpacity={0.8}
                 onPress={() => {
                   ReturnRequest();
-                  // dispatch(setRerenderOrders());
+                  // dispatch(setRerenderBookings());
                 }}
               >
                 <Text style={{ fontWeight: "bold", color: "green" }}>Send</Text>

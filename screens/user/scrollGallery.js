@@ -39,10 +39,13 @@ import {
   setAddStarRerenderFromScrollGallery,
   setRemoveReviewQntRerenderFromScrollGallery,
   setRemoveStarRerenderFromScrollGallery,
+  setSaveFromScrollGallery,
+  setUnsaveFromScrollGallery,
 } from "../../redux/rerenders";
 import SmoothModal from "../../screens/user/editPostPopup";
 import * as Notifications from "expo-notifications";
 import { sendNotification } from "../../components/pushNotifications";
+import { Circle } from "../../components/skeltons";
 
 /**
  * User feeds scrolling gallery
@@ -78,13 +81,13 @@ export const ScrollGallery = ({ route, navigation }) => {
   const backendUrl = useSelector((state) => state.storeApp.backendUrl);
 
   // add new feeds function
-  async function AddFeedObjs() {
+  async function AddFeedObjs(p) {
     setLoadNewFeeds(true);
     try {
       const response = await axios.get(
-        backendUrl +
-          `/api/v1/users/${props.user?._id}/feeds/native?page=${page}&check=${props.user?._id}`
+        `${backendUrl}/api/v1/feeds/${props.user?._id}/feeds?page=${p}&check=${currentUser?._id}&language=${lang}`
       );
+
       setScrollableFeeds((prev) => {
         const newFeeds = response.data.data?.feeds;
         if (newFeeds) {
@@ -107,14 +110,6 @@ export const ScrollGallery = ({ route, navigation }) => {
 
   // run add feeds (avoid on screen load first render)
   const addFeedsFirstRenderAvoid = useRef(true);
-
-  useEffect(() => {
-    if (addFeedsFirstRenderAvoid.current) {
-      addFeedsFirstRenderAvoid.current = false;
-      return;
-    }
-    AddFeedObjs();
-  }, [page]);
 
   // define language context
   const language = Language();
@@ -170,7 +165,7 @@ export const ScrollGallery = ({ route, navigation }) => {
     if (props.feedsLength > scrolableFeeds.length) {
       if (offsetY + layoutHeight >= contentHeight - 600) {
         if (!loadNewFeeds) {
-          setPage(page + 1);
+          AddFeedObjs(page + 1);
         }
       }
     }
@@ -345,20 +340,19 @@ const FeedItem = (props) => {
       setCheckifStared(true);
       dispatch(setActiveFeedFromScrollGallery(props?.feed._id));
 
-      await axios.post(
-        backendUrl +
-          `/api/v1/users/${props?.user._id}/feeds/${props.feed._id}/stars`,
-        {
+      await axios.post(`${backendUrl}/api/v1/feeds/${props.feed._id}/stars`, {
+        star: {
           staredBy: props.currentUser?._id,
           createdAt: new Date(),
-        }
-      );
+        },
+      });
+
       if (currentUser?._id !== props.user?._id) {
         await axios.post(
           backendUrl + `/api/v1/users/${props.user?._id}/notifications`,
           {
             senderId: currentUser?._id,
-            text: `მიანიჭა ვარსკვლავი თქვენ პოსტს!`,
+            text: ``,
             date: new Date(),
             type: "star",
             status: "unread",
@@ -370,8 +364,8 @@ const FeedItem = (props) => {
             await sendNotification(
               props.user?.pushNotificationToken,
               currentUser.name,
-              "added start to your feed!",
-              { feed: props.feed }
+              "added start on your feed!",
+              { feed: props.feed._id }
             );
           }
         }
@@ -399,7 +393,7 @@ const FeedItem = (props) => {
     try {
       const url =
         backendUrl +
-        `/api/v1/users/${props?.user._id}/feeds/${props.feed._id}/stars/${props.currentUser?._id}`;
+        `/api/v1/feeds/${props.feed._id}/stars/${props.currentUser?._id}`;
       const response = await fetch(url, { method: "DELETE" })
         .then((response) => response.json())
         .then(() => {
@@ -413,19 +407,24 @@ const FeedItem = (props) => {
   /**
    *  getReviews
    */
+
+  const [loading, setLoading] = useState(true);
+
   const [reviewsList, setReviewsList] = useState([]);
   const [reviewLength, setReviewLength] = useState(null);
   const [reviewsPage, setReviewsPage] = useState(1);
 
   useEffect(() => {
     const GetReviews = async () => {
+      setLoading(true);
       try {
         const response = await axios.get(
           backendUrl +
-            `/api/v1/users/${props?.user?._id}/feeds/${props?.feed?._id}/reviews?page=${reviewsPage}`
+            `/api/v1/feeds/${props?.feed?._id}/reviews?page=${reviewsPage}`
         );
         setReviewsList(response.data.data.reviews);
         setReviewLength(response.data.result);
+        setLoading(false);
       } catch (error) {
         console.log(error.response.data.message);
       }
@@ -437,8 +436,7 @@ const FeedItem = (props) => {
   async function AddNewReviews(nextPage) {
     try {
       const response = await axios.get(
-        backendUrl +
-          `/api/v1/users/${props?.user._id}/feeds/${props?.feed._id}/reviews?page=${nextPage}`
+        backendUrl + `/api/v1/feeds/${props?.feed._id}/reviews?page=${nextPage}`
       );
       setReviewsList((prev) => {
         const newReviews = response.data.data?.reviews || [];
@@ -496,22 +494,18 @@ const FeedItem = (props) => {
       dispatch(setAddReviewQntRerenderFromScrollGallery());
       setReviewInput("");
       setOpenReviews(true);
-      await axios.post(
-        backendUrl +
-          `/api/v1/users/${props?.user._id}/feeds/${props.feed._id}/reviews`,
-        {
-          reviewId: newId,
-          reviewer: props.currentUser?._id,
-          createdAt: new Date(),
-          text: reviewInput,
-        }
-      );
+      await axios.post(backendUrl + `/api/v1/feeds/${props.feed._id}/reviews`, {
+        reviewId: newId,
+        reviewer: props.currentUser?._id,
+        createdAt: new Date(),
+        text: reviewInput,
+      });
       if (currentUser?._id !== props.user?._id) {
         await axios.post(
           backendUrl + `/api/v1/users/${props.user?._id}/notifications`,
           {
             senderId: currentUser?._id,
-            text: `დატოვა კომენტარი თქვენს პოსტზე!`,
+            text: ``,
             date: new Date(),
             type: "review",
             status: "unread",
@@ -523,8 +517,8 @@ const FeedItem = (props) => {
             await sendNotification(
               props.user?.pushNotificationToken,
               currentUser.name,
-              "added comment to your feed!",
-              { feed: props.feed }
+              "added comment on your feed!",
+              { feed: props.feed._id }
             );
           }
         }
@@ -550,9 +544,7 @@ const FeedItem = (props) => {
   const [removeReview, setRemoveReview] = useState(null);
 
   const DeleteReview = async (id) => {
-    const url =
-      backendUrl +
-      `/api/v1/users/${props?.user._id}/feeds/${props.feed._id}/reviews/${id}`;
+    const url = backendUrl + `/api/v1/feeds/${props.feed._id}/reviews/${id}`;
     try {
       setReviewsList((prevReviews) =>
         prevReviews.filter((review) => review.reviewId !== id)
@@ -588,6 +580,72 @@ const FeedItem = (props) => {
       useNativeDriver: true,
     }).start();
   }, [fadeAnim]);
+
+  /**
+   *
+   * Main save function
+   */
+
+  const [savesLength, setSavesLength] = useState(props?.feed?.saves?.length);
+  const [checkIfSaved, setCheckifSaved] = useState(props?.feed?.checkIfSaved);
+
+  const SaveFeed = async (userId, itemId) => {
+    try {
+      setCheckifSaved(true);
+      setSavesLength(savesLength + 1);
+      dispatch(setActiveFeedFromScrollGallery(itemId));
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+
+      await axios.patch(backendUrl + "/api/v1/feeds/" + itemId + "/save", {
+        saveFor: currentUser._id,
+      });
+      dispatch(setSaveFromScrollGallery());
+      if (currentUser?._id !== props.user?._id) {
+        await axios.post(
+          backendUrl + `/api/v1/users/${props.user?._id}/notifications`,
+          {
+            senderId: currentUser?._id,
+            text: ``,
+            date: new Date(),
+            type: "feed",
+            status: "unread",
+            feed: `${props?.feed._id}`,
+          }
+        );
+        if (props.user._id !== currentUser._id) {
+          if (props.user?.pushNotificationToken) {
+            await sendNotification(
+              props.user?.pushNotificationToken,
+              currentUser.name,
+              "saved your feed!",
+              { feed: props.feed._id }
+            );
+          }
+        }
+      }
+
+      socket.emit("updateUser", {
+        targetId: props.user?._id,
+      });
+    } catch (error) {
+      console.log(error.response.data.message);
+    }
+  };
+  const UnSaveFeed = async (userId, itemId) => {
+    try {
+      setCheckifSaved(false);
+      setSavesLength(savesLength - 1);
+      dispatch(setActiveFeedFromScrollGallery(itemId));
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+
+      await axios.patch(backendUrl + "/api/v1/feeds/" + itemId + "/save", {
+        unSaveFor: currentUser._id,
+      });
+      dispatch(setUnsaveFromScrollGallery());
+    } catch (error) {
+      console.log(error.response.data.message);
+    }
+  };
 
   // define open post or hide
   const [numLines, setNumLines] = useState(5);
@@ -668,8 +726,7 @@ const FeedItem = (props) => {
 
   // load video indicator loader
   const [loadVideo, setLoadVideo] = useState(true);
-
-  console.log(props.scrollY);
+  const [loadImage, setLoadImage] = useState(true);
 
   return (
     <>
@@ -820,11 +877,12 @@ const FeedItem = (props) => {
                     height: "100%",
                     backgroundColor: currentTheme.background2,
                     position: "absolute",
+                    zIndex: 1,
                     alignItems: "center",
                     justifyContent: "center",
                   }}
                 >
-                  <ActivityIndicator color={currentTheme.pink} size="large" />
+                  <Circle />
                 </View>
               )}
               <CacheableVideo
@@ -851,7 +909,12 @@ const FeedItem = (props) => {
                 }
                 isLooping
                 resizeMode="contain"
-                onLoad={() => setLoadVideo(false)}
+                onLoad={
+                  () =>
+                    // setTimeout(() => {
+                    setLoadVideo(false)
+                  // }, 200)
+                }
               />
             </>
           ) : (
@@ -868,7 +931,23 @@ const FeedItem = (props) => {
                     key={index}
                     onLongPress={() => props.navigation.goBack()}
                     delayLongPress={200}
+                    style={{ height: "100%" }}
                   >
+                    {loadImage && (
+                      <View
+                        style={{
+                          height: hght > 642 ? 642 : hght + 2,
+                          width: SCREEN_WIDTH,
+                          backgroundColor: currentTheme.background2,
+                          position: "absolute",
+                          zIndex: 1,
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        <Circle />
+                      </View>
+                    )}
                     <ZoomableImage
                       style={{
                         height: hght > 642 ? 642 : hght + 2,
@@ -880,6 +959,12 @@ const FeedItem = (props) => {
                       source={{
                         uri: item.url,
                       }}
+                      onLoad={
+                        () =>
+                          // setTimeout(() => {
+                          setLoadImage(false)
+                        // }, 200)
+                      }
                     />
                   </Pressable>
                 );
@@ -961,8 +1046,12 @@ const FeedItem = (props) => {
                   volume={volume}
                   setVideoVolume={setVideoVolume}
                   checkIfStared={checkIfStared}
+                  checkIfSaved={checkIfSaved}
                   starsLength={starsLength}
                   reviewsLength={reviewLength}
+                  savesLength={savesLength}
+                  SaveFeed={SaveFeed}
+                  UnSaveFeed={UnSaveFeed}
                 />
               </View>
             </Pressable>
@@ -999,8 +1088,12 @@ const FeedItem = (props) => {
                 volume={volume}
                 setVideoVolume={setVideoVolume}
                 checkIfStared={checkIfStared}
+                checkIfSaved={checkIfSaved}
                 starsLength={starsLength}
                 reviewsLength={reviewLength}
+                savesLength={savesLength}
+                SaveFeed={SaveFeed}
+                UnSaveFeed={UnSaveFeed}
               />
             </View>
           </View>
@@ -1067,6 +1160,7 @@ const FeedItem = (props) => {
             />
           </View>
         )}
+
         {openReviews && (
           <Pressable style={styles.reviewsList}>
             {reviewsList?.length > 0 ? (
@@ -1134,24 +1228,6 @@ const ReviewItem = ({
   setRemoveReview,
   language,
 }) => {
-  const [User, setUser] = useState(null);
-  useEffect(() => {
-    const GetUser = async () => {
-      try {
-        const response = await axios.get(
-          backendUrl + "/api/v1/users/" + item.reviewer.id
-        );
-        setUser(response.data.data.user);
-      } catch (error) {
-        console.log(error.response?.data.message || error.message);
-      }
-    };
-
-    if (item) {
-      GetUser();
-    }
-  }, [item]);
-
   // get review date
 
   const currentPostTime = GetTimesAgo(new Date(item.createdAt).getTime());
@@ -1180,6 +1256,8 @@ const ReviewItem = ({
       currentPostTime?.slice(0, -1) + language?.language.Main.feedCard.y;
   }
 
+  console.log(item);
+
   return (
     <View style={styles.reviewItem}>
       <View style={styles.reviewReviewer}>
@@ -1192,10 +1270,10 @@ const ReviewItem = ({
         >
           <Pressable
             onPress={
-              User
+              item?.reviewer
                 ? () =>
                     navigation.navigate("User", {
-                      user: User,
+                      user: item?.reviewer,
                     })
                 : undefined
             }
@@ -1226,16 +1304,16 @@ const ReviewItem = ({
           </Pressable>
           <Pressable
             onPress={
-              User
+              item?.reviewer
                 ? () =>
                     navigation.navigate("User", {
-                      user: User,
+                      user: item?.reviewer,
                     })
                 : undefined
             }
           >
             <Text style={[styles.reviewItemName, { color: currentTheme.font }]}>
-              {User ? item.reviewer.name : "Removed User"}
+              {item?.reviewer.name ? item.reviewer.name : "Removed User"}
             </Text>
           </Pressable>
         </View>

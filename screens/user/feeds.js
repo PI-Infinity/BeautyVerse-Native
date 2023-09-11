@@ -58,7 +58,7 @@ export const Feeds = ({
       setFeeds([]);
       try {
         const response = await axios.get(
-          `${backendUrl}/api/v1/users/${userId}/feeds/native?page=${1}&limit=8&check=${
+          `${backendUrl}/api/v1/feeds/${userId}/feeds?page=${1}&limit=8&check=${
             currentUser?._id
           }`
         );
@@ -264,6 +264,7 @@ const styles = StyleSheet.create({
  */
 
 const FeedItem = (props) => {
+  const [loadingFeed, setLoadingFeed] = useState(true);
   // fade in
   const fadeAnim = useRef(new Animated.Value(0)).current; // Initial value for opacity: 0
 
@@ -290,18 +291,21 @@ const FeedItem = (props) => {
           });
         }}
       >
-        <View
-          style={{
-            position: "absolute",
-            width: SCREEN_WIDTH / 2 - 2,
-            height: SCREEN_WIDTH / 2 - 2,
-            backgroundColor: "rgba(1,1,1,0.1)",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <Circle />
-        </View>
+        {loadingFeed && (
+          <View
+            style={{
+              position: "absolute",
+              width: SCREEN_WIDTH / 2 - 2,
+              aspectRatio: 1,
+              backgroundColor: "rgba(1,1,1,0.1)",
+              alignItems: "center",
+              justifyContent: "center",
+              overflow: "hidden",
+            }}
+          >
+            <Circle />
+          </View>
+        )}
         <Animated.View style={{ opacity: fadeAnim }}>
           {props?.feed.fileFormat === "video" ? (
             <CacheableVideo
@@ -320,6 +324,11 @@ const FeedItem = (props) => {
               shouldPlay
               isLooping
               resizeMode="cover"
+              onLoad={() =>
+                setTimeout(() => {
+                  setLoadingFeed(false);
+                }, 500)
+              }
             />
           ) : (
             <CacheableImage
@@ -339,6 +348,11 @@ const FeedItem = (props) => {
                 },
                 { rotate: 90 },
               ]}
+              onLoad={() =>
+                setTimeout(() => {
+                  setLoadingFeed(false);
+                }, 500)
+              }
             />
           )}
         </Animated.View>

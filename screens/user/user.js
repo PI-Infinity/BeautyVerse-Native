@@ -48,13 +48,14 @@ import {
   setRerenderCurrentUser,
   setRerenderNotifcations,
 } from "../../redux/rerenders";
-import { setRerenderOrders } from "../../redux/rerenders";
+import { setRerenderBookings } from "../../redux/rerenders";
 import { Image } from "@rneui/base";
 import ConfirmPopup from "../../components/confirmDialog";
 import { sendNotification } from "../../components/pushNotifications";
 import Showroom from "../../Marketplace/components/shworoom";
 import { setRerenderProducts } from "../../redux/Marketplace";
 import { useSocket } from "../../context/socketContext";
+import { Circle } from "../../components/skeltons";
 
 /**
  * User Profile Screen
@@ -152,10 +153,11 @@ export const User = ({ navigation, user, variant, setScrollY }) => {
       profileCleanRef.current = false;
       return;
     }
-    setRefresh(true);
+    openLoading();
+
     const timer = setTimeout(() => {
-      setRefresh(false);
-    }, 700);
+      closeLoading();
+    }, 1300);
     return () => clearTimeout(timer); // clear the timer if the component is unmounted
   }, [rerenderCurrentUser]);
 
@@ -333,16 +335,14 @@ export const User = ({ navigation, user, variant, setScrollY }) => {
           backendUrl + `/api/v1/users/${targetUser?._id}/notifications`,
           {
             senderId: currentUser?._id,
-            text: `გამოიწერა თქვენი გვერდი!`,
+            text: ``,
             date: new Date(),
             type: "follow",
             status: "unread",
-            feed: `/api/v1/users/${currentUser?._id}/`,
+            feed: "",
           }
         );
-        socket.emit("updateUser", {
-          targetId: targetUser?._id,
-        });
+
         if (targetUser?.pushNotificationToken) {
           await sendNotification(
             targetUser?.pushNotificationToken,
@@ -353,6 +353,9 @@ export const User = ({ navigation, user, variant, setScrollY }) => {
             }
           );
         }
+        socket.emit("updateUser", {
+          targetId: props.user?._id,
+        });
       }
 
       // const data = await response.data;
@@ -526,8 +529,7 @@ export const User = ({ navigation, user, variant, setScrollY }) => {
   async function AddFeeds(p) {
     try {
       const response = await axios.get(
-        backendUrl +
-          `/api/v1/users/${targetUser._id}/feeds/native?page=${p}&limit=8`
+        `${backendUrl}/api/v1/feeds/${targetUser._id}/feeds?page=${p}&limit=8&check=${currentUser?._id}`
       );
       setFeeds((prev) => {
         const newFeeds = response.data.data?.feeds;
@@ -599,7 +601,6 @@ export const User = ({ navigation, user, variant, setScrollY }) => {
 
   useEffect(() => {
     const GetUserProducts = async () => {
-      setLoading(true);
       try {
         const response = await axios.get(
           backendUrl +
@@ -621,7 +622,9 @@ export const User = ({ navigation, user, variant, setScrollY }) => {
             sexFilter +
             "&type=" +
             typeFilter +
-            "&from=showroom"
+            "&from=showroom" +
+            "&check=" +
+            currentUser._id
         );
         if (response.data.data.products) {
           setPageSh(1);
@@ -644,7 +647,6 @@ export const User = ({ navigation, user, variant, setScrollY }) => {
       console.log("Error in useEffect:", error);
     }
   }, [
-    currentUser,
     rerenderProducts,
     search,
     targetUser,
@@ -682,7 +684,9 @@ export const User = ({ navigation, user, variant, setScrollY }) => {
           sexFilter +
           "&type=" +
           typeFilter +
-          "&from=showroom"
+          "&from=showroom" +
+          "&check=" +
+          currentUser._id
       );
       if (response.data.data.products) {
         const newProducts = response.data.data.products;
@@ -780,6 +784,40 @@ export const User = ({ navigation, user, variant, setScrollY }) => {
       />
     );
   }
+
+  // refresh inidcator animation
+  const opacityValue = useRef(new Animated.Value(0)).current;
+  const transformScroll = useRef(new Animated.Value(0)).current;
+
+  const openLoading = () => {
+    Animated.parallel([
+      Animated.timing(opacityValue, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.timing(transformScroll, {
+        toValue: 60,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+  const closeLoading = () => {
+    Animated.parallel([
+      Animated.timing(opacityValue, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.timing(transformScroll, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
   return (
     <>
       <ConfirmPopup
@@ -790,23 +828,27 @@ export const User = ({ navigation, user, variant, setScrollY }) => {
         cancel="Cancel"
         delet="Delete"
       />
-      <ScrollView
+      <View>
+        <Animated.View
+          style={{
+            opacity: opacityValue,
+            transform: [{ scale: 1.2 }],
+            alignItems: "center",
+          }}
+        >
+          <ActivityIndicator
+            color={currentTheme.pink}
+            style={{ position: "absolute", top: 15 }}
+          />
+        </Animated.View>
+      </View>
+      <Animated.ScrollView
         ref={scrollViewRef}
         onScroll={onScroll}
         scrollEventThrottle={16}
         showsVerticalScrollIndicator={false}
-        style={{ width: "100%" }}
+        style={{ flex: 1, transform: [{ translateY: transformScroll }] }}
         overScrollMode={Platform.OS === "ios" ? "never" : "always"}
-        refreshControl={
-          <RefreshControl
-            tintColor="#ccc"
-            refreshing={refresh}
-            onRefresh={() => {
-              dispatch(setRerenderOrders());
-              dispatch(setRerenderCurrentUser());
-            }}
-          />
-        }
       >
         <View style={styles.header}>
           <View
@@ -875,10 +917,11 @@ export const User = ({ navigation, user, variant, setScrollY }) => {
                           zIndex: 120,
                           alignItems: "center",
                           justifyContent: "center",
-                          opacity: 0.5,
+                          opacity: 1,
+                          overflow: "hidden",
                         }}
                       >
-                        <ActivityIndicator color={currentTheme.pink} />
+                        <Circle />
                       </View>
                     )}
                     <Animated.View
@@ -907,7 +950,11 @@ export const User = ({ navigation, user, variant, setScrollY }) => {
                           },
                           { rotate: 90 },
                         ]}
-                        onLoad={() => setLoading(false)}
+                        onLoad={() =>
+                          setTimeout(() => {
+                            setLoading(false);
+                          }, 200)
+                        }
                         onError={() => console.log("Error loading image")}
                       />
                     </Animated.View>
@@ -1094,7 +1141,7 @@ export const User = ({ navigation, user, variant, setScrollY }) => {
         </>
 
         {/* )} */}
-      </ScrollView>
+      </Animated.ScrollView>
 
       {!loadingFollowerDefined && (
         <View

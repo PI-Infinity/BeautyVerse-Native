@@ -1,4 +1,4 @@
-import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
+import { FontAwesome, Fontisto, MaterialIcons } from "@expo/vector-icons";
 import axios from "axios";
 import React, { useEffect, useState } from "react";
 import {
@@ -159,7 +159,7 @@ const NotificationItem = ({
   notifications,
 }) => {
   // define screen id by query split
-  let feed = item?.feed?.split("/");
+  let feed = item?.feed;
 
   // backend url
   const backendUrl = useSelector((state) => state.storeApp.backendUrl);
@@ -168,6 +168,7 @@ const NotificationItem = ({
   const [loadCover, setLoadCover] = useState(true);
   const [feedObj, setFeedObj] = useState(null);
   const [user, setUser] = useState(null);
+  const [product, setProduct] = useState(null);
 
   // define language
   const language = Language();
@@ -180,15 +181,12 @@ const NotificationItem = ({
   // get feed from DB
   async function GetFeedObj() {
     try {
-      if (item?.type !== "welcome") {
+      if (item?.type !== "welcome" && item?.type !== "follow" && item.feed) {
         let response = await axios.get(
-          backendUrl +
-            `/api/v1/users/${currentUser?._id}/feeds/${
-              feed[feed?.length - 1]
-            }?check=${currentUser._id}`
+          backendUrl + `/api/v1/feeds/${feed}?check=${currentUser._id}`
         );
 
-        setFeedObj(response.data.data.feedObj);
+        setFeedObj(response.data.data.feed);
       }
     } catch (error) {
       console.log(error.response.data.message);
@@ -208,22 +206,50 @@ const NotificationItem = ({
       console.log(error.response.data.message);
     }
   }
+  // Get product from DB
+  async function GetProduct() {
+    try {
+      if (item?.type === "saveProduct") {
+        let res = await axios.get(
+          backendUrl + `/api/v1/marketplace/${item?.product}`
+        );
+        setProduct(res.data.data.product);
+      }
+    } catch (error) {
+      console.log(error.response.data.message);
+    }
+  }
+
+  if (item.type === "saveProduct") {
+    console.log(product);
+  }
 
   // on press navigate to feed screen
-  const handlePress = () => {
-    if (feedObj) {
-      navigation.navigate("UserFeed", {
-        user: currentUser,
-        feed: feedObj,
-      });
-    } else {
-      Alert.alert("Feed not defined");
+  const handlePress = (x) => {
+    if (x === "feed") {
+      if (feedObj) {
+        navigation.navigate("UserFeed", {
+          user: currentUser,
+          feed: feedObj,
+        });
+      } else {
+        Alert.alert("Feed not defined");
+      }
+    } else if (x === "product") {
+      if (product) {
+        navigation.navigate("Product", {
+          product: product,
+        });
+      } else {
+        Alert.alert("Product not defined");
+      }
     }
   };
 
   useEffect(() => {
     GetFeedObj();
     GetUser();
+    GetProduct();
   }, [rerenderUserFeed, item]);
 
   // delete notification
@@ -273,6 +299,59 @@ const NotificationItem = ({
       notifiyTime?.slice(0, -1) + language?.language.Main.feedCard.y;
   }
 
+  // define text
+  const lang = useSelector((state) => state.storeApp.language);
+  let text;
+  if (item.type === "star") {
+    if (lang === "en") {
+      text = "Added star on your feed";
+    } else if (lang === "ru") {
+      text = "Добавлена звезда к вашей ленте";
+    } else if (lang === "ka") {
+      text = "მიანიჭა ვარსკვლავი თქვენ პოსტს";
+    }
+  } else if (item.type === "save") {
+    if (lang === "en") {
+      text = "Saved your feed";
+    } else if (lang === "ru") {
+      text = "Ваша лента сохранена";
+    } else if (lang === "ka") {
+      text = "შეინახა თქვენი პოსტი";
+    }
+  } else if (item.type === "share") {
+    if (lang === "en") {
+      text = "Shared your feed";
+    } else if (lang === "ru") {
+      text = "Ваша лента поделилась";
+    } else if (lang === "ka") {
+      text = "გააზიარა თქვენი პოსტი";
+    }
+  } else if (item.type === "review") {
+    if (lang === "en") {
+      text = "Reviewed your feed";
+    } else if (lang === "ru") {
+      text = "Ваша лента была просмотрена";
+    } else if (lang === "ka") {
+      text = "შეაფასა თქვენი პოსტი";
+    }
+  } else if (item.type === "follow") {
+    if (lang === "en") {
+      text = "Started following you";
+    } else if (lang === "ru") {
+      text = "Начал следовать за вами";
+    } else if (lang === "ka") {
+      text = "გამოიწერა თქვენი გვერდი";
+    }
+  } else if (item.type === "saveProduct") {
+    if (lang === "en") {
+      text = "Saved your product";
+    } else if (lang === "ru") {
+      text = "Сохранил ваш продукт";
+    } else if (lang === "ka") {
+      text = "შეინახა თქვენი პროდუქტი";
+    }
+  }
+
   return (
     <>
       {item?.type !== "welcome" ? (
@@ -289,7 +368,11 @@ const NotificationItem = ({
             borderWidth: 1,
             borderColor: currentTheme.line,
           }}
-          onPress={() => ReadNotification(item?._id)}
+          onPress={
+            item.status === "unread"
+              ? () => ReadNotification(item?._id)
+              : undefined
+          }
           onLongPress={DeleteNotification}
           delayLongPress={250}
         >
@@ -379,15 +462,18 @@ const NotificationItem = ({
                 fontSize: 12,
               }}
             >
-              {item?.text}
+              {text}
             </Text>
           </View>
           <View style={{ flexDirection: "row", gap: 20, marginLeft: "auto" }}>
-            {(item?.type === "star" || item?.type === "review") && (
+            {(item?.type === "star" ||
+              item?.type === "review" ||
+              item?.type === "save" ||
+              item?.type === "share") && (
               <TouchableOpacity
                 activeOpacity={0.3}
                 style={{ alignItems: "flex-end" }}
-                onPress={handlePress}
+                onPress={() => handlePress("feed")}
               >
                 <FontAwesome
                   style={{ marginLeft: "auto" }}
@@ -401,18 +487,49 @@ const NotificationItem = ({
                 />
               </TouchableOpacity>
             )}
-            <FontAwesome
-              style={{ marginLeft: "auto" }}
-              name={
-                item?.type === "star"
-                  ? "star-o"
-                  : item?.type === "follow"
-                  ? "check" // Replace 'user-plus' with the desired icon for 'follow'
-                  : "comment" // Replace 'default-icon' with the desired default icon
-              }
-              size={16}
-              color={item?.status === "unread" ? "#f1f1f1" : currentTheme.pink}
-            />
+            {item.type === "saveProduct" && (
+              <TouchableOpacity
+                activeOpacity={0.3}
+                style={{ alignItems: "flex-end" }}
+                onPress={() => handlePress("product")}
+              >
+                <Fontisto
+                  style={{ marginLeft: "auto" }}
+                  name="shopping-bag-1"
+                  size={18}
+                  color={
+                    item?.status === "unread"
+                      ? "#f1f1f1"
+                      : currentTheme.disabled
+                  }
+                />
+              </TouchableOpacity>
+            )}
+            {item?.type === "save" || item?.type === "saveProduct" ? (
+              <MaterialIcons
+                style={{ marginLeft: "auto" }}
+                name="save-alt"
+                size={17}
+                color={
+                  item?.status === "unread" ? "#f1f1f1" : currentTheme.pink
+                }
+              />
+            ) : (
+              <FontAwesome
+                style={{ marginLeft: "auto" }}
+                name={
+                  item?.type === "star"
+                    ? "star-o"
+                    : item?.type === "follow"
+                    ? "check"
+                    : "comment" // Replace 'default-icon' with the desired default icon
+                }
+                size={16}
+                color={
+                  item?.status === "unread" ? "#f1f1f1" : currentTheme.pink
+                }
+              />
+            )}
           </View>
         </Pressable>
       ) : (
@@ -438,16 +555,11 @@ const NotificationItem = ({
           onLongPress={DeleteNotification}
           delayLongPress={250}
         >
-          {item?.senderCover?.length > 0 ? (
-            <Image
-              source={{ uri: item?.cover }}
-              style={{ height: 40, width: 40, borderRadius: 50 }}
-            />
-          ) : (
-            <View style={{ padding: 5 }}>
-              <FontAwesome name="user" size={24} color={currentTheme.pink} />
-            </View>
-          )}
+          <Image
+            source={require("../../assets/icon.png")}
+            style={{ height: 40, width: 40, borderRadius: 50 }}
+          />
+
           <View
             style={{
               gap: 2.5,

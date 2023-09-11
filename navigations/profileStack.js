@@ -22,12 +22,12 @@ import { Language } from "../context/language";
 import { darkTheme, lightTheme } from "../context/theme";
 import { Room } from "../screens/chat/room";
 import { FeedItem } from "../screens/feedScreen";
-import { AddOrder } from "../screens/orders/addOrder";
-import { Orders } from "../screens/orders/orders";
-import { SendOrder } from "../screens/orders/sendOrder";
-import { Statistics } from "../screens/orders/statistics";
+import { AddBooking } from "../screens/bookings/addBooking";
+import { Bookings } from "../screens/bookings/bookings";
+import { SendBooking } from "../screens/bookings/sendBooking";
+import { Statistics } from "../screens/bookings/statistics";
 import { Prices } from "../screens/prices";
-import { SentOrders } from "../screens/sentOrders/sentOrders";
+import { SentBookings } from "../screens/sentBookings/sentBookings";
 import { QA } from "../screens/user/QA";
 import { AddFeed } from "../screens/user/addFeed";
 import { Notifications } from "../screens/user/notifications";
@@ -49,6 +49,9 @@ import Products from "../Marketplace/screens/userProductListSettings";
 import AddNewProduct from "../Marketplace/screens/addProduct";
 import EditProduct from "../Marketplace/screens/editProduct";
 import Product from "../Marketplace/screens/product";
+import Support from "../screens/support";
+import { SavedItems } from "../screens/user/settings/savedItems";
+import { Image } from "@rneui/base";
 
 /**
  * Create user profile stack, where include all main configs
@@ -73,8 +76,8 @@ export function ProfileStack({
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
 
-  const newOrders = useSelector((state) => state.storeOrders.new);
-  const newSentOrders = useSelector((state) => state.storeSentOrders.new);
+  const newBookings = useSelector((state) => state.storeBookings.new);
+  const newSentBookings = useSelector((state) => state.storeSentBookings.new);
   /** in profile stack defined,
    * user personal data, settings
    * and control datas and feeds */
@@ -101,7 +104,7 @@ export function ProfileStack({
             setScrollY={setScrollY}
           />
         )}
-        options={({ route }) => ({
+        options={({ route, navigation }) => ({
           headerStyle: {
             height: SCREEN_HEIGHT / 9,
             backgroundColor: currentTheme.background,
@@ -180,9 +183,9 @@ export function ProfileStack({
                       padding: 5,
                       paddingVertical: 2.5,
                     }}
-                    onPress={() => navigation.navigate("Orders")}
+                    onPress={() => navigation.navigate("Bookings")}
                   >
-                    {newOrders > 0 && (
+                    {newBookings > 0 && (
                       <View
                         style={{
                           width: "auto",
@@ -199,7 +202,7 @@ export function ProfileStack({
                         }}
                       >
                         <Text style={{ color: "#fff", fontSize: 10 }}>
-                          {newOrders}
+                          {newBookings}
                         </Text>
                       </View>
                     )}
@@ -262,7 +265,7 @@ export function ProfileStack({
                 onPress={() => navigation.navigate("Settings")}
                 style={{ marginRight: 15, padding: 5 }}
               >
-                {currentUser?.type === "specialist" && newSentOrders > 0 && (
+                {currentUser?.type === "specialist" && newSentBookings > 0 && (
                   <View
                     style={{
                       width: "auto",
@@ -279,7 +282,7 @@ export function ProfileStack({
                     }}
                   >
                     <Text style={{ color: "#fff", fontSize: 10 }}>
-                      {newSentOrders}
+                      {newSentBookings}
                     </Text>
                   </View>
                 )}
@@ -294,6 +297,102 @@ export function ProfileStack({
           ),
         })}
       />
+      {/** user screen in feeds, visit page, that component gettings props "visitPage", so from this component only can to visit page, current user can't modify any data from there  */}
+      <Stack.Screen
+        name="User"
+        children={() => <User navigation={navigation} />}
+        options={({ route, navigation }) => ({
+          headerBackTitleVisible: false,
+          headerTitleAlign: "center",
+          headerLeft: () => (
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => navigation.goBack()}
+              style={{ padding: 8, paddingLeft: 15 }}
+            >
+              <FontAwesome
+                name="arrow-left"
+                color={currentTheme.pink}
+                size={22}
+              />
+            </TouchableOpacity>
+          ),
+          headerTitle: (props) => (
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+                flex: 1,
+                width: "100%",
+                gap: 5,
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 18,
+                  letterSpacing: 0.5,
+                  color: currentTheme.font,
+                  fontWeight: "bold",
+                }}
+              >
+                {route.params.user.name}
+              </Text>
+              {route.params.user.subscription.status === "active" && (
+                <MaterialIcons name="verified" size={14} color="#F866B1" />
+              )}
+            </View>
+          ),
+          headerRight: (props) => {
+            if (
+              currentUser?.type.toLowerCase() !== "beautycenter" &&
+              currentUser?.type.toLowerCase() !== "shop"
+            ) {
+              return (
+                <View style={{ marginRight: 20 }}>
+                  {route.params?.user?._id !== currentUser._id &&
+                    currentUser.type !== "beautycenter" &&
+                    currentUser?.type !== "shop" &&
+                    route.params?.user.type !== "shop" &&
+                    route.params?.user.type !== "user" &&
+                    route.params.user.subscription.status === "active" && (
+                      <TouchableOpacity
+                        acitveOpacity={0.3}
+                        onPress={() =>
+                          navigation.navigate("Send Booking", {
+                            user: route.params.user,
+                          })
+                        }
+                      >
+                        <FontAwesome
+                          name="calendar"
+                          size={18}
+                          color={currentTheme.font}
+                        />
+                      </TouchableOpacity>
+                    )}
+                </View>
+              );
+            }
+          },
+          headerStyle: {
+            height: SCREEN_HEIGHT / 9,
+            backgroundColor: currentTheme.background,
+            elevation: 0,
+            shadowOpacity: 0,
+            borderBottomWidth: 0,
+          },
+          headerTintColor: currentTheme.font,
+          headerTitleStyle: {
+            fontWeight: "bold",
+            fontSize: 18,
+            letterSpacing: 0.5,
+          },
+          cardStyle: {
+            backgroundColor: currentTheme.background,
+          },
+        })}
+      />
       {/** User notifications page */}
       <Stack.Screen
         name="Notifications"
@@ -305,7 +404,7 @@ export function ProfileStack({
             setUnreadNotifications={setUnreadNotifications}
           />
         )}
-        options={({ route }) => ({
+        options={({ route, navigation }) => ({
           headerTitle: language?.language?.Pages?.pages?.notifications,
           headerBackTitleVisible: false,
           headerLeft: () => (
@@ -345,7 +444,7 @@ export function ProfileStack({
         children={() => (
           <User navigation={navigation} setScrollY={setScrollY} />
         )}
-        options={({ route }) => ({
+        options={({ route, navigation }) => ({
           headerBackTitleVisible: false,
           headerLeft: () => (
             <TouchableOpacity
@@ -394,11 +493,12 @@ export function ProfileStack({
                   currentUser.type !== "beautycenter" &&
                   currentUser?.type !== "shop" &&
                   route.params?.user.type !== "shop" &&
-                  route.params?.user.type !== "user" && (
+                  route.params?.user.type !== "user" &&
+                  route.params.user.subscription.status === "active" && (
                     <TouchableOpacity
                       acitveOpacity={0.3}
                       onPress={() =>
-                        navigation.navigate("Send Order", {
+                        navigation.navigate("Send Booking", {
                           user: route.params.user,
                         })
                       }
@@ -437,7 +537,7 @@ export function ProfileStack({
       <Stack.Screen
         name="ScrollGallery"
         component={ScrollGallery}
-        options={({ route }) => ({
+        options={({ route, navigation }) => ({
           headerBackTitleVisible: false,
           headerLeft: () => (
             <TouchableOpacity
@@ -475,7 +575,7 @@ export function ProfileStack({
       <Stack.Screen
         name="UserFeed"
         component={FeedItem}
-        options={({ route }) => ({
+        options={({ route, navigation }) => ({
           headerBackTitleVisible: false,
           headerLeft: () => (
             <TouchableOpacity
@@ -514,7 +614,7 @@ export function ProfileStack({
       <Stack.Screen
         name="AddFeed"
         component={AddFeed}
-        options={({ route }) => ({
+        options={({ route, navigation }) => ({
           headerBackTitleVisible: false,
           headerLeft: () => (
             <TouchableOpacity
@@ -549,12 +649,12 @@ export function ProfileStack({
           },
         })}
       />
-      {/** main order list screen  */}
+      {/** main booking list screen  */}
 
       <Stack.Screen
-        name="Send Order"
-        component={SendOrder}
-        options={({ route }) => ({
+        name="Send Booking"
+        component={SendBooking}
+        options={({ route, navigation }) => ({
           headerBackTitleVisible: false,
           headerLeft: () => (
             <TouchableOpacity
@@ -589,9 +689,9 @@ export function ProfileStack({
         })}
       />
       <Stack.Screen
-        name="Sent Orders"
-        component={SentOrders}
-        options={({ route }) => ({
+        name="Sent Bookings"
+        component={SentBookings}
+        options={({ route, navigation }) => ({
           headerBackTitleVisible: false,
           headerLeft: () => (
             <TouchableOpacity
@@ -627,9 +727,9 @@ export function ProfileStack({
       />
 
       <Stack.Screen
-        name="Order Statistics"
+        name="Booking Statistics"
         component={Statistics}
-        options={({ route }) => ({
+        options={({ route, navigation }) => ({
           headerBackTitleVisible: false,
           headerLeft: () => (
             <TouchableOpacity
@@ -644,7 +744,7 @@ export function ProfileStack({
               />
             </TouchableOpacity>
           ),
-          title: "Order statistics",
+          title: "Booking statistics",
           headerStyle: {
             height: SCREEN_HEIGHT / 9,
             backgroundColor: currentTheme.background,
@@ -668,7 +768,7 @@ export function ProfileStack({
       <Stack.Screen
         name="Settings"
         component={Settings}
-        options={({ route }) => ({
+        options={({ route, navigation }) => ({
           headerBackTitleVisible: false,
           headerLeft: () => (
             <TouchableOpacity
@@ -707,7 +807,7 @@ export function ProfileStack({
       <Stack.Screen
         name="Personal info"
         component={PersonalInfo}
-        options={({ route }) => ({
+        options={({ route, navigation }) => ({
           headerBackTitleVisible: false,
           headerLeft: () => (
             <TouchableOpacity
@@ -746,7 +846,7 @@ export function ProfileStack({
       <Stack.Screen
         name="Procedures"
         component={Procedures}
-        options={({ route }) => ({
+        options={({ route, navigation }) => ({
           headerBackTitleVisible: false,
           headerLeft: () => (
             <TouchableOpacity
@@ -804,7 +904,7 @@ export function ProfileStack({
       <Stack.Screen
         name="Products"
         component={Products}
-        options={({ route }) => ({
+        options={({ route, navigation }) => ({
           headerBackTitleVisible: false,
           headerLeft: () => (
             <TouchableOpacity
@@ -862,7 +962,7 @@ export function ProfileStack({
       <Stack.Screen
         name="AddNewProduct"
         component={AddNewProduct}
-        options={({ route }) => ({
+        options={({ route, navigation }) => ({
           headerBackTitleVisible: false,
           headerLeft: () => (
             <TouchableOpacity
@@ -901,7 +1001,7 @@ export function ProfileStack({
       <Stack.Screen
         name="EditProduct"
         component={EditProduct}
-        options={({ route }) => ({
+        options={({ route, navigation }) => ({
           headerBackTitleVisible: false,
           headerLeft: () => (
             <TouchableOpacity
@@ -940,7 +1040,7 @@ export function ProfileStack({
       <Stack.Screen
         name="Product"
         component={Product}
-        options={({ route }) => ({
+        options={({ route, navigation }) => ({
           headerBackTitleVisible: false,
           headerLeft: () => (
             <TouchableOpacity
@@ -953,6 +1053,30 @@ export function ProfileStack({
                 color={currentTheme.pink}
                 size={22}
               />
+            </TouchableOpacity>
+          ),
+          headerRight: () => (
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() =>
+                navigation.navigate("User", {
+                  user: route.params.product.owner,
+                })
+              }
+              style={{ padding: 8, marginRight: 8 }}
+            >
+              {route.params.product.owner?.cover ? (
+                <CacheableImage
+                  source={{ uri: route.params.product.owner?.cover }}
+                  style={{ width: 25, height: 25, borderRadius: 50 }}
+                />
+              ) : (
+                <FontAwesome
+                  name="user"
+                  size={20}
+                  color={currentTheme.disabled}
+                />
+              )}
             </TouchableOpacity>
           ),
           title: route.params.product.title,
@@ -979,7 +1103,7 @@ export function ProfileStack({
       <Stack.Screen
         name="Working info"
         component={WorkingInfo}
-        options={({ route }) => ({
+        options={({ route, navigation }) => ({
           headerBackTitleVisible: false,
           headerLeft: () => (
             <TouchableOpacity
@@ -1018,7 +1142,7 @@ export function ProfileStack({
       <Stack.Screen
         name="Addresses"
         component={Addresses}
-        options={({ route }) => ({
+        options={({ route, navigation }) => ({
           headerBackTitleVisible: false,
           headerLeft: () => (
             <TouchableOpacity
@@ -1076,7 +1200,7 @@ export function ProfileStack({
       <Stack.Screen
         name="AddNewAddress"
         component={AddNewAddress}
-        options={({ route }) => ({
+        options={({ route, navigation }) => ({
           headerBackTitleVisible: false,
           headerLeft: () => (
             <TouchableOpacity
@@ -1114,7 +1238,7 @@ export function ProfileStack({
       <Stack.Screen
         name="EditAddress"
         component={EditAddress}
-        options={({ route }) => ({
+        options={({ route, navigation }) => ({
           headerBackTitleVisible: false,
           headerLeft: () => (
             <TouchableOpacity
@@ -1153,7 +1277,7 @@ export function ProfileStack({
       <Stack.Screen
         name="AddNewProcedures"
         component={AddNewProcedures}
-        options={({ route }) => ({
+        options={({ route, navigation }) => ({
           headerBackTitleVisible: false,
           headerLeft: () => (
             <TouchableOpacity
@@ -1192,7 +1316,7 @@ export function ProfileStack({
       <Stack.Screen
         name="Prices"
         component={Prices}
-        options={({ route }) => ({
+        options={({ route, navigation }) => ({
           headerBackTitleVisible: false,
           headerLeft: () => (
             <TouchableOpacity
@@ -1231,7 +1355,7 @@ export function ProfileStack({
       <Stack.Screen
         name="Charts"
         component={Charts}
-        options={({ route }) => ({
+        options={({ route, navigation }) => ({
           headerBackTitleVisible: false,
           headerLeft: () => (
             <TouchableOpacity
@@ -1267,9 +1391,85 @@ export function ProfileStack({
         })}
       />
       <Stack.Screen
+        name="SavedItems"
+        component={SavedItems}
+        options={({ route, navigation }) => ({
+          headerBackTitleVisible: false,
+          headerLeft: () => (
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => navigation.goBack()}
+              style={{ padding: 8, paddingLeft: 15 }}
+            >
+              <FontAwesome
+                name="arrow-left"
+                color={currentTheme.pink}
+                size={22}
+              />
+            </TouchableOpacity>
+          ),
+          title: language?.language?.User?.userPage?.savedItems,
+          headerStyle: {
+            height: SCREEN_HEIGHT / 9,
+            backgroundColor: currentTheme.background,
+
+            elevation: 0,
+            shadowOpacity: 0,
+            borderBottomWidth: 0,
+          },
+          headerTintColor: currentTheme.font,
+          headerTitleStyle: {
+            fontWeight: "bold",
+            fontSize: 18,
+            letterSpacing: 0.5,
+          },
+          cardStyle: {
+            backgroundColor: currentTheme.background,
+          },
+        })}
+      />
+      <Stack.Screen
+        name="Support"
+        component={Support}
+        options={({ route, navigation }) => ({
+          headerBackTitleVisible: false,
+          headerLeft: () => (
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => navigation.goBack()}
+              style={{ padding: 8, paddingLeft: 15 }}
+            >
+              <FontAwesome
+                name="arrow-left"
+                color={currentTheme.pink}
+                size={22}
+              />
+            </TouchableOpacity>
+          ),
+          title: language?.language?.User?.userPage?.support,
+          headerStyle: {
+            height: SCREEN_HEIGHT / 9,
+            backgroundColor: currentTheme.background,
+
+            elevation: 0,
+            shadowOpacity: 0,
+            borderBottomWidth: 0,
+          },
+          headerTintColor: currentTheme.font,
+          headerTitleStyle: {
+            fontWeight: "bold",
+            fontSize: 18,
+            letterSpacing: 0.5,
+          },
+          cardStyle: {
+            backgroundColor: currentTheme.background,
+          },
+        })}
+      />
+      <Stack.Screen
         name="Terms"
         component={Terms}
-        options={({ route }) => ({
+        options={({ route, navigation }) => ({
           headerBackTitleVisible: false,
           headerLeft: () => (
             <TouchableOpacity
@@ -1307,7 +1507,7 @@ export function ProfileStack({
       <Stack.Screen
         name="Privacy"
         component={Privacy}
-        options={({ route }) => ({
+        options={({ route, navigation }) => ({
           headerBackTitleVisible: false,
           headerLeft: () => (
             <TouchableOpacity
@@ -1345,7 +1545,7 @@ export function ProfileStack({
       <Stack.Screen
         name="QA"
         component={QA}
-        options={({ route }) => ({
+        options={({ route, navigation }) => ({
           headerBackTitleVisible: false,
           headerLeft: () => (
             <TouchableOpacity
@@ -1383,7 +1583,7 @@ export function ProfileStack({
       <Stack.Screen
         name="Usage"
         component={Usage}
-        options={({ route }) => ({
+        options={({ route, navigation }) => ({
           headerBackTitleVisible: false,
           headerLeft: () => (
             <TouchableOpacity

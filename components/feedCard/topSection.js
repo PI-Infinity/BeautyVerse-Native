@@ -14,6 +14,7 @@ import { CacheableImage } from "../../components/cacheableImage";
 import { Reports } from "../../components/feedCard/reports";
 import GetTimesAgo from "../../functions/getTimesAgo";
 import { setSendReport } from "../../redux/alerts";
+import { Circle } from "../skeltons";
 
 /**
  * Top section of feed card
@@ -41,13 +42,9 @@ export const TopSection = (props) => {
 
   let type;
   if (props.user.type === "specialist") {
-    if (props?.lang === "en") {
-      type = t;
-    } else if (props?.lang === "ka") {
-      type = "სპეციალისტი";
-    } else {
-      type = props.language?.language?.Main?.feedCard?.specialist;
-    }
+    type = props.language?.language?.Main?.feedCard?.specialist;
+  } else if (props.user.type === "shop") {
+    type = props.language?.language?.Marketplace?.marketplace?.shop;
   } else {
     type = props.language?.language?.Auth?.auth?.beautySalon;
   }
@@ -85,6 +82,9 @@ export const TopSection = (props) => {
    * reports
    */
   const [openReports, setOpenReports] = useState(false);
+
+  // loading cover state
+  const [loading, setLoading] = useState(true);
 
   return (
     <>
@@ -133,10 +133,22 @@ export const TopSection = (props) => {
                   height: 40,
                   overflow: "hidden",
                   alignItems: "center",
-                  justifyContent: "center",
+
                   borderRadius: 50,
                 }}
               >
+                {loading && (
+                  <View
+                    style={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: 50,
+                      overflow: "hidden",
+                    }}
+                  >
+                    <Circle />
+                  </View>
+                )}
                 <CacheableImage
                   key={props.user?.cover}
                   style={{
@@ -157,6 +169,12 @@ export const TopSection = (props) => {
                     },
                     { rotate: 90 },
                   ]}
+                  onLoad={
+                    () =>
+                      // setTimeout(() => {
+                      setLoading(false)
+                    // }, 200)
+                  }
                 />
               </TouchableOpacity>
             ) : (
@@ -309,7 +327,8 @@ export const TopSection = (props) => {
             >
               ✦
             </Text>
-            {route.name === "Feeds" && currentUser._id !== props.user._id ? (
+            {(route.name === "Feeds" || route.name === "SavedItems") &&
+            currentUser._id !== props.user._id ? (
               <Pressable
                 style={{
                   position: "absolute",
@@ -330,7 +349,7 @@ export const TopSection = (props) => {
                   color={props.currentTheme.font}
                 />
               </Pressable>
-            ) : route.name !== "Feeds" ? (
+            ) : route.name !== "Feeds" && route.name !== "SavedItems" ? (
               <Pressable
                 style={{
                   position: "absolute",

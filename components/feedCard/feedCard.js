@@ -25,6 +25,7 @@ import { setLoading } from "../../redux/app";
 import * as Location from "expo-location";
 import * as Notifications from "expo-notifications";
 import { sendNotification } from "../../components/pushNotifications";
+import { Circle } from "../skeltons";
 
 /**
  * Feed Item in feeds screen
@@ -80,9 +81,9 @@ export const Feed = (props) => {
   async function GetUserFeeds() {
     try {
       const response = await axios.get(
-        `${backendUrl}/api/v1/users/${
-          props.user?._id
-        }/feeds/native?page=${1}&check=${currentUser?._id}&language=${lang}`
+        `${backendUrl}/api/v1/feeds/${
+          props.feed.owner?._id
+        }/feeds?page=${1}&check=${currentUser?._id}&language=${lang}`
       );
       setUserFeeds(response.data.data.feeds);
       setFeedsLength(response.data.result);
@@ -92,10 +93,10 @@ export const Feed = (props) => {
   }
 
   useEffect(() => {
-    if (props.user.feed) {
+    if (props.feed) {
       GetUserFeeds();
     }
-  }, [props.user.feed, cleanUp]);
+  }, [props.feed, cleanUp]);
 
   // define current user state from redux
   const currentUser = useSelector((state) => state.storeUser.currentUser);
@@ -110,6 +111,7 @@ export const Feed = (props) => {
    * when video displayed the video starts
    *  */
   const [loadVideo, setLoadVideo] = useState(true);
+  const [loadImage, setLoadImage] = useState(true);
 
   // when scrolling defines active feed and plays video if displayed part of it
 
@@ -125,7 +127,7 @@ export const Feed = (props) => {
   }, [scrollX]);
 
   /**
-   * user actions: stars, comments
+   * user actions: stars, comments, saves
    */
 
   // add and remove stars from feed screen useState
@@ -227,39 +229,40 @@ export const Feed = (props) => {
     try {
       AddStar();
       await axios.post(
-        `${backendUrl}/api/v1/users/${props.user?._id}/feeds/${userFeeds[activeFeed]?._id}/stars`,
+        `${backendUrl}/api/v1/feeds/${userFeeds[activeFeed]?._id}/stars`,
         {
-          staredBy: currentUser?._id,
-          createdAt: new Date(),
+          star: {
+            staredBy: currentUser?._id,
+            createdAt: new Date(),
+          },
         }
       );
-      if (currentUser?._id !== props.user?._id) {
+      if (currentUser?._id !== props.feed.owner?._id) {
         await axios.post(
-          `${backendUrl}/api/v1/users/${props.user?._id}/notifications`,
+          `${backendUrl}/api/v1/users/${props.feed.owner?._id}/notifications`,
           {
             senderId: currentUser?._id,
-            text: `მიანიჭა ვარსკვლავი თქვენ პოსტს!`,
+            text: "",
             date: new Date(),
             type: "star",
             status: "unread",
-            feed: `/api/v1/users/${props.user?._id}/feeds/${userFeeds[activeFeed]?._id}`,
+            feed: `${userFeeds[activeFeed]?._id}`,
           }
         );
-        if (props.user?.pushNotificationToken) {
+        if (props.feed.owner?.pushNotificationToken) {
           await sendNotification(
-            props.user?.pushNotificationToken,
+            props.feed.owner?.pushNotificationToken,
             currentUser.name,
-            "added star to your feed!",
-            { feed: userFeeds[activeFeed] }
+            "added star on your feed!",
+            {
+              feed: userFeeds[activeFeed]._id,
+            }
           );
         }
         socket.emit("updateUser", {
-          targetId: props.user?._id,
+          targetId: props.feed.owner?._id,
         });
       }
-      if (props.user?.pushNotificationToken) {
-      }
-      // await schedulePushNotification();
     } catch (error) {
       console.error(error.response.data.message);
     }
@@ -273,7 +276,7 @@ export const Feed = (props) => {
     try {
       RemoveStarFromState();
 
-      const url = `${backendUrl}/api/v1/users/${props.user?._id}/feeds/${userFeeds[activeFeed]?._id}/stars/${currentUser?._id}`;
+      const url = `${backendUrl}/api/v1/feeds/${userFeeds[activeFeed]?._id}/stars/${currentUser?._id}`;
       await fetch(url, { method: "DELETE" })
         .then((response) => response.json())
 
@@ -341,6 +344,179 @@ export const Feed = (props) => {
   }, [removeReviewQntRerenderFromScrollGallery]);
 
   /**
+   *
+   * Main save function
+   */
+  const SaveFeed = async (userId, itemId) => {
+    try {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      setUserFeeds((prevFeeds) => {
+        let updatedFeeds = [...prevFeeds];
+
+        // Check if the array already contains the user's ID
+        const existingUserSave = updatedFeeds[activeFeed].saves.find(
+          (save) => save.user === currentUser._id
+        );
+
+        if (!existingUserSave) {
+          updatedFeeds[activeFeed].saves.push({
+            user: currentUser._id,
+            savedAt: new Date(),
+          });
+          updatedFeeds[activeFeed].checkIfSaved = true;
+        }
+
+        return updatedFeeds;
+      });
+
+      await axios.patch(backendUrl + "/api/v1/feeds/" + itemId + "/save", {
+        saveFor: currentUser._id,
+      });
+      if (currentUser?._id !== props.feed.owner?._id) {
+        await axios.post(
+          `${backendUrl}/api/v1/users/${props.feed.owner?._id}/notifications`,
+          {
+            senderId: currentUser?._id,
+            text: ``,
+            date: new Date(),
+            type: "save",
+            status: "unread",
+            feed: `/${userFeeds[activeFeed]?._id}`,
+          }
+        );
+        if (props.feed.owner?.pushNotificationToken) {
+          await sendNotification(
+            props.feed.owner?.pushNotificationToken,
+            currentUser.name,
+            "saved your feed!",
+            {
+              feed: userFeeds[activeFeed]._id,
+            }
+          );
+        }
+        socket.emit("updateUser", {
+          targetId: props.feed.owner?._id,
+        });
+      }
+    } catch (error) {
+      console.log(error.response);
+    }
+  };
+
+  const UnSaveFeed = async (userId, itemId) => {
+    try {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      setUserFeeds((prevFeeds) => {
+        let updatedFeeds = [...prevFeeds];
+
+        // Remove the user's ID from the saves array
+        const newSaves = updatedFeeds[activeFeed].saves.filter(
+          (itm) => itm.user !== currentUser._id
+        );
+
+        updatedFeeds[activeFeed].saves = newSaves;
+        updatedFeeds[activeFeed].checkIfSaved = false;
+
+        return updatedFeeds;
+      });
+
+      await axios.patch(backendUrl + "/api/v1/feeds/" + itemId + "/save", {
+        unSaveFor: currentUser._id,
+      });
+    } catch (error) {
+      console.log(error.response.data.message);
+    }
+  };
+
+  // save functions from scroll gallery
+
+  // define rerenders from redux
+  const saveRerenderFromScrollGallery = useSelector(
+    (state) => state.storeRerenders.saveFromScrollGallery
+  );
+  const unsaveRerenderFromScrollGallery = useSelector(
+    (state) => state.storeRerenders.unsaveFromScrollGallery
+  );
+
+  async function SaveFromScrollGallery() {
+    setUserFeeds((prevFeeds) => {
+      // Clone the array to prevent direct state mutation
+      const updatedFeeds = [...prevFeeds];
+
+      // Find the index of the feed by its _id
+      const targetFeedIndex = updatedFeeds.findIndex(
+        (feed) => feed._id === activeFeedFromScrollGallery
+      );
+
+      // If the feed isn't found, return the original state
+      if (targetFeedIndex === -1) return prevFeeds;
+
+      // Check if the array already contains the user's ID
+      if (!updatedFeeds[targetFeedIndex].saves.includes(currentUser._id)) {
+        updatedFeeds[targetFeedIndex].saves = [
+          ...updatedFeeds[targetFeedIndex].saves,
+          currentUser._id,
+        ];
+      }
+
+      // Update the checkIfSaved property
+      updatedFeeds[targetFeedIndex] = {
+        ...updatedFeeds[targetFeedIndex],
+        checkIfSaved: true,
+      };
+
+      return updatedFeeds;
+    });
+  }
+
+  const saveRefFromScrollGallery = useRef(true);
+  useEffect(() => {
+    if (saveRefFromScrollGallery.current) {
+      saveRefFromScrollGallery.current = false;
+      return;
+    }
+    SaveFromScrollGallery();
+  }, [saveRerenderFromScrollGallery]);
+
+  //////////////////
+
+  const UnsaveFromScrollGallery = () => {
+    setUserFeeds((prevFeeds) => {
+      // Clone the prevFeeds to ensure no direct mutations
+      const updatedFeeds = [...prevFeeds];
+
+      // Find the feed based on its _id
+      const targetFeedIndex = updatedFeeds.findIndex(
+        (feed) => feed._id === activeFeedFromScrollGallery
+      );
+
+      if (targetFeedIndex === -1) return prevFeeds; // If feed not found, return the original state
+
+      // Remove the user's ID from the saves array
+      const newSaves = updatedFeeds[targetFeedIndex].saves.filter(
+        (id) => id !== currentUser._id
+      );
+
+      updatedFeeds[targetFeedIndex] = {
+        ...updatedFeeds[targetFeedIndex],
+        checkIfSaved: false,
+        saves: newSaves,
+      };
+
+      return updatedFeeds;
+    });
+  };
+
+  const unsaveRefFromGallery = useRef(true);
+  useEffect(() => {
+    if (unsaveRefFromGallery.current) {
+      unsaveRefFromGallery.current = false;
+      return;
+    }
+    UnsaveFromScrollGallery();
+  }, [unsaveRerenderFromScrollGallery]);
+
+  /**
    * Post
    */
 
@@ -361,22 +537,22 @@ export const Feed = (props) => {
    */
   // define file height
   let hght;
-  if (props.user.feed?.video) {
+  if (props.feed?.video) {
     let originalHeight =
-      props.user.feed.fileWidth >= props.user.feed.fileHeight
-        ? props.user.feed.fileWidth
-        : props.user.feed.fileHeight;
+      props.feed.fileWidth >= props.feed.fileHeight
+        ? props.feed.fileWidth
+        : props.feed.fileHeight;
     let originalWidth =
-      props.user.feed.fileWidth >= props.user.feed.fileHeight
-        ? props.user.feed.fileHeight
-        : props.user.feed.fileWidth;
+      props.feed.fileWidth >= props.feed.fileHeight
+        ? props.feed.fileHeight
+        : props.feed.fileWidth;
 
     let percented = originalWidth / SCREEN_WIDTH;
 
     hght = originalHeight / percented;
-  } else if (props.user.feed?.images[0]) {
-    let originalHeight = props.user.feed.fileHeight;
-    let originalWidth = props.user.feed.fileWidth;
+  } else if (props.feed?.images[0]) {
+    let originalHeight = props.feed.fileHeight;
+    let originalWidth = props.feed.fileWidth;
 
     let percented = originalWidth / SCREEN_WIDTH;
     hght = originalHeight / percented;
@@ -389,7 +565,7 @@ export const Feed = (props) => {
         backgroundColor: currentTheme.background,
       }}
     >
-      {props.user.feed?.fileFormat === "img" && (
+      {props.feed?.fileFormat === "img" && (
         <View
           style={{
             height: 70,
@@ -403,26 +579,24 @@ export const Feed = (props) => {
         >
           <TopSection
             notifications={props.from ? true : false}
-            user={props.user}
+            user={props.feed.owner}
             currentTheme={currentTheme}
             navigation={navigation}
             lang={lang}
             language={language}
-            createdAt={props.user.feed.createdAt}
-            fileFormat={props.user.feed?.fileFormat}
+            createdAt={props.feed.createdAt}
+            fileFormat={props.feed?.fileFormat}
           />
         </View>
       )}
-      {props.user.feed?.post && props.user.feed?.fileFormat === "img" && (
+      {props.feed?.post && props.feed?.fileFormat === "img" && (
         <View style={{ paddingLeft: 10 }}>
           <Post
-            post={post}
-            setPost={setPost}
             currentTheme={currentTheme}
             numLines={numLines}
             setNumLines={setNumLines}
-            fileFormat={props.user.feed?.fileFormat}
-            postItem={props.user.feed?.post}
+            fileFormat={props.feed?.fileFormat}
+            postItem={props.feed?.post}
           />
         </View>
       )}
@@ -442,7 +616,7 @@ export const Feed = (props) => {
           width: SCREEN_WIDTH,
         }}
       >
-        {props.user.feed?.images?.length > 1 && (
+        {props.feed?.images?.length > 1 && (
           <View
             style={{
               position: "absolute",
@@ -465,7 +639,7 @@ export const Feed = (props) => {
             />
           </View>
         )}
-        {props.user.feed?.fileFormat === "video" && (
+        {props.feed?.fileFormat === "video" && (
           <View
             style={{
               position: "absolute",
@@ -478,30 +652,28 @@ export const Feed = (props) => {
           >
             <TopSection
               notifications={props.from ? true : false}
-              user={props.user}
+              user={props.feed.owner}
               currentTheme={currentTheme}
               navigation={navigation}
               lang={lang}
               language={language}
-              createdAt={props.user.feed.createdAt}
-              fileFormat={props.user.feed?.fileFormat}
+              createdAt={props.feed.createdAt}
+              fileFormat={props.feed?.fileFormat}
             />
             <View style={{ marginTop: 10 }}>
-              {props.user.feed?.post && (
+              {props.feed?.post && (
                 <Post
-                  post={post}
-                  setPost={setPost}
                   currentTheme={currentTheme}
                   numLines={numLines}
                   setNumLines={setNumLines}
-                  fileFormat={props.user.feed?.fileFormat}
-                  postItem={props.user.feed?.post}
+                  fileFormat={props.feed?.fileFormat}
+                  postItem={props.feed?.post}
                 />
               )}
             </View>
           </View>
         )}
-        {props.user.feed?.fileFormat === "video" ? (
+        {props.feed?.fileFormat === "video" ? (
           <>
             {loadVideo && (
               <View
@@ -510,35 +682,37 @@ export const Feed = (props) => {
                   height: "100%",
                   backgroundColor: currentTheme.background2,
                   position: "absolute",
+                  zIndex: 1,
                   alignItems: "center",
                   justifyContent: "center",
+                  overflow: "hidden",
                 }}
               >
-                <ActivityIndicator color={currentTheme.pink} size="large" />
+                <Circle />
               </View>
             )}
 
             <CacheableVideo
               videoRef={videoRef}
+              key={props.feed.video}
               onPress={() =>
                 navigation.navigate("ScrollGallery", {
-                  user: props.user,
+                  user: props.feed.owner,
                   scrolableFeeds: userFeeds,
                   feedsLength: feedsLength,
                   page: props.page,
-                  post: post,
                 })
               }
               // delayLongPress={80}
               style={{
                 width: SCREEN_WIDTH,
                 height:
-                  props.user.feed.fileHeight > props.user.feed.fileWidth
+                  props.feed.fileHeight > props.feed.fileWidth
                     ? hght
-                    : props.user.feed.fileWidth,
+                    : props.feed.fileWidth,
               }}
               source={{
-                uri: props.user.feed.video,
+                uri: props.feed.video,
               }}
               rate={1.0}
               volume={1.0}
@@ -551,11 +725,10 @@ export const Feed = (props) => {
               onLoad={async (response) => {
                 let { status } =
                   await Location.requestForegroundPermissionsAsync();
+                // setTimeout(() => {
                 setLoadVideo(false);
+                // }, 200);
                 setTimeout(() => {
-                  if (props.setLoading) {
-                    props.setLoading(false);
-                  }
                   if (
                     props.x === props.feedsLength - 1 &&
                     status !== "denied"
@@ -580,7 +753,7 @@ export const Feed = (props) => {
               alignItems: "center",
             }}
           >
-            {props.user.feed?.images?.map((itm, x) => {
+            {props.feed?.images?.map((itm, x) => {
               return (
                 <Pressable
                   key={x}
@@ -597,7 +770,7 @@ export const Feed = (props) => {
                   }}
                   onPress={() => {
                     navigation.navigate("ScrollGallery", {
-                      user: props.user,
+                      user: props.feed.owner,
                       scrolableFeeds: userFeeds,
                       feedsLength: feedsLength,
                       page: props.page,
@@ -606,6 +779,27 @@ export const Feed = (props) => {
                     dispatch(setVideoVolume(true));
                   }}
                 >
+                  {loadImage && (
+                    <View
+                      style={{
+                        width: "100%",
+                        height:
+                          hght > 640 && definedDevice === "mobile"
+                            ? 642
+                            : hght > 640 && definedDevice !== "mobile"
+                            ? 902
+                            : hght + 2,
+                        backgroundColor: currentTheme.background2,
+                        position: "absolute",
+                        zIndex: 1,
+                        alignItems: "center",
+                        justifyContent: "center",
+                        overflow: "hidden",
+                      }}
+                    >
+                      <Circle />
+                    </View>
+                  )}
                   <ZoomableImage
                     key={itm.url}
                     style={{
@@ -625,12 +819,12 @@ export const Feed = (props) => {
                       cache: "reload",
                     }}
                     onLoad={async () => {
+                      // setTimeout(() => {
+                      setLoadImage(false);
+                      // }, 200);
                       let { status } =
                         await Location.requestForegroundPermissionsAsync();
                       setTimeout(() => {
-                        if (props.setLoading) {
-                          props.setLoading(false);
-                        }
                         if (
                           props.x + 1 === props.feedsLength - 1 &&
                           status !== "denied"
@@ -646,7 +840,7 @@ export const Feed = (props) => {
           </ScrollView>
         )}
 
-        {props.user.feed?.fileFormat === "video" && (
+        {props.feed?.fileFormat === "video" && (
           <Pressable
             onPress={(event) => event.stopPropagation()}
             name="bottom-section"
@@ -668,22 +862,26 @@ export const Feed = (props) => {
                 RemoveStar={RemoveStar}
                 SetStar={SetStar}
                 activeFeed={activeFeed}
-                user={props.user}
+                user={props.feed.owner}
                 feed={userFeeds[activeFeed]}
                 setVideoVolume={setVideoVolume}
                 volume={volume}
                 reviewsLength={userFeeds[activeFeed]?.reviewsLength}
                 checkIfStared={userFeeds[activeFeed]?.checkIfStared}
+                checkIfSaved={userFeeds[activeFeed]?.checkIfSaved}
                 starsLength={userFeeds[activeFeed]?.starsLength}
+                savesLength={userFeeds[activeFeed]?.saves?.length}
                 from="FeedCard"
                 GetUserFeeds={GetUserFeeds}
                 post={post}
+                SaveFeed={SaveFeed}
+                UnSaveFeed={UnSaveFeed}
               />
             )}
           </Pressable>
         )}
       </View>
-      {props.user.feed?.fileFormat === "img" && (
+      {props.feed?.fileFormat === "img" && (
         <Pressable
           onPress={(event) => event.stopPropagation()}
           name="bottom-section"
@@ -710,14 +908,18 @@ export const Feed = (props) => {
                 RemoveStar={RemoveStar}
                 SetStar={SetStar}
                 activeFeed={activeFeed}
-                user={props.user}
+                user={props.feed.owner}
                 feed={userFeeds[activeFeed]}
                 reviewsLength={userFeeds[activeFeed]?.reviewsLength}
                 checkIfStared={userFeeds[activeFeed]?.checkIfStared}
+                checkIfSaved={userFeeds[activeFeed]?.checkIfSaved}
                 starsLength={userFeeds[activeFeed]?.starsLength}
+                savesLength={userFeeds[activeFeed]?.saves?.length}
                 GetUserFeeds={GetUserFeeds}
                 from="FeedCard"
                 post={post}
+                SaveFeed={SaveFeed}
+                UnSaveFeed={UnSaveFeed}
               />
             )}
           </View>

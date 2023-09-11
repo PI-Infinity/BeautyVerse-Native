@@ -49,7 +49,7 @@ export const Contact = ({ targetUser }) => {
     <View style={styles.container}>
       {targetUser?.type !== "user" && (
         <TouchableOpacity
-          onPress={() => handleLinkPress(`tel:${targetUser.phone}`)}
+          onPress={() => handleLinkPress(`tel:${targetUser.phone.phone}`)}
           style={[
             styles.item,
             {
@@ -72,7 +72,7 @@ export const Contact = ({ targetUser }) => {
                     { color: currentTheme.font },
                   ]}
                 >
-                  {targetUser.phone}
+                  {targetUser.phone.phone}
                 </Text>
               </>
             )}
@@ -90,7 +90,7 @@ export const Contact = ({ targetUser }) => {
             {targetUser.media.whatsapp && (
               <TouchableOpacity
                 onPress={() => {
-                  handleLinkPress(`https://wa.me/${targetUser.phone}`);
+                  handleLinkPress(`https://wa.me/${targetUser.phone.phone}`);
                 }}
                 style={[styles.title, {}]}
               >
@@ -104,7 +104,7 @@ export const Contact = ({ targetUser }) => {
             {targetUser.media.telegram && (
               <TouchableOpacity
                 onPress={() =>
-                  handleLinkPress(`https://t.me/${targetUser.phone}`)
+                  handleLinkPress(`https://t.me/${targetUser.phone.phone}`)
                 }
                 style={[styles.title, {}]}
               >
@@ -426,7 +426,6 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
     gap: 5,
-    paddingTop: 20,
     paddingBottom: 70,
   },
   item: {

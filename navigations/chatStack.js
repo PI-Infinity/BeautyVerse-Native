@@ -1,33 +1,29 @@
+import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import {
-  createStackNavigator,
   CardStyleInterpolators,
+  createStackNavigator,
 } from "@react-navigation/stack";
+import React from "react";
 import {
-  View,
-  TouchableOpacity,
-  Text,
   Dimensions,
   Pressable,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useDispatch, useSelector } from "react-redux";
+import Product from "../Marketplace/screens/product";
+import { CacheableImage } from "../components/cacheableImage";
+import { Language } from "../context/language";
+import { darkTheme, lightTheme } from "../context/theme";
+import { setOpenAddChat } from "../redux/chat";
 import { Chat } from "../screens/chat/chat";
 import { Room } from "../screens/chat/room";
-import { FontAwesome } from "@expo/vector-icons";
-import React, { useState, useEffect } from "react";
-import { useSelector, useDispatch } from "react-redux";
-import { setOpenAddChat } from "../redux/chat";
-import { CacheableImage } from "../components/cacheableImage";
-import { MaterialIcons } from "@expo/vector-icons";
-import { Language } from "../context/language";
-import { ScrollGallery } from "../screens/user/scrollGallery";
-import { User } from "../screens/user/user";
-import { lightTheme, darkTheme } from "../context/theme";
-import { SendOrder } from "../screens/orders/sendOrder";
-import { SentOrders } from "../screens/sentOrders/sentOrders";
-import axios from "axios";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { FeedItem } from "../screens/feedScreen";
-import Product from "../Marketplace/screens/product";
+import { SendBooking } from "../screens/bookings/sendBooking";
+import { SentBookings } from "../screens/sentBookings/sentBookings";
+import { User } from "../screens/user/user";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -228,7 +224,7 @@ export function ChatStack({ navigation }) {
       <Stack.Screen
         name="User"
         component={User}
-        options={({ route }) => ({
+        options={({ route, navigation }) => ({
           headerBackTitleVisible: false,
           headerLeft: () => (
             <TouchableOpacity
@@ -281,11 +277,12 @@ export function ChatStack({ navigation }) {
                     currentUser.type !== "beautycenter" &&
                     currentUser?.type !== "shop" &&
                     route.params?.user.type !== "shop" &&
-                    route.params?.user.type !== "user" && (
+                    route.params?.user.type !== "user" &&
+                    route.params.user.subscription.status === "active" && (
                       <TouchableOpacity
                         acitveOpacity={0.3}
                         onPress={() =>
-                          navigation.navigate("Send Order", {
+                          navigation.navigate("Send Booking", {
                             user: route.params.user,
                           })
                         }
@@ -323,7 +320,7 @@ export function ChatStack({ navigation }) {
       <Stack.Screen
         name="UserVisit"
         component={User}
-        options={({ route }) => ({
+        options={({ route, navigation }) => ({
           headerBackTitleVisible: false,
           headerLeft: () => (
             <TouchableOpacity
@@ -376,11 +373,12 @@ export function ChatStack({ navigation }) {
                     currentUser.type !== "beautycenter" &&
                     currentUser?.type !== "shop" &&
                     route.params?.user.type !== "shop" &&
-                    route.params?.user.type !== "user" && (
+                    route.params?.user.type !== "user" &&
+                    route.params.user.subscription.status === "active" && (
                       <TouchableOpacity
                         acitveOpacity={0.3}
                         onPress={() =>
-                          navigation.navigate("Send Order", {
+                          navigation.navigate("Send Booking", {
                             user: route.params.user,
                           })
                         }
@@ -419,7 +417,7 @@ export function ChatStack({ navigation }) {
       <Stack.Screen
         name="UserFeed"
         component={FeedItem}
-        options={({ route }) => ({
+        options={({ route, navigation }) => ({
           headerBackTitleVisible: false,
           headerLeft: () => (
             <TouchableOpacity
@@ -455,9 +453,9 @@ export function ChatStack({ navigation }) {
         })}
       />
       <Stack.Screen
-        name="Send Order"
-        component={SendOrder}
-        options={({ route }) => ({
+        name="Send Booking"
+        component={SendBooking}
+        options={({ route, navigation }) => ({
           headerBackTitleVisible: false,
           headerLeft: () => (
             <TouchableOpacity
@@ -492,9 +490,9 @@ export function ChatStack({ navigation }) {
         })}
       />
       <Stack.Screen
-        name="Sent Orders"
-        component={SentOrders}
-        options={({ route }) => ({
+        name="Sent Bookings"
+        component={SentBookings}
+        options={({ route, navigation }) => ({
           headerBackTitleVisible: false,
           headerLeft: () => (
             <TouchableOpacity
@@ -532,7 +530,7 @@ export function ChatStack({ navigation }) {
       <Stack.Screen
         name="Product"
         component={Product}
-        options={({ route }) => ({
+        options={({ route, navigation }) => ({
           headerBackTitleVisible: false,
           headerLeft: () => (
             <TouchableOpacity
@@ -545,6 +543,30 @@ export function ChatStack({ navigation }) {
                 color={currentTheme.pink}
                 size={22}
               />
+            </TouchableOpacity>
+          ),
+          headerRight: () => (
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() =>
+                navigation.navigate("User", {
+                  user: route.params.product.owner,
+                })
+              }
+              style={{ padding: 8, marginRight: 8 }}
+            >
+              {route.params.product.owner?.cover ? (
+                <CacheableImage
+                  source={{ uri: route.params.product.owner?.cover }}
+                  style={{ width: 25, height: 25, borderRadius: 50 }}
+                />
+              ) : (
+                <FontAwesome
+                  name="user"
+                  size={20}
+                  color={currentTheme.disabled}
+                />
+              )}
             </TouchableOpacity>
           ),
           title: route.params.product.title,

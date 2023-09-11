@@ -9,6 +9,8 @@ PODS:
   - EXAV (13.2.1):
     - ExpoModulesCore
     - ReactCommon/turbomodule/core
+  - EXCamera (13.2.1):
+    - ExpoModulesCore
   - EXConstants (14.2.1):
     - ExpoModulesCore
   - EXDocumentPicker (11.2.2):
@@ -457,6 +459,7 @@ DEPENDENCIES:
   - EASClient (from `../node_modules/expo-eas-client/ios`)
   - EXApplication (from `../node_modules/expo-application/ios`)
   - EXAV (from `../node_modules/expo-av/ios`)
+  - EXCamera (from `../node_modules/expo-camera/ios`)
   - EXConstants (from `../node_modules/expo-constants/ios`)
   - EXDocumentPicker (from `../node_modules/expo-document-picker/ios`)
   - EXFileSystem (from `../node_modules/expo-file-system/ios`)
@@ -548,6 +551,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/expo-application/ios"
   EXAV:
     :path: "../node_modules/expo-av/ios"
+  EXCamera:
+    :path: "../node_modules/expo-camera/ios"
   EXConstants:
     :path: "../node_modules/expo-constants/ios"
   EXDocumentPicker:
@@ -698,6 +703,7 @@ SPEC CHECKSUMS:
   EASClient: 950674e1098ebc09c4c2cf064a61e42e84d9d4c6
   EXApplication: d8f53a7eee90a870a75656280e8d4b85726ea903
   EXAV: f1f69397ecdcf44cfacd4ff5d338cd1b96891e87
+  EXCamera: a323a5942b5e7fc8349e17d728e91c18840ad561
   EXConstants: f348da07e21b23d2b085e270d7b74f282df1a7d9
   EXDocumentPicker: a2e52acbb3204af80b6e3ffd3deb2cb25d052593
   EXFileSystem: 844e86ca9b5375486ecc4ef06d3838d5597d895d

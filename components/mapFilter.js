@@ -356,7 +356,9 @@ export const MapFilter = ({ users }) => {
                 </View>
               )}
               <Pressable
-                onPress={() => handleLinkPress(`tel:${selectedUser?.phone}`)}
+                onPress={() =>
+                  handleLinkPress(`tel:${selectedUser?.phone.phone}`)
+                }
                 style={{
                   flexDirection: "row",
                   gap: 8,
@@ -378,7 +380,7 @@ export const MapFilter = ({ users }) => {
                     })
                   }
                 >
-                  {selectedUser?.phone}
+                  {selectedUser?.phone.phone}
                 </Text>
               </Pressable>
               <Pressable
@@ -444,7 +446,10 @@ export const MapFilter = ({ users }) => {
                 style={{
                   flexDirection: "row",
                   alignItems: "center",
-                  justifyContent: "space-between",
+                  justifyContent:
+                    selectedUser?.subscription?.status === "active"
+                      ? "space-between"
+                      : "center",
                   width: "100%",
                 }}
               >
@@ -483,36 +488,40 @@ export const MapFilter = ({ users }) => {
                     Chat
                   </Text>
                 </Pressable>
-                <Pressable
-                  onPress={() => {
-                    navigation.navigate("Send Order", { user: selectedUser });
-                    setModalVisible(false);
-                  }}
-                  style={{
-                    backgroundColor: "red",
-                    padding: 7.5,
-                    borderRadius: 50,
-                    width: "47%",
-                    alignItems: "center",
-                    backgroundColor: currentTheme.background2,
-                    flexDirection: "row",
-                    justifyContent: "center",
-                    borderWidth: 1,
-                    borderColor: currentTheme.line,
-                    gap: 8,
-                  }}
-                >
-                  <FontAwesome
-                    name="calendar"
-                    size={16}
-                    color={currentTheme.pink}
-                  />
-                  <Text
-                    style={{ color: currentTheme.font, letterSpacing: 0.3 }}
+                {selectedUser?.subscription?.status === "active" && (
+                  <Pressable
+                    onPress={() => {
+                      navigation.navigate("Send Booking", {
+                        user: selectedUser,
+                      });
+                      setModalVisible(false);
+                    }}
+                    style={{
+                      backgroundColor: "red",
+                      padding: 7.5,
+                      borderRadius: 50,
+                      width: "47%",
+                      alignItems: "center",
+                      backgroundColor: currentTheme.background2,
+                      flexDirection: "row",
+                      justifyContent: "center",
+                      borderWidth: 1,
+                      borderColor: currentTheme.line,
+                      gap: 8,
+                    }}
                   >
-                    Schedule
-                  </Text>
-                </Pressable>
+                    <FontAwesome
+                      name="calendar"
+                      size={16}
+                      color={currentTheme.pink}
+                    />
+                    <Text
+                      style={{ color: currentTheme.font, letterSpacing: 0.3 }}
+                    >
+                      Schedule
+                    </Text>
+                  </Pressable>
+                )}
               </View>
             )}
           </View>
@@ -540,7 +549,7 @@ const styles = StyleSheet.create({
       width: 0,
       height: 2,
     },
-    shadowOpacity: 0.25,
+    shadowOpacity: 0.35,
     shadowRadius: 4,
     elevation: 5,
   },
@@ -557,46 +566,96 @@ const MarkerItem = ({ item, currentTheme }) => {
   }, [item]);
 
   return (
-    <View
-      style={{
-        width: 30,
-        height: 30,
-        borderRadius: 50,
-        borderWidth: 2,
-        borderColor: currentTheme.pink,
-        backgroundColor: currentTheme.background2,
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
-      {item?.cover.length > 0 ? (
-        <View
+    <>
+      {item?.rating ? (
+        <Pressable
           style={{
-            width: 30,
-            height: 30,
-            borderRadius: 50,
-            overflow: "hidden",
+            alignItems: "center",
+            flexDirection: "row",
+            justifyContent: "center",
           }}
         >
-          {loading && <Circle />}
-          <CacheableImage
-            style={{
-              width: 30,
-              height: 30,
-              borderRadius: 50,
-              borderWidth: 2,
-              borderColor: currentTheme.pink,
-            }}
-            onLoad={() => setLoading(false)}
-            key={item?._id}
-            source={{
-              uri: item?.cover,
-              cache: "reload",
-            }}
+          <FontAwesome
+            style={[
+              styles.stars,
+              {
+                color: currentTheme.pink,
+                fontSize: 35,
+              },
+            ]}
+            name="heart"
           />
-        </View>
+          <Text
+            style={[
+              styles.stars,
+              {
+                position: "absolute",
+                top: 10,
+                color: currentTheme.font,
+                fontSize: 10,
+                fontWeight: "bold",
+              },
+            ]}
+          >
+            {item?.rating.toFixed(1)}
+          </Text>
+        </Pressable>
       ) : (
-        <FontAwesome name="user" size={16} color={currentTheme.pink} />
+        <View
+          style={{
+            width: 35,
+            height: 35,
+            borderRadius: 50,
+            borderWidth: 2,
+            borderColor: currentTheme.pink,
+            backgroundColor: currentTheme.background2,
+            flexDirection: "row",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          {item?.cover.length > 0 ? (
+            <View
+              style={{
+                width: 35,
+                height: 35,
+                borderRadius: 50,
+                overflow: "hidden",
+              }}
+            >
+              {loading && (
+                <View
+                  style={{
+                    position: "absolute",
+                    zIndex: 1,
+                    width: 35,
+                    height: 35,
+                    borderRadius: 50,
+                  }}
+                >
+                  <Circle />
+                </View>
+              )}
+              <CacheableImage
+                style={{
+                  width: 35,
+                  height: 35,
+                  borderRadius: 50,
+                  borderWidth: 2,
+                  borderColor: currentTheme.pink,
+                }}
+                onLoad={() => setLoading(false)}
+                key={item?._id}
+                source={{
+                  uri: item?.cover,
+                  cache: "reload",
+                }}
+              />
+            </View>
+          ) : (
+            <FontAwesome name="user" size={16} color={currentTheme.pink} />
+          )}
+        </View>
       )}
       {item?.online && (
         <View
@@ -614,6 +673,6 @@ const MarkerItem = ({ item, currentTheme }) => {
           }}
         ></View>
       )}
-    </View>
+    </>
   );
 };

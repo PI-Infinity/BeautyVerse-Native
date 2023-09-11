@@ -6,8 +6,10 @@ import {
   TouchableOpacity,
   View,
   Dimensions,
+  Animated,
+  ActivityIndicator,
 } from "react-native";
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Language } from "../../context/language";
 import { darkTheme, lightTheme } from "../../context/theme";
 import { useSelector, useDispatch } from "react-redux";
@@ -20,10 +22,11 @@ import {
 } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import CoverSlider from "../../Marketplace/components/coverSlider";
+import { setRerenderProducts } from "../../redux/Marketplace";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
-const Main = () => {
+const Main = ({ setScrollY, scrollY }) => {
   // language state
   const language = Language();
 
@@ -43,49 +46,145 @@ const Main = () => {
     (state) => state.storeMarketplace.randomProductsList
   );
 
-  // const latestList = useSelector((state) => state.storeMarketplace.latestList);
-  // const bestSellers = useSelector(
-  //   (state) => state.storeMarketplace.bestSellersList
-  // );
-
   // search
   const [search, setSearch] = useState("");
 
-  return (
-    <ScrollView
-      contentContainerStyle={{ gap: 0, paddingBottom: 30 }}
-      showsVerticalScrollIndicator={false}
-      bounces={Platform.OS === "ios" ? false : undefined}
-      overScrollMode={Platform.OS === "ios" ? "never" : "always"}
-    >
-      <CoverSlider />
-      {/*  */}
-      <ListComponent
-        list={randomList}
-        navigation={navigation}
-        currentTheme={currentTheme}
-        title={language?.language?.Marketplace?.marketplace?.popularProducts}
-      />
+  // on scroll getting new data
+  const scrollRef = useRef();
 
-      {/* <ListComponent
+  const onScroll = (event) => {
+    const offsetY = event.nativeEvent.contentOffset.y;
+    const contentHeight = event.nativeEvent.contentSize.height;
+    const layoutHeight = event.nativeEvent.layoutMeasurement.height;
+    setScrollY(offsetY);
+  };
+
+  const zoomToTop = useSelector((state) => state.storeApp.zoomToTop);
+
+  let firstRend = useRef();
+
+  useEffect(() => {
+    if (firstRend.current) {
+      firstRend.current = false;
+      return;
+    }
+
+    if (scrollY > 0) {
+      scrollRef.current.scrollTo({ y: 0, animated: true });
+    }
+  }, [zoomToTop]);
+
+  // useEffect for rerenderCurrentUser
+  const [refresh, setRefresh] = useState(false);
+  const rerenderProducts = useSelector(
+    (state) => state.storeMarketplace.rerenderProducts
+  );
+
+  const marketplaceClearFirstRender = useRef(true);
+
+  useEffect(() => {
+    if (marketplaceClearFirstRender.current) {
+      marketplaceClearFirstRender.current = false;
+      return;
+    }
+    openLoading();
+    const timer = setTimeout(() => {
+      closeLoading();
+    }, 1300);
+    return () => clearTimeout(timer); // clear the timer if the component is unmounted
+  }, [rerenderProducts]);
+
+  // refresh inidcator animation
+  const opacityValue = useRef(new Animated.Value(0)).current;
+  const transformScroll = useRef(new Animated.Value(0)).current;
+
+  const openLoading = () => {
+    Animated.parallel([
+      Animated.timing(opacityValue, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.timing(transformScroll, {
+        toValue: 60,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+  const closeLoading = () => {
+    Animated.parallel([
+      Animated.timing(opacityValue, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.timing(transformScroll, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
+  return (
+    <>
+      <Animated.View
+        style={{
+          opacity: opacityValue,
+          transform: [{ scale: 1.2 }],
+          alignItems: "center",
+          width: "100%",
+        }}
+      >
+        <ActivityIndicator
+          color={currentTheme.pink}
+          style={{ position: "absolute", top: 15, zIndex: -1 }}
+        />
+      </Animated.View>
+      <Animated.ScrollView
+        contentContainerStyle={{ gap: 0, paddingBottom: 30 }}
+        showsVerticalScrollIndicator={false}
+        bounces={Platform.OS === "ios" ? false : undefined}
+        overScrollMode={Platform.OS === "ios" ? "never" : "always"}
+        onScroll={onScroll}
+        scrollEventThrottle={16}
+        ref={scrollRef}
+        style={{
+          flex: 1,
+          transform: [{ translateY: transformScroll }],
+          backgroundColor: currentTheme.background,
+        }}
+      >
+        <CoverSlider />
+        {/*  */}
+        <ListComponent
+          list={randomList}
+          navigation={navigation}
+          currentTheme={currentTheme}
+          title={language?.language?.Marketplace?.marketplace?.popularProducts}
+        />
+
+        {/* <ListComponent
         list={randomList}
         navigation={navigation}
         currentTheme={currentTheme}
         title="Popular"
       /> */}
-      {/* <ListComponent
+        {/* <ListComponent
         list={latestList}
         navigation={navigation}
         currentTheme={currentTheme}
         title="Latest"
       /> */}
-      {/* <ListComponent
+        {/* <ListComponent
         list={randomList}
         navigation={navigation}
         currentTheme={currentTheme}
         title="Last Solds"
       /> */}
-    </ScrollView>
+      </Animated.ScrollView>
+    </>
   );
 };
 

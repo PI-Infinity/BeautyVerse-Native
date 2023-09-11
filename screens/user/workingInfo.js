@@ -104,33 +104,13 @@ export const WorkingInfo = ({ targetUser, navigation }) => {
           );
         })
       ) : (
-        <>
-          {targetUser._id === currentUser._id ? (
-            <Pressable
-              onPress={() => navigation.navigate("Working info")}
-              style={{
-                width: "30%",
-                height: 35,
-                borderRadius: 10,
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Ionicons name="add-circle" color={currentTheme.pink} size={30} />
-            </Pressable>
-          ) : (
-            <View>
-              <Text
-                style={{ color: currentTheme.disabled, letterSpacing: 0.2 }}
-              >
-                Not found
-              </Text>
-            </View>
-          )}
-        </>
+        <View>
+          <Text style={{ color: currentTheme.disabled, letterSpacing: 0.2 }}>
+            Not found
+          </Text>
+        </View>
       )}
-      {(targetUser?.experience?.length > 0 ||
-        targetUser._id === currentUser._id) && (
+      {targetUser?.experience?.length > 0 && (
         <>
           <Text
             style={{
@@ -143,40 +123,26 @@ export const WorkingInfo = ({ targetUser, navigation }) => {
           >
             Experience
           </Text>
-          {targetUser?.experience?.length > 0 ? (
-            <View
+
+          <View
+            style={{
+              width: "90%",
+              backgroundColor: currentTheme.background2,
+              padding: 10,
+              paddingHorizontal: 15,
+              borderRadius: 5,
+            }}
+          >
+            <Text
               style={{
-                width: "90%",
-                backgroundColor: currentTheme.background2,
-                padding: 10,
-                paddingHorizontal: 15,
-                borderRadius: 5,
+                color: currentTheme.font,
+                lineHeight: 22,
+                letterSpacing: 0.2,
               }}
             >
-              <Text
-                style={{
-                  color: currentTheme.font,
-                  lineHeight: 22,
-                  letterSpacing: 0.2,
-                }}
-              >
-                {targetUser?.experience}
-              </Text>
-            </View>
-          ) : (
-            <Pressable
-              onPress={() => navigation.navigate("Working info")}
-              style={{
-                width: "30%",
-                height: 35,
-                borderRadius: 10,
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Ionicons name="add-circle" color={currentTheme.pink} size={30} />
-            </Pressable>
-          )}
+              {targetUser?.experience}
+            </Text>
+          </View>
         </>
       )}
     </View>

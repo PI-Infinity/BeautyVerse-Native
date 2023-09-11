@@ -132,7 +132,9 @@ const Charts = ({ route }) => {
           activeOpacity={0.3}
           onPress={() => setActiveChart(1)}
         >
-          <Text style={[styles.itemTitle, { color: "#ccc" }]}>Last month</Text>
+          <Text style={[styles.itemTitle, { color: currentTheme.font }]}>
+            Last month
+          </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -149,7 +151,9 @@ const Charts = ({ route }) => {
           activeOpacity={0.3}
           onPress={() => setActiveChart(2)}
         >
-          <Text style={[styles.itemTitle, { color: "#ccc" }]}>Last year</Text>
+          <Text style={[styles.itemTitle, { color: currentTheme.font }]}>
+            Last year
+          </Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={{
@@ -165,7 +169,9 @@ const Charts = ({ route }) => {
           activeOpacity={0.3}
           onPress={() => setActiveChart(3)}
         >
-          <Text style={[styles.itemTitle, { color: "#ccc" }]}>Annually</Text>
+          <Text style={[styles.itemTitle, { color: currentTheme.font }]}>
+            Annually
+          </Text>
         </TouchableOpacity>
       </ScrollView>
       <View>{chart}</View>
@@ -227,7 +233,7 @@ const Chart = ({ data, title, x, initial }) => {
                 <View key={index + 1} style={{ gap: 5, alignItems: "center" }}>
                   <View
                     style={{
-                      minWidth: 20,
+                      minWidth: 30,
                       height: 15 + item[x] * 0.2,
                       borderRadius: 5,
                       backgroundColor: currentTheme.pink,

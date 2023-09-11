@@ -57,21 +57,28 @@ export const Settings = ({ navigation }) => {
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
 
+  // backend url
+  const backendUrl = useSelector((state) => state.storeApp.backendUrl);
+
   /**
    * Logout function
    */
   const Logout = async () => {
     dispatch(setLogoutLoading(true));
-    await AsyncStorage.removeItem("Beautyverse:currentUser");
-    dispatch(setCurrentUser(null));
-    dispatch(setRerenderCurrentUser());
-    setTimeout(() => {
-      dispatch(setLogoutLoading(false));
-    }, 1000);
+    try {
+      await axios.patch(backendUrl + "/api/v1/users/" + currentUser._id, {
+        pushNotificationToken: "null",
+      });
+      await AsyncStorage.removeItem("Beautyverse:currentUser");
+      dispatch(setCurrentUser(null));
+      dispatch(setRerenderCurrentUser());
+      setTimeout(() => {
+        dispatch(setLogoutLoading(false));
+      }, 1000);
+    } catch (error) {
+      console.log(error.response.data.message);
+    }
   };
-
-  // backend url
-  const backendUrl = useSelector((state) => state.storeApp.backendUrl);
 
   /**
    * change user active in feeds and cards or not
@@ -87,8 +94,8 @@ export const Settings = ({ navigation }) => {
     }
   };
 
-  // define new sent orders
-  const newSentOrders = useSelector((state) => state.storeSentOrders.new);
+  // define new sent bookings
+  const newSentBookings = useSelector((state) => state.storeSentBookings.new);
 
   return (
     <ScrollView
@@ -108,7 +115,7 @@ export const Settings = ({ navigation }) => {
       {currentUser?.type.toLowerCase() === "specialist" && (
         <TouchableOpacity
           activeOpacity={0.5}
-          onPress={() => navigation.navigate("Sent Orders")}
+          onPress={() => navigation.navigate("Sent Bookings")}
           style={[
             styles.item,
             {
@@ -127,7 +134,7 @@ export const Settings = ({ navigation }) => {
             >
               {language?.language?.User?.userPage?.sentBookings}
             </Text>
-            {newSentOrders > 0 && (
+            {newSentBookings > 0 && (
               <View
                 style={{
                   width: "auto",
@@ -140,7 +147,7 @@ export const Settings = ({ navigation }) => {
                 }}
               >
                 <Text style={{ color: "#fff", fontSize: 10 }}>
-                  {newSentOrders}
+                  {newSentBookings}
                 </Text>
               </View>
             )}
@@ -288,6 +295,59 @@ export const Settings = ({ navigation }) => {
           />
         </TouchableOpacity>
       )}
+      <TouchableOpacity
+        activeOpacity={0.5}
+        onPress={() => navigation.navigate("SavedItems")}
+        style={[
+          styles.item,
+          {
+            borderWidth: 1,
+            borderColor: currentTheme.line,
+            borderRadius: 10,
+          },
+        ]}
+      >
+        <Text
+          style={[
+            styles.sectionTitle,
+            { color: currentTheme.font, letterSpacing: 0.2 },
+          ]}
+        >
+          {language?.language?.User?.userPage?.savedItems}
+        </Text>
+        <MaterialIcons
+          name={"arrow-right"}
+          color={currentTheme.pink}
+          size={18}
+        />
+      </TouchableOpacity>
+      <TouchableOpacity
+        activeOpacity={0.5}
+        onPress={() => navigation.navigate("Support")}
+        style={[
+          styles.item,
+          {
+            borderWidth: 1,
+            borderColor: currentTheme.line,
+            borderRadius: 10,
+          },
+        ]}
+      >
+        <Text
+          style={[
+            styles.sectionTitle,
+            { color: currentTheme.font, letterSpacing: 0.2 },
+          ]}
+        >
+          {language?.language?.User?.userPage?.support}
+        </Text>
+        <MaterialIcons
+          name={"arrow-right"}
+          color={currentTheme.pink}
+          size={18}
+        />
+      </TouchableOpacity>
+
       <TouchableOpacity
         activeOpacity={0.5}
         onPress={() => setOpenSecurity(!openSecurity)}
@@ -441,8 +501,8 @@ export const Settings = ({ navigation }) => {
               marginBottom: 10,
             },
           ]}
-        > */}
-      {/* <View style={{ alignItems: "center", gap: 7, flexDirection: "row" }}>
+        >
+          <View style={{ alignItems: "center", gap: 7, flexDirection: "row" }}>
             <MaterialIcons
               name="verified"
               size={16}
@@ -460,15 +520,17 @@ export const Settings = ({ navigation }) => {
             >
               {language?.language?.User?.userPage?.verification}
             </Text>
-          </View> */}
+          </View>
 
-      {/* <Pressable
+          <Pressable
             onPress={() => navigation.navigate("Prices", { from: "Settings" })}
             style={{
               alignItems: "center",
               gap: 0,
               flexDirection: "row",
-              borderWidth: 1, borderColor: currentTheme.line, borderRadius: 10,
+              borderWidth: 1,
+              borderColor: currentTheme.line,
+              borderRadius: 10,
               borderRadius: 50,
               paddingHorizontal: 10,
               paddingVertical: 5,
@@ -481,11 +543,11 @@ export const Settings = ({ navigation }) => {
               ]}
             >
               {currentUser?.subscription.status === "active"
-                ? "Cancel"
-                : "Activation"}
+                ? language.language.Prices.prices.cancel
+                : language.language.Prices.prices.activation}
             </Text>
-          </Pressable> */}
-      {/* </View>
+          </Pressable>
+        </View>
       )} */}
       {/* <View style={[styles.item, { backgroundColor: "rgba(0,0,0,0)" }]}>
         <Text

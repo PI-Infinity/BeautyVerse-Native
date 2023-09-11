@@ -51,7 +51,7 @@ const List = ({ route }) => {
     // Helper function to merge two arrays while ensuring uniqueness based on _id
     try {
       const response = await axios.get(
-        backendUrl + "/api/v1/marketplace" + "?page=" + parseInt(page + 1)
+        backendUrl + "/api/v1/marketplace" + "?page=" + (page + 1)
       );
       if (response.data.data.products.random) {
         const newProducts = response.data.data.products.random;

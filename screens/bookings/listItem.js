@@ -19,8 +19,8 @@ import { CacheableImage } from "../../components/cacheableImage";
 import DeleteConfirm from "../../components/confirmDialog";
 import { useSocket } from "../../context/socketContext";
 import { ProceduresOptions } from "../../datas/registerDatas";
-import { setRerenderOrders } from "../../redux/rerenders";
-import { StatusPopup } from "../../screens/orders/statusPopup";
+import { setRerenderBookings } from "../../redux/rerenders";
+import { StatusPopup } from "../../screens/bookings/statusPopup";
 import { Language } from "../../context/language";
 import { useNavigation } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -59,15 +59,19 @@ export const ListItem = ({ item, currentUser, currentTheme, setLoader }) => {
   const backendUrl = useSelector((state) => state.storeApp.backendUrl);
 
   /**
-   * Delete order
+   * Delete booking
    */
-  const DeleteOrder = async () => {
+  const DeleteBooking = async () => {
     try {
       setLoader(true);
       await axios.delete(
-        backendUrl + "/api/v1/users/" + currentUser._id + "/orders/" + item._id
+        backendUrl +
+          "/api/v1/bookings/booking/" +
+          item.bookingNumber +
+          "?user=" +
+          currentUser._id
       );
-      dispatch(setRerenderOrders());
+      dispatch(setRerenderBookings());
       setTimeout(() => {
         setLoader(false);
       }, 200);
@@ -76,47 +80,39 @@ export const ListItem = ({ item, currentUser, currentTheme, setLoader }) => {
     }
   };
   // change status
-  const UpdateOrder = async (val) => {
+  const UpdateBooking = async (body) => {
     try {
       await axios.patch(
-        backendUrl +
-          "/api/v1/users/" +
-          currentUser._id +
-          "/orders/" +
-          item.orderNumber,
-        {
-          status: val,
-        }
+        backendUrl + "/api/v1/bookings/booking/" + item.bookingNumber,
+        body
       );
-      await axios.patch(
-        backendUrl +
-          "/api/v1/users/" +
-          item.user._id +
-          "/sentorders/" +
-          item.orderNumber,
-        {
-          status: val,
+      if (item.client?.pushNotificationToken) {
+        if (body?.status.client) {
+          await sendNotification(
+            item.client?.pushNotificationToken,
+            currentUser.name,
+            "has changed booking status to - " + body.status.client,
+            { type: "booking", status: body.status.client }
+          );
+        } else {
+          await sendNotification(
+            item.client?.pushNotificationToken,
+            currentUser.name,
+            "has sent you a new status date - " + body.date,
+            { type: "booking", date: body.date }
+          );
         }
-      );
-      if (item.user?.pushNotificationToken) {
-        await sendNotification(
-          item.user?.pushNotificationToken,
-          currentUser.name,
-          "has changed order status to - " + val,
-          { type: "order", status: val }
-        );
+        socket.emit("UpdateBookings", {
+          targetId: item.client?._id,
+        });
       }
-      socket.emit("updateOrders", {
-        targetId: item.user?._id,
-      });
-      dispatch(setRerenderOrders());
     } catch (error) {
       console.log(error.response.data.message);
     }
   };
 
   // status option
-  const [selectedItem, setSelectedItem] = useState(item.status);
+  const [selectedItem, setSelectedItem] = useState(item.status.seller);
   const [openStatusOption, setOpenStatusOption] = useState(false);
 
   // defines beautyverse procedures list
@@ -150,24 +146,24 @@ export const ListItem = ({ item, currentUser, currentTheme, setLoader }) => {
   const rooms = useSelector((state) => state.storeChat.rooms);
 
   let chatDefined =
-    currentUser._id !== item.user?._id &&
+    currentUser._id !== item.client._id &&
     rooms.find(
       (r) =>
         (r.members.member1 === currentUser._id ||
-          r.members.member1 === item.user?._id) &&
+          r.members.member1 === item.client._id) &&
         (r.members.member2 === currentUser._id ||
-          r.members.member2 === item.user?._id)
+          r.members.member2 === item.client._id)
     );
 
   // get chat room
   const GetNewChatRoom = async () => {
     let newChat = {
-      room: currentUser?._id + item.user?._id,
+      room: currentUser?._id + item.client._id,
       members: {
         member1: currentUser._id,
-        member2: item.user?._id,
-        member2Cover: item.user?.cover,
-        member2Name: item.user?.name,
+        member2: item.client._id,
+        member2Cover: item.client.cover,
+        member2Name: item.client.name,
       },
       lastMessage: "",
       lastSender: "",
@@ -177,13 +173,13 @@ export const ListItem = ({ item, currentUser, currentTheme, setLoader }) => {
     try {
       navigation.navigate("Room", {
         newChat,
-        user: item.user,
+        user: item.client,
       });
       const response = await axios.post(backendUrl + "/api/v1/chats/", {
-        room: currentUser?._id + item.user?._id,
+        room: currentUser?._id + item.client._id,
         members: {
           member1: currentUser._id,
-          member2: item.user?._id,
+          member2: item.client._id,
         },
         lastMessage: "",
         lastSender: "",
@@ -221,7 +217,7 @@ export const ListItem = ({ item, currentUser, currentTheme, setLoader }) => {
     try {
       dispatch(setCurrentChat(Room));
       navigation.navigate("Room", {
-        user: item?.user,
+        user: item?.client,
         screenHeight: screenHeight,
       });
       if (Room.lastSender !== currentUser._id) {
@@ -279,7 +275,7 @@ export const ListItem = ({ item, currentUser, currentTheme, setLoader }) => {
               cancel={language?.language?.Bookings?.bookings?.cancel}
               delet={language?.language?.Bookings?.bookings?.delete}
               onClose={() => setOpenDeleteDialog(false)}
-              onDelete={DeleteOrder}
+              onDelete={DeleteBooking}
             />
           </View>
         )}
@@ -288,8 +284,8 @@ export const ListItem = ({ item, currentUser, currentTheme, setLoader }) => {
             currentTheme={currentTheme}
             selectedItem={selectedItem}
             setSelectedItem={setSelectedItem}
-            UpdateOrder={UpdateOrder}
-            Delete={DeleteOrder}
+            UpdateBooking={UpdateBooking}
+            Delete={DeleteBooking}
             from="listItem"
           />
         </View>
@@ -385,7 +381,7 @@ export const ListItem = ({ item, currentUser, currentTheme, setLoader }) => {
                 let lab = proceduresOptions?.find(
                   (it) =>
                     it?.value?.toLowerCase() ===
-                    item?.orderedProcedure?.toLowerCase()
+                    item?.bookingProcedure?.toLowerCase()
                 );
 
                 return lab?.label;
@@ -407,10 +403,10 @@ export const ListItem = ({ item, currentUser, currentTheme, setLoader }) => {
             <Text style={{ color: font }}>
               {language?.language?.Bookings?.bookings?.price}:{" "}
             </Text>
-            {item.orderSum ? (
+            {item.bookingSum ? (
               <>
                 <Text style={{ color: font, letterSpacing: 0.2 }}>
-                  {item.orderSum}{" "}
+                  {item.bookingSum}{" "}
                 </Text>
                 {item?.currency === "Dollar" ? (
                   <FontAwesome name="dollar" color={"#111"} size={14} />
@@ -466,10 +462,10 @@ export const ListItem = ({ item, currentUser, currentTheme, setLoader }) => {
               <TouchableOpacity
                 acitveOpacity={0.3}
                 onPress={
-                  item.user?._id
+                  item.client?._id
                     ? () =>
                         navigation.navigate("UserVisit", {
-                          user: item.user,
+                          user: item.client,
                         })
                     : undefined
                 }
@@ -479,7 +475,7 @@ export const ListItem = ({ item, currentUser, currentTheme, setLoader }) => {
                   gap: 10,
                 }}
               >
-                {item.user?.cover ? (
+                {item.client?.cover ? (
                   <CacheableImage
                     style={{
                       width: 30,
@@ -488,7 +484,7 @@ export const ListItem = ({ item, currentUser, currentTheme, setLoader }) => {
                       borderRadius: 50,
                     }}
                     source={{
-                      uri: item.user?.cover,
+                      uri: item.client?.cover,
                     }}
                     manipulationOptions={[
                       {
@@ -506,12 +502,12 @@ export const ListItem = ({ item, currentUser, currentTheme, setLoader }) => {
                 )}
 
                 <Text style={{ color: font, letterSpacing: 0.3 }}>
-                  {item.user.name}
+                  {item.client.name}
                 </Text>
               </TouchableOpacity>
-              {item.user?._id && (
+              {item.client?._id && (
                 <TouchableOpacity
-                  style={{ padding: 5, paddingHorizontal: 10 }}
+                  style={{ padding: 5, paddingHorizontal: 4 }}
                   activeOpacity={0.3}
                   onPress={
                     chatDefined ? () => GetChatRoom() : () => GetNewChatRoom()
@@ -529,7 +525,9 @@ export const ListItem = ({ item, currentUser, currentTheme, setLoader }) => {
           <View>
             <TouchableOpacity
               activeOpacity={0.3}
-              onPress={() => handleLinkPress(`tel:${item?.user?.phone}`)}
+              onPress={() =>
+                handleLinkPress(`tel:${item?.client?.phone.phone}`)
+              }
               style={{
                 height: "100%",
                 paddingHorizontal: 10,
@@ -541,7 +539,7 @@ export const ListItem = ({ item, currentUser, currentTheme, setLoader }) => {
             >
               <Text style={{ color: font, letterSpacing: 0.3 }}>
                 {language?.language?.Bookings?.bookings?.phone}:{" "}
-                {item?.user?.phone}
+                {item?.client?.phone?.phone}
               </Text>
             </TouchableOpacity>
           </View>
@@ -556,7 +554,7 @@ export const ListItem = ({ item, currentUser, currentTheme, setLoader }) => {
             }}
           >
             <Text style={{ color: font, letterSpacing: 0.3 }}>
-              {language?.language?.Bookings?.bookings?.orderedAt}:{" "}
+              {language?.language?.Bookings?.bookings?.bookedAt}:{" "}
             </Text>
             <Text style={{ color: font, letterSpacing: 0.3 }}>
               {(() => {

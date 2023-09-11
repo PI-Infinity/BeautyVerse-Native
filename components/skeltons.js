@@ -39,7 +39,7 @@ export const Circle = () => {
   };
 
   return (
-    <View style={{ gap: 8, opacity: 0.5 }}>
+    <View style={{ opacity: 0.5, width: "100%", height: "100%" }}>
       <Animated.View
         style={[
           styles.circle,
@@ -52,15 +52,9 @@ export const Circle = () => {
 };
 
 const styles = StyleSheet.create({
-  skeleton: {
-    // flexDirection: "column",
-    padding: 10,
-    paddingHorizontal: 15,
-    opacity: 0.3,
-  },
   circle: {
     width: "100%",
-    aspectRatio: 1,
+    height: "100%",
     // borderRadius: 100,
   },
 });

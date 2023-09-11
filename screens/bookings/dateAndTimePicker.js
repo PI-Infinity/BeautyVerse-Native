@@ -10,8 +10,6 @@ import { Picker } from "@react-native-picker/picker";
 import Modal from "react-native-modal";
 import { useSelector, useDispatch } from "react-redux";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { setDate } from "../../redux/orders";
-import { setDateSentOrders } from "../../redux/sentOrders";
 import moment from "moment";
 import "moment-timezone";
 import * as Localization from "expo-localization";
@@ -20,60 +18,31 @@ import { lightTheme, darkTheme } from "../../context/theme";
 import { Language } from "../../context/language";
 
 /**
- * Only date picker
+ * Date and time picket
  */
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
-const CustomDatePicker = ({ from, targetUser }) => {
-  const dispatch = useDispatch();
+const CustomDatePicker = ({ from, dateAndTime, setDateAndTime }) => {
+  // defines theme
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
 
   // defines language
   const language = Language();
 
-  // const define state
-  const dateState = useSelector((state) => {
-    if (from === "orders") {
-      return state.storeOrders.date;
-    } else if (from === "sentOrders") {
-      return state.storeSentOrders.date;
-    }
-  });
+  // defines current user
+  const currentUser = useSelector((state) => state.storeUser.currentUser);
 
-  const [date, setdate] = useState(new Date(dateState.date));
+  // cdefines active date
+  const dateState = dateAndTime;
 
+  const [date, setdate] = useState(new Date(dateState));
   useEffect(() => {
-    setdate(new Date(dateState.date));
+    setdate(new Date(dateState));
   }, [dateState]);
 
-  let dt = moment(date).tz(Localization.timezone).format("DD MMMM YYYY");
-
-  // For Today
-  let today = moment().tz(Localization.timezone).format("DD MMMM YYYY");
-  // For yesterday
-  let yesterday = moment()
-    .tz(Localization.timezone)
-    .subtract(1, "days")
-    .format("DD MMMM YYYY");
-
-  // For tomorrow
-  let tomorrow = moment()
-    .tz(Localization.timezone)
-    .add(1, "days")
-    .format("DD MMMM YYYY");
-
-  let initialDate;
-  if (dt === today) {
-    initialDate = language?.language?.Bookings?.bookings?.today;
-  } else if (dt === yesterday) {
-    initialDate = language?.language?.Bookings?.bookings?.yesterday;
-  } else if (dt === tomorrow) {
-    initialDate = language?.language?.Bookings?.bookings?.tomorrow;
-  } else {
-    initialDate = dt;
-  }
+  const initialDate = moment.utc(date).format("DD MMMM YYYY - HH:mm");
 
   /**
    * open close functions
@@ -91,19 +60,23 @@ const CustomDatePicker = ({ from, targetUser }) => {
   const [selectedDay, setSelectedDay] = useState(date.getDate());
   const [selectedMonth, setSelectedMonth] = useState(date.getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(date.getFullYear());
+  const [selectedHour, setSelectedHour] = useState("10");
+  const [selectedMinute, setSelectedMinute] = useState("00");
 
   const savePicker = () => {
-    let newDate = new Date(selectedYear, selectedMonth - 1, selectedDay);
+    let newDate = new Date(
+      selectedYear,
+      selectedMonth - 1,
+      selectedDay,
+      selectedHour,
+      selectedMinute
+    );
     let formattedDateInTimezone = moment(newDate)
       .tz(Localization.timezone)
       .format("YYYY-MM-DDTHH:mm:ss.SSS[Z]");
-    if (from === "orders") {
-      dispatch(setDate({ active: true, date: formattedDateInTimezone }));
-    } else {
-      dispatch(
-        setDateSentOrders({ active: true, date: formattedDateInTimezone })
-      );
-    }
+
+    setDateAndTime(formattedDateInTimezone);
+
     setPickerVisibility(false);
   };
 
@@ -124,11 +97,11 @@ const CustomDatePicker = ({ from, targetUser }) => {
   ];
 
   const [daysArray, setDaysArray] = useState(
-    Array.from({ length: 31 }, (_, i) => i + 1)
+    Array?.from({ length: 31 }, (_, i) => i + 1)
   );
   const [monthsArray, setMonthsArray] = useState(MONTHS);
   const [yearsArray, setYearsArray] = useState(
-    Array.from({ length: 28 }, (_, i) => i + 2023)
+    Array?.from({ length: 28 }, (_, i) => i + 2023)
   );
 
   const isFirstRender = useRef(true); // add this line
@@ -159,10 +132,61 @@ const CustomDatePicker = ({ from, targetUser }) => {
       daysInMonth = 31;
     }
     setDaysArray(Array.from({ length: daysInMonth }, (_, i) => i + 1));
-    if (dateState.active) {
+    if (dateState) {
       setSelectedDay(1);
     }
   }, [selectedMonth, selectedYear]);
+
+  /**
+   * generate time picker
+   *
+   */
+  const today = new Date();
+  const isToday = today
+    .toLocaleDateString("en-US", {
+      weekday: "long",
+    })
+    ?.split(",")[0];
+  const workingDays = currentUser.workingDays.find(
+    (item) =>
+      item.value?.toLowerCase() === "everyday" ||
+      item.value?.toLowerCase() === "workingdays" ||
+      item.value?.toLowerCase() === isToday.toLowerCase()
+  );
+
+  let timePeriod;
+  if (
+    workingDays?.value.toLowerCase() === "everyday" ||
+    workingDays?.value.toLowerCase() === "workingdays" ||
+    workingDays?.value
+  ) {
+    if (workingDays.hours) {
+      timePeriod = workingDays.hours;
+    } else {
+      timePeriod = "09:00 - 21:00";
+    }
+  }
+
+  let splited = timePeriod?.split(" - ");
+  let startHour;
+  let endHour;
+  if (splited) {
+    startHour = splited[0];
+    endHour = splited[1];
+  } else {
+    startHour = "09:00";
+    endHour = "21:00";
+  }
+
+  // Generate hours array for 24 hours
+  const hoursArray = Array.from({ length: 24 }, (_, i) =>
+    String(i).padStart(2, "0")
+  );
+
+  // Generate minutes array for 60 minutes with 15 minutes interval
+  const minutesArray = Array.from({ length: 4 }, (_, i) =>
+    String(i * 15).padStart(2, "0")
+  );
 
   return (
     <View
@@ -180,6 +204,7 @@ const CustomDatePicker = ({ from, targetUser }) => {
           flexDirection: "row",
           justifyContent: "space-between",
           paddingHorizontal: 15,
+          paddingRight: 0,
         }}
       >
         <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
@@ -196,59 +221,31 @@ const CustomDatePicker = ({ from, targetUser }) => {
               letterSpacing: 0.3,
             }}
           >
-            {language?.language?.Bookings?.bookings?.choiceDate}:{" "}
+            {language?.language?.Bookings?.bookings?.choiceDate}:
           </Text>
         </View>
         <TouchableOpacity
           onPress={openPicker}
           style={{
             // backgroundColor: currentTheme.background2,
-            width: "40%",
+            width: "60%",
             borderRadius: 50,
             padding: 5,
             alignItems: "center",
             borderWidth: 1.5,
-            borderColor: dateState.active
-              ? currentTheme.pink
-              : currentTheme.line,
+            borderColor: currentTheme.pink,
             marginLeft: "auto",
           }}
         >
           <Text
             style={{
-              color: dateState.active ? currentTheme.pink : currentTheme.font,
+              color: currentTheme.font,
               fontSize: 14,
-              fontWeight: "bold",
             }}
           >
-            {dateState.active ? initialDate : "N/A"}
+            {initialDate}
           </Text>
         </TouchableOpacity>
-        {dateState?.active && (
-          <TouchableOpacity
-            style={{ padding: 2.5 }}
-            onPress={() => {
-              let newdate = new Date();
-              let formattedDateInTimezone = moment(newdate)
-                .tz(Localization.timezone)
-                .format("YYYY-MM-DDTHH:mm:ss.SSS[Z]");
-              if (from === "orders") {
-                dispatch(
-                  setDate({ active: false, date: formattedDateInTimezone })
-                );
-              } else if (from === "sentOrders") {
-                dispatch(
-                  setDateSentOrders({
-                    active: false,
-                    date: formattedDateInTimezone,
-                  })
-                );
-              }
-            }}
-          >
-            <MaterialCommunityIcons name="close" size={22} color="red" />
-          </TouchableOpacity>
-        )}
       </View>
       <Modal
         isVisible={isPickerVisible}
@@ -258,9 +255,8 @@ const CustomDatePicker = ({ from, targetUser }) => {
           alignItems: "center",
           width: SCREEN_WIDTH - 40,
           marginRight: 15,
-        }} // center the modal
+        }}
         animationIn="zoomIn" // animate in with a zoom
-        // animationOut="fadeOut" // animate out with a zoom
         backdropColor="black" // make the backdrop black
         backdropOpacity={0.7}
       >
@@ -329,7 +325,81 @@ const CustomDatePicker = ({ from, targetUser }) => {
               ))}
             </Picker>
           </View>
-
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 8,
+              width: "100%",
+              marginTop: 8,
+            }}
+          >
+            <MaterialCommunityIcons
+              name="clock"
+              size={18}
+              color={currentTheme.pink}
+            />
+            <Text
+              style={{
+                fontSize: 16,
+                fontWeight: "bold",
+                letterSpacing: 0.3,
+                color: currentTheme.font,
+                marginVertical: 10,
+              }}
+            >
+              Select Time:{" "}
+            </Text>
+          </View>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "center",
+              width: "100%",
+              overflow: "hidden",
+              paddingHorizontal: 15,
+              gap: 8,
+            }}
+          >
+            <Picker
+              selectedValue={selectedHour}
+              style={{
+                width: Platform.OS === "ios" ? "24%" : "100%",
+                backgroundColor: currentTheme.pink,
+                borderRadius: 10,
+                height: Platform.OS === "ios" ? 150 : 50,
+                justifyContent: "center",
+                width: Platform.OS === "ios" ? "35%" : "60%",
+              }}
+              onValueChange={(itemValue) => setSelectedHour(itemValue)}
+            >
+              {hoursArray
+                // .filter(({ status }) => status === "Available")
+                .map((item, index) => (
+                  <Picker.Item label={item} value={item} key={index} />
+                ))}
+            </Picker>
+            <Picker
+              selectedValue={selectedMinute}
+              style={{
+                width: Platform.OS === "ios" ? "24%" : "100%",
+                backgroundColor: currentTheme.pink,
+                borderRadius: 10,
+                height: Platform.OS === "ios" ? 150 : 50,
+                justifyContent: "center",
+                width: Platform.OS === "ios" ? "35%" : "60%",
+              }}
+              onValueChange={(itemValue) => setSelectedMinute(itemValue)}
+            >
+              {minutesArray
+                // .filter(({ status }) => status === "Available")
+                .map((item, index) => (
+                  <Picker.Item label={item} value={item} key={index} />
+                ))}
+            </Picker>
+          </View>
           <View style={{ alignItems: "center", width: "100%" }}>
             <Pressable
               style={{

@@ -13,6 +13,7 @@ import { CacheableImage } from "../../components/cacheableImage";
 import { darkTheme, lightTheme } from "../../context/theme";
 import { AudienceList } from "../../screens/user/audienceList";
 import { Language } from "../../context/language";
+import { Circle } from "../../components/skeltons";
 
 /**
  * audience component in user screen
@@ -147,38 +148,7 @@ export const Audience = ({
                       }
                     >
                       {item?.cover?.length > 0 ? (
-                        <View>
-                          {item.online && (
-                            <View
-                              style={{
-                                width: 10,
-                                height: 10,
-                                backgroundColor: "#3bd16f",
-                                borderRadius: 50,
-                                position: "absolute",
-                                zIndex: 100,
-                                right: 5,
-                                bottom: 1,
-                                borderWidth: 1.5,
-                                borderColor: currentTheme.background,
-                              }}
-                            ></View>
-                          )}
-                          <CacheableImage
-                            source={{ uri: item?.cover }}
-                            style={{
-                              width: 40,
-                              height: 40,
-                              borderRadius: 50,
-                              borderWidth: 3,
-                              borderColor: currentTheme.background,
-                            }}
-                            manipulationOptions={[
-                              { resize: { width: 40, height: 40 } },
-                              { rotate: 90 },
-                            ]}
-                          />
-                        </View>
+                        <CoverImg item={item} currentTheme={currentTheme} />
                       ) : (
                         <View>
                           {item.online && (
@@ -281,40 +251,8 @@ export const Audience = ({
                         })
                       }
                     >
-                      {item.cover?.length > 0 ? (
-                        <View>
-                          {item.online && (
-                            <View
-                              style={{
-                                width: 10,
-                                height: 10,
-                                backgroundColor: "#3bd16f",
-                                borderRadius: 50,
-                                position: "absolute",
-                                zIndex: 100,
-                                right: 5,
-                                bottom: 1,
-                                borderWidth: 1.5,
-                                borderColor: currentTheme.background,
-                              }}
-                            ></View>
-                          )}
-                          <CacheableImage
-                            key={index}
-                            source={{ uri: item?.cover }}
-                            style={{
-                              width: 40,
-                              height: 40,
-                              borderRadius: 50,
-                              borderWidth: 3,
-                              borderColor: currentTheme.background,
-                            }}
-                            manipulationOptions={[
-                              { resize: { width: 40, height: 40 } },
-                              { rotate: 90 },
-                            ]}
-                          />
-                        </View>
+                      {item?.cover?.length > 0 ? (
+                        <CoverImg item={item} currentTheme={currentTheme} />
                       ) : (
                         <View>
                           {item.online && (
@@ -389,6 +327,56 @@ export const Audience = ({
           </Collapsible>
         </View>
       )}
+    </View>
+  );
+};
+
+const CoverImg = ({ item, currentTheme }) => {
+  const [loadingImg, setLoadingImg] = useState(true);
+  return (
+    <View>
+      {item.online && (
+        <View
+          style={{
+            width: 10,
+            height: 10,
+            backgroundColor: "#3bd16f",
+            borderRadius: 50,
+            position: "absolute",
+            zIndex: 100,
+            right: 1,
+            bottom: 1,
+            borderWidth: 1.5,
+            borderColor: currentTheme.background,
+          }}
+        ></View>
+      )}
+      <View
+        style={{
+          width: 40,
+          height: 40,
+          borderRadius: 50,
+          overflow: "hidden",
+        }}
+      >
+        {loadingImg && <Circle />}
+
+        <CacheableImage
+          source={{ uri: item.cover }}
+          style={{
+            width: 40,
+            height: 40,
+            borderRadius: 50,
+            borderWidth: 1.5,
+            borderColor: currentTheme.pink,
+          }}
+          manipulationOptions={[
+            { resize: { width: 40, height: 40 } },
+            { rotate: 90 },
+          ]}
+          onLoad={() => setLoadingImg(false)}
+        />
+      </View>
     </View>
   );
 };

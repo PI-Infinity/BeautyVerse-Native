@@ -28,30 +28,30 @@ import {
 } from "../redux/Marketplace";
 import { setRerederRooms, setRooms } from "../redux/chat";
 import {
-  setActiveOrders,
-  setCanceledOrders,
-  setCompletedOrders,
+  setActiveBookings,
+  setCanceledBookings,
+  setCompletedBookings,
   setFilterResult,
   setLoader,
-  setNewOrders,
-  setOrders,
-  setPendingOrders,
-  setRejectedOrders,
+  setNewBookings,
+  setBookings,
+  setPendingBookings,
+  setRejectedBookings,
   setTotalResult,
-} from "../redux/orders";
-import { setRerenderOrders } from "../redux/rerenders";
+} from "../redux/bookings";
+import { setRerenderBookings } from "../redux/rerenders";
 import {
-  setActiveSentOrders,
-  setCanceledSentOrders,
-  setCompletedSentOrders,
-  setLoaderSentOrders,
-  setNewSentOrders,
-  setPendingSentOrders,
-  setRejectedSentOrders,
-  setSentOrders,
-  setSentOrdersFilterResult,
-  setSentOrdersTotalResult,
-} from "../redux/sentOrders";
+  setActiveSentBookings,
+  setCanceledSentBookings,
+  setCompletedSentBookings,
+  setLoaderSentBookings,
+  setNewSentBookings,
+  setPendingSentBookings,
+  setRejectedSentBookings,
+  setSentBookings,
+  setSentBookingsFilterResult,
+  setSentBookingsTotalResult,
+} from "../redux/sentBookings";
 
 /**
  * create tab bar
@@ -106,47 +106,47 @@ export const BottomTabNavigator = () => {
   const backendUrl = useSelector((state) => state.storeApp.backendUrl);
 
   /**
-   * get orders
+   * get bookings
    */
 
-  // after run this state, it changes value and rerenders orders api
-  const rerenderOrders = useSelector(
-    (state) => state.storeRerenders.rerenderOrders
+  // after run this state, it changes value and rerenders bookings api
+  const rerenderBookings = useSelector(
+    (state) => state.storeRerenders.rerenderBookings
   );
   // this render also addationally renders some useffects
-  const [renderOrders, setRenderOrders] = useState(false);
+  const [renderBookings, setRenderBookings] = useState(false);
 
-  // some filters for orders
-  const statusFilter = useSelector((state) => state.storeOrders.statusFilter);
-  const date = useSelector((state) => state.storeOrders.date);
-  const createdAt = useSelector((state) => state.storeOrders.createdAt);
-  const procedure = useSelector((state) => state.storeOrders.procedure);
+  // some filters for bookings
+  const statusFilter = useSelector((state) => state.storeBookings.statusFilter);
+  const date = useSelector((state) => state.storeBookings.date);
+  const createdAt = useSelector((state) => state.storeBookings.createdAt);
+  const procedure = useSelector((state) => state.storeBookings.procedure);
 
-  // get recieved orders
+  // get recieved bookings
   useEffect(() => {
-    const GetOrders = async () => {
+    const GetBookings = async () => {
       try {
         dispatch(setLoader(true));
         const response = await axios.get(
           backendUrl +
-            "/api/v1/users/" +
+            "/api/v1/bookings/" +
             currentUser._id +
-            `/orders?page=${1}&status=${
+            `?page=${1}&status=${
               statusFilter === "All" ? "" : statusFilter?.toLowerCase()
             }&date=${
               date.active ? date.date : ""
             }&createdAt=${createdAt}&procedure=${procedure}`
         );
-        // define orders with specific status
-        dispatch(setOrders(response.data.data.orders));
+        // define bookings with specific status
+        dispatch(setBookings(response.data.data.bookings));
         dispatch(setTotalResult(response.data.totalResult));
         dispatch(setFilterResult(response.data.filterResult));
-        dispatch(setNewOrders(response.data.new));
-        dispatch(setPendingOrders(response.data.pending));
-        dispatch(setActiveOrders(response.data.active));
-        dispatch(setCompletedOrders(response.data.completed));
-        dispatch(setRejectedOrders(response.data.rejected));
-        dispatch(setCanceledOrders(response.data.canceled));
+        dispatch(setNewBookings(response.data.new));
+        dispatch(setPendingBookings(response.data.pending));
+        dispatch(setActiveBookings(response.data.active));
+        dispatch(setCompletedBookings(response.data.completed));
+        dispatch(setRejectedBookings(response.data.rejected));
+        dispatch(setCanceledBookings(response.data.canceled));
         setTimeout(() => {
           dispatch(setLoader(false));
         }, 500);
@@ -156,50 +156,57 @@ export const BottomTabNavigator = () => {
     };
 
     if (currentUser) {
-      GetOrders();
+      GetBookings();
     }
-  }, [renderOrders, rerenderOrders, statusFilter, date, procedure, createdAt]);
+  }, [
+    renderBookings,
+    rerenderBookings,
+    statusFilter,
+    date,
+    procedure,
+    createdAt,
+  ]);
 
-  // get sent orders
-  const statusFilterSentOrders = useSelector(
-    (state) => state.storeSentOrders.statusFilter
+  // get sent bookings
+  const statusFilterSentBookings = useSelector(
+    (state) => state.storeSentBookings.statusFilter
   );
-  const dateSentOrders = useSelector((state) => state.storeSentOrders.date);
+  const dateSentBookings = useSelector((state) => state.storeSentBookings.date);
 
-  const createdAtSentOrders = useSelector(
-    (state) => state.storeSentOrders.createdAt
+  const createdAtSentBookings = useSelector(
+    (state) => state.storeSentBookings.createdAt
   );
-  const procedureSentOrders = useSelector(
-    (state) => state.storeSentOrders.procedure
+  const procedureSentBookings = useSelector(
+    (state) => state.storeSentBookings.procedure
   );
   useEffect(() => {
-    const GetOrders = async () => {
+    const GetSentBookings = async () => {
       try {
-        dispatch(setLoaderSentOrders(true));
+        dispatch(setLoaderSentBookings(true));
         const response = await axios.get(
           backendUrl +
-            "/api/v1/users/" +
+            "/api/v1/bookings/sent/" +
             currentUser._id +
-            `/sentorders?page=${1}&status=${
-              statusFilterSentOrders === "All"
+            `?page=${1}&status=${
+              statusFilterSentBookings === "All"
                 ? ""
-                : statusFilterSentOrders?.toLowerCase()
+                : statusFilterSentBookings?.toLowerCase()
             }&date=${
-              dateSentOrders.active ? dateSentOrders.date : ""
-            }&createdAt=${createdAtSentOrders}&procedure=${procedureSentOrders}`
+              dateSentBookings.active ? dateSentBookings.date : ""
+            }&createdAt=${createdAtSentBookings}&procedure=${procedureSentBookings}`
         );
-
-        dispatch(setSentOrders(response.data.data.sentOrders));
-        dispatch(setSentOrdersTotalResult(response.data.totalResult));
-        dispatch(setSentOrdersFilterResult(response.data.filterResult));
-        dispatch(setNewSentOrders(response.data.new));
-        dispatch(setActiveSentOrders(response.data.active));
-        dispatch(setPendingSentOrders(response.data.pending));
-        dispatch(setCanceledSentOrders(response.data.canceled));
-        dispatch(setRejectedSentOrders(response.data.rejected));
-        dispatch(setCompletedSentOrders(response.data.completed));
+        console.log(response.data.data.bookings);
+        dispatch(setSentBookings(response.data.data.bookings));
+        dispatch(setSentBookingsTotalResult(response.data.totalResult));
+        dispatch(setSentBookingsFilterResult(response.data.filterResult));
+        dispatch(setNewSentBookings(response.data.new));
+        dispatch(setActiveSentBookings(response.data.active));
+        dispatch(setPendingSentBookings(response.data.pending));
+        dispatch(setCanceledSentBookings(response.data.canceled));
+        dispatch(setRejectedSentBookings(response.data.rejected));
+        dispatch(setCompletedSentBookings(response.data.completed));
         setTimeout(() => {
-          dispatch(setLoaderSentOrders(false));
+          dispatch(setLoaderSentBookings(false));
         }, 500);
       } catch (error) {
         console.log(error.response.data.message);
@@ -207,21 +214,21 @@ export const BottomTabNavigator = () => {
     };
 
     if (currentUser) {
-      GetOrders();
+      GetSentBookings();
     }
   }, [
-    renderOrders,
-    rerenderOrders,
-    statusFilterSentOrders,
-    dateSentOrders,
-    procedureSentOrders,
-    createdAtSentOrders,
+    renderBookings,
+    rerenderBookings,
+    statusFilterSentBookings,
+    dateSentBookings,
+    procedureSentBookings,
+    createdAtSentBookings,
   ]);
 
-  // this useeffect rerenders orders in real time when some users sends booking requests
+  // this useeffect rerenders bookings in real time when some users sends booking requests
   useEffect(() => {
-    socket.on("ordersUpdate", () => {
-      dispatch(setRerenderOrders());
+    socket.on("bookingsUpdate", () => {
+      dispatch(setRerenderBookings());
     });
   }, []);
 
@@ -260,10 +267,15 @@ export const BottomTabNavigator = () => {
 
   // feeds scroll y position
   const [feedsScrollY, setFeedsScrollY] = useState(0);
+  // feeds scroll y position
+  const [feedsScrollYF, setFeedsScrollYF] = useState(0);
   // cards scroll y position
   const [cardsScrollY, setCardsScrollY] = useState(0);
-  // cards scroll y position
+  // profile scroll y position
   const [profileScrollY, setProfileScrollY] = useState(0);
+  // marketplace scroll y position
+
+  const [marketplaceScrollY, setMarketplaceScrollY] = useState(0);
 
   /**
    * get marketplace products
@@ -278,9 +290,12 @@ export const BottomTabNavigator = () => {
   useEffect(() => {
     const GetProducts = async () => {
       try {
-        const response = await axios.get(backendUrl + "/api/v1/marketplace");
+        const response = await axios.get(
+          backendUrl + "/api/v1/marketplace" + "?check=" + currentUser._id
+        );
         if (response.data.data.products?.random) {
           dispatch(setRandomProductsList(response.data.data.products.random));
+          console.log(response.data.data.products.random[0].checkIfSaved);
           // dispatch(setLatestList(response.data.data.products.latestList));
         }
         // ... other dispatches
@@ -320,6 +335,8 @@ export const BottomTabNavigator = () => {
             render={render}
             navigation={navigation}
             setScrollY={setFeedsScrollY}
+            setScrollYF={setFeedsScrollYF}
+            scrollY={feedsScrollY}
           />
         )}
         options={({}) => ({
@@ -349,6 +366,7 @@ export const BottomTabNavigator = () => {
               currentTheme={currentTheme}
               sum={sum}
               scrollY={feedsScrollY}
+              scrollYF={feedsScrollYF}
             />
           ),
         })}
@@ -401,7 +419,8 @@ export const BottomTabNavigator = () => {
           <MarketplaceStack
             render={render}
             navigation={navigation}
-            // setScrollY={setCardsScrollY}
+            setScrollY={setMarketplaceScrollY}
+            scrollY={marketplaceScrollY}
           />
         )}
         options={{
@@ -429,7 +448,7 @@ export const BottomTabNavigator = () => {
               {...props}
               // sum={sum}
               currentTheme={currentTheme}
-              // scrollY={cardsScrollY}
+              scrollY={marketplaceScrollY}
             />
           ),
         }}

@@ -12,8 +12,6 @@ import { Language } from "../../context/language";
  */
 
 export const Post = (props) => {
-  const [loading, setLoading] = useState(true);
-
   const language = Language();
 
   const [post, setPost] = useState(null);
@@ -50,9 +48,6 @@ export const Post = (props) => {
         width: "auto",
       }}
     >
-      {/* {loading ? (
-        <Text style={{ color: "pink" }}>Loading...</Text>
-      ) : ( */}
       <Pressable
         onPress={
           props.numLines > 5
@@ -78,10 +73,10 @@ export const Post = (props) => {
             textShadowRadius: 1,
           }}
         >
-          <>{text}</>
+          {text}
         </Text>
 
-        {post && post?.originalLanguage !== lang && (
+        {post?.original?.length > 0 && post?.originalLanguage !== lang && (
           <Pressable
             onPress={
               !original

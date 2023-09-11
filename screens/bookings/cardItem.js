@@ -13,16 +13,18 @@ import {
   View,
   Dimensions,
   Alert,
+  Pressable,
+  Image,
 } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 import { CacheableImage } from "../../components/cacheableImage";
 import DeleteConfirm from "../../components/confirmDialog";
 import { useSocket } from "../../context/socketContext";
 import { ProceduresOptions } from "../../datas/registerDatas";
-import { setCompletedOrders, setOrders } from "../../redux/orders";
-import { setRerenderOrders } from "../../redux/rerenders";
-import ItemDateAndTimePicker from "../../screens/orders/itemDateAndTimePicker";
-import { StatusPopup } from "../../screens/orders/statusPopup";
+import { setBookings } from "../../redux/bookings";
+import { setRerenderBookings } from "../../redux/rerenders";
+import ItemDateAndTimePicker from "./itemDateAndTimePicker";
+import { StatusPopup } from "./statusPopup";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   setRooms,
@@ -35,7 +37,7 @@ import { useNavigation } from "@react-navigation/native";
 import { sendNotification } from "../../components/pushNotifications";
 
 /**
- * Order card item
+ * Booking card item
  */
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -53,8 +55,8 @@ export const Card = ({ item, currentUser, currentTheme, setLoader }) => {
   // defines redux dispatch
   const dispatch = useDispatch();
 
-  // defines all orders
-  const orders = useSelector((state) => state.storeOrders.orders);
+  // defines all bookings
+  const bookings = useSelector((state) => state.storeBookings.bookings);
 
   // creates link by url
   const handleLinkPress = (url) => {
@@ -64,7 +66,7 @@ export const Card = ({ item, currentUser, currentTheme, setLoader }) => {
   // copy item id
   const [copySuccess, setCopySuccess] = useState(null);
   const copyToClipboard = () => {
-    Clipboard.setString(item?.orderNumber);
+    Clipboard.setString(item?.bookingNumber);
     setCopySuccess("Id copied!");
   };
 
@@ -90,15 +92,19 @@ export const Card = ({ item, currentUser, currentTheme, setLoader }) => {
   const backendUrl = useSelector((state) => state.storeApp.backendUrl);
 
   /**
-   * Delete order
+   * Delete booking
    */
-  const DeleteOrder = async () => {
+  const DeleteBooking = async () => {
     try {
       setLoader(true);
       await axios.delete(
-        backendUrl + "/api/v1/users/" + currentUser._id + "/orders/" + item._id
+        backendUrl +
+          "/api/v1/bookings/booking/" +
+          item.bookingNumber +
+          "?user=" +
+          currentUser._id
       );
-      dispatch(setRerenderOrders());
+      dispatch(setRerenderBookings());
       setTimeout(() => {
         setLoader(false);
       }, 200);
@@ -106,40 +112,34 @@ export const Card = ({ item, currentUser, currentTheme, setLoader }) => {
       console.log(error.response.data.message);
     }
   };
+
   // change status
-  const UpdateOrder = async (val) => {
+  const UpdateBooking = async (body) => {
     try {
       await axios.patch(
-        backendUrl +
-          "/api/v1/users/" +
-          currentUser._id +
-          "/orders/" +
-          item.orderNumber,
-        {
-          status: val,
-        }
+        backendUrl + "/api/v1/bookings/booking/" + item.bookingNumber,
+        body
       );
-      await axios.patch(
-        backendUrl +
-          "/api/v1/users/" +
-          item.user._id +
-          "/sentorders/" +
-          item.orderNumber,
-        {
-          status: val,
+      if (item.client?.pushNotificationToken) {
+        if (body?.status.client) {
+          await sendNotification(
+            item.client?.pushNotificationToken,
+            currentUser.name,
+            "has changed booking status to - " + body.status.client,
+            { type: "booking", status: body.status.client }
+          );
+        } else {
+          await sendNotification(
+            item.client?.pushNotificationToken,
+            currentUser.name,
+            "has sent you a new status date - " + body.date,
+            { type: "booking", date: body.date }
+          );
         }
-      );
-      if (item.user?.pushNotificationToken) {
-        await sendNotification(
-          item.user?.pushNotificationToken,
-          currentUser.name,
-          "has changed order status to - " + val,
-          { type: "order", status: val }
-        );
+        socket.emit("UpdateBookings", {
+          targetId: item.client?._id,
+        });
       }
-      socket.emit("updateOrders", {
-        targetId: item.user?._id,
-      });
     } catch (error) {
       console.log(error.response.data.message);
     }
@@ -148,68 +148,55 @@ export const Card = ({ item, currentUser, currentTheme, setLoader }) => {
   /**
    * Edit item when client returns request you sent before
    */
-  const ReturnRequest = async (val) => {
+  const ReturnRequest = async () => {
     try {
       dispatch(
-        setOrders(
-          orders.map((order) =>
-            order._id === item._id
-              ? { ...order, date: dateAndTime.date, status: "pending" }
-              : order
+        setBookings(
+          bookings.map((booking) =>
+            booking._id === item._id
+              ? {
+                  ...booking,
+                  date: dateAndTime.date,
+                  status: { client: "new", seller: "pending" },
+                }
+              : booking
           )
         )
       );
       await axios.patch(
         backendUrl +
-          "/api/v1/users/" +
-          currentUser._id +
-          "/orders/" +
-          item.orderNumber +
+          "/api/v1/bookings/booking/" +
+          item.bookingNumber +
           "?return=true",
         {
-          ...item,
-          user: {
-            id: item.user._id,
-            phone: item.user.phone,
-            name: item.user.name,
-          },
-          date: dateAndTime,
-          status: "pending",
-        }
-      );
-
-      await axios.patch(
-        backendUrl +
-          "/api/v1/users/" +
-          item.user._id +
-          "/sentorders/" +
-          item.orderNumber +
-          "?return=true",
-        {
-          ...item,
-          user: {
+          seller: {
             id: currentUser._id,
             phone: currentUser.phone,
             name: currentUser.name,
           },
+          client: {
+            id: item.client?._id,
+            phone: item.client?.phone,
+            name: item.client?.name,
+          },
           date: dateAndTime,
-          status: "new",
+          status: { client: "new", seller: "pending" },
         }
       );
       let lab = proceduresOptions?.find(
         (it) =>
-          it?.value?.toLowerCase() === item?.orderedProcedure?.toLowerCase()
+          it?.value?.toLowerCase() === item?.bookingProcedure?.toLowerCase()
       );
-      if (item.user?.pushNotificationToken) {
+      if (item.client?.pushNotificationToken) {
         await sendNotification(
-          item.user?.pushNotificationToken,
+          item.client?.pushNotificationToken,
           currentUser.name,
-          "return you an appointment request! - " + lab.label,
-          { type: "order", status: "new" }
+          "return you an appointment request!",
+          { type: "booking", status: "new" }
         );
       }
-      socket.emit("updateOrders", {
-        targetId: item.user?._id,
+      socket.emit("UpdateBookings", {
+        targetId: item.client?._id,
       });
     } catch (error) {
       console.log(error.response.data.message);
@@ -217,7 +204,7 @@ export const Card = ({ item, currentUser, currentTheme, setLoader }) => {
   };
 
   // status option
-  const [selectedItem, setSelectedItem] = useState(item.status);
+  const [selectedItem, setSelectedItem] = useState(item.status.seller);
 
   // define some style for item
   let font = currentTheme.font;
@@ -226,24 +213,24 @@ export const Card = ({ item, currentUser, currentTheme, setLoader }) => {
   const rooms = useSelector((state) => state.storeChat.rooms);
 
   let chatDefined =
-    currentUser._id !== item.user?._id &&
+    currentUser._id !== item.client._id &&
     rooms.find(
       (r) =>
         (r.members.member1 === currentUser._id ||
-          r.members.member1 === item.user?._id) &&
+          r.members.member1 === item.client._id) &&
         (r.members.member2 === currentUser._id ||
-          r.members.member2 === item.user?._id)
+          r.members.member2 === item.client._id)
     );
 
   // get chat room
   const GetNewChatRoom = async () => {
     let newChat = {
-      room: currentUser?._id + item.user?._id,
+      room: currentUser?._id + item.client._id,
       members: {
         member1: currentUser._id,
-        member2: item.user?._id,
-        member2Cover: item.user?.cover,
-        member2Name: item.user?.name,
+        member2: item.client._id,
+        member2Cover: item.client.cover,
+        member2Name: item.client.name,
       },
       lastMessage: "",
       lastSender: "",
@@ -253,13 +240,13 @@ export const Card = ({ item, currentUser, currentTheme, setLoader }) => {
     try {
       navigation.navigate("Room", {
         newChat,
-        user: item.user,
+        user: item.client,
       });
       const response = await axios.post(backendUrl + "/api/v1/chats/", {
-        room: currentUser?._id + item.user?._id,
+        room: currentUser?._id + item.client._id,
         members: {
           member1: currentUser._id,
-          member2: item.user?._id,
+          member2: item.client._id,
         },
         lastMessage: "",
         lastSender: "",
@@ -297,7 +284,7 @@ export const Card = ({ item, currentUser, currentTheme, setLoader }) => {
     try {
       dispatch(setCurrentChat(Room));
       navigation.navigate("Room", {
-        user: item?.user,
+        user: item?.client,
         screenHeight: screenHeight,
       });
       if (Room.lastSender !== currentUser._id) {
@@ -335,7 +322,7 @@ export const Card = ({ item, currentUser, currentTheme, setLoader }) => {
             cancel={language?.language?.Bookings?.bookings?.cancel}
             delet={language?.language?.Bookings?.bookings?.delete}
             onClose={() => setOpenDeleteDialog(false)}
-            onDelete={DeleteOrder}
+            onDelete={DeleteBooking}
           />
         </View>
       )}
@@ -354,6 +341,7 @@ export const Card = ({ item, currentUser, currentTheme, setLoader }) => {
           gap: 5,
           borderWidth: 1.5,
           borderColor: currentTheme.line,
+          minHeight: 420,
         }}
       >
         <View
@@ -370,7 +358,9 @@ export const Card = ({ item, currentUser, currentTheme, setLoader }) => {
               borderRadius: 50,
               flexDirection: "row",
               alignItems: "center",
-              gap: 3,
+              gap: item?.whereFrom === "user" ? 8 : 3,
+              position: "relative",
+              right: item?.whereFrom === "user" ? 6 : 0,
             }}
           >
             {editRequest ? (
@@ -379,13 +369,19 @@ export const Card = ({ item, currentUser, currentTheme, setLoader }) => {
                   targetUser={currentUser}
                   dateAndTime={dateAndTime}
                   setDateAndTime={setDateAndTime}
-                  orderId={item.orderNumber}
-                  orderDuration={item.duration}
-                  orderDate={item.date}
+                  bookingId={item.bookingNumber}
+                  bookingDuration={item.duration}
+                  bookingDate={item.date}
                 />
               </View>
             ) : (
               <>
+                {item?.whereFrom === "client" && (
+                  <Image
+                    source={require("../../assets/icon.png")}
+                    style={{ width: 30, height: 30 }}
+                  />
+                )}
                 <Text
                   style={{
                     fontWeight: "bold",
@@ -452,17 +448,19 @@ export const Card = ({ item, currentUser, currentTheme, setLoader }) => {
               </>
             )}
           </View>
+
           {!editRequest && (
             <StatusPopup
               currentTheme={currentTheme}
               selectedItem={selectedItem}
               setSelectedItem={setSelectedItem}
-              UpdateOrder={UpdateOrder}
-              Delete={DeleteOrder}
+              UpdateBooking={UpdateBooking}
+              Delete={DeleteBooking}
               setEditRequest={setEditRequest}
             />
           )}
         </View>
+
         <View
           style={{
             borderWidth: 1,
@@ -484,7 +482,7 @@ export const Card = ({ item, currentUser, currentTheme, setLoader }) => {
               let lab = proceduresOptions?.find(
                 (it) =>
                   it?.value?.toLowerCase() ===
-                  item?.orderedProcedure?.toLowerCase()
+                  item?.bookingProcedure?.toLowerCase()
               );
 
               return lab?.label;
@@ -507,10 +505,10 @@ export const Card = ({ item, currentUser, currentTheme, setLoader }) => {
           <Text style={{ fontWeight: "bold", color: font, letterSpacing: 0.2 }}>
             {language?.language?.Bookings?.bookings?.price}:
           </Text>
-          {item.orderSum ? (
+          {item.bookingSum ? (
             <>
               <Text style={{ color: font, letterSpacing: 0.2 }}>
-                {item.orderSum}{" "}
+                {item.bookingSum}{" "}
               </Text>
               {item?.currency === "Dollar" ? (
                 <FontAwesome name="dollar" color={font} size={14} />
@@ -579,9 +577,9 @@ export const Card = ({ item, currentUser, currentTheme, setLoader }) => {
           <Text style={{ color: font, letterSpacing: 0.3, fontWeight: "bold" }}>
             Id:{" "}
             <Text style={{ fontWeight: "normal" }}>
-              {item.orderNumber.length > 5
-                ? item.orderNumber.substring(0, 10) + "..."
-                : item.orderNumber}
+              {item.bookingNumber.length > 5
+                ? item.bookingNumber.substring(0, 10) + "..."
+                : item.bookingNumber}
             </Text>
           </Text>
           {copySuccess ? (
@@ -616,7 +614,8 @@ export const Card = ({ item, currentUser, currentTheme, setLoader }) => {
           <View
             style={{
               width: "100%",
-              backgroundColor: currentTheme.background2,
+              borderWidth: 1,
+              borderColor: currentTheme.line,
               padding: 10,
               paddingVertical: 5,
               borderRadius: 50,
@@ -629,10 +628,10 @@ export const Card = ({ item, currentUser, currentTheme, setLoader }) => {
             <TouchableOpacity
               activeOpacity={0.3}
               onPress={
-                item.user?._id
+                item.client?._id
                   ? () =>
-                      navigation.navigate("UserVisit", {
-                        user: item.user,
+                      navigation.navigate("User", {
+                        user: item.client,
                       })
                   : undefined
               }
@@ -642,7 +641,7 @@ export const Card = ({ item, currentUser, currentTheme, setLoader }) => {
                 gap: 10,
               }}
             >
-              {item.user.cover ? (
+              {item.client?.cover || item.seller?.cover ? (
                 <CacheableImage
                   style={{
                     width: 40,
@@ -651,7 +650,7 @@ export const Card = ({ item, currentUser, currentTheme, setLoader }) => {
                     borderRadius: 50,
                   }}
                   source={{
-                    uri: item?.user?.cover,
+                    uri: item.client?.cover || item.seller?.cover,
                   }}
                   manipulationOptions={[
                     {
@@ -681,10 +680,10 @@ export const Card = ({ item, currentUser, currentTheme, setLoader }) => {
               <Text
                 style={{ color: font, letterSpacing: 0.3, fontWeight: "bold" }}
               >
-                {item.user.name}
+                {item.client?.name || item.seller?.name}
               </Text>
             </TouchableOpacity>
-            {item.user?._id && (
+            {(item.client?.address || item.seller?.address) && (
               <TouchableOpacity
                 style={{ padding: 5, paddingHorizontal: 10 }}
                 activeOpacity={0.3}
@@ -700,19 +699,83 @@ export const Card = ({ item, currentUser, currentTheme, setLoader }) => {
               </TouchableOpacity>
             )}
           </View>
-          {item?.user?.phone && (
+          {(item.client?.phone || item.seller?.phone) && (
             <TouchableOpacity
               activeOpacity={0.3}
-              onPress={() => handleLinkPress(`tel:${item?.user?.phone}`)}
+              onPress={() =>
+                handleLinkPress(
+                  `tel:${
+                    item.client?.phone?.phone || item.seller?.phone?.phone
+                  }`
+                )
+              }
               style={{ flexDirection: "row", alignItems: "center", gap: 5 }}
             >
               <MaterialCommunityIcons name="phone" size={22} color={font} />
               <Text style={{ color: font, letterSpacing: 0.3 }}>
-                {item?.user?.phone}
+                {item.client?.phone.phone || item.seller?.phone.phone}
               </Text>
             </TouchableOpacity>
           )}
         </View>
+        {selectedItem === "completed" && item?.whereFrom === "user" && (
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 10,
+              justifyContent: "center",
+              width: "100%",
+              paddingVertical: 8,
+            }}
+          >
+            <Pressable>
+              <FontAwesome
+                name="heart"
+                size={22}
+                color={
+                  item?.rating > 0 ? currentTheme.pink : currentTheme.disabled
+                }
+              />
+            </Pressable>
+            <Pressable>
+              <FontAwesome
+                name="heart"
+                size={22}
+                color={
+                  item?.rating > 1 ? currentTheme.pink : currentTheme.disabled
+                }
+              />
+            </Pressable>
+            <Pressable>
+              <FontAwesome
+                name="heart"
+                size={22}
+                color={
+                  item?.rating > 2 ? currentTheme.pink : currentTheme.disabled
+                }
+              />
+            </Pressable>
+            <Pressable>
+              <FontAwesome
+                name="heart"
+                size={22}
+                color={
+                  item?.rating > 3 ? currentTheme.pink : currentTheme.disabled
+                }
+              />
+            </Pressable>
+            <Pressable>
+              <FontAwesome
+                name="heart"
+                size={22}
+                color={
+                  item?.rating > 4 ? currentTheme.pink : currentTheme.disabled
+                }
+              />
+            </Pressable>
+          </View>
+        )}
         <View
           style={{
             // flexDirection: "row",
@@ -742,7 +805,7 @@ export const Card = ({ item, currentUser, currentTheme, setLoader }) => {
                 fontStyle: "italic",
               }}
             >
-              {language?.language?.Bookings?.bookings?.orderedAt}:{" "}
+              {language?.language?.Bookings?.bookings?.bookedAt}:{" "}
               <Text
                 style={{
                   color: font,
@@ -752,7 +815,7 @@ export const Card = ({ item, currentUser, currentTheme, setLoader }) => {
                 }}
               >
                 {(() => {
-                  let formattedDateInTimezone = moment(item.orderAt)
+                  let formattedDateInTimezone = moment(item.bookingAt)
                     .tz(Localization.timezone)
                     .format("DD MMMM YYYY - HH:mm");
 
@@ -761,7 +824,7 @@ export const Card = ({ item, currentUser, currentTheme, setLoader }) => {
               </Text>
             </Text>
           </View>
-          {item.status === "new" && !editRequest ? (
+          {item.status.seller === "new" && !editRequest ? (
             <View
               style={{
                 flexDirection: "row",
@@ -778,17 +841,17 @@ export const Card = ({ item, currentUser, currentTheme, setLoader }) => {
               <TouchableOpacity
                 activeOpacity={0.8}
                 onPress={() => {
-                  UpdateOrder("rejected");
-                  dispatch(setRerenderOrders());
+                  UpdateBooking({
+                    status: { seller: "rejected", client: "rejected" },
+                  });
+                  dispatch(setRerenderBookings());
                 }}
               >
                 <FontAwesome size={20} name="remove" color="red" />
               </TouchableOpacity>
               <TouchableOpacity
                 activeOpacity={0.8}
-                onPress={() => {
-                  setEditRequest(true);
-                }}
+                onPress={() => setEditRequest(true)}
               >
                 <FontAwesome
                   size={18}
@@ -800,8 +863,10 @@ export const Card = ({ item, currentUser, currentTheme, setLoader }) => {
               <TouchableOpacity
                 activeOpacity={0.8}
                 onPress={() => {
-                  UpdateOrder("active");
-                  dispatch(setRerenderOrders());
+                  UpdateBooking({
+                    status: { seller: "active", client: "active" },
+                  });
+                  dispatch(setRerenderBookings());
                 }}
               >
                 <FontAwesome size={20} name="check" color="green" />
@@ -825,7 +890,6 @@ export const Card = ({ item, currentUser, currentTheme, setLoader }) => {
                 activeOpacity={0.8}
                 onPress={() => {
                   setEditRequest(false);
-
                   setDateAndTime(item.date);
                 }}
               >
@@ -836,13 +900,22 @@ export const Card = ({ item, currentUser, currentTheme, setLoader }) => {
 
               <TouchableOpacity
                 activeOpacity={0.8}
-                onPress={() => {
-                  ReturnRequest();
-                  dispatch(setRerenderOrders());
-                }}
+                onPress={
+                  item?.whereFrom === "client"
+                    ? () => {
+                        ReturnRequest();
+                        dispatch(setRerenderBookings());
+                      }
+                    : () => {
+                        UpdateBooking({ date: dateAndTime });
+                        dispatch(setRerenderBookings());
+                      }
+                }
               >
                 <Text style={{ fontWeight: "bold", color: "green" }}>
-                  {language?.language?.Bookings?.bookings?.send}
+                  {item?.whereFrom === "client"
+                    ? language?.language?.Bookings?.bookings?.send
+                    : language?.language?.Marketplace?.marketplace?.save}
                 </Text>
               </TouchableOpacity>
             </View>

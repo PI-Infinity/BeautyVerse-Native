@@ -26,6 +26,7 @@ const InputVideo = ({ title, setFile, currentTheme, from }) => {
     });
 
     if (!result.canceled && result.assets && result.assets.length > 0) {
+      console.log(result.assets[0]);
       setFile(result.assets[0]); // Wrap the asset object in an object with an "assets" property
       // setTimeout(() => {
       //   setLoading(false);

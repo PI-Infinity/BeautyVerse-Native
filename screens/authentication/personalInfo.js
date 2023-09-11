@@ -83,7 +83,7 @@ export const PersonalInfo = ({ navigation }) => {
     if (phone?.includes("+")) {
       return setAlert({
         active: true,
-        text: "Phone number doesn't need country code (+)",
+        text: "Phone number doesn't need country code +" + callingCode,
         type: "error",
       });
     }
@@ -109,7 +109,11 @@ export const PersonalInfo = ({ navigation }) => {
       // Signup user
       await axios.patch(backendUrl + "/api/v1/users/" + currentUser._id, {
         name: name,
-        phone: "+" + callingCode + phone,
+        phone: {
+          phone: phone,
+          callingCode: callingCode,
+          countryCode: countryCode,
+        },
         address: {
           country: address?.country,
           region: address?.region && address.region,

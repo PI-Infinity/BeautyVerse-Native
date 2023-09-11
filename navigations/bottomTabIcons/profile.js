@@ -19,9 +19,10 @@ import { CacheableImage } from "../../components/cacheableImage";
 import { darkTheme, lightTheme } from "../../context/theme";
 import {
   setRerenderCurrentUser,
-  setRerenderOrders,
+  setRerenderBookings,
 } from "../../redux/rerenders";
 import { setZoomToTop } from "../../redux/app";
+import { Circle } from "../../components/skeltons";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -36,9 +37,9 @@ export const CustomTabBarProfileIcon = (props) => {
   const route = useRoute();
   const routeName = getFocusedRouteNameFromRoute(route);
 
-  // // recieved and sent orders redux states
-  // const newOrders = useSelector((state) => state.storeOrders.new);
-  const newSentOrders = useSelector((state) => state.storeSentOrders.new);
+  // // recieved and sent bookings redux states
+  // const newBookings = useSelector((state) => state.storeBookings.new);
+  const newSentBookings = useSelector((state) => state.storeSentBookings.new);
 
   // Select theme from global Redux state (dark or light theme)
   const theme = useSelector((state) => state.storeApp.theme);
@@ -90,7 +91,7 @@ export const CustomTabBarProfileIcon = (props) => {
                 dispatch(setZoomToTop());
               } else {
                 dispatch(setRerenderCurrentUser());
-                dispatch(setRerenderOrders());
+                dispatch(setRerenderBookings());
               }
             }
           } else {
@@ -106,8 +107,9 @@ export const CustomTabBarProfileIcon = (props) => {
           }}
         >
           {(props.unreadNotifications > 0 ||
-            // newOrders > 0 ||
-            (props.currentUser.type === "specialist" && newSentOrders > 0)) && (
+            // newBookings > 0 ||
+            (props.currentUser.type === "specialist" &&
+              newSentBookings > 0)) && (
             <View
               style={{
                 width: "auto",
@@ -132,13 +134,24 @@ export const CustomTabBarProfileIcon = (props) => {
                 }}
               >
                 {props.unreadNotifications +
-                  (props.currentUser.type === "specialist" ? newSentOrders : 0)}
+                  (props.currentUser.type === "specialist"
+                    ? newSentBookings
+                    : 0)}
               </Text>
             </View>
           )}
           {loadCover && (
-            <View style={{ position: "absolute", top: 5, zIndex: 1000 }}>
-              <ActivityIndicator size="small" color={currentTheme.pink} />
+            <View
+              style={{
+                position: "absolute",
+                zIndex: 1000,
+                overflow: "hidden",
+                height: 27,
+                width: 27,
+                borderRadius: 50,
+              }}
+            >
+              <Circle />
             </View>
           )}
           {props.currentUser?.cover?.length > 0 ? (

@@ -20,7 +20,7 @@ import { ProceduresOptions } from "../../datas/registerDatas";
 
 export const ProceduresList = ({
   targetUser,
-  addOrder,
+  addBooking,
   procedure,
   setProcedure,
   setPrice,
@@ -154,7 +154,7 @@ export const ProceduresList = ({
                         setTime && setTime(null);
                       }
                 }
-                activeOpacity={addOrder ? 0.5 : 1}
+                activeOpacity={addBooking ? 0.5 : 1}
                 key={index}
                 style={{
                   width: "95%",

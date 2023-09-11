@@ -10,6 +10,7 @@ import {
   Animated,
   KeyboardAvoidingView,
   Platform,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -22,16 +23,16 @@ import { useDispatch, useSelector } from "react-redux";
 import { BackDrop } from "../../components/backDropLoader";
 import ProcedureDurationPicker from "../../components/durationList";
 import { darkTheme, lightTheme } from "../../context/theme";
-import { setRerenderOrders } from "../../redux/rerenders";
-import DateAndTimePicker from "../../screens/orders/dateAndTimePicker";
-import { ProceduresList } from "../../screens/orders/procedures";
+import { setRerenderBookings } from "../../redux/rerenders";
+import DateAndTimePicker from "../../screens/bookings/dateAndTimePicker";
+import { ProceduresList } from "../../screens/bookings/procedures";
 import { Language } from "../../context/language";
 
 /**
- * Add new order manualy from OMS
+ * Add new booking manualy from OMS
  */
 
-export const AddOrder = ({ route, navigation }) => {
+export const AddBooking = ({ route, navigation }) => {
   // defines redux dispatch
   const dispatch = useDispatch();
 
@@ -61,7 +62,7 @@ export const AddOrder = ({ route, navigation }) => {
   const [dateAndTime, setDateAndTime] = useState(formattedDateInTimezone);
 
   /**
-   * states to create order
+   * states to create booking
    */
   // defines procedure
   const [procedure, setProcedure] = useState(null);
@@ -88,9 +89,9 @@ export const AddOrder = ({ route, navigation }) => {
   const backendUrl = useSelector((state) => state.storeApp.backendUrl);
 
   /**
-   * Add order to db
+   * Add booking to db
    */
-  const AddOrderToDb = async () => {
+  const AddBooking = async () => {
     if (
       procedure &&
       price?.toString()?.length > 0 &&
@@ -98,26 +99,26 @@ export const AddOrder = ({ route, navigation }) => {
       duration > 0
     ) {
       setLoader(true);
-      let orderId = uuid.v4();
+      let bookingId = uuid.v4();
 
       try {
-        await axios.post(
-          backendUrl + "/api/v1/users/" + currentUser._id + "/orders",
-          {
-            orderNumber: orderId,
-            user: { id: user.id, phone: user.phone, name: user.name },
-            orderedProcedure: procedure?.value,
-            orderedSpecialist: "",
-            orderSum: price,
-            currency: currency,
-            duration: duration,
-            date: dateAndTime,
-            status: "active",
-            comment: "",
-          }
-        );
+        await axios.post(backendUrl + "/api/v1/bookings", {
+          bookingNumber: bookingId,
+          client: user,
+          seller: { id: currentUser._id },
+          bookingProcedure: procedure?.value,
+          bookingSpecialist: "",
+          bookingSum: price,
+          currency: currency,
+          duration: duration,
+          date: dateAndTime,
+          status: { client: "active", seller: "active" },
+          comment: comment,
+          bookingFrom: "seller",
+          whereFrom: "seller",
+        });
 
-        dispatch(setRerenderOrders());
+        dispatch(setRerenderBookings());
         navigation.goBack();
         setLoader(false);
       } catch (error) {
@@ -156,6 +157,23 @@ export const AddOrder = ({ route, navigation }) => {
     }, 200);
   }, []);
 
+  const [usersResult, setUsersResult] = useState([]);
+  // serch client from data base
+  const SearchClient = async (s) => {
+    try {
+      const response = await axios.get(
+        backendUrl +
+          "/api/v1/bookings/" +
+          currentUser._id +
+          "/clients?search=" +
+          s
+      );
+      setUsersResult(response.data.data.users);
+    } catch (error) {
+      console.log(error.response.data.message);
+    }
+  };
+
   return (
     <>
       {isLoaded ? (
@@ -172,12 +190,13 @@ export const AddOrder = ({ route, navigation }) => {
       ) : (
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
-          keyboardVerticalOffset={100}
+          keyboardVerticalOffset={70}
         >
           <ScrollView
             style={{}}
             contentContainerStyle={{
               padding: 15,
+              paddingBottom: 150,
               alignItems: "center",
               gap: 15,
             }}
@@ -226,7 +245,7 @@ export const AddOrder = ({ route, navigation }) => {
               </View>
               <ProceduresList
                 targetUser={currentUser}
-                addOrder={true}
+                addBooking={true}
                 procedure={procedure}
                 setProcedure={setProcedure}
                 price={price}
@@ -459,8 +478,67 @@ export const AddOrder = ({ route, navigation }) => {
                   borderBottomColor: currentTheme.line,
                   padding: 10,
                 }}
-                onChangeText={(val) => setUser({ ...user, name: val })}
+                onChangeText={(val) => {
+                  setUser({ ...user, name: val });
+                  SearchClient(val);
+                }}
               />
+              {user.name?.length > 0 && usersResult?.length > 0 && (
+                <ScrollView
+                  style={{
+                    width: "100%",
+                    padding: 8,
+                    gap: 8,
+                    borderRadius: 10,
+                    borderWidth: 1,
+                    borderColor: currentTheme.line,
+                  }}
+                >
+                  {usersResult?.map((item, index) => {
+                    return (
+                      <Pressable
+                        onPress={() => {
+                          setUser(item.client);
+                          setUsersResult([]);
+                        }}
+                        key={index}
+                        style={{
+                          padding: 8,
+                          borderBottomColor: currentTheme.line,
+                          borderBottomWidth: 1,
+                          gap: 8,
+                          flexDirection: "row",
+                        }}
+                      >
+                        <Text
+                          style={{
+                            color: currentTheme.pink,
+                            letterSpacing: 0.3,
+                          }}
+                        >
+                          {item.client?.name}
+                        </Text>
+                        <Text
+                          style={{
+                            color: currentTheme.pink,
+                            letterSpacing: 0.3,
+                          }}
+                        >
+                          ({item.client?.phone.phone})
+                        </Text>
+                        <Text
+                          style={{
+                            color: currentTheme.pink,
+                            letterSpacing: 0.3,
+                          }}
+                        >
+                          {item.client?.addationalInfo}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                </ScrollView>
+              )}
               <TextInput
                 placeholder={
                   language?.language?.Bookings?.bookings?.phone +
@@ -470,14 +548,19 @@ export const AddOrder = ({ route, navigation }) => {
                   ")"
                 }
                 placeholderTextColor={currentTheme.disabled}
-                value={user.phone}
+                value={user.phone.phone}
                 style={{
                   color: currentTheme.font,
                   borderBottomWidth: 1,
                   borderBottomColor: currentTheme.line,
                   padding: 10,
                 }}
-                onChangeText={(val) => setUser({ ...user, phone: val })}
+                onChangeText={(val) =>
+                  setUser((prevState) => ({
+                    ...prevState,
+                    phone: { ...prevState.phone, phone: val },
+                  }))
+                }
               />
               <TextInput
                 placeholder={
@@ -522,7 +605,7 @@ export const AddOrder = ({ route, navigation }) => {
             </View>
             <TouchableOpacity
               activeOpacity={0.9}
-              onPress={AddOrderToDb}
+              onPress={AddBooking}
               style={{
                 marginVertical: 15,
                 borderRadius: 50,
@@ -539,7 +622,7 @@ export const AddOrder = ({ route, navigation }) => {
                   textAlign: "center",
                 }}
               >
-                {language?.language?.Bookings?.bookings?.addOrder}
+                {language?.language?.Bookings?.bookings?.addBooking}
               </Text>
             </TouchableOpacity>
           </ScrollView>

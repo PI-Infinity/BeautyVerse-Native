@@ -10,7 +10,7 @@ import Modal from "react-native-modal";
 import { Language } from "../../context/language";
 
 /**
- * Status popup for order item
+ * Status popup for bookings item
  */
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -19,7 +19,7 @@ export const StatusPopup = ({
   currentTheme,
   selectedItem,
   setSelectedItem,
-  UpdateOrder,
+  UpdateBooking,
   Delete,
   from,
   setEditRequest,
@@ -53,7 +53,7 @@ export const StatusPopup = ({
   ];
 
   const handleSelect = (value) => {
-    UpdateOrder(value);
+    UpdateBooking({ status: { client: value, seller: value } });
     setSelectedItem(value);
     setModalVisible(false);
   };
@@ -144,7 +144,7 @@ export const StatusPopup = ({
             if (item.value === "pending") {
               return;
             }
-            if (from === "sentOrders" && item.value === "new") {
+            if (from === "sentBookings" && item.value === "new") {
               return;
             }
             if (

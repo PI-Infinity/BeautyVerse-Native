@@ -16,14 +16,15 @@ import { darkTheme, lightTheme } from "../context/theme";
 import { CacheableImage } from "../components/cacheableImage";
 import { Room } from "../screens/chat/room";
 import { FeedItem } from "../screens/feedScreen";
-import { SendOrder } from "../screens/orders/sendOrder";
-import { SentOrders } from "../screens/sentOrders/sentOrders";
+import { SendBooking } from "../screens/bookings/sendBooking";
+import { SentBookings } from "../screens/sentBookings/sentBookings";
 import { ScrollGallery } from "../screens/user/scrollGallery";
 import { User } from "../screens/user/user";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
-import { AddOrder } from "../screens/orders/addOrder";
+import { AddBooking } from "../screens/bookings/addBooking";
 import Product from "../Marketplace/screens/product";
+import { useNavigation } from "@react-navigation/native";
 
 /* 
   Create filter stack navigator
@@ -33,7 +34,8 @@ const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 const Stack = createStackNavigator();
 
-export function BMSStackSent({ navigation }) {
+export function BMSStackSent({}) {
+  const navigation = useNavigation();
   // redux toolkit dispatch
   const dispatch = useDispatch();
 
@@ -60,10 +62,10 @@ export function BMSStackSent({ navigation }) {
         cardStyle: { backgroundColor: "transparent" }, // Set card background to transparent
       }}
     >
-      {/** main order list screen  */}
+      {/** main booking list screen  */}
       <Stack.Screen
-        name="sent orders"
-        children={() => <SentOrders navigation={navigation} />}
+        name="sent bookings"
+        children={() => <SentBookings navigation={navigation} />}
         options={({ navigation }) => ({
           headerBackTitleVisible: false,
           title: language?.language?.User?.userPage?.sentBookings,
@@ -92,7 +94,7 @@ export function BMSStackSent({ navigation }) {
           //     <TouchableOpacity
           //       acitveOpacity={0.3}
           //       style={{ marginRight: 15 }}
-          //       onPress={() => navigation.navigate("Add Order")}
+          //       onPress={() => navigation.navigate("Add Booking")}
           //     >
           //       <MaterialIcons
           //         style={{
@@ -106,7 +108,7 @@ export function BMSStackSent({ navigation }) {
           //     {/* <TouchableOpacity
           //       acitveOpacity={0.3}
           //       style={{ marginRight: 15 }}
-          //       onPress={() => navigation.navigate("Order Statistics")}
+          //       onPress={() => navigation.navigate("Booking Statistics")}
           //     >
           //       <MaterialIcons
           //         name="bar-chart"
@@ -119,11 +121,11 @@ export function BMSStackSent({ navigation }) {
         })}
       />
       {/* <Stack.Screen
-        name="Add Order"
-        component={AddOrder}
-        options={({ route }) => ({
+        name="Add Booking"
+        component={AddBooking}
+        options={({ route, navigation }) => ({
           headerBackTitleVisible: false,
-          title: language?.language?.Bookings?.bookings?.addOrder,
+          title: language?.language?.Bookings?.bookings?.addBooking,
           headerStyle: {
             height: SCREEN_HEIGHT / 9,
 
@@ -218,11 +220,12 @@ export function BMSStackSent({ navigation }) {
                     currentUser.type !== "beautycenter" &&
                     currentUser?.type !== "shop" &&
                     route.params?.user.type !== "shop" &&
-                    route.params?.user.type !== "user" && (
+                    route.params?.user.type !== "user" &&
+                    route.params.user.subscription.status === "active" && (
                       <TouchableOpacity
                         acitveOpacity={0.3}
                         onPress={() =>
-                          navigation.navigate("Send Order", {
+                          navigation.navigate("Send Booking", {
                             user: route.params.user,
                           })
                         }
@@ -243,7 +246,7 @@ export function BMSStackSent({ navigation }) {
       <Stack.Screen
         name="UserVisit"
         component={User}
-        options={({ route }) => ({
+        options={({ route, navigation }) => ({
           headerBackTitleVisible: false,
           headerLeft: () => (
             <TouchableOpacity
@@ -296,11 +299,12 @@ export function BMSStackSent({ navigation }) {
                     currentUser.type !== "beautycenter" &&
                     currentUser?.type !== "shop" &&
                     route.params?.user.type !== "shop" &&
-                    route.params?.user.type !== "user" && (
+                    route.params?.user.type !== "user" &&
+                    route.params.user.subscription.status === "active" && (
                       <TouchableOpacity
                         acitveOpacity={0.3}
                         onPress={() =>
-                          navigation.navigate("Send Order", {
+                          navigation.navigate("Send Booking", {
                             user: route.params.user,
                           })
                         }
@@ -336,11 +340,11 @@ export function BMSStackSent({ navigation }) {
           },
         })}
       />
-      {/* sent order screen */}
+      {/* sent booking screen */}
       <Stack.Screen
-        name="Send Order"
-        component={SendOrder}
-        options={({ route }) => ({
+        name="Send Booking"
+        component={SendBooking}
+        options={({ navigation }) => ({
           headerBackTitleVisible: false,
           headerLeft: () => (
             <TouchableOpacity
@@ -375,9 +379,9 @@ export function BMSStackSent({ navigation }) {
         })}
       />
       <Stack.Screen
-        name="Sent Orders"
-        component={SentOrders}
-        options={({ route }) => ({
+        name="Sent Bookings"
+        component={SentBookings}
+        options={({ navigation }) => ({
           headerBackTitleVisible: false,
           headerLeft: () => (
             <TouchableOpacity
@@ -415,7 +419,7 @@ export function BMSStackSent({ navigation }) {
       <Stack.Screen
         name="ScrollGallery"
         component={ScrollGallery}
-        options={({ route }) => ({
+        options={({ navigation }) => ({
           headerBackTitleVisible: false,
           headerLeft: () => (
             <TouchableOpacity
@@ -590,7 +594,7 @@ export function BMSStackSent({ navigation }) {
       <Stack.Screen
         name="UserFeed"
         component={FeedItem}
-        options={({ route }) => ({
+        options={({ route, navigation }) => ({
           headerBackTitleVisible: false,
           headerLeft: () => (
             <TouchableOpacity
@@ -629,7 +633,7 @@ export function BMSStackSent({ navigation }) {
       <Stack.Screen
         name="Product"
         component={Product}
-        options={({ route }) => ({
+        options={({ route, navigation }) => ({
           headerBackTitleVisible: false,
           headerLeft: () => (
             <TouchableOpacity
@@ -642,6 +646,30 @@ export function BMSStackSent({ navigation }) {
                 color={currentTheme.pink}
                 size={22}
               />
+            </TouchableOpacity>
+          ),
+          headerRight: () => (
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() =>
+                navigation.navigate("User", {
+                  user: route.params.product.owner,
+                })
+              }
+              style={{ padding: 8, marginRight: 8 }}
+            >
+              {route.params.product.owner?.cover ? (
+                <CacheableImage
+                  source={{ uri: route.params.product.owner?.cover }}
+                  style={{ width: 25, height: 25, borderRadius: 50 }}
+                />
+              ) : (
+                <FontAwesome
+                  name="user"
+                  size={20}
+                  color={currentTheme.disabled}
+                />
+              )}
             </TouchableOpacity>
           ),
           title: route.params.product.title,

@@ -10,13 +10,15 @@ const initialState = {
   removeStarRerenderFromScrollGallery: false,
   addReviewQntRerenderFromScrollGallery: false,
   removeReviewQntRerenderFromScrollGallery: false,
+  saveFromScrollGallery: false,
+  unsaveFromScrollGallery: false,
 
   rerenderUserFeeds: false,
   rerenderUserFeed: false,
 
   rerenderNotifications: false,
 
-  rerenderOrders: false,
+  rerenderBookings: false,
 
   // refreshes
   feedRefreshControl: false,
@@ -62,11 +64,17 @@ export const Rerenders = createSlice({
       state.removeReviewQntRerenderFromScrollGallery =
         !state.removeReviewQntRerenderFromScrollGallery;
     },
+    setSaveFromScrollGallery: (state, action) => {
+      state.saveFromScrollGallery = !state.saveFromScrollGallery;
+    },
+    setUnsaveFromScrollGallery: (state, action) => {
+      state.unsaveFromScrollGallery = !state.unsaveFromScrollGallery;
+    },
     setRerenderNotifcations: (state, action) => {
       state.rerenderNotifications = !state.rerenderNotifications;
     },
-    setRerenderOrders: (state, action) => {
-      state.rerenderOrders = !state.rerenderOrders;
+    setRerenderBookings: (state, action) => {
+      state.rerenderBookings = !state.rerenderBookings;
     },
     setFeedRefreshControl: (state, action) => {
       state.feedRefreshControl = action.payload;
@@ -88,8 +96,10 @@ export const {
   setRemoveStarRerenderFromScrollGallery,
   setAddReviewQntRerenderFromScrollGallery,
   setRemoveReviewQntRerenderFromScrollGallery,
+  setSaveFromScrollGallery,
+  setUnsaveFromScrollGallery,
   setRerenderNotifcations,
-  setRerenderOrders,
+  setRerenderBookings,
   setFeedRefreshControl,
   setCardRefreshControl,
 } = Rerenders.actions;

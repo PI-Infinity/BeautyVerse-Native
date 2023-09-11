@@ -168,7 +168,7 @@ export const Message = (props) => {
           }
         }
       } else {
-        // delete reciever id field if sender not current user
+        // delete seller id field if sender not current user
         await axios.patch(backendUrl + "/api/v1/chats/messages/" + m, {
           receiverId: "",
         });

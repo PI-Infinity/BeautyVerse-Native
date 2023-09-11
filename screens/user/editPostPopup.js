@@ -51,7 +51,7 @@ const SmoothModal = ({
   const currentUser = useSelector((state) => state.storeUser.currentUser);
 
   useEffect(() => {
-    setText(post.original);
+    setText(post?.original);
   }, []);
 
   // on save function
@@ -77,7 +77,7 @@ const SmoothModal = ({
   const UpdatePost = async () => {
     try {
       const response = await axios.patch(
-        backendUrl + `/api/v1/users/${currentUser?._id}/feeds/${itemId}`,
+        backendUrl + `/api/v1/feeds/${itemId}`,
         {
           post: text,
         }
@@ -107,11 +107,11 @@ const SmoothModal = ({
     }
 
     // remove feed from DB
-    const url =
-      backendUrl + `/api/v1/users/${currentUser?._id}/feeds/${itemId}`;
-    await fetch(url, { method: "DELETE" })
-      .then((response) => response.json())
-      .then(async (data) => {
+    try {
+      const url = backendUrl + `/api/v1/feeds/${itemId}`;
+      const resp = await axios.delete(url);
+
+      if (resp) {
         // Delete the file from cloud
         if (fileFormat === "video") {
           deleteObject(fileRef).then(() => {
@@ -142,10 +142,10 @@ const SmoothModal = ({
               console.log("error : " + error);
             });
         }
-      })
-      .catch((error) => {
-        console.log("Error fetching data:", error);
-      });
+      }
+    } catch (error) {
+      console.log(error.response.data.message);
+    }
   };
 
   return (

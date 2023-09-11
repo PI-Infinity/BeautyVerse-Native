@@ -16,19 +16,19 @@ import uuid from "react-native-uuid";
 import { useDispatch, useSelector } from "react-redux";
 import { useSocket } from "../../context/socketContext";
 import { darkTheme, lightTheme } from "../../context/theme";
-import { setRerenderOrders } from "../../redux/rerenders";
-import { Calendar } from "../../screens/orders/calendar";
-import { ProceduresList } from "../../screens/orders/procedures";
+import { setRerenderBookings } from "../../redux/rerenders";
+import { Calendar } from "../../screens/bookings/calendar";
+import { ProceduresList } from "../../screens/bookings/procedures";
 import { Language } from "../../context/language";
 import { ProceduresOptions } from "../../datas/registerDatas";
 import { BackDrop } from "../../components/backDropLoader";
 import { sendNotification } from "../../components/pushNotifications";
 
 /**
- * Send order component to specialist or to salon
+ * Send booking component to specialist or to salon
  */
 
-export const SendOrder = ({ route }) => {
+export const SendBooking = ({ route }) => {
   // loading state
   const [isLoaded, setIsLoaded] = useState(true); // new state variable
 
@@ -78,29 +78,29 @@ export const SendOrder = ({ route }) => {
   // time loader state
   const [timeLoader, setTimeLoader] = useState(false);
 
-  /// get orders by date
-  const [orders, setOrders] = useState([]);
+  /// get bookings by date
+  const [bookings, setBookings] = useState([]);
 
   // backend url
   const backendUrl = useSelector((state) => state.storeApp.backendUrl);
 
   /**
-   * Get orders function
+   * Get bookings function
    */
-  const GetOrders = async () => {
+  const GetBookings = async () => {
     setTimeLoader(true);
     try {
       const response = await axios.get(
-        backendUrl + "/api/v1/users/" + targetUser._id + `/orders?date=${date}`
+        backendUrl + `/api/v1/bookings/${currentUser._id}?date=${date}`
       );
-      setOrders(response.data.data.orders);
+      setBookings(response.data.data.bookings);
     } catch (error) {
       console.log(error.response.data.message);
     }
   };
 
   useEffect(() => {
-    GetOrders();
+    GetBookings();
   }, [date, time]);
 
   const t = new Date(date);
@@ -132,10 +132,10 @@ export const SendOrder = ({ route }) => {
     if (wDay.hours) {
       workingHoursInThisDay = wDay.hours?.split(" - ");
     } else {
-      workingHoursInThisDay = ["10:00", "21:00"];
+      workingHoursInThisDay = ["09:00", "21:00"];
     }
   } else {
-    workingHoursInThisDay = ["10:00", "21:00"];
+    workingHoursInThisDay = ["09:00", "21:00"];
   }
 
   let startHour;
@@ -153,12 +153,12 @@ export const SendOrder = ({ route }) => {
     procedureTime = 60;
   }
 
-  // Assuming orders is defined elsewhere in your code and each order has a `date` (a timestamp) and `duration` (in minutes)
-  let activeHours = orders?.map((order, index) => {
-    // Parse the order date as a UTC moment
-    let startTime = moment.utc(order.date);
+  // Assuming bookings is defined elsewhere in your code and each booking has a `date` (a timestamp) and `duration` (in minutes)
+  let activeHours = bookings?.map((booking, index) => {
+    // Parse the booking date as a UTC moment
+    let startTime = moment.utc(booking.date);
 
-    let duration = order.duration;
+    let duration = booking.duration;
 
     // Compute endTime as startTime + duration
     let endTime = moment.utc(startTime).add(duration, "minutes");
@@ -252,11 +252,39 @@ export const SendOrder = ({ route }) => {
     }
   });
 
+  // define day offs
+  let days = [
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+    "Sunday",
+  ];
+
+  // Assuming workingDays is set elsewhere in your code.
+  let dayOffs;
+  if (targetUser?.workingDays[0]?.value.toLowerCase() === "workingdays") {
+    dayOffs = ["Saturday", "Sunday"];
+  } else if (targetUser?.workingDays[0]?.value.toLowerCase() === "everyday") {
+    dayOffs = [];
+  } else if (Array.isArray(targetUser?.workingDays)) {
+    dayOffs = days.filter(
+      (day) =>
+        !targetUser?.workingDays.some(
+          (workingDay) => workingDay.value?.toLowerCase() === day.toLowerCase()
+        )
+    );
+  } else {
+    console.log("Unexpected value for workingDays");
+  }
+
   // defines beautyverse procedures list
   const proceduresOptions = ProceduresOptions();
 
-  /// send order request function
-  const SendOrderRequest = async () => {
+  /// send booking request function
+  const SendBookingRequest = async () => {
     if (!time || !procedure) {
       return Alert.alert("Procedure, date or time are undefined!");
     } else {
@@ -269,47 +297,30 @@ export const SendOrder = ({ route }) => {
       // Set the time
       newDate.setUTCHours(hours, minutes);
 
-      let orderId = uuid.v4();
+      let bookingId = uuid.v4();
       setSending(true);
       try {
-        await axios.post(
-          backendUrl + "/api/v1/users/" + targetUser._id + "/orders",
-          {
-            orderNumber: orderId,
-            user: {
-              id: currentUser._id,
-              phone: currentUser.phone,
-              name: currentUser.name,
-            },
-            orderedProcedure: procedure.value,
-            orderedSpecialist: "",
-            orderSum: procedure?.price,
-            currency: currency,
-            duration: procedure?.duration ? procedure.duration : 60,
-            date: newDate.toISOString(),
-            status: "new",
-            comment: "",
-          }
-        );
-        await axios.post(
-          backendUrl + "/api/v1/users/" + currentUser._id + "/sentorders",
-          {
-            orderNumber: orderId,
-            user: {
-              id: targetUser._id,
-              phone: targetUser.phone,
-              name: targetUser.name,
-            },
-            orderedProcedure: procedure.value,
-            orderedSpecialist: "",
-            orderSum: procedure?.price,
-            currency: currency,
-            duration: procedure?.duration,
-            date: newDate.toISOString(),
-            status: "pending",
-            comment: "",
-          }
-        );
+        await axios.post(backendUrl + "/api/v1/bookings", {
+          bookingNumber: bookingId,
+          client: {
+            id: currentUser._id,
+            phone: currentUser.phone,
+            name: currentUser.name,
+          },
+          seller: {
+            id: targetUser._id,
+            phone: targetUser.phone,
+            name: targetUser.name,
+          },
+          bookingProcedure: procedure.value,
+          bookingSum: procedure?.price,
+          currency: currency,
+          duration: procedure?.duration ? procedure.duration : 60,
+          date: newDate.toISOString(),
+          status: { seller: "new", client: "pending" },
+          comment: "",
+          whereFrom: "client",
+        });
 
         let lab = proceduresOptions?.find(
           (it) => it?.value?.toLowerCase() === procedure?.value?.toLowerCase()
@@ -319,13 +330,13 @@ export const SendOrder = ({ route }) => {
             targetUser?.pushNotificationToken,
             currentUser.name,
             "sent you an appointment request",
-            { type: "order", status: "new" }
+            { type: "booking", status: "new" }
           );
         }
-        socket.emit("updateOrders", {
+        socket.emit("updateBookings", {
           targetId: targetUser?._id,
         });
-        dispatch(setRerenderOrders());
+        dispatch(setRerenderBookings());
         Alert.alert("The request has been sent successfully!");
         setTimeout(() => {
           navigation.navigate("BMSSent");
@@ -392,7 +403,7 @@ export const SendOrder = ({ route }) => {
           </View>
           <ProceduresList
             targetUser={targetUser}
-            addOrder={true}
+            addBooking={true}
             procedure={procedure}
             setProcedure={setProcedure}
             price={price}
@@ -486,61 +497,63 @@ export const SendOrder = ({ route }) => {
                 </View>
               ) : (
                 <>
-                  {result?.map((item, index) => {
-                    return (
-                      <View
-                        key={index}
-                        style={{
-                          flexDirection: "row",
-                          width: "95%",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                          marginVertical: 8,
-                          paddingHorizontal: 15,
-                          paddingVertical: 10,
-                          borderWidth: 1,
-                          borderColor:
-                            time?.time === item?.time
-                              ? currentTheme.pink
-                              : currentTheme.line,
-                          borderRadius: 10,
-                        }}
-                      >
-                        <Text
+                  {!dayOffs.includes(isTodayDay) &&
+                    result?.map((item, index) => {
+                      return (
+                        <View
+                          key={index}
                           style={{
-                            color:
+                            flexDirection: "row",
+                            width: "95%",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            marginVertical: 8,
+                            paddingHorizontal: 15,
+                            paddingVertical: 10,
+                            borderWidth: 1,
+                            borderColor:
                               time?.time === item?.time
                                 ? currentTheme.pink
-                                : currentTheme.font,
-                            letterSpacing: 0.2,
-                            fontWeight: "bold",
+                                : currentTheme.line,
+                            borderRadius: 10,
                           }}
-                        >
-                          {item?.time}
-                        </Text>
-                        <Pressable
-                          onPress={
-                            item.status === "Available"
-                              ? () => setTime(item)
-                              : () => Alert.alert("This time isn't Available!")
-                          }
                         >
                           <Text
                             style={{
                               color:
-                                item.status === "Available"
+                                time?.time === item?.time
                                   ? currentTheme.pink
                                   : currentTheme.font,
                               letterSpacing: 0.2,
                               fontWeight: "bold",
                             }}
                           >
-                            {item.status}
+                            {item?.time}
                           </Text>
-                        </Pressable>
-                      </View>
-                    );
-                  })}
+                          <Pressable
+                            onPress={
+                              item.status === "Available"
+                                ? () => setTime(item)
+                                : () =>
+                                    Alert.alert("This time isn't Available!")
+                            }
+                          >
+                            <Text
+                              style={{
+                                color:
+                                  item.status === "Available"
+                                    ? currentTheme.pink
+                                    : currentTheme.font,
+                                letterSpacing: 0.2,
+                                fontWeight: "bold",
+                              }}
+                            >
+                              {item.status}
+                            </Text>
+                          </Pressable>
+                        </View>
+                      );
+                    })}
                 </>
               )}
             </View>
@@ -599,7 +612,7 @@ export const SendOrder = ({ route }) => {
             style={{ width: "100%", alignItems: "center", marginBottom: 30 }}
           >
             <Pressable
-              onPress={SendOrderRequest}
+              onPress={SendBookingRequest}
               style={{
                 width: "45%",
                 backgroundColor: currentTheme.pink,

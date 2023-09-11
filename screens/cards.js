@@ -8,6 +8,7 @@ import {
   StyleSheet,
   Text,
   View,
+  Animated,
 } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 import { Card } from "../components/profileCard";
@@ -65,31 +66,31 @@ export const Cards = ({ navigation, setScrollY }) => {
   // useEffect hook to get data from the API
   useEffect(() => {
     const Getting = async () => {
+      openLoading();
       try {
         const response = await axios.get(
           `${backendUrl}/api/v1/cards?search=${search}&filter=${filter}&type=${
             specialists ? "specialist" : ""
           }${salons ? "beautyCenter" : ""}${
             shops ? "shop" : ""
-          }&city=${city}&district=${district}&check=${
-            currentUser !== null ? currentUser._id : ""
-          }&page=${1}&limit=8&country=${
+          }&city=${city}&district=${district}&page=${1}&limit=8&country=${
             location.country ? location.country : currentUser.address[0].country
           }`
         );
 
-        setUsers(response.data.data.feedList);
+        setUsers(response.data.data.cards);
         setTimeout(() => {
           setLoadingSkelton(false);
           dispatch(setCardRefreshControl(false));
           setPage(1);
-        }, 300);
+          closeLoading();
+        }, 200);
       } catch (error) {
         console.log(error);
         setTimeout(() => {
           setLoadingSkelton(false);
           setPage(1);
-        }, 300);
+        }, 200);
       }
     };
     Getting();
@@ -115,14 +116,12 @@ export const Cards = ({ navigation, setScrollY }) => {
           specialists ? "specialist" : ""
         }${salons ? "beautyCenter" : ""}${
           shops ? "shop" : ""
-        }&city=${city}&district=${district}&check=${
-          currentUser !== null ? currentUser._id : ""
-        }&page=${currentPage}&limit=8&country=${
+        }&city=${city}&district=${district}&page=${currentPage}&limit=8&country=${
           location.country ? location.country : currentUser.address[0].country
         }`
       );
       setUsers((prev) => {
-        const newUsers = response.data.data.feedList;
+        const newUsers = response.data.data.cards;
         return newUsers.reduce((acc, curr) => {
           const existingUserIndex = acc.findIndex(
             (user) => user._id === curr._id
@@ -149,13 +148,6 @@ export const Cards = ({ navigation, setScrollY }) => {
     }
   };
 
-  // Function to handle pull-to-refresh
-  const onRefresh = useCallback(async () => {
-    dispatch(setCardRefreshControl(true));
-    setPage(1);
-    dispatch(setCleanUp());
-  }, []);
-
   // zoom to top on change dependency
   const zoomToTop = useSelector((state) => state.storeApp.zoomToTop);
   let firstRend = useRef();
@@ -167,6 +159,39 @@ export const Cards = ({ navigation, setScrollY }) => {
     flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
   }, [zoomToTop]);
 
+  // refresh inidcator animation
+  const opacityValue = useRef(new Animated.Value(0)).current;
+  const transformScroll = useRef(new Animated.Value(0)).current;
+
+  const openLoading = () => {
+    Animated.parallel([
+      Animated.timing(opacityValue, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.timing(transformScroll, {
+        toValue: 60,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+  const closeLoading = () => {
+    Animated.parallel([
+      Animated.timing(opacityValue, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.timing(transformScroll, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
   return (
     <View
       style={{
@@ -176,6 +201,20 @@ export const Cards = ({ navigation, setScrollY }) => {
         height: "100%",
       }}
     >
+      <Animated.View
+        style={{
+          opacity: opacityValue,
+          transform: [{ scale: 1.2 }],
+          alignItems: "center",
+          width: "100%",
+        }}
+      >
+        <ActivityIndicator
+          color={currentTheme.pink}
+          style={{ position: "absolute", top: 15, zIndex: -1 }}
+        />
+      </Animated.View>
+
       {loadingSkelton ? (
         <View
           style={{
@@ -188,7 +227,7 @@ export const Cards = ({ navigation, setScrollY }) => {
           <ActivityIndicator color={currentTheme.pink} size="large" />
         </View>
       ) : users?.length > 0 ? (
-        <FlatList
+        <Animated.FlatList
           ref={flatListRef}
           data={users}
           onScroll={handleScroll}
@@ -198,15 +237,11 @@ export const Cards = ({ navigation, setScrollY }) => {
             width: SCREEN_WIDTH,
           }}
           columnWrapperStyle={styles.columnWrapper}
-          // bounces={Platform.OS === "ios" ? false : undefined}
-          // overScrollMode={Platform.OS === "ios" ? "never" : "always"}
-          refreshControl={
-            <RefreshControl
-              tintColor="#ccc"
-              refreshing={refresh}
-              onRefresh={onRefresh}
-            />
-          }
+          style={{
+            flex: 1,
+            transform: [{ translateY: transformScroll }],
+            backgroundColor: currentTheme.background,
+          }}
           renderItem={({ item, index }) => {
             return (
               <Card

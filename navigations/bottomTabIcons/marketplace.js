@@ -10,6 +10,7 @@ import { Animated, Pressable, View, Dimensions } from "react-native";
 import { useDispatch } from "react-redux";
 import { RouteNameContext } from "../../context/routName";
 import { setRerenderProducts } from "../../redux/Marketplace";
+import { setZoomToTop } from "../../redux/app";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -19,6 +20,7 @@ export const CustomTabBarMarketplaceIcon = ({
   color,
   currentTheme,
   focused,
+  scrollY,
 }) => {
   // define some contexts and routes
 
@@ -67,17 +69,15 @@ export const CustomTabBarMarketplaceIcon = ({
         style={{}}
         onPress={() => {
           if (isFocused) {
-            // if (routeName === "cards") {
-            // if (scrollY > 0) {
-            //   dispatch(setZoomToTop());
-            // } else {
-            //   dispatch(setCardRefreshControl(true));
-            //   dispatch(setCleanUp());
-            // }
-            dispatch(setRerenderProducts());
-            // } else {
-            //   navigation.navigate("Marketplace")
-            // }
+            if (routeName === "main") {
+              if (scrollY > 0) {
+                dispatch(setZoomToTop());
+              } else {
+                dispatch(setRerenderProducts());
+              }
+            } else {
+              navigation.navigate("main");
+            }
           } else {
             navigation.navigate("Marketplace");
           }

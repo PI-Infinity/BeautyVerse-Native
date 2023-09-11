@@ -4,7 +4,7 @@ import React, { useContext, useEffect, useRef, useState } from "react";
 import { Animated, Pressable, Text, View, Dimensions } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 import { RouteNameContext } from "../../context/routName";
-import { setRerenderOrders } from "../../redux/rerenders";
+import { setRerenderBookings } from "../../redux/rerenders";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -21,9 +21,9 @@ export const CustomTabBarBookingsIcon = ({
   const isFocused = useIsFocused();
   const dispatch = useDispatch();
 
-  // recieved and sent orders redux states
-  const newOrders = useSelector((state) => state.storeOrders.new);
-  const newSentOrders = useSelector((state) => state.storeSentOrders.new);
+  // recieved and sent bookings redux states
+  const newBookings = useSelector((state) => state.storeBookings.new);
+  const newSentBookings = useSelector((state) => state.storeSentBookings.new);
 
   // current user state
   const currentUser = useSelector((state) => state.storeUser.currentUser);
@@ -66,13 +66,7 @@ export const CustomTabBarBookingsIcon = ({
       <Pressable
         onPress={
           isFocused
-            ? () => dispatch(setRerenderOrders())
-            : routeName === "Filter" || routeName === "Search"
-            ? () => navigation.navigate("Feeds")
-            : routeName === "Filter1" || routeName === "Search1"
-            ? () => {
-                navigation.navigate("cards");
-              }
+            ? () => dispatch(setRerenderBookings())
             : currentUser.type === "user"
             ? () => navigation.navigate("BMSSent")
             : () => navigation.navigate("BMS")
@@ -153,7 +147,8 @@ export const CustomTabBarBookingsIcon = ({
               // marginTop: 3,
             }}
           >
-            {newOrders > 0 && (
+            {(currentUser.type === "user" ? newSentBookings : newBookings) >
+              0 && (
               <View
                 style={{
                   width: "auto",
@@ -169,7 +164,9 @@ export const CustomTabBarBookingsIcon = ({
                   top: -2,
                 }}
               >
-                <Text style={{ color: "#fff", fontSize: 10 }}>{newOrders}</Text>
+                <Text style={{ color: "#fff", fontSize: 10 }}>
+                  {currentUser.type === "user" ? newSentBookings : newBookings}
+                </Text>
               </View>
             )}
             <FontAwesome5

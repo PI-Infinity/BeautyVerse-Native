@@ -41,11 +41,13 @@ export const PersonalInfo = () => {
   // define current user
   const currentUser = useSelector((state) => state.storeUser.currentUser);
 
+  console.log(currentUser);
+
   // define editing mode
   const [isEditing, setIsEditing] = useState(false);
   const [editableUser, setEditableUser] = useState({ ...currentUser });
-  const [countryCode, setCountryCode] = useState("US");
-  const [callingCode, setCallingCode] = useState("1");
+  const [countryCode, setCountryCode] = useState(currentUser.phone.countryCode);
+  const [callingCode, setCallingCode] = useState(currentUser.phone.collingCode);
 
   // alert message
   const [alert, setAlert] = useState({ active: false, text: "", type: "" });
@@ -66,7 +68,7 @@ export const PersonalInfo = () => {
 
   // define function on save
   const handleSave = async () => {
-    if (editableUser?.phone?.includes("+")) {
+    if (editableUser?.phone.phone?.includes("+")) {
       return setAlert({
         active: true,
         text: "Phone number doesn't need country code +" + callingCode,
@@ -77,7 +79,11 @@ export const PersonalInfo = () => {
       ...currentUser,
       name: editableUser?.name,
       username: editableUser?.username,
-      phone: callingCode + editableUser?.phone,
+      phone: {
+        phone: editableUser.phone.phone,
+        callingCode: callingCode,
+        countryCode: countryCode,
+      },
       about: editableUser?.about,
       media: {
         web: editableUser?.media?.web,
@@ -95,7 +101,11 @@ export const PersonalInfo = () => {
       await axios.patch(backendUrl + "/api/v1/users/" + currentUser._id, {
         name: editableUser?.name,
         username: editableUser?.username,
-        phone: editableUser?.phone,
+        phone: {
+          phone: editableUser.phone.phone,
+          callingCode: callingCode,
+          countryCode: countryCode,
+        },
         about: editableUser?.about,
         media: {
           web: editableUser?.media?.web,
@@ -350,17 +360,17 @@ export const PersonalInfo = () => {
               </View>
               <TextInput
                 placeholderTextColor={currentTheme.disabled}
-                placeholder="ex: +00000000000"
+                placeholder="ex: 555000000"
                 style={[
                   styles.input,
                   { color: currentTheme.font, borderColor: currentTheme.line },
                 ]}
-                value={editableUser.phone}
+                value={editableUser.phone.phone}
                 onChangeText={(text) =>
-                  setEditableUser({
-                    ...editableUser,
-                    phone: text,
-                  })
+                  setEditableUser((prevState) => ({
+                    ...prevState,
+                    phone: { ...prevState.phone, phone: text },
+                  }))
                 }
               />
             </View>
@@ -371,7 +381,7 @@ export const PersonalInfo = () => {
                 { color: currentTheme.font, letterSpacing: 0.2 },
               ]}
             >
-              {currentUser.phone}
+              {currentUser.phone.phone}
             </Text>
           )}
         </View>

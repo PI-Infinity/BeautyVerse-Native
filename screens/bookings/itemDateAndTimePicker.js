@@ -26,8 +26,8 @@ const CustomDatePicker = ({
   from,
   dateAndTime,
   setDateAndTime,
-  orderId,
-  orderDuration,
+  bookingId,
+  bookingDuration,
   targetUser,
 }) => {
   const dispatch = useDispatch();
@@ -139,32 +139,29 @@ const CustomDatePicker = ({
     }
   }, [selectedMonth, selectedYear]);
 
-  /// get orders by date
-  const [orders, setOrders] = useState([]);
+  /// get bookings by date
+  const [bookings, setBookings] = useState([]);
 
   const [loader, setLoader] = useState(false);
 
   // backend url
   const backendUrl = useSelector((state) => state.storeApp.backendUrl);
 
-  const GetOrders = async () => {
+  const GetBookings = async () => {
     setLoader(true);
     let newDate = new Date(selectedYear, selectedMonth - 1, selectedDay);
     try {
       const response = await axios.get(
-        backendUrl +
-          "/api/v1/users/" +
-          targetUser._id +
-          `/orders?date=${newDate}`
+        backendUrl + "/api/v1/bookings/" + targetUser._id + `?date=${newDate}`
       );
-      setOrders(response.data.data.orders);
+      setBookings(response.data.data.bookings);
     } catch (error) {
       console.log(error.response.data.message);
     }
   };
 
   useEffect(() => {
-    GetOrders();
+    GetBookings();
   }, [selectedDay, selectedMonth, selectedYear]);
 
   // define free hours
@@ -186,7 +183,7 @@ const CustomDatePicker = ({
   if (wDay) {
     workingHoursInThisDay = wDay.hours?.split(" - ");
   } else {
-    workingHoursInThisDay = "00:00 - 00:00";
+    workingHoursInThisDay = "09:00 - 21:00";
   }
 
   let startHour;
@@ -195,21 +192,21 @@ const CustomDatePicker = ({
     startHour = workingHoursInThisDay[0];
     endHour = workingHoursInThisDay[1];
   } else {
-    startHour = "01:00";
-    endHour = "24:00";
+    startHour = "09:00";
+    endHour = "21:00";
   }
 
   // define procedure time
-  const procedureTime = orderDuration;
+  const procedureTime = bookingDuration;
 
-  // Assuming orders is defined elsewhere in your code and each order has a `date` (a timestamp) and `duration` (in minutes)
-  let activeHours = orders
-    .filter((or) => or.orderNumber !== orderId)
-    ?.map((order, index) => {
-      // Parse the order date as a UTC moment
-      let startTime = moment.utc(order.date);
+  // Assuming bookings is defined elsewhere in your code and each booking has a `date` (a timestamp) and `duration` (in minutes)
+  let activeHours = bookings
+    .filter((b) => b.bookingNumber !== bookingId)
+    ?.map((booking, index) => {
+      // Parse the booking date as a UTC moment
+      let startTime = moment.utc(booking.date);
 
-      let duration = order.duration;
+      let duration = booking.duration;
 
       // Compute endTime as startTime + duration
       let endTime = moment.utc(startTime).add(duration, "minutes");

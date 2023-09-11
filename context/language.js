@@ -12,6 +12,7 @@ import Bookings from "../languages/pages/bookings/bookings";
 import Auth from "../languages/pages/auth/auth";
 import Pages from "../languages/pages/pages";
 import Marketplace from "../languages/pages/marketplace/marketplace";
+import Prices from "../languages/pages/prices";
 
 export const Language = () => {
   const lang = useSelector((state) => state.storeApp.language);
@@ -46,6 +47,9 @@ export const Language = () => {
         Marketplace: {
           marketplace: Marketplace.en,
         },
+        Prices: {
+          prices: Prices.en,
+        },
       },
     };
   } else if (lang === "ka") {
@@ -78,6 +82,9 @@ export const Language = () => {
         Marketplace: {
           marketplace: Marketplace.ka,
         },
+        Prices: {
+          prices: Prices.ka,
+        },
       },
     };
   } else if (lang === "ru") {
@@ -109,6 +116,9 @@ export const Language = () => {
         },
         Marketplace: {
           marketplace: Marketplace.ru,
+        },
+        Prices: {
+          prices: Prices.ru,
         },
       },
     };

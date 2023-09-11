@@ -98,15 +98,14 @@ export const Filter = ({ navigation }) => {
   const [districts, setDistricts] = useState([]);
 
   async function GetDistricts() {
-    await fetch(`${backendUrl}/api/v1/districts?city=${city}`)
-      .then((response) => response.json())
-      .then((data) => {
-        setDistricts([...data.data.districts]);
-      })
-      .then(() => {})
-      .catch((error) => {
-        console.log("Error fetching data:", error);
-      });
+    try {
+      const response = await axios.get(
+        `${backendUrl}/api/v1/districts?city=${city}`
+      );
+      setDistricts([...response.data.data.districts]);
+    } catch (error) {
+      console.log(error.response.data.message);
+    }
   }
 
   useEffect(() => {
@@ -141,7 +140,7 @@ export const Filter = ({ navigation }) => {
           }`
         );
         setUsersLength(response.data.cardsResult);
-        setUsers(response.data.data.feedList);
+        setUsers(response.data.data.cards);
         setPage(1);
       } catch (error) {
         console.log(error.response.data.message);
@@ -173,7 +172,7 @@ export const Filter = ({ navigation }) => {
       );
       // Update users' state with new feed data
       setUsers((prev) => {
-        const newUsers = response.data.data.feedList;
+        const newUsers = response.data.data.cards;
         return newUsers.reduce((acc, curr) => {
           const existingUserIndex = acc.findIndex(
             (user) => user._id === curr._id

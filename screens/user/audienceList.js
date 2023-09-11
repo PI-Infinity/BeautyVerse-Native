@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Dimensions,
   Pressable,
@@ -11,6 +11,7 @@ import { CacheableImage } from "../../components/cacheableImage";
 import { FontAwesome } from "@expo/vector-icons";
 import { darkTheme, lightTheme } from "../../context/theme";
 import { useSelector } from "react-redux";
+import { Circle } from "../../components/skeltons";
 
 /**
  * Audience list component in user screen audience section
@@ -73,7 +74,7 @@ export const AudienceList = ({
   };
 
   return (
-    <View style={{ width: "100%", gap: 8 }}>
+    <View style={{ width: "100%", gap: 4 }}>
       {list?.map((item, index) => {
         const t = capitalizeFirstLetter(item.type);
         return (
@@ -87,7 +88,7 @@ export const AudienceList = ({
               borderWidth: 1,
               borderColor: currentTheme.line,
               width: (SCREEN_WIDTH / 100) * 80,
-              padding: 8,
+              padding: 4,
             }}
             onPress={() => navigation.navigate("UserVisit", { user: item })}
             onLongPress={
@@ -107,32 +108,7 @@ export const AudienceList = ({
               style={{ flexDirection: "row", alignItems: "center", gap: 15 }}
             >
               {item?.cover ? (
-                <View>
-                  {item.online && (
-                    <View
-                      style={{
-                        width: 10,
-                        height: 10,
-                        backgroundColor: "#3bd16f",
-                        borderRadius: 50,
-                        position: "absolute",
-                        zIndex: 100,
-                        right: 1,
-                        bottom: 1,
-                        borderWidth: 1.5,
-                        borderColor: currentTheme.background,
-                      }}
-                    ></View>
-                  )}
-                  <CacheableImage
-                    source={{ uri: item.cover }}
-                    style={{ width: 40, height: 40, borderRadius: 50 }}
-                    manipulationOptions={[
-                      { resize: { width: 40, height: 40 } },
-                      { rotate: 90 },
-                    ]}
-                  />
-                </View>
+                <CoverImg item={item} currentTheme={currentTheme} />
               ) : (
                 <View>
                   {item.online && (
@@ -172,7 +148,7 @@ export const AudienceList = ({
 
               <Text
                 style={{
-                  color: "#e5e5e5",
+                  color: currentTheme.font,
                   fontWeight: "bold",
                   letterSpacing: 0.2,
                 }}
@@ -198,3 +174,42 @@ export const AudienceList = ({
 };
 
 const styles = StyleSheet.create({});
+
+const CoverImg = ({ item, currentTheme }) => {
+  const [loadingImg, setLoadingImg] = useState(true);
+  return (
+    <View>
+      {item.online && (
+        <View
+          style={{
+            width: 10,
+            height: 10,
+            backgroundColor: "#3bd16f",
+            borderRadius: 50,
+            position: "absolute",
+            zIndex: 100,
+            right: 1,
+            bottom: 1,
+            borderWidth: 1.5,
+            borderColor: currentTheme.background,
+          }}
+        ></View>
+      )}
+      <View
+        style={{ width: 40, height: 40, borderRadius: 50, overflow: "hidden" }}
+      >
+        {loadingImg && <Circle />}
+
+        <CacheableImage
+          source={{ uri: item.cover }}
+          style={{ width: 40, height: 40, borderRadius: 50 }}
+          manipulationOptions={[
+            { resize: { width: 40, height: 40 } },
+            { rotate: 90 },
+          ]}
+          onLoad={() => setLoadingImg(false)}
+        />
+      </View>
+    </View>
+  );
+};

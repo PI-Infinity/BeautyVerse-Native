@@ -18,7 +18,7 @@ import { ProceduresOptions } from "../../datas/registerDatas";
  * User Procedures section in user screen
  */
 
-export const ProceduresList = ({ targetUser, addOrder }) => {
+export const ProceduresList = ({ targetUser, AddBooking }) => {
   // define some context
   const language = Language();
   const theme = useSelector((state) => state.storeApp.theme);
@@ -115,7 +115,7 @@ export const ProceduresList = ({ targetUser, addOrder }) => {
             const label = proceduresOptions.find((c) => item.value === c.value);
             return (
               <TouchableOpacity
-                activeOpacity={addOrder ? 0.5 : 1}
+                activeOpacity={AddBooking ? 0.5 : 1}
                 key={index}
                 style={{
                   width: "100%",
@@ -252,7 +252,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     gap: 15,
-    marginTop: 15,
+    marginTop: 20,
     paddingBottom: 15,
   },
   navigator: {

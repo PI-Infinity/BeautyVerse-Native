@@ -22,8 +22,8 @@ import { darkTheme, lightTheme } from "../context/theme";
 import { Cards } from "../screens/cards";
 import { Room } from "../screens/chat/room";
 import { FeedItem } from "../screens/feedScreen";
-import { SendOrder } from "../screens/orders/sendOrder";
-import { SentOrders } from "../screens/sentOrders/sentOrders";
+import { SendBooking } from "../screens/bookings/sendBooking";
+import { SentBookings } from "../screens/sentBookings/sentBookings";
 import { ScrollGallery } from "../screens/user/scrollGallery";
 import { User } from "../screens/user/user";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -51,7 +51,7 @@ const Stack = createStackNavigator();
 
 /* Card's screen stack navigator */
 
-export function MarketplaceStack({ navigation, setScrollY }) {
+export function MarketplaceStack({ navigation, setScrollY, scrollY }) {
   // define current user redux state
   const currentUser = useSelector((state) => state.storeUser.currentUser);
 
@@ -85,7 +85,11 @@ export function MarketplaceStack({ navigation, setScrollY }) {
       <Stack.Screen
         name="main"
         children={() => (
-          <Main navigation={navigation} setScrollY={setScrollY} />
+          <Main
+            navigation={navigation}
+            setScrollY={setScrollY}
+            scrollY={scrollY}
+          />
         )}
         options={{
           headerStyle: {
@@ -129,7 +133,7 @@ export function MarketplaceStack({ navigation, setScrollY }) {
               >
                 <Text
                   style={{
-                    fontSize: 26,
+                    fontSize: 28,
                     fontWeight: "bold",
                     color: currentTheme.font,
                     letterSpacing: 1,
@@ -139,7 +143,7 @@ export function MarketplaceStack({ navigation, setScrollY }) {
                 </Text>
                 <Text
                   style={{
-                    fontSize: 26,
+                    fontSize: 28,
                     fontWeight: "bold",
                     color: currentTheme.pink,
                     letterSpacing: 1,
@@ -187,7 +191,7 @@ export function MarketplaceStack({ navigation, setScrollY }) {
       <Stack.Screen
         name="Search"
         component={Search}
-        options={({ route }) => ({
+        options={({ route, navigation }) => ({
           headerBackTitleVisible: false,
           title: language?.language?.Main?.filter?.search,
           headerStyle: {
@@ -225,7 +229,7 @@ export function MarketplaceStack({ navigation, setScrollY }) {
       <Stack.Screen
         name="List"
         component={List}
-        options={({ route }) => ({
+        options={({ route, navigation }) => ({
           headerBackTitleVisible: false,
           title: language?.language?.Marketplace?.marketplace?.popularProducts,
           headerStyle: {
@@ -330,11 +334,12 @@ export function MarketplaceStack({ navigation, setScrollY }) {
                     currentUser.type !== "beautycenter" &&
                     currentUser?.type !== "shop" &&
                     route.params?.user.type !== "shop" &&
-                    route.params?.user.type !== "user" && (
+                    route.params?.user.type !== "user" &&
+                    route.params.user.subscription.status === "active" && (
                       <TouchableOpacity
                         acitveOpacity={0.3}
                         onPress={() =>
-                          navigation.navigate("Send Order", {
+                          navigation.navigate("Send Booking", {
                             user: route.params.user,
                           })
                         }
@@ -355,7 +360,7 @@ export function MarketplaceStack({ navigation, setScrollY }) {
       <Stack.Screen
         name="UserVisit"
         component={User}
-        options={({ route }) => ({
+        options={({ route, navigation }) => ({
           headerBackTitleVisible: false,
           headerTitleAlign: "center",
           headerLeft: () => (
@@ -405,11 +410,12 @@ export function MarketplaceStack({ navigation, setScrollY }) {
                     currentUser.type !== "beautycenter" &&
                     currentUser?.type !== "shop" &&
                     route.params?.user.type !== "shop" &&
-                    route.params?.user.type !== "user" && (
+                    route.params?.user.type !== "user" &&
+                    route.params.user.subscription.status === "active" && (
                       <TouchableOpacity
                         acitveOpacity={0.3}
                         onPress={() =>
-                          navigation.navigate("Send Order", {
+                          navigation.navigate("Send Booking", {
                             user: route.params.user,
                           })
                         }
@@ -445,11 +451,11 @@ export function MarketplaceStack({ navigation, setScrollY }) {
           },
         })}
       />
-      {/* sent order screen */}
+      {/* sent booking screen */}
       <Stack.Screen
-        name="Send Order"
-        component={SendOrder}
-        options={({ route }) => ({
+        name="Send Booking"
+        component={SendBooking}
+        options={({ route, navigation }) => ({
           headerBackTitleVisible: false,
           headerLeft: () => (
             <TouchableOpacity
@@ -484,9 +490,9 @@ export function MarketplaceStack({ navigation, setScrollY }) {
         })}
       />
       <Stack.Screen
-        name="Sent Orders"
-        component={SentOrders}
-        options={({ route }) => ({
+        name="Sent Bookings"
+        component={SentBookings}
+        options={({ route, navigation }) => ({
           headerBackTitleVisible: false,
           headerLeft: () => (
             <TouchableOpacity
@@ -524,7 +530,7 @@ export function MarketplaceStack({ navigation, setScrollY }) {
       <Stack.Screen
         name="ScrollGallery"
         component={ScrollGallery}
-        options={({ route }) => ({
+        options={({ route, navigation }) => ({
           headerBackTitleVisible: false,
           headerLeft: () => (
             <TouchableOpacity
@@ -699,7 +705,7 @@ export function MarketplaceStack({ navigation, setScrollY }) {
       <Stack.Screen
         name="UserFeed"
         component={FeedItem}
-        options={({ route }) => ({
+        options={({ route, navigation }) => ({
           headerBackTitleVisible: false,
           headerLeft: () => (
             <TouchableOpacity
@@ -739,7 +745,7 @@ export function MarketplaceStack({ navigation, setScrollY }) {
       <Stack.Screen
         name="Product"
         component={Product}
-        options={({ route }) => ({
+        options={({ route, navigation }) => ({
           headerBackTitleVisible: false,
           headerLeft: () => (
             <TouchableOpacity
@@ -752,6 +758,30 @@ export function MarketplaceStack({ navigation, setScrollY }) {
                 color={currentTheme.pink}
                 size={22}
               />
+            </TouchableOpacity>
+          ),
+          headerRight: () => (
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() =>
+                navigation.navigate("User", {
+                  user: route.params.product.owner,
+                })
+              }
+              style={{ padding: 8, marginRight: 8 }}
+            >
+              {route.params.product.owner?.cover ? (
+                <CacheableImage
+                  source={{ uri: route.params.product.owner?.cover }}
+                  style={{ width: 25, height: 25, borderRadius: 50 }}
+                />
+              ) : (
+                <FontAwesome
+                  name="user"
+                  size={20}
+                  color={currentTheme.disabled}
+                />
+              )}
             </TouchableOpacity>
           ),
           title: route.params.product.title,

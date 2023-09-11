@@ -1,18 +1,16 @@
-import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
-import React, { useState } from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { useDispatch, useSelector } from "react-redux";
-import { Language } from "../../context/language";
-import { darkTheme, lightTheme } from "../../context/theme";
-import { setType } from "../../redux/auth";
-import { CheckBox } from "react-native-elements";
-import AlertMessage from "../../components/alertMessage";
-import { setRejectedOrders } from "../../redux/orders";
+import { MaterialIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
-import { setRerenderCurrentUser } from "../../redux/rerenders";
-import { BackDrop } from "../../components/backDropLoader";
 import * as Notifications from "expo-notifications";
+import React, { useState } from "react";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { CheckBox } from "react-native-elements";
+import { useDispatch, useSelector } from "react-redux";
+import AlertMessage from "../../components/alertMessage";
+import { BackDrop } from "../../components/backDropLoader";
+import { Language } from "../../context/language";
+import { darkTheme, lightTheme } from "../../context/theme";
+import { setRerenderCurrentUser } from "../../redux/rerenders";
 
 /*
   Register Screen,

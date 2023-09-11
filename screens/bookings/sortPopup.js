@@ -8,12 +8,12 @@ import {
 } from "react-native";
 import Modal from "react-native-modal";
 import { useDispatch, useSelector } from "react-redux";
-import { setStatusFilter } from "../../redux/orders";
-import { setStatusFilterSentOrders } from "../../redux/sentOrders";
+import { setStatusFilter } from "../../redux/bookings";
+import { setStatusFilterSentBookings } from "../../redux/sentBookings";
 import { Language } from "../../context/language";
 
 /**
- * orders status Sort popup
+ * bookings status Sort popup
  */
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -27,35 +27,39 @@ export const SortPopup = ({ currentTheme, from, setPage }) => {
   const lang = useSelector((state) => state.storeApp.language);
 
   // filtered result
-  const fOrders = useSelector((state) => state.storeOrders.statusFilter);
+  const fBookings = useSelector((state) => state.storeBookings.statusFilter);
 
-  // recieved orders totals by status
-  const allRecieved = useSelector((state) => state.storeOrders.totalResult);
-  const newOrders = useSelector((state) => state.storeOrders.new);
-  const pendingRecieved = useSelector((state) => state.storeOrders.pending);
-  const completedRecieved = useSelector((state) => state.storeOrders.completed);
-  const activeRecieved = useSelector((state) => state.storeOrders.active);
-  const rejectedRecieved = useSelector((state) => state.storeOrders.rejected);
-  const canceledRecieved = useSelector((state) => state.storeOrders.canceled);
+  // recieved bookings totals by status
+  const allRecieved = useSelector((state) => state.storeBookings.totalResult);
+  const newBookings = useSelector((state) => state.storeBookings.new);
+  const pendingRecieved = useSelector((state) => state.storeBookings.pending);
+  const completedRecieved = useSelector(
+    (state) => state.storeBookings.completed
+  );
+  const activeRecieved = useSelector((state) => state.storeBookings.active);
+  const rejectedRecieved = useSelector((state) => state.storeBookings.rejected);
+  const canceledRecieved = useSelector((state) => state.storeBookings.canceled);
 
-  // sent orders totals by status
-  const allSent = useSelector((state) => state.storeSentOrders.totalResult);
-  const newSentOrders = useSelector((state) => state.storeSentOrders.new);
-  const pendingSent = useSelector((state) => state.storeSentOrders.pending);
-  const completedSent = useSelector((state) => state.storeSentOrders.completed);
-  const activeSent = useSelector((state) => state.storeSentOrders.active);
-  const rejectedSent = useSelector((state) => state.storeSentOrders.rejected);
-  const canceledSent = useSelector((state) => state.storeSentOrders.canceled);
-  const fSentOrders = useSelector(
-    (state) => state.storeSentOrders.statusFilter
+  // sent bookings totals by status
+  const allSent = useSelector((state) => state.storeSentBookings.totalResult);
+  const newSentBookings = useSelector((state) => state.storeSentBookings.new);
+  const pendingSent = useSelector((state) => state.storeSentBookings.pending);
+  const completedSent = useSelector(
+    (state) => state.storeSentBookings.completed
+  );
+  const activeSent = useSelector((state) => state.storeSentBookings.active);
+  const rejectedSent = useSelector((state) => state.storeSentBookings.rejected);
+  const canceledSent = useSelector((state) => state.storeSentBookings.canceled);
+  const fSentBookings = useSelector(
+    (state) => state.storeSentBookings.statusFilter
   );
 
   // defines filter where comes from
   let filter;
-  if (from === "orders") {
-    filter = fOrders;
+  if (from === "bookings") {
+    filter = fBookings;
   } else {
-    filter = fSentOrders;
+    filter = fSentBookings;
   }
 
   // picker open/hide state
@@ -89,10 +93,10 @@ export const SortPopup = ({ currentTheme, from, setPage }) => {
 
   const handleSelect = (value) => {
     setPage(1);
-    if (from === "orders") {
+    if (from === "bookings") {
       dispatch(setStatusFilter(value));
     } else {
-      dispatch(setStatusFilterSentOrders(value));
+      dispatch(setStatusFilterSentBookings(value));
     }
     setPickerVisibility(false);
   };
@@ -171,7 +175,7 @@ export const SortPopup = ({ currentTheme, from, setPage }) => {
               : language?.language?.Bookings?.bookings?.all}{" "}
           </Text>
 
-          {(from === "orders" ? newOrders > 0 : newSentOrders > 0) && (
+          {(from === "bookings" ? newBookings > 0 : newSentBookings > 0) && (
             <View
               style={{
                 width: 15,
@@ -190,7 +194,7 @@ export const SortPopup = ({ currentTheme, from, setPage }) => {
                   fontSize: 10,
                 }}
               >
-                {from === "orders" ? newOrders : newSentOrders}
+                {from === "bookings" ? newBookings : newSentBookings}
               </Text>
             </View>
           )}
@@ -284,10 +288,10 @@ export const SortPopup = ({ currentTheme, from, setPage }) => {
                       fontSize: 12,
                     }}
                   >
-                    {from === "orders"
-                      ? newOrders
-                      : from === "sentOrders"
-                      ? newSentOrders
+                    {from === "bookings"
+                      ? newBookings
+                      : from === "sentBookings"
+                      ? newSentBookings
                       : null}
                   </Text>
                 </View>
@@ -323,9 +327,9 @@ export const SortPopup = ({ currentTheme, from, setPage }) => {
                       fontSize: 12,
                     }}
                   >
-                    {from === "orders"
+                    {from === "bookings"
                       ? activeRecieved
-                      : from === "sentOrders"
+                      : from === "sentBookings"
                       ? activeSent
                       : null}
                   </Text>
@@ -362,9 +366,9 @@ export const SortPopup = ({ currentTheme, from, setPage }) => {
                       fontSize: 12,
                     }}
                   >
-                    {from === "orders"
+                    {from === "bookings"
                       ? rejectedRecieved
-                      : from === "sentOrders"
+                      : from === "sentBookings"
                       ? rejectedSent
                       : null}
                   </Text>
@@ -401,9 +405,9 @@ export const SortPopup = ({ currentTheme, from, setPage }) => {
                       fontSize: 12,
                     }}
                   >
-                    {from === "orders"
+                    {from === "bookings"
                       ? completedRecieved
-                      : from === "sentOrders"
+                      : from === "sentBookings"
                       ? completedSent
                       : null}
                   </Text>
@@ -440,9 +444,9 @@ export const SortPopup = ({ currentTheme, from, setPage }) => {
                       fontSize: 12,
                     }}
                   >
-                    {from === "orders"
+                    {from === "bookings"
                       ? allRecieved
-                      : from === "sentOrders"
+                      : from === "sentBookings"
                       ? allSent
                       : null}
                   </Text>
@@ -479,9 +483,9 @@ export const SortPopup = ({ currentTheme, from, setPage }) => {
                       fontSize: 12,
                     }}
                   >
-                    {from === "orders"
+                    {from === "bookings"
                       ? pendingRecieved
-                      : from === "sentOrders"
+                      : from === "sentBookings"
                       ? pendingSent
                       : null}
                   </Text>
@@ -519,9 +523,9 @@ export const SortPopup = ({ currentTheme, from, setPage }) => {
                       fontSize: 12,
                     }}
                   >
-                    {from === "orders"
+                    {from === "bookings"
                       ? canceledRecieved
-                      : from === "sentOrders"
+                      : from === "sentBookings"
                       ? canceledSent
                       : null}
                   </Text>

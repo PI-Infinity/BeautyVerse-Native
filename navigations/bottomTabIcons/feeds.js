@@ -11,6 +11,7 @@ import { useDispatch } from "react-redux";
 import { RouteNameContext } from "../../context/routName";
 import { setZoomToTop } from "../../redux/app";
 import { setCleanUp, setFeedRefreshControl } from "../../redux/rerenders";
+import * as Haptics from "expo-haptics";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -21,6 +22,7 @@ export const CustomTabBarFeedsIcon = ({
   render,
   setRender,
   scrollY,
+  scrollYF,
   focused,
   currentTheme,
 }) => {
@@ -62,7 +64,7 @@ export const CustomTabBarFeedsIcon = ({
         onPress={() => {
           if (isFocused) {
             if (routeName === "Feeds") {
-              if (scrollY > 0) {
+              if (scrollY > 0 || scrollYF > 0) {
                 dispatch(setZoomToTop());
               } else {
                 dispatch(setFeedRefreshControl(true));

@@ -24,8 +24,8 @@ import { darkTheme, lightTheme } from "../context/theme";
 import { Room } from "../screens/chat/room";
 import { FeedItem } from "../screens/feedScreen";
 import { Feeds } from "../screens/feeds";
-import { SendOrder } from "../screens/orders/sendOrder";
-import { SentOrders } from "../screens/sentOrders/sentOrders";
+import { SendBooking } from "../screens/bookings/sendBooking";
+import { SentBookings } from "../screens/sentBookings/sentBookings";
 import { ScrollGallery } from "../screens/user/scrollGallery";
 import { User } from "../screens/user/user";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -52,7 +52,7 @@ const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 */
 const Stack = createStackNavigator();
 
-export function FeedsStack({ navigation, setScrollY }) {
+export function FeedsStack({ navigation, setScrollY, scrollY, setScrollYF }) {
   // ltheme context
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
@@ -66,80 +66,6 @@ export function FeedsStack({ navigation, setScrollY }) {
 
   const insets = useSafeAreaInsets();
   const screenHeight = SCREEN_HEIGHT - insets.top - insets.bottom;
-
-  // redux toolkit dispatch
-  const dispatch = useDispatch();
-
-  // define user location
-  const location = useSelector((state) => state.storeApp.location);
-
-  // language context
-
-  // define active filter's length
-  const filter = useSelector((state) => state.storeFilter.filter);
-  let filterBadge;
-  if (filter !== "") {
-    filterBadge = 1;
-  } else {
-    filterBadge = 0;
-  }
-  // search state
-  const search = useSelector((state) => state.storeFilter.search);
-  let searchBadge;
-  if (search !== "") {
-    searchBadge = 1;
-  } else {
-    searchBadge = 0;
-  }
-  // city state
-  const city = useSelector((state) => state.storeFilter.city);
-  let cityBadge;
-  if (
-    currentUser.address.find(
-      (c) => c?.city.replace("'", "").toLowerCase() === city?.toLowerCase()
-    )
-  ) {
-    cityBadge = 0;
-  } else {
-    cityBadge = 1;
-  }
-
-  // district state
-  const district = useSelector((state) => state.storeFilter.district);
-  let districtBadge;
-  if (district !== "") {
-    districtBadge = 1;
-  } else {
-    districtBadge = 0;
-  }
-  // specialist state
-  const specialist = useSelector((state) => state.storeFilter.specialists);
-  let specialistBadge;
-  if (!specialist) {
-    specialistBadge = 1;
-  } else {
-    specialistBadge = 0;
-  }
-  // salon state
-  const object = useSelector((state) => state.storeFilter.salons);
-  let objectBadge;
-  if (!object) {
-    objectBadge = 1;
-  } else {
-    objectBadge = 0;
-  }
-  // total of active variants of filter and creating total of badge
-  const sum =
-    filterBadge +
-    cityBadge +
-    districtBadge +
-    specialistBadge +
-    objectBadge +
-    searchBadge;
-  // set badge to redux for getting in different component easily (in bottom tab filter icon gettings badge sum)
-  useEffect(() => {
-    dispatch(setFilterBadgeSum(sum));
-  }, [sum]);
 
   // feeds first loading
   const [firstLoading, setFirstLoading] = useState(true);
@@ -160,6 +86,8 @@ export function FeedsStack({ navigation, setScrollY }) {
           <Feeds
             navigation={navigation}
             setScrollY={setScrollY}
+            setScrollYF={setScrollYF}
+            scrollY={scrollY}
             firstLoading={firstLoading}
             setFirstLoading={setFirstLoading}
           />
@@ -168,7 +96,7 @@ export function FeedsStack({ navigation, setScrollY }) {
           headerBackTitleVisible: false,
           headerStyle: {
             backgroundColor: currentTheme.background,
-            shadowColor: "#000",
+            shadowColor: currentTheme.line,
             height: SCREEN_HEIGHT / 9,
 
             borderBottomWidth: 0,
@@ -206,7 +134,7 @@ export function FeedsStack({ navigation, setScrollY }) {
               >
                 <Text
                   style={{
-                    fontSize: 26,
+                    fontSize: 28,
                     fontWeight: "bold",
                     color: currentTheme.font,
                     letterSpacing: 1,
@@ -216,7 +144,7 @@ export function FeedsStack({ navigation, setScrollY }) {
                 </Text>
                 <Text
                   style={{
-                    fontSize: 26,
+                    fontSize: 28,
                     fontWeight: "bold",
                     color: currentTheme.pink,
                     letterSpacing: 1,
@@ -225,96 +153,6 @@ export function FeedsStack({ navigation, setScrollY }) {
                   Verse
                 </Text>
               </View>
-              <Pressable
-                onPress={() => navigation.navigate("Filter")}
-                style={{
-                  // height: 80,
-                  // width: 60,
-                  alignItems: "center",
-                }}
-              >
-                {/** badge for filter */}
-                {!firstLoading && sum > 0 && (
-                  <View
-                    style={{
-                      width: "auto",
-                      minWidth: 15,
-                      height: 15,
-                      backgroundColor: currentTheme.pink,
-                      borderRadius: 50,
-                      alignItems: "center",
-                      justifyContent: "center",
-                      zIndex: 10,
-                      position: "absolute",
-                      top: 5,
-                      right: 10,
-                      marginBottom: 2,
-                      shadowColor: "#000",
-                      shadowOffset: {
-                        width: 0,
-                        height: 3, // negative value places shadow on top
-                      },
-                      shadowOpacity: 0.2,
-                      shadowRadius: 2,
-                      elevation: 1,
-                    }}
-                  >
-                    <Text
-                      style={{
-                        color: "#f1f1f1",
-                        fontSize: 10,
-                        fontWeight: "bold",
-                        letterSpacing: 0.15,
-                      }}
-                    >
-                      {sum}
-                    </Text>
-                  </View>
-                )}
-
-                {/* {focused ? (
-                  <FontAwesome
-                    name="arrow-up"
-                    size={27}
-                    color={sum > 0 && focused ? color : currentTheme.pink}
-                    style={{ paddingTop: 5 }}
-                  />
-                ) : ( */}
-                {!firstLoading && (
-                  <View
-                    style={{
-                      // backgroundColor: "red",
-                      height: 50,
-                      width: SCREEN_WIDTH / 3,
-                      alignItems: "flex-end",
-                      justifyContent: "center",
-                      // overflow: "hidden",
-                      paddingRight: 10,
-                      paddingBottom: 5,
-                    }}
-                  >
-                    <Fontisto
-                      name="earth"
-                      size={90}
-                      color={currentTheme.disabled}
-                      style={{
-                        position: "absolute",
-                        top: 0,
-                        zIndex: -1,
-                        opacity: 0.1,
-                        right: -18,
-                      }}
-                    />
-
-                    <Feather
-                      name="search"
-                      size={28}
-                      color={currentTheme.disabled}
-                    />
-                    {/* )} */}
-                  </View>
-                )}
-              </Pressable>
             </View>
           ),
         }}
@@ -323,7 +161,7 @@ export function FeedsStack({ navigation, setScrollY }) {
       <Stack.Screen
         name="User"
         children={() => <User navigation={navigation} />}
-        options={({ route }) => ({
+        options={({ route, navigation }) => ({
           headerBackTitleVisible: false,
           headerTitleAlign: "center",
           headerLeft: () => (
@@ -376,11 +214,12 @@ export function FeedsStack({ navigation, setScrollY }) {
                     currentUser.type !== "beautycenter" &&
                     currentUser?.type !== "shop" &&
                     route.params?.user.type !== "shop" &&
-                    route.params?.user.type !== "user" && (
+                    route.params?.user.type !== "user" &&
+                    route.params.user.subscription.status === "active" && (
                       <TouchableOpacity
                         acitveOpacity={0.3}
                         onPress={() =>
-                          navigation.navigate("Send Order", {
+                          navigation.navigate("Send Booking", {
                             user: route.params.user,
                           })
                         }
@@ -417,7 +256,7 @@ export function FeedsStack({ navigation, setScrollY }) {
       <Stack.Screen
         name="UserVisit"
         children={() => <User navigation={navigation} />}
-        options={({ route }) => ({
+        options={({ route, navigation }) => ({
           headerBackTitleVisible: false,
           headerTitleAlign: "center",
           headerLeft: () => (
@@ -470,11 +309,12 @@ export function FeedsStack({ navigation, setScrollY }) {
                     currentUser.type !== "beautycenter" &&
                     currentUser?.type !== "shop" &&
                     route.params?.user.type !== "shop" &&
-                    route.params?.user.type !== "user" && (
+                    route.params?.user.type !== "user" &&
+                    route.params.user.subscription.status === "active" && (
                       <TouchableOpacity
                         acitveOpacity={0.3}
                         onPress={() =>
-                          navigation.navigate("Send Order", {
+                          navigation.navigate("Send Booking", {
                             user: route.params.user,
                           })
                         }
@@ -510,9 +350,9 @@ export function FeedsStack({ navigation, setScrollY }) {
         })}
       />
       <Stack.Screen
-        name="Send Order"
-        component={SendOrder}
-        options={({ route }) => ({
+        name="Send Booking"
+        component={SendBooking}
+        options={({ route, navigation }) => ({
           headerBackTitleVisible: false,
           title: language?.language?.Bookings?.bookings?.createBooking,
           headerStyle: {
@@ -534,9 +374,9 @@ export function FeedsStack({ navigation, setScrollY }) {
         })}
       />
       <Stack.Screen
-        name="Sent Orders"
-        component={SentOrders}
-        options={({ route }) => ({
+        name="Sent Bookings"
+        component={SentBookings}
+        options={({ route, navigation }) => ({
           headerBackTitleVisible: false,
           title: language?.language?.User?.userPage?.sentBookings,
           headerStyle: {
@@ -561,7 +401,7 @@ export function FeedsStack({ navigation, setScrollY }) {
       <Stack.Screen
         name="ScrollGallery"
         component={ScrollGallery}
-        options={({ route }) => ({
+        options={({ route, navigation }) => ({
           headerBackTitleVisible: false,
           headerLeft: () => (
             <TouchableOpacity
@@ -615,7 +455,7 @@ export function FeedsStack({ navigation, setScrollY }) {
       <Stack.Screen
         name="UserFeed"
         component={FeedItem}
-        options={({ route }) => ({
+        options={({ route, navigation }) => ({
           headerLeft: () => (
             <TouchableOpacity
               activeOpacity={0.9}
@@ -786,157 +626,11 @@ export function FeedsStack({ navigation, setScrollY }) {
           },
         })}
       />
-      {/** filter screen */}
-      <Stack.Screen
-        name="Filter"
-        component={Filter}
-        options={{
-          headerBackTitleVisible: false,
-          title: language?.language?.Main?.filter?.filter,
-          headerStyle: {
-            height: SCREEN_HEIGHT / 9,
-            backgroundColor: currentTheme.background,
-            shadowOpacity: 0,
-            shadowColor: "#000",
-            borderBottomWidth: 0,
-          },
-          headerTintColor: currentTheme.font,
-          headerTitleStyle: {
-            fontWeight: "bold",
-            fontSize: 18,
-            letterSpacing: 0.5,
-          },
-          cardStyle: {
-            backgroundColor: currentTheme.background,
-          },
-          headerLeft: () => (
-            <TouchableOpacity
-              activeOpacity={0.9}
-              onPress={() => navigation.navigate("Feeds")}
-              style={{ padding: 8, paddingLeft: 15 }}
-            >
-              <FontAwesome
-                name="arrow-left"
-                color={currentTheme.pink}
-                size={22}
-              />
-            </TouchableOpacity>
-          ),
-          headerRight: () => (
-            <View style={{ flexDirection: "row", alignItems: "center" }}>
-              {sum > 0 && (
-                <TouchableOpacity
-                  onPress={() => {
-                    // on press can be clean filter and getting starting position, also with clean() function clear imports as default
-                    dispatch(
-                      setCity(
-                        (
-                          currentUser?.address?.find(
-                            (a) =>
-                              a.city?.toLowerCase()?.replace("'", "") ===
-                              location.city
-                          )?.city || currentUser.address[0]?.city
-                        )?.replace("'", "")
-                      )
-                    );
-                    dispatch(setDistrict(""));
-                    dispatch(setFilter(""));
-                    dispatch(setSearch(""));
-                    dispatch(setSearchInput(""));
-                    dispatch(setSpecialists(true));
-                    dispatch(setSalons(true));
-                    dispatch(setCleanUp());
-                  }}
-                  style={{ marginRight: 15, padding: 5 }}
-                >
-                  <View style={{ height: 30, justifyContent: "center" }}>
-                    <View
-                      style={{
-                        width: "auto",
-                        minWidth: 13,
-                        height: 13,
-                        backgroundColor: currentTheme.pink,
-                        borderRadius: 50,
-                        alignItems: "center",
-                        justifyContent: "center",
-                        position: "absolute",
-                        zIndex: 2,
-                        right: -5,
-                        top: 0,
-                      }}
-                    >
-                      <Text
-                        style={{
-                          color: "#e5e5e5",
-                          fontSize: 10,
-                          letterSpacing: 1.5,
-                          position: "relative",
-                          left: 1,
-                        }}
-                      >
-                        {sum}
-                      </Text>
-                    </View>
-
-                    <Text
-                      style={{
-                        color: currentTheme.font,
-                        fontWeight: "bold",
-                        letterSpacing: 0.3,
-                      }}
-                    >
-                      {language?.language?.Main?.filter?.clear}
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-              )}
-            </View>
-          ),
-        }}
-      />
-      {/** search screen */}
-      <Stack.Screen
-        name="Search"
-        component={Search}
-        options={({ route }) => ({
-          headerBackTitleVisible: false,
-          title: language?.language?.Main?.filter?.search,
-          headerStyle: {
-            backgroundColor: currentTheme.background,
-            height: SCREEN_HEIGHT / 9,
-            elevation: 0,
-            shadowOpacity: 0,
-            borderBottomWidth: 0,
-          },
-          headerTintColor: currentTheme.font,
-          headerTitleStyle: {
-            fontWeight: "bold",
-            fontSize: 18,
-            letterSpacing: 0.5,
-          },
-          cardStyle: {
-            backgroundColor: currentTheme.background,
-          },
-          headerLeft: () => (
-            <TouchableOpacity
-              activeOpacity={0.9}
-              onPress={() => navigation.navigate("Filter")}
-              style={{ padding: 8, paddingLeft: 15 }}
-            >
-              <FontAwesome
-                name="arrow-left"
-                color={currentTheme.pink}
-                size={22}
-              />
-            </TouchableOpacity>
-          ),
-        })}
-      />
       {/* product screen */}
       <Stack.Screen
         name="Product"
         component={Product}
-        options={({ route }) => ({
+        options={({ route, navigation }) => ({
           headerBackTitleVisible: false,
           headerLeft: () => (
             <TouchableOpacity
@@ -949,6 +643,30 @@ export function FeedsStack({ navigation, setScrollY }) {
                 color={currentTheme.pink}
                 size={22}
               />
+            </TouchableOpacity>
+          ),
+          headerRight: () => (
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() =>
+                navigation.navigate("User", {
+                  user: route.params.product.owner,
+                })
+              }
+              style={{ padding: 8, marginRight: 8 }}
+            >
+              {route.params.product.owner?.cover ? (
+                <CacheableImage
+                  source={{ uri: route.params.product.owner?.cover }}
+                  style={{ width: 25, height: 25, borderRadius: 50 }}
+                />
+              ) : (
+                <FontAwesome
+                  name="user"
+                  size={20}
+                  color={currentTheme.disabled}
+                />
+              )}
             </TouchableOpacity>
           ),
           title: route.params.product.title,

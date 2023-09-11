@@ -39,9 +39,12 @@ import {
   setRemoveReviewQntRerenderFromScrollGallery,
   setRemoveStarRerenderFromScrollGallery,
   setRerenderUserFeed,
+  setSaveFromScrollGallery,
+  setUnsaveFromScrollGallery,
 } from "../redux/rerenders";
 import SmoothModal from "../screens/user/editPostPopup";
 import { sendNotification } from "../components/pushNotifications";
+import { Circle } from "../components/skeltons";
 /**
  * Feed screen uses when navigate to only one feed screen
  */
@@ -91,24 +94,22 @@ export const FeedItem = ({ route }) => {
       setCheckifStared(true);
       dispatch(setActiveFeedFromScrollGallery(props?.feed?._id));
 
-      await axios.post(
-        backendUrl +
-          `/api/v1/users/${props?.user?._id}/feeds/${props.feed?._id}/stars`,
-        {
+      await axios.post(`${backendUrl}/api/v1/feeds/${props.feed?._id}/stars`, {
+        star: {
           staredBy: currentUser?._id,
           createdAt: new Date(),
-        }
-      );
+        },
+      });
       if (currentUser?._id !== props.user?._id) {
         await axios.post(
           backendUrl + `/api/v1/users/${props.user?._id}/notifications`,
           {
             senderId: currentUser?._id,
-            text: `მიანიჭა ვარსკვლავი თქვენ პოსტს!`,
+            text: ``,
             date: new Date(),
             type: "star",
             status: "unread",
-            feed: `/api/v1/users/${props.user?._id}/feeds/${props.feed?._id}`,
+            feed: `${props.feed?._id}`,
           }
         );
         if (props.user._id !== currentUser._id) {
@@ -116,8 +117,10 @@ export const FeedItem = ({ route }) => {
             await sendNotification(
               props.user?.pushNotificationToken,
               currentUser.name,
-              "added star to your feed!",
-              { feed: props.feed }
+              "added star on your feed!",
+              {
+                feed: props.feed._id,
+              }
             );
           }
         }
@@ -146,7 +149,7 @@ export const FeedItem = ({ route }) => {
     try {
       const url =
         backendUrl +
-        `/api/v1/users/${props?.user?._id}/feeds/${props.feed?._id}/stars/${currentUser?._id}`;
+        `/api/v1/feeds/${props.feed?._id}/stars/${currentUser?._id}`;
       const response = await fetch(url, { method: "DELETE" })
         .then((response) => response.json())
         .then(() => {
@@ -170,7 +173,7 @@ export const FeedItem = ({ route }) => {
       try {
         const response = await axios.get(
           backendUrl +
-            `/api/v1/users/${props?.user?._id}/feeds/${props?.feed?._id}/reviews?page=${reviewsPage}`
+            `/api/v1/feeds/${props?.feed?._id}/reviews?page=${reviewsPage}`
         );
         setReviewsList(response.data.data.reviews);
         setReviewLength(response.data.result);
@@ -187,7 +190,7 @@ export const FeedItem = ({ route }) => {
     try {
       const response = await axios.get(
         backendUrl +
-          `/api/v1/users/${props?.user._id}/feeds/${props?.feed?._id}/reviews?page=${nextPage}`
+          `/api/v1/feeds/${props?.feed?._id}/reviews?page=${nextPage}`
       );
       setReviewsList((prev) => {
         const newReviews = response.data.data?.reviews || [];
@@ -249,8 +252,7 @@ export const FeedItem = ({ route }) => {
       setReviewInput("");
       setOpenReviews(true);
       await axios.post(
-        backendUrl +
-          `/api/v1/users/${props?.user._id}/feeds/${props.feed?._id}/reviews`,
+        backendUrl + `/api/v1/feeds/${props.feed?._id}/reviews`,
         {
           reviewId: newId,
           reviewer: currentUser?._id,
@@ -263,11 +265,11 @@ export const FeedItem = ({ route }) => {
           backendUrl + `/api/v1/users/${props.user?._id}/notifications`,
           {
             senderId: currentUser?._id,
-            text: `დატოვა კომენტარი თქვენს პოსტზე!`,
+            text: ``,
             date: new Date(),
             type: "review",
             status: "unread",
-            feed: `/api/v1/users/${props.user?._id}/feeds/${props?.feed?._id}`,
+            feed: `${props?.feed?._id}`,
           }
         );
         if (props.user._id !== currentUser._id) {
@@ -275,8 +277,8 @@ export const FeedItem = ({ route }) => {
             await sendNotification(
               props.user?.pushNotificationToken,
               currentUser.name,
-              "added comment to your feed!",
-              { feed: props.feed }
+              "added comment on your feed!",
+              { feed: props.feed._id }
             );
           }
         }
@@ -305,9 +307,7 @@ export const FeedItem = ({ route }) => {
   const [removeReview, setRemoveReview] = useState(null);
 
   const DeleteReview = async (id) => {
-    const url =
-      backendUrl +
-      `/api/v1/users/${props?.user?._id}/feeds/${props.feed?._id}/reviews/${id}`;
+    const url = backendUrl + `/api/v1/feeds/${props.feed?._id}/reviews/${id}`;
     try {
       setReviewsList((prevReviews) =>
         prevReviews.filter((review) => review.reviewId !== id)
@@ -332,6 +332,72 @@ export const FeedItem = ({ route }) => {
 
   // open reviews
   const [openReviews, setOpenReviews] = useState(true);
+
+  /**
+   *
+   * Main save function
+   */
+
+  const [savesLength, setSavesLength] = useState(props?.feed?.saves?.length);
+  const [checkIfSaved, setCheckifSaved] = useState(props?.feed?.checkIfSaved);
+
+  const SaveFeed = async (userId, itemId) => {
+    try {
+      setCheckifSaved(true);
+      setSavesLength(savesLength + 1);
+      dispatch(setActiveFeedFromScrollGallery(itemId));
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      dispatch(setSaveFromScrollGallery());
+
+      await axios.patch(backendUrl + "/api/v1/feeds/" + itemId + "/save", {
+        saveFor: currentUser._id,
+      });
+      if (currentUser?._id !== props.user?._id) {
+        await axios.post(
+          backendUrl + `/api/v1/users/${props.user?._id}/notifications`,
+          {
+            senderId: currentUser?._id,
+            text: ``,
+            date: new Date(),
+            type: "save",
+            status: "unread",
+            feed: `${props?.feed?._id}`,
+          }
+        );
+        if (props.user._id !== currentUser._id) {
+          if (props.user?.pushNotificationToken) {
+            await sendNotification(
+              props.user?.pushNotificationToken,
+              currentUser.name,
+              "saved your feed!",
+              { feed: props.feed._id }
+            );
+          }
+        }
+      }
+
+      socket.emit("updateUser", {
+        targetId: props.user?._id,
+      });
+    } catch (error) {
+      console.log(error.response.data.message);
+    }
+  };
+  const UnSaveFeed = async (userId, itemId) => {
+    try {
+      setCheckifSaved(false);
+      setSavesLength(savesLength - 1);
+      dispatch(setActiveFeedFromScrollGallery(itemId));
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      dispatch(setUnsaveFromScrollGallery());
+
+      await axios.patch(backendUrl + "/api/v1/feeds/" + itemId + "/save", {
+        unSaveFor: currentUser._id,
+      });
+    } catch (error) {
+      console.log(error.response.data.message);
+    }
+  };
 
   // fade in
 
@@ -429,6 +495,7 @@ export const FeedItem = ({ route }) => {
 
   // load video state
   const [loadVideo, setLoadVideo] = useState(true);
+  const [loadImage, setLoadImage] = useState(true);
 
   const scrollViewRef = useRef();
 
@@ -591,7 +658,7 @@ export const FeedItem = ({ route }) => {
                       justifyContent: "center",
                     }}
                   >
-                    <ActivityIndicator color={currentTheme.pink} size="large" />
+                    <Circle />
                   </View>
                 )}
                 <CacheableVideo
@@ -613,7 +680,12 @@ export const FeedItem = ({ route }) => {
                   shouldPlay={true}
                   isLooping
                   resizeMode="contain"
-                  onLoad={() => setLoadVideo(false)}
+                  onLoad={
+                    () =>
+                      // setTimeout(() => {
+                      setLoadVideo(false)
+                    // }, 200)
+                  }
                 />
               </>
             ) : (
@@ -627,6 +699,20 @@ export const FeedItem = ({ route }) => {
                 {props?.feed?.images.map((item, index) => {
                   return (
                     <Pressable key={index} delayLongPress={50}>
+                      {loadImage && (
+                        <View
+                          style={{
+                            width: "100%",
+                            height: hght > 642 ? 642 : hght + 2,
+                            backgroundColor: currentTheme.background2,
+                            position: "absolute",
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          <Circle />
+                        </View>
+                      )}
                       <ZoomableImage
                         style={{
                           height: hght > 642 ? 642 : hght + 2,
@@ -638,6 +724,12 @@ export const FeedItem = ({ route }) => {
                         source={{
                           uri: item.url,
                         }}
+                        onLoad={
+                          () =>
+                            // setTimeout(() => {
+                            setLoadImage(false)
+                          // }, 200)
+                        }
                       />
                     </Pressable>
                   );
@@ -718,8 +810,12 @@ export const FeedItem = ({ route }) => {
                     volume={volume}
                     setVideoVolume={setVideoVolume}
                     checkIfStared={checkIfStared}
+                    checkIfSaved={checkIfSaved}
                     starsLength={starsLength}
                     reviewsLength={reviewLength}
+                    savesLength={savesLength}
+                    SaveFeed={SaveFeed}
+                    UnSaveFeed={UnSaveFeed}
                   />
                 </View>
               </Pressable>
@@ -756,8 +852,12 @@ export const FeedItem = ({ route }) => {
                   volume={volume}
                   setVideoVolume={setVideoVolume}
                   checkIfStared={checkIfStared}
+                  checkIfSaved={checkIfSaved}
                   starsLength={starsLength}
                   reviewsLength={reviewLength}
+                  savesLength={savesLength}
+                  SaveFeed={SaveFeed}
+                  UnSaveFeed={UnSaveFeed}
                 />
               </View>
             </View>

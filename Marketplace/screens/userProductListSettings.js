@@ -84,7 +84,9 @@ const Products = () => {
             currentUser._id +
             "/products?page=1&search=" +
             search +
-            "&from=settings"
+            "&from=settings" +
+            "&check=" +
+            currentUser._id
         );
         if (response.data.data.products) {
           dispatch(setUserProductListingPage(1));
@@ -116,7 +118,9 @@ const Products = () => {
           parseInt(page + 1) +
           "&search=" +
           search +
-          "&from=settings"
+          "&from=settings" +
+          "&check=" +
+          currentUser._id
       );
       if (response.data.data.products) {
         const newProducts = response.data.data.products;

@@ -13,7 +13,7 @@ let formattedDateInTimezone = moment(myDate)
 
 const initialState = {
   loader: false,
-  orders: [],
+  bookings: [],
   statusFilter: "",
   date: { active: true, date: formattedDateInTimezone },
   createdAt: "",
@@ -29,29 +29,29 @@ const initialState = {
   canceled: null,
 };
 
-export const Orders = createSlice({
-  name: "Orders",
+export const Bookings = createSlice({
+  name: "Bookings",
   initialState,
 
   reducers: {
     setLoader: (state, action) => {
       state.loader = action.payload;
     },
-    setOrders: (state, action) => {
-      state.orders = action.payload;
+    setBookings: (state, action) => {
+      state.bookings = action.payload;
     },
-    addOrders: (state, action) => {
-      action.payload.forEach((newOrder) => {
-        // Check if this order is already in the state
-        if (!state.orders.some((order) => order._id === newOrder._id)) {
+    addBookings: (state, action) => {
+      action.payload.forEach((newBooking) => {
+        // Check if this booking is already in the state
+        if (!state.bookings.some((booking) => booking._id === newBooking._id)) {
           // If not, add it to the state
-          state.orders.push(newOrder);
+          state.bookings.push(newBooking);
         }
       });
     },
-    reduceOrders: (state, action) => {
+    reduceBookings: (state, action) => {
       // Reduce state to the first 5 items
-      state.orders = state.orders.slice(0, 5);
+      state.bookings = state.bookings.slice(0, 5);
     },
     setStatusFilter: (state, action) => {
       state.statusFilter = action.payload;
@@ -74,22 +74,22 @@ export const Orders = createSlice({
     setPage: (state, action) => {
       state.page = action.payload;
     },
-    setNewOrders: (state, action) => {
+    setNewBookings: (state, action) => {
       state.new = action.payload;
     },
-    setActiveOrders: (state, action) => {
+    setActiveBookings: (state, action) => {
       state.active = action.payload;
     },
-    setRejectedOrders: (state, action) => {
+    setRejectedBookings: (state, action) => {
       state.rejected = action.payload;
     },
-    setCompletedOrders: (state, action) => {
+    setCompletedBookings: (state, action) => {
       state.completed = action.payload;
     },
-    setPendingOrders: (state, action) => {
+    setPendingBookings: (state, action) => {
       state.pending = action.payload;
     },
-    setCanceledOrders: (state, action) => {
+    setCanceledBookings: (state, action) => {
       state.canceled = action.payload;
     },
   },
@@ -97,9 +97,9 @@ export const Orders = createSlice({
 
 export const {
   setLoader,
-  setOrders,
-  addOrders,
-  reduceOrders,
+  setBookings,
+  addBookings,
+  reduceBookings,
   setStatusFilter,
   setDate,
   setProcedure,
@@ -107,11 +107,11 @@ export const {
   setTotalResult,
   setFilterResult,
   setPage,
-  setNewOrders,
-  setActiveOrders,
-  setRejectedOrders,
-  setCompletedOrders,
-  setPendingOrders,
-  setCanceledOrders,
-} = Orders.actions;
-export default Orders.reducer;
+  setNewBookings,
+  setActiveBookings,
+  setRejectedBookings,
+  setCompletedBookings,
+  setPendingBookings,
+  setCanceledBookings,
+} = Bookings.actions;
+export default Bookings.reducer;

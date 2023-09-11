@@ -17,6 +17,7 @@ import { Language } from "../context/language";
 import { darkTheme, lightTheme } from "../context/theme";
 import { setLanguage, setTheme } from "../redux/app";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { CacheableImage } from "../components/cacheableImage";
 
 /**
  * Welcome screen
@@ -258,23 +259,6 @@ const Welcome = ({ navigation }) => {
         </Pressable>
       </View>
       <View style={{ width: "90%", marginTop: 15 }}>
-        {/* <TouchableOpacity
-          activeOpacity={0.5}
-          onPress={() => navigation.navigate("Prices", { from: "Welcome" })}
-          style={[
-            styles.item,
-            { backgroundColor: currentTheme.background, marginTop: 30 },
-          ]}
-        >
-          <Text style={[styles.BsectionTitle, { color: currentTheme.font }]}>
-            {language?.language?.User?.userPage?.prices}
-          </Text>
-          <MaterialIcons
-            name={"arrow-right"}
-            color={currentTheme.pink}
-            size={18}
-          />
-        </TouchableOpacity> */}
         <TouchableOpacity
           activeOpacity={0.5}
           onPress={() => navigation.navigate("Terms")}

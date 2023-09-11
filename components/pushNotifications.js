@@ -11,11 +11,11 @@ import { RouteNameContext } from "../context/routName";
 import Constants from "expo-constants";
 import { useNavigation } from "@react-navigation/native";
 import { setCurrentChat } from "../redux/chat";
-import { setDate, setStatusFilter } from "../redux/orders";
+import { setDate, setStatusFilter } from "../redux/bookings";
 import {
-  setDateSentOrders,
-  setStatusFilterSentOrders,
-} from "../redux/sentOrders";
+  setDateSentBookings,
+  setStatusFilterSentBookings,
+} from "../redux/sentBookings";
 import moment from "moment";
 import "moment-timezone";
 import * as Localization from "expo-localization";
@@ -82,15 +82,48 @@ export default function App({ currentUser }) {
           if (response.notification.request.content.data.someData) {
             // navigate to target feed after getting notification
             if (response.notification.request.content.data.someData.feed) {
-              navigation.navigate("UserFeed", {
-                feed: response.notification.request.content.data.someData.feed,
-                user: currentUser,
-              });
+              // get feed
+              const GetFeed = async (id) => {
+                try {
+                  const response = await axios.get(
+                    backendUrl +
+                      "/api/v1/feeds/" +
+                      id +
+                      "?check=" +
+                      currentUser._id
+                  );
+                  navigation.navigate("UserFeed", {
+                    feed: response.data.data.feed,
+                    user: currentUser,
+                  });
+                } catch (error) {
+                  console.log(error.response.data.message);
+                }
+              };
+              GetFeed(response.notification.request.content.data.someData.feed);
+            }
+            if (response.notification.request.content.data.someData.product) {
+              // get feed
+              const GetProduct = async (id) => {
+                try {
+                  const response = await axios.get(
+                    backendUrl + "/api/v1/marketplace/" + id
+                  );
+                  navigation.navigate("Product", {
+                    product: response.data.data.product,
+                  });
+                } catch (error) {
+                  console.log(error.response.data.message);
+                }
+              };
+              GetProduct(
+                response.notification.request.content.data.someData.product
+              );
             }
             // navigate to target user page after getting notification
             if (
               response.notification.request.content.data.someData.user &&
-              !response.notification.request.content.data.someData.user
+              !response.notification.request.content.data.someData.feed
             ) {
               const parsed = JSON.parse(
                 response.notification.request.content.data.someData.user
@@ -113,17 +146,17 @@ export default function App({ currentUser }) {
                 user: parsedUser,
               });
             }
-            // navigate to orders after getting notification
+            // navigate to bookings after getting notification
             if (
               response.notification.request.content.data.someData.type ===
-              "order"
+              "booking"
             ) {
               let newdate = new Date();
               let formattedDateInTimezone = moment(newdate)
                 .tz(Localization.timezone)
                 .format("YYYY-MM-DDTHH:mm:ss.SSS[Z]");
 
-              // recieved orders
+              // recieved bookings
               if (
                 currentUser?.type === "specialist" ||
                 currentUser?.type === "beautycenter"
@@ -138,14 +171,14 @@ export default function App({ currentUser }) {
                 );
                 navigation.navigate("BMS");
               } else {
-                // sent orders
+                // sent bookings
                 dispatch(
-                  setStatusFilterSentOrders(
+                  setStatusFilterSentBookings(
                     response.notification.request.content.data.someData.status
                   )
                 );
                 dispatch(
-                  setDateSentOrders({
+                  setDateSentBookings({
                     active: false,
                     date: formattedDateInTimezone,
                   })

@@ -18,6 +18,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { CacheableImage } from "../components/cacheableImage";
 import { Language } from "../context/language";
 import { darkTheme, lightTheme } from "../context/theme";
+import { Circle } from "./skeltons";
+import axios from "axios";
 
 /**
  * Profile card component in cards screen
@@ -51,45 +53,21 @@ export const Card = (props) => {
 
   let type;
   if (props.user.type === "specialist") {
-    if (lang === "en") {
-      type = t;
-    } else if (lang === "ka") {
-      type = "სპეციალისტი";
-    } else {
-      type = language?.language?.Main?.feedCard?.specialist;
-    }
+    type = language?.language?.Main?.feedCard?.specialist;
+  } else if (props.user.type === "shop") {
+    type = language?.language?.Marketplace?.marketplace?.shop;
   } else {
     type = language?.language?.Auth?.auth?.beautySalon;
   }
 
   // define active address
   const city = useSelector((state) => state.storeFilter.city);
-  const definedAddress = props?.user.address.find(
+  const definedAddress = props?.user?.address.find(
     (item) => item?.city.replace("'", "") === city
   );
 
   // defines backend url
   const backendUrl = useSelector((state) => state.storeApp.backendUrl);
-
-  /**
-   * Define stars total
-   */
-  const [stars, setStars] = useState([]);
-
-  async function GetStars() {
-    await fetch(`${backendUrl}/api/v1/users/${props?.user._id}/stars`)
-      .then((response) => response.json())
-      .then(async (data) => {
-        setStars(data.data.stars);
-      })
-      .catch((error) => {
-        console.log("Error fetching data:", error);
-      });
-  }
-
-  useEffect(() => {
-    GetStars();
-  }, []);
 
   // fade in
   const fadeAnim = useRef(new Animated.Value(0)).current; // Initial value for opacity: 0
@@ -101,6 +79,7 @@ export const Card = (props) => {
       useNativeDriver: true,
     }).start();
   }, [fadeAnim]);
+  console.log(props.user.followersLength);
 
   return (
     <>
@@ -254,20 +233,9 @@ export const Card = (props) => {
               styles.starsContainer,
               {
                 justifyContent: "center",
-                // shadowColor: "#000",
                 borderTopWidth: 1.5,
                 borderBottomWidth: 1.5,
                 borderColor: currentTheme.line,
-                // shadowOffset: {
-                //   width: 0,
-                //   height: 1, // negative value places shadow on top
-                // },
-                // shadowOpacity: 0.1,
-                // shadowRadius: 1,
-                // elevation: 1,
-                // backgroundColor: theme
-                //   ? currentTheme.background2
-                //   : "rgba(0,0,0,0)",
               },
             ]}
           >
@@ -289,7 +257,7 @@ export const Card = (props) => {
                 name="star-o"
               />
               <Text style={[styles.stars, { color: currentTheme.font }]}>
-                {stars}
+                {props.user?.totalStars}
               </Text>
             </View>
             <View
@@ -313,6 +281,29 @@ export const Card = (props) => {
                 {props?.user?.followersLength}
               </Text>
             </View>
+            {props?.user?.rating && (
+              <View
+                style={{
+                  gap: 5,
+                  alignItems: "center",
+                  flexDirection: "row",
+                  // backgroundColor: currentTheme.background2,
+                  padding: 5,
+                  borderRadius: 3,
+                }}
+              >
+                <FontAwesome
+                  style={[
+                    styles.stars,
+                    { color: currentTheme.pink, fontSize: 14 },
+                  ]}
+                  name="heart"
+                />
+                <Text style={[styles.stars, { color: currentTheme.font }]}>
+                  {props?.user?.rating.toFixed(1)}
+                </Text>
+              </View>
+            )}
           </View>
         </View>
       )}
@@ -323,7 +314,7 @@ export const Card = (props) => {
 const styles = StyleSheet.create({
   container: {
     width: SCREEN_WIDTH / 2,
-    height: SCREEN_WIDTH / 2 + 150,
+    height: SCREEN_WIDTH / 2 + 140,
     // backgroundColor: "rgba(255,255,255,0.01)",
     // margin: 5,
     // borderRadius: 5,

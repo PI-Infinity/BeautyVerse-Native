@@ -10,12 +10,16 @@ import React, { useEffect, useRef, useState } from "react";
 import { CacheableImage } from "../../components/cacheableImage";
 import { Language } from "../../context/language";
 import { darkTheme, lightTheme } from "../../context/theme";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import Gallery from "../components/gallery";
 import { ProceduresOptions } from "../../datas/registerDatas";
-import { FontAwesome } from "@expo/vector-icons";
+import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
+import * as Haptics from "expo-haptics";
 import axios from "axios";
+import { setRerenderProducts } from "../../redux/Marketplace";
+import { useSocket } from "../../context/socketContext";
+import { sendNotification } from "../../components/pushNotifications";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -28,6 +32,12 @@ const Product = ({ route }) => {
 
   // navigation state
   const navigation = useNavigation();
+
+  // redux dispatch
+  const dispatch = useDispatch();
+
+  // defines socket server
+  const socket = useSocket();
 
   // Get currentUser from global Redux state
   const currentUser = useSelector((state) => state.storeUser.currentUser);
@@ -61,14 +71,78 @@ const Product = ({ route }) => {
     }
   };
 
+  const [saved, setSaved] = useState(null);
+
   useEffect(() => {
     if (product) {
       ProductVariants();
+      setSaved(product?.checkIfSaved);
     }
   }, [product]);
 
   // scroll ref
   const scrollRef = useRef();
+
+  /**
+   *
+   * Save Product
+   */
+  const SaveProduct = async (itemId, userId) => {
+    try {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      setSaved(true);
+
+      await axios.patch(
+        backendUrl + "/api/v1/marketplace/" + itemId + "/save",
+        {
+          saveFor: userId,
+        }
+      );
+      if (currentUser?._id !== product.owner._id) {
+        await axios.post(
+          `${backendUrl}/api/v1/users/${product?.owner?._id}/notifications`,
+          {
+            senderId: currentUser?._id,
+            text: ``,
+            date: new Date(),
+            type: "saveProduct",
+            status: "unread",
+            product: product?._id,
+          }
+        );
+        if (product.owner?.pushNotificationToken) {
+          await sendNotification(
+            product.owner?.pushNotificationToken,
+            currentUser.name,
+            "saved your product!",
+            { product: product?._id }
+          );
+        }
+        socket.emit("updateUser", {
+          targetId: product.owner?._id,
+        });
+      }
+      dispatch(setRerenderProducts());
+    } catch (error) {
+      console.log(error.response.data.message);
+    }
+  };
+  const UnSaveProduct = async (itemId, userId) => {
+    try {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      setSaved(false);
+
+      await axios.patch(
+        backendUrl + "/api/v1/marketplace/" + itemId + "/save",
+        {
+          unSaveFor: currentUser._id,
+        }
+      );
+      dispatch(setRerenderProducts());
+    } catch (error) {
+      console.log(error.response.data.message);
+    }
+  };
 
   return (
     <ScrollView
@@ -82,12 +156,91 @@ const Product = ({ route }) => {
       <Gallery product={product} />
       <View
         style={{
+          width: "100%",
+          paddingHorizontal: 15,
+          paddingBottom: 10,
+          alignItems: "flex-end",
+        }}
+      >
+        <Pressable
+          style={{ padding: 5 }}
+          onPress={
+            saved
+              ? () => UnSaveProduct(product._id, currentUser._id)
+              : () => SaveProduct(product._id, currentUser._id)
+          }
+        >
+          <MaterialIcons
+            name="save-alt"
+            color={saved ? currentTheme.pink : currentTheme.disabled}
+            size={22}
+          />
+        </Pressable>
+      </View>
+      <View
+        style={{
           gap: 8,
           width: "100%",
           alignItems: "center",
           paddingHorizontal: 15,
         }}
       >
+        <View
+          style={{
+            width: "100%",
+            flexDirection: "row",
+            alignItems: "center",
+            borderWidth: 1,
+            borderColor: currentTheme.line,
+            padding: 15,
+            borderRadius: 10,
+            gap: 4,
+          }}
+        >
+          <Text
+            style={{
+              fontSize: 14,
+              fontWeight: "bold",
+              letterSpacing: 0.5,
+              color: currentTheme.font,
+            }}
+          >
+            {language?.language?.Marketplace?.marketplace?.shop}:
+          </Text>
+          <Pressable
+            style={{ flexDirection: "row", alignItems: "center", gap: 8 }}
+            onPress={() =>
+              navigation.navigate("User", {
+                user: product.owner,
+              })
+            }
+          >
+            <View activeOpacity={0.9} style={{ marginLeft: 8 }}>
+              {product.owner?.cover ? (
+                <CacheableImage
+                  source={{ uri: route.params.product.owner?.cover }}
+                  style={{ width: 25, height: 25, borderRadius: 50 }}
+                />
+              ) : (
+                <FontAwesome
+                  name="user"
+                  size={20}
+                  color={currentTheme.disabled}
+                />
+              )}
+            </View>
+            <Text
+              style={{
+                fontSize: 14,
+                fontWeight: "bold",
+                letterSpacing: 0.5,
+                color: currentTheme.pink,
+              }}
+            >
+              {product?.owner.name}
+            </Text>
+          </Pressable>
+        </View>
         <View
           style={{
             width: "100%",

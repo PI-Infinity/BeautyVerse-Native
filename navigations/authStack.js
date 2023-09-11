@@ -330,30 +330,7 @@ export function AuthStack({ route }) {
           },
         }}
       />
-      {/* <Stack.Screen
-        name="Identify"
-        component={Identify}
-        options={{
-          title: language?.language?.Auth?.auth?.identify,
-          headerBackTitleVisible: false,
-          headerStyle: {
-            backgroundColor: currentTheme.background,
 
-            elevation: 0,
-            shadowOpacity: 0,
-            borderBottomWidth: 0,
-          },
-          headerTintColor: currentTheme.font,
-          headerTitleStyle: {
-            fontWeight: "bold",
-            fontSize: 18,
-            letterSpacing: 0.5,
-          },
-          cardStyle: {
-            backgroundColor: currentTheme.background,
-          },
-        }}
-      /> */}
       {/** business register screen, if user specialist or beauty salon */}
       <Stack.Screen
         name="Business"
@@ -394,7 +371,7 @@ export function AuthStack({ route }) {
         }}
       />
       {/** prices screen, navigated from welcome screen */}
-      {/* <Stack.Screen
+      <Stack.Screen
         name="Prices"
         component={Prices}
         options={({ route }) => ({
@@ -417,7 +394,7 @@ export function AuthStack({ route }) {
             backgroundColor: currentTheme.background,
           },
         })}
-      /> */}
+      />
       {/** terms and rules, navigated from welcome screen */}
       <Stack.Screen
         name="Terms"

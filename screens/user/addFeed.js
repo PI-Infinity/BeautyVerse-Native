@@ -105,6 +105,12 @@ export const AddFeed = ({ navigation }) => {
    */
 
   async function FileUpload() {
+    if (file?.length < 1) {
+      return Alert.alert("File not include!");
+    }
+    if (postText.length > 1500) {
+      return Alert.alert("Text must include maximum 1500 characters!");
+    }
     setLoading(true);
 
     const AddFileInCloud = async (index, folder, uri) => {
@@ -141,15 +147,15 @@ export const AddFeed = ({ navigation }) => {
             fileFormat: "img",
             fileHeight: file[0]?.height,
             fileWidth: file[0]?.width,
+            owner: currentUser._id,
           };
           const feedResponse = await axios.post(
-            backendUrl +
-              `api/v1/users/${currentUser?._id}/feeds?language=${lang}`,
+            backendUrl + `/api/v1/feeds`,
             newFeed
           );
 
           const userResponse = await axios.patch(
-            backendUrl + `api/v1/users/${currentUser?._id}`,
+            backendUrl + `/api/v1/users/${currentUser?._id}`,
             {
               lastPostCreatedAt: new Date(),
             }
@@ -203,16 +209,20 @@ export const AddFeed = ({ navigation }) => {
               fileFormat: "video",
               fileHeight: file.height,
               fileWidth: file.width,
+              owner: currentUser._id,
             };
 
             const response = await axios.post(
-              backendUrl + `api/v1/users/${currentUser?._id}/feeds`,
+              backendUrl + `/api/v1/feeds`,
               newFeed
             );
 
-            await axios.patch(backendUrl + `api/v1/users/${currentUser?._id}`, {
-              lastPostCreatedAt: new Date(),
-            });
+            await axios.patch(
+              backendUrl + `/api/v1/users/${currentUser?._id}`,
+              {
+                lastPostCreatedAt: new Date(),
+              }
+            );
 
             setTimeout(() => {
               dispatch(setRerenderUserFeeds());
@@ -521,11 +531,7 @@ export const AddFeed = ({ navigation }) => {
             justifyContent: "center",
             borderRadius: 50,
           }}
-          onPress={
-            file?.length > 0 && postText.length < 1501
-              ? FileUpload
-              : () => Alert.alert("File not include!")
-          }
+          onPress={FileUpload}
         >
           <Text style={{ textAlign: "center", color: "#eee" }}>
             {language?.language?.User?.addFeed?.upload}

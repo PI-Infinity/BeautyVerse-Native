@@ -22,8 +22,8 @@ import { darkTheme, lightTheme } from "../context/theme";
 import { Cards } from "../screens/cards";
 import { Room } from "../screens/chat/room";
 import { FeedItem } from "../screens/feedScreen";
-import { SendOrder } from "../screens/orders/sendOrder";
-import { SentOrders } from "../screens/sentOrders/sentOrders";
+import { SendBooking } from "../screens/bookings/sendBooking";
+import { SentBookings } from "../screens/sentBookings/sentBookings";
 import { ScrollGallery } from "../screens/user/scrollGallery";
 import { User } from "../screens/user/user";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -43,6 +43,7 @@ import {
 } from "../redux/filter";
 import { setCleanUp } from "../redux/rerenders";
 import Product from "../Marketplace/screens/product";
+import Mirror from "../Mirror/screens/mirror";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 const Stack = createStackNavigator();
@@ -150,11 +151,12 @@ export function CardsStack({ navigation, setScrollY }) {
         children={() => (
           <Cards navigation={navigation} setScrollY={setScrollY} />
         )}
+        // component={Mirror}
         options={{
           headerStyle: {
             height: SCREEN_HEIGHT / 9,
             backgroundColor: currentTheme.background,
-            shadowColor: "#000",
+            shadowColor: currentTheme.line,
             borderBottomWidth: 0,
           },
           headerTintColor: currentTheme.font,
@@ -188,7 +190,7 @@ export function CardsStack({ navigation, setScrollY }) {
               >
                 <Text
                   style={{
-                    fontSize: 26,
+                    fontSize: 28,
                     fontWeight: "bold",
                     color: currentTheme.font,
                     letterSpacing: 1,
@@ -198,7 +200,7 @@ export function CardsStack({ navigation, setScrollY }) {
                 </Text>
                 <Text
                   style={{
-                    fontSize: 26,
+                    fontSize: 28,
                     fontWeight: "bold",
                     color: currentTheme.pink,
                     letterSpacing: 1,
@@ -208,7 +210,7 @@ export function CardsStack({ navigation, setScrollY }) {
                 </Text>
               </View>
               <Pressable
-                onPress={() => navigation.navigate("Filter1")}
+                onPress={() => navigation.navigate("Filter")}
                 style={{
                   // height: 80,
                   // width: 60,
@@ -373,11 +375,12 @@ export function CardsStack({ navigation, setScrollY }) {
                     currentUser.type !== "beautycenter" &&
                     currentUser?.type !== "shop" &&
                     route.params?.user.type !== "shop" &&
-                    route.params?.user.type !== "user" && (
+                    route.params?.user.type !== "user" &&
+                    route.params.user.subscription.status === "active" && (
                       <TouchableOpacity
                         acitveOpacity={0.3}
                         onPress={() =>
-                          navigation.navigate("Send Order", {
+                          navigation.navigate("Send Booking", {
                             user: route.params.user,
                           })
                         }
@@ -398,7 +401,7 @@ export function CardsStack({ navigation, setScrollY }) {
       <Stack.Screen
         name="UserVisit"
         component={User}
-        options={({ route }) => ({
+        options={({ route, navigation }) => ({
           headerBackTitleVisible: false,
           headerTitleAlign: "center",
           headerLeft: () => (
@@ -451,11 +454,12 @@ export function CardsStack({ navigation, setScrollY }) {
                     currentUser.type !== "beautycenter" &&
                     currentUser?.type !== "shop" &&
                     route.params?.user.type !== "shop" &&
-                    route.params?.user.type !== "user" && (
+                    route.params?.user.type !== "user" &&
+                    route.params.user.subscription.status === "active" && (
                       <TouchableOpacity
                         acitveOpacity={0.3}
                         onPress={() =>
-                          navigation.navigate("Send Order", {
+                          navigation.navigate("Send Booking", {
                             user: route.params.user,
                           })
                         }
@@ -491,11 +495,11 @@ export function CardsStack({ navigation, setScrollY }) {
           },
         })}
       />
-      {/* sent order screen */}
+      {/* sent booking screen */}
       <Stack.Screen
-        name="Send Order"
-        component={SendOrder}
-        options={({ route }) => ({
+        name="Send Booking"
+        component={SendBooking}
+        options={({ route, navigation }) => ({
           headerBackTitleVisible: false,
           title: language?.language?.Bookings?.bookings?.createBooking,
           headerStyle: {
@@ -517,9 +521,9 @@ export function CardsStack({ navigation, setScrollY }) {
         })}
       />
       <Stack.Screen
-        name="Sent Orders"
-        component={SentOrders}
-        options={({ route }) => ({
+        name="Sent Bookings"
+        component={SentBookings}
+        options={({ route, navigation }) => ({
           headerBackTitleVisible: false,
           title: language?.language?.User?.userPage?.sentBookings,
           headerStyle: {
@@ -544,7 +548,7 @@ export function CardsStack({ navigation, setScrollY }) {
       <Stack.Screen
         name="ScrollGallery"
         component={ScrollGallery}
-        options={({ route }) => ({
+        options={({ route, navigation }) => ({
           headerBackTitleVisible: false,
           headerLeft: () => (
             <TouchableOpacity
@@ -719,7 +723,7 @@ export function CardsStack({ navigation, setScrollY }) {
       <Stack.Screen
         name="UserFeed"
         component={FeedItem}
-        options={({ route }) => ({
+        options={({ route, navigation }) => ({
           headerBackTitleVisible: false,
           headerLeft: () => (
             <TouchableOpacity
@@ -756,7 +760,7 @@ export function CardsStack({ navigation, setScrollY }) {
       />
       {/** filter screen */}
       <Stack.Screen
-        name="Filter1"
+        name="Filter"
         component={Filter}
         options={{
           headerBackTitleVisible: false,
@@ -864,9 +868,9 @@ export function CardsStack({ navigation, setScrollY }) {
       />
       {/** search screen */}
       <Stack.Screen
-        name="Search1"
+        name="Search"
         component={Search}
-        options={({ route }) => ({
+        options={({ route, navigation }) => ({
           headerBackTitleVisible: false,
           title: language?.language?.Main?.filter?.search,
           headerStyle: {
@@ -905,7 +909,7 @@ export function CardsStack({ navigation, setScrollY }) {
       <Stack.Screen
         name="Product"
         component={Product}
-        options={({ route }) => ({
+        options={({ route, navigation }) => ({
           headerBackTitleVisible: false,
           headerLeft: () => (
             <TouchableOpacity
@@ -918,6 +922,30 @@ export function CardsStack({ navigation, setScrollY }) {
                 color={currentTheme.pink}
                 size={22}
               />
+            </TouchableOpacity>
+          ),
+          headerRight: () => (
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() =>
+                navigation.navigate("User", {
+                  user: route.params.product.owner,
+                })
+              }
+              style={{ padding: 8, marginRight: 8 }}
+            >
+              {route.params.product.owner?.cover ? (
+                <CacheableImage
+                  source={{ uri: route.params.product.owner?.cover }}
+                  style={{ width: 25, height: 25, borderRadius: 50 }}
+                />
+              ) : (
+                <FontAwesome
+                  name="user"
+                  size={20}
+                  color={currentTheme.disabled}
+                />
+              )}
             </TouchableOpacity>
           ),
           title: route.params.product.title,
