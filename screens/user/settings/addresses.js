@@ -8,7 +8,6 @@ import {
 import axios from "axios";
 import React, { useEffect, useRef, useState } from "react";
 import {
-  ActivityIndicator,
   Alert,
   Dimensions,
   Platform,
@@ -20,6 +19,7 @@ import {
   Vibration,
   View,
 } from "react-native";
+import { ActivityIndicator } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 import { BackDrop } from "../../../components/backDropLoader";
 import Map from "../../../components/map";

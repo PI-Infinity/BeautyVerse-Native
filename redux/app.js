@@ -13,8 +13,11 @@ const initialState = {
   machineId: null,
   zoomToTop: false,
   backendUrl: "https://beautyverse.herokuapp.com",
-  // backendUrl: "http://192.168.0.108:5000",
+  // backendUrl: "http://192.168.0.105:5000",
   devicePushToken: null,
+
+  // blur background switcher
+  blur: false,
 
   location: { country: null, city: null, latitude: null, longitude: null },
 };
@@ -57,6 +60,9 @@ export const App = createSlice({
     setDevicePushToken: (state, action) => {
       state.devicePushToken = action.payload;
     },
+    setBlur: (state, action) => {
+      state.blur = action.payload;
+    },
   },
 });
 
@@ -72,5 +78,6 @@ export const {
   setZoomToTop,
   setLocation,
   setDevicePushToken,
+  setBlur,
 } = App.actions;
 export default App.reducer;

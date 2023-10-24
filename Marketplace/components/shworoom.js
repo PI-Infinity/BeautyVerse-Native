@@ -25,7 +25,7 @@ import {
   setUserProductListingPage,
   setUserProducts,
 } from "../../redux/Marketplace";
-import { ActivityIndicator } from "react-native";
+import { ActivityIndicator } from "react-native-paper";
 import FilterPopup from "./showroomFilter";
 import { Circle } from "../../components/skeltons";
 
@@ -181,7 +181,7 @@ const Showroom = ({
           style={{
             alignItems: "center",
             justifyContent: "center",
-            height: SCREEN_HEIGHT - 200,
+            height: SCREEN_HEIGHT - SCREEN_HEIGHT / 3,
           }}
         >
           <ActivityIndicator color={currentTheme.pink} size="large" />

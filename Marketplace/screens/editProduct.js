@@ -652,7 +652,6 @@ const EditProduct = ({ route }) => {
               currentTheme={currentTheme}
             />
             {files?.map((i, x) => {
-              console.log(i.gallery);
               return (
                 <Pressable onPress={() => setCover(x)} key={x}>
                   {x === cover && (

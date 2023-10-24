@@ -5,11 +5,11 @@ import {
   Alert,
   Modal,
   Button,
-  ActivityIndicator,
   Pressable,
   Linking,
 } from "react-native";
 import React, { useState, useEffect, useRef } from "react";
+
 import MapView, { Marker } from "react-native-maps";
 import { useSelector, useDispatch } from "react-redux";
 import { CacheableImage } from "../components/cacheableImage";
@@ -30,6 +30,7 @@ import {
 } from "../redux/chat";
 import axios from "axios";
 import { Circle } from "../components/skeltons";
+import { setBlur } from "../redux/app";
 
 export const MapFilter = ({ users }) => {
   // defines dispatch for redux
@@ -196,13 +197,7 @@ export const MapFilter = ({ users }) => {
     <>
       <MapView
         ref={mapRef} // Add this line
-        style={{ height: "110%" }}
-        // initialRegion={{
-        //   latitude: users[0]?.address[0].latitude,
-        //   longitude: users[0]?.address[0].longitude,
-        //   latitudeDelta: 0.0922,
-        //   longitudeDelta: 0.0421,
-        // }}
+        style={{ height: "100%", borderRadius: 20 }}
         customMapStyle={[
           {
             featureType: "poi.business",
@@ -230,6 +225,7 @@ export const MapFilter = ({ users }) => {
               onPress={() => {
                 setSelectedUser(item);
                 setModalVisible(true);
+                dispatch(setBlur(true));
               }}
             >
               <MarkerItem item={item} currentTheme={currentTheme} />
@@ -237,16 +233,12 @@ export const MapFilter = ({ users }) => {
           );
         })}
       </MapView>
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalVisible}
-        style={{ backgroundColor: "red" }}
-      >
+      <Modal animationType="slide" transparent={true} visible={modalVisible}>
         <Pressable
           style={[styles.centeredView, { opacity: 1 }]}
           onPress={() => {
             setModalVisible(false);
+            dispatch(setBlur(false));
           }}
         >
           <View
@@ -263,6 +255,7 @@ export const MapFilter = ({ users }) => {
               onPress={() => {
                 navigation.navigate("User", { user: selectedUser });
                 setModalVisible(false);
+                dispatch(setBlur(false));
               }}
               style={{
                 width: "100%",
@@ -424,7 +417,10 @@ export const MapFilter = ({ users }) => {
                 }}
               >
                 <Pressable
-                  onPress={() => setModalVisible(false)}
+                  onPress={() => {
+                    dispatch(setBlur(false));
+                    setModalVisible(false);
+                  }}
                   style={{
                     backgroundColor: "red",
                     padding: 7.5,
@@ -458,9 +454,11 @@ export const MapFilter = ({ users }) => {
                     chatDefined
                       ? () => {
                           GetChatRoom();
+                          dispatch(setBlur(false));
                         }
                       : () => {
                           GetNewChatRoom();
+                          dispatch(setBlur(false));
                         }
                   }
                   style={{
@@ -495,6 +493,7 @@ export const MapFilter = ({ users }) => {
                         user: selectedUser,
                       });
                       setModalVisible(false);
+                      dispatch(setBlur(false));
                     }}
                     style={{
                       backgroundColor: "red",
@@ -563,6 +562,9 @@ const MarkerItem = ({ item, currentTheme }) => {
 
   useEffect(() => {
     setLoading(true);
+    setTimeout(() => {
+      setLoading(false);
+    }, 1000);
   }, [item]);
 
   return (
@@ -645,7 +647,7 @@ const MarkerItem = ({ item, currentTheme }) => {
                   borderColor: currentTheme.pink,
                 }}
                 onLoad={() => setLoading(false)}
-                key={item?._id}
+                key={item?.cover}
                 source={{
                   uri: item?.cover,
                   cache: "reload",

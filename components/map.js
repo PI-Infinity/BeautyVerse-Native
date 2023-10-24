@@ -63,7 +63,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#F5FCFF",
   },
   map: {
-    borderRadius: 5,
+    borderRadius: 20,
     ...StyleSheet.absoluteFillObject,
   },
 });

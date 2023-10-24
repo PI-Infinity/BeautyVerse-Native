@@ -6,14 +6,7 @@ import {
   useRoute,
 } from "@react-navigation/native";
 import React, { useEffect, useRef, useState } from "react";
-import {
-  ActivityIndicator,
-  Animated,
-  Pressable,
-  Text,
-  View,
-  Dimensions,
-} from "react-native";
+import { Animated, Pressable, Text, View, Dimensions } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 import { CacheableImage } from "../../components/cacheableImage";
 import { darkTheme, lightTheme } from "../../context/theme";
@@ -82,6 +75,12 @@ export const CustomTabBarProfileIcon = (props) => {
       }}
     >
       <Pressable
+        stylr={{
+          flex: 1,
+
+          width: "100%",
+          alignItems: "center",
+        }}
         onPress={() => {
           if (isFocused) {
             if (routeName !== "UserProfile") {

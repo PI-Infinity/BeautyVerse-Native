@@ -21,6 +21,8 @@ import {
   setRerenderUserFeeds,
   setRerenderUserList,
 } from "../../redux/rerenders";
+import { setBlur } from "../../redux/app";
+import { BlurView } from "expo-blur";
 
 /**
  * Edit post popup component
@@ -59,12 +61,14 @@ const SmoothModal = ({
     onSave(text);
     setText("");
     UpdatePost();
+    dispatch(setBlur(false));
   };
 
   // on cancel functions
   const handleCancel = () => {
     onClose();
     setText("");
+    dispatch(setBlur(false));
   };
 
   // backend url
@@ -120,6 +124,7 @@ const SmoothModal = ({
               dispatch(setRerenderUserFeeds());
               dispatch(setRerenderUserList());
               setLoading(false);
+              dispatch(setBlur(false));
               navigation.navigate("UserProfile");
             }, 500);
           });
@@ -133,6 +138,7 @@ const SmoothModal = ({
                     dispatch(setRerenderUserFeeds());
                     dispatch(setRerenderUserList());
                     setLoading(false);
+                    dispatch(setBlur(false));
                     navigation.navigate("UserProfile");
                   }, 500);
                 });
@@ -150,7 +156,7 @@ const SmoothModal = ({
 
   return (
     <Modal
-      animationType="fade"
+      animationType="fadeIn"
       transparent={true}
       visible={visible}
       onRequestClose={handleCancel}
@@ -174,10 +180,17 @@ const SmoothModal = ({
           enableOnAndroid={true}
           enableAutomaticScroll={Platform.OS === "ios"}
         >
-          <View
+          <BlurView
+            tint={theme ? "extra-dark" : "light"}
+            intensity={60}
             style={[
               styles.modalContent,
-              { backgroundColor: currentTheme.background },
+              {
+                borderRadius: 20,
+                backgroundColor: theme
+                  ? "rgba(0, 1, 8, 0.8)"
+                  : currentTheme.background,
+              },
             ]}
           >
             <View
@@ -199,7 +212,7 @@ const SmoothModal = ({
                 Edit Post:
               </Text>
               <Text style={{ color: currentTheme.font, fontSize: 12 }}>
-                ({text?.length})
+                ({text?.length ? text?.length : "0"})
               </Text>
             </View>
             <TextInput
@@ -223,7 +236,7 @@ const SmoothModal = ({
               <TouchableOpacity
                 style={[
                   styles.modalCancelButton,
-                  { backgroundColor: currentTheme.background2 },
+                  { backgroundColor: currentTheme.disabled },
                 ]}
                 onPress={handleCancel}
               >
@@ -281,7 +294,7 @@ const SmoothModal = ({
                 <MaterialIcons name="delete" size={24} color="red" />
               </TouchableOpacity>
             </View>
-          </View>
+          </BlurView>
         </KeyboardAwareScrollView>
       </TouchableOpacity>
     </Modal>
@@ -293,13 +306,14 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    // backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
   modalContent: {
-    backgroundColor: "#fff",
-    borderRadius: 10,
+    overflow: "hidden",
     padding: 20,
     width: "90%",
+    height: "100%",
+    justifyContent: "space-evenly",
   },
   modalTitle: {
     fontSize: 18,
@@ -309,10 +323,11 @@ const styles = StyleSheet.create({
   modalTextInput: {
     borderWidth: 1,
     borderColor: "#ccc",
-    borderRadius: 5,
+    borderRadius: 10,
     paddingHorizontal: 10,
     paddingVertical: 5,
     marginBottom: 10,
+    minHeight: 150,
   },
   modalButtonsContainer: {
     flexDirection: "row",

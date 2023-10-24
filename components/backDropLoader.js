@@ -1,7 +1,8 @@
 import React from "react";
-import { ActivityIndicator, Modal, StyleSheet, View } from "react-native";
+import { Modal, StyleSheet, View } from "react-native";
 import { useSelector } from "react-redux";
 import { darkTheme, lightTheme } from "../context/theme";
+import { ActivityIndicator } from "react-native-paper";
 
 // sticky loader with overlay background
 

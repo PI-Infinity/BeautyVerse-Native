@@ -66,9 +66,6 @@ export const Card = (props) => {
     (item) => item?.city.replace("'", "") === city
   );
 
-  // defines backend url
-  const backendUrl = useSelector((state) => state.storeApp.backendUrl);
-
   // fade in
   const fadeAnim = useRef(new Animated.Value(0)).current; // Initial value for opacity: 0
 
@@ -79,7 +76,6 @@ export const Card = (props) => {
       useNativeDriver: true,
     }).start();
   }, [fadeAnim]);
-  console.log(props.user.followersLength);
 
   return (
     <>
@@ -101,7 +97,7 @@ export const Card = (props) => {
               alignItems: "center",
               width: "100%",
               paddingLeft: 5,
-              backgroundColor: currentTheme.background,
+              // backgroundColor: currentTheme.background,
               gap: 0,
             }}
           >
@@ -152,14 +148,21 @@ export const Card = (props) => {
             <Animated.View styles={{ opacity: fadeAnim }}>
               {props.user.cover?.url?.length > 0 ||
               props.user?.cover?.length ? (
-                <View style={{ width: "100%", aspectRatio: 1 }}>
+                <View
+                  style={{
+                    width: "100%",
+                    aspectRatio: 1,
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
                   <CacheableImage
                     key={props.user?.cover?.url || props.user?.cover}
                     style={{
-                      width: "100%",
+                      width: "90%",
                       aspectRatio: 0.99,
                       resizeMode: "cover",
-                      borderRadius: 5,
+                      borderRadius: 10,
                     }}
                     source={{
                       uri: props.user?.cover?.url || props.user?.cover,
@@ -232,10 +235,14 @@ export const Card = (props) => {
             style={[
               styles.starsContainer,
               {
+                backgroundColor: theme
+                  ? "rgba(255, 255, 255, 0.08)"
+                  : "rgba(0,0,0,0.03)",
+                borderRadius: 50,
                 justifyContent: "center",
-                borderTopWidth: 1.5,
-                borderBottomWidth: 1.5,
-                borderColor: currentTheme.line,
+                // borderTopWidth: 1.5,
+                // borderBottomWidth: 1.5,
+                // borderColor: currentTheme.line,
               },
             ]}
           >
@@ -353,14 +360,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     gap: 0,
-    // shadowColor: "#000",
-    // shadowOffset: {
-    //   width: 0,
-    //   height: 0.2, // negative value places shadow on top
-    // },
-    // shadowOpacity: 0.1,
-    // shadowRadius: 2,
-    // borderRadius: 50,
   },
   stars: {
     fontSize: 14,

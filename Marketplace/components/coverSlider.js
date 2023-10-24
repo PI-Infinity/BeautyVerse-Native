@@ -31,7 +31,7 @@ const CoverSlider = () => {
     const interval = setInterval(() => {
       let nextIndex = (activeIndex + 1) % (images.length + 1);
       scrollRef.current.scrollTo({
-        x: SCREEN_WIDTH * nextIndex,
+        x: (SCREEN_WIDTH - 20) * nextIndex,
         animated: true,
       });
     }, 3000);
@@ -68,15 +68,16 @@ const CoverSlider = () => {
         bounces={false}
         onScroll={handleScroll}
         scrollEventThrottle={16}
+        style={{ borderRadius: 20 }}
       >
         {images.map((image, index) => (
           <Img image={image} key={index} />
         ))}
         {/* Duplicate First Image */}
-        <View style={{ width: SCREEN_WIDTH, height: SCREEN_WIDTH }}>
+        <View style={{ width: SCREEN_WIDTH - 20, height: SCREEN_WIDTH }}>
           <Image
             source={images[0]}
-            style={{ width: SCREEN_WIDTH, height: SCREEN_WIDTH }}
+            style={{ width: SCREEN_WIDTH - 20, height: SCREEN_WIDTH }}
           />
         </View>
       </ScrollView>
@@ -104,12 +105,14 @@ const CoverSlider = () => {
 const styles = StyleSheet.create({
   container: {
     alignItems: "center",
-    width: "100%",
+    width: SCREEN_WIDTH - 20,
     paddingBottom: 0,
     overflow: "hidden",
+    marginLeft: 10,
+    paddingTop: 10,
   },
   image: {
-    width: SCREEN_WIDTH,
+    width: SCREEN_WIDTH - 20,
     aspectRatio: 1,
   },
   dotContainer: {
@@ -131,12 +134,16 @@ const Img = ({ image }) => {
   const [loading, setLoading] = useState(true);
   return (
     <View
-      style={{ width: SCREEN_WIDTH, height: SCREEN_WIDTH, overflow: "hidden" }}
+      style={{
+        width: SCREEN_WIDTH - 20,
+        height: SCREEN_WIDTH,
+        overflow: "hidden",
+      }}
     >
       {loading && <Circle />}
       <Image
         source={image}
-        style={{ width: SCREEN_WIDTH, height: SCREEN_WIDTH }}
+        style={{ width: SCREEN_WIDTH - 20, height: SCREEN_WIDTH }}
         onLoad={() => setLoading(false)}
       />
     </View>

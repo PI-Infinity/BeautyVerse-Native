@@ -1,5 +1,3 @@
-import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
-import { useHeaderHeight } from "@react-navigation/elements";
 import { useIsFocused } from "@react-navigation/native";
 import axios from "axios";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -7,27 +5,19 @@ import {
   Dimensions,
   FlatList,
   Pressable,
-  RefreshControl,
-  Text,
-  View,
-  TouchableOpacity,
-  ActivityIndicator,
   ScrollView,
-  Animation,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
+import { ActivityIndicator } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
-import { Feed } from "../../../components/feedCard/feedCard";
-import AlertMessage from "../../../components/alertMessage";
-import SkeletonComponent from "../../../components/skelton";
-import { darkTheme, lightTheme } from "../../../context/theme";
-import { setSendReport } from "../../../redux/alerts";
-import { setCleanUp, setFeedRefreshControl } from "../../../redux/rerenders";
-import { setZoomToTop } from "../../../redux/app";
-import * as Location from "expo-location";
-import GetSharedFeed from "../../../components/getSharedFeed";
-import { ProceduresOptions } from "../../../datas/registerDatas";
-import { Circle } from "../../../components/skeltons";
 import { CacheableImage } from "../../../components/cacheableImage";
+import { Feed } from "../../../components/feedCard/feedCard";
+import { Circle } from "../../../components/skeltons";
+import { darkTheme, lightTheme } from "../../../context/theme";
+import { ProceduresOptions } from "../../../datas/registerDatas";
+import { setFeedRefreshControl } from "../../../redux/rerenders";
 
 /**
  * Feeds screen
@@ -55,8 +45,6 @@ export const SavedItems = ({ navigation, setScrollY, setScrollYF }) => {
   const [feeds, setFeeds] = useState([]);
   const [products, setProducts] = useState([]);
 
-  console.log(products?.length);
-
   // defines navigator of for you list or followings list
   const [activeList, setActiveList] = useState(false);
 
@@ -67,8 +55,6 @@ export const SavedItems = ({ navigation, setScrollY, setScrollYF }) => {
 
   const [page, setPage] = useState(1);
   const [productsPage, setProductsPage] = useState(1);
-
-  console.log(productsPage);
 
   // Selector for the cleanup state
   const cleanUp = useSelector((state) => state.storeRerenders.cleanUp);
@@ -206,7 +192,6 @@ export const SavedItems = ({ navigation, setScrollY, setScrollYF }) => {
       console.log(error.response.data.message);
     }
     dispatch(setFeedRefreshControl(false));
-    console.log("add");
   };
 
   const flatListRef = useRef();
@@ -432,7 +417,7 @@ export const SavedItems = ({ navigation, setScrollY, setScrollYF }) => {
               }}
             >
               <Text style={{ color: currentTheme.disabled }}>
-                No Feeds found
+                No Products found
               </Text>
             </View>
           )}

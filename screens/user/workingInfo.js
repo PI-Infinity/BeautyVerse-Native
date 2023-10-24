@@ -45,7 +45,7 @@ export const WorkingInfo = ({ targetUser, navigation }) => {
           } else if (lang === "ka") {
             labelLang = label?.ka;
           } else {
-            labelLang === label?.ru;
+            labelLang = label?.ru;
           }
 
           return (

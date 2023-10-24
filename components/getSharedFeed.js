@@ -5,9 +5,6 @@ import axios from "axios";
 import { useNavigation } from "@react-navigation/native";
 
 const GetSharedFeed = () => {
-  const [user, setUser] = useState(null);
-  const [feed, setFeed] = useState(null);
-
   const navigation = useNavigation();
   const backendUrl = useSelector((state) => state.storeApp.backendUrl);
   const currentUser = useSelector((state) => state.storeUser.currentUser);
@@ -24,17 +21,15 @@ const GetSharedFeed = () => {
           const userResponse = await axios.get(
             backendUrl + "/api/v1/users/" + userId
           );
-          setUser(userResponse.data.data.user);
 
           if (feedId) {
             const feedResponse = await axios.get(
               backendUrl +
                 "/api/v1/feeds/" +
                 feedId +
-                "&check=" +
+                "?check=" +
                 currentUser._id
             );
-            setFeed(feedResponse.data.data.feedObj);
 
             if (feedResponse.data.data.feed) {
               navigation.navigate("UserFeed", {
@@ -65,10 +60,10 @@ const GetSharedFeed = () => {
     Linking.addEventListener("url", handleDeepLink);
     initialURL();
 
-    // Cleanup: Remove event listener on component unmount
-    return () => {
-      Linking.removeEventListener("url", handleDeepLink);
-    };
+    // // Cleanup: Remove event listener on component unmount
+    // return () => {
+    //   Linking.removeEventListener("url", handleDeepLink);
+    // };
   }, [backendUrl, navigation]);
 
   // ... rest of your component logic

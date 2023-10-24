@@ -1,11 +1,5 @@
-import {
-  StyleSheet,
-  Text,
-  View,
-  ScrollView,
-  Platform,
-  ActivityIndicator,
-} from "react-native";
+import { StyleSheet, Text, View, ScrollView, Platform } from "react-native";
+import { ActivityIndicator } from "react-native-paper";
 import React, { useState, useEffect } from "react";
 import { terms, privacy, qa, usage } from "../../datas/pageTexts";
 import { lightTheme, darkTheme } from "../../context/theme";

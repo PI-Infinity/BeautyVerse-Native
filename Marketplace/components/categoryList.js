@@ -3,19 +3,18 @@ import {
   StyleSheet,
   Text,
   View,
-  ActivityIndicator,
   Modal,
   TouchableOpacity,
   Pressable,
   TextInput,
 } from "react-native";
 import React, { useEffect, useState } from "react";
-
 import { FlatList } from "react-native-gesture-handler";
 import { Language } from "../../context/language";
 import { darkTheme, lightTheme } from "../../context/theme";
 import { useSelector, useDispatch } from "react-redux";
 import { FontAwesome, FontAwesome5, MaterialIcons } from "@expo/vector-icons";
+import { ActivityIndicator } from "react-native-paper";
 
 const CategoryList = ({
   setIsModalVisible,

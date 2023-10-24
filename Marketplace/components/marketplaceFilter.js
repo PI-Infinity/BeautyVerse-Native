@@ -14,12 +14,15 @@ import { useSelector, useDispatch } from "react-redux";
 import { ProceduresOptions } from "../../datas/registerDatas";
 import {
   Entypo,
+  Feather,
   FontAwesome,
+  FontAwesome5,
   Fontisto,
   MaterialCommunityIcons,
   MaterialIcons,
 } from "@expo/vector-icons";
 import { TouchableOpacity } from "react-native-gesture-handler";
+import { BlurView } from "expo-blur";
 
 const FilterPopup = ({
   openFilter,
@@ -85,417 +88,504 @@ const FilterPopup = ({
         setOpenFilter(!openFilter);
       }}
     >
-      <ScrollView
-        contentContainerStyle={{
-          paddingHorizontal: 15,
-          paddingVertical: 60,
-          paddingBottom: 20,
-          width: "100%",
-        }}
-        showsVerticalScrollIndicator={false}
+      <BlurView
         style={{
           flex: 1,
-          backgroundColor: currentTheme.background,
+          backgroundColor: theme
+            ? "rgba(0, 1, 8, 0.8)"
+            : currentTheme.background,
         }}
+        tint="extra-dark"
+        intensity={60}
       >
-        <View
-          style={{
+        <ScrollView
+          contentContainerStyle={{
+            paddingHorizontal: 15,
+            paddingVertical: 60,
+            paddingBottom: 20,
             width: "100%",
-            borderWidth: 1,
-            borderColor: currentTheme.line,
-            padding: 15,
-            borderRadius: 10,
-            marginVertical: 10,
+          }}
+          showsVerticalScrollIndicator={false}
+          style={{
+            flex: 1,
           }}
         >
-          <View style={{ alignItems: "center", padding: 5, width: "100%" }}>
-            <Text
+          <View
+            style={{
+              width: "100%",
+              borderWidth: 1,
+              borderColor: currentTheme.pink,
+              padding: 15,
+              borderRadius: 10,
+              // marginVertical: 10,
+            }}
+          >
+            <View
               style={{
-                color: currentTheme.pink,
-                letterSpacing: 0.5,
-                fontSize: 16,
+                alignItems: "center",
+                padding: 5,
+                width: "100%",
+                flexDirection: "row",
+                justifyContent: "center",
+                gap: 8,
               }}
             >
-              {language?.language?.Marketplace?.marketplace?.categories}:
-            </Text>
-          </View>
-          <View style={{ alignItems: "center", gap: 8, marginTop: 15 }}>
-            {categories?.map((item, index) => {
-              let lab = categoriesList.find(
-                (i, x) =>
-                  i.value?.toLocaleLowerCase() === item?.toLocaleLowerCase()
-              ).label;
-              return (
-                <Pressable
-                  key={index}
-                  onPress={
-                    categoryFilter?.includes(item)
-                      ? () =>
-                          setCategoryFilter(
-                            categoryFilter.filter((i, x) => i !== item)
-                          )
-                      : () => setCategoryFilter([...categoryFilter, item])
-                  }
-                  style={{
-                    padding: 10,
-                    paddingHorizontal: 15,
-                    borderRadius: 50,
-                    borderWidth: 1,
-                    borderColor: categoryFilter?.includes(item)
-                      ? currentTheme.pink
-                      : currentTheme.line,
-                    width: "90%",
-                    alignItems: "center",
-                  }}
-                >
-                  <Text
-                    style={{ letterSpacing: 0.3, color: currentTheme.font }}
+              <Entypo name="list" size={20} color={currentTheme.font} />
+              <Text
+                style={{
+                  color: currentTheme.pink,
+                  letterSpacing: 0.5,
+                  fontSize: 16,
+                }}
+              >
+                {language?.language?.Marketplace?.marketplace?.categories}:
+              </Text>
+            </View>
+            <View style={{ alignItems: "center", gap: 8, marginTop: 15 }}>
+              {categories?.map((item, index) => {
+                let lab = categoriesList.find(
+                  (i, x) =>
+                    i.value?.toLocaleLowerCase() === item?.toLocaleLowerCase()
+                ).label;
+                return (
+                  <Pressable
+                    key={index}
+                    onPress={
+                      categoryFilter?.includes(item)
+                        ? () =>
+                            setCategoryFilter(
+                              categoryFilter.filter((i, x) => i !== item)
+                            )
+                        : () => setCategoryFilter([...categoryFilter, item])
+                    }
+                    style={{
+                      padding: 10,
+                      paddingHorizontal: 15,
+                      borderRadius: 50,
+                      borderWidth: 1,
+                      borderColor: categoryFilter?.includes(item)
+                        ? currentTheme.pink
+                        : currentTheme.line,
+                      width: "90%",
+                      alignItems: "center",
+                    }}
                   >
-                    {lab}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
-        </View>
-        <View
-          style={{
-            width: "100%",
-            borderWidth: 1,
-            borderColor: currentTheme.line,
-            padding: 15,
-            borderRadius: 10,
-            marginVertical: 10,
-          }}
-        >
-          <View style={{ alignItems: "center", padding: 5, width: "100%" }}>
-            <Text
-              style={{
-                color: currentTheme.pink,
-                letterSpacing: 0.5,
-                fontSize: 16,
-              }}
-            >
-              {language?.language?.Marketplace?.marketplace?.brands}:
-            </Text>
+                    <Text
+                      style={{ letterSpacing: 0.3, color: currentTheme.font }}
+                    >
+                      {lab}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
           </View>
           <View
             style={{
-              alignItems: "center",
-              gap: 8,
-              marginTop: 10,
               width: "100%",
+              borderWidth: 1,
+              borderColor: currentTheme.pink,
+              marginTop: 10,
+              padding: 15,
+              borderRadius: 10,
             }}
           >
-            {brands?.map((item, index) => {
-              return (
-                <Pressable
-                  key={index}
-                  onPress={
-                    brands?.length > 1 && brand?.includes(item)
-                      ? () => setBrands(brand.filter((i, x) => i !== item))
-                      : brands?.length > 1 && !brand?.includes(item)
-                      ? () => setBrands([...brand, item])
-                      : undefined
-                  }
-                  style={{
-                    padding: 10,
-                    paddingHorizontal: 15,
-                    borderRadius: 50,
-                    borderWidth: 1,
-
-                    borderColor: brand?.includes(item)
+            <View
+              style={{
+                alignItems: "center",
+                padding: 5,
+                width: "100%",
+                flexDirection: "row",
+                justifyContent: "center",
+                gap: 8,
+              }}
+            >
+              <Feather name="type" size={18} color={currentTheme.font} />
+              <Text
+                style={{
+                  color: currentTheme.pink,
+                  letterSpacing: 0.5,
+                  fontSize: 16,
+                }}
+              >
+                {language?.language?.Marketplace?.marketplace?.type}:
+              </Text>
+            </View>
+            <View style={styles.priceInputContainer}>
+              <Pressable
+                onPress={
+                  type === "everyone"
+                    ? () => setType("")
+                    : () => setType("everyone")
+                }
+                style={{
+                  padding: 10,
+                  borderWidth: 1,
+                  borderColor:
+                    type === "everyone" ? currentTheme.pink : currentTheme.line,
+                  borderRadius: 50,
+                  width: "47.5%",
+                  alignItems: "center",
+                }}
+              >
+                <Text
+                  style={{ color: currentTheme.font, letterSpacing: 0.3 }}
+                  numberOfLines={1}
+                  ellipsizeMode={"tail"}
+                >
+                  {language?.language?.Marketplace?.marketplace?.forEveryone}
+                </Text>
+              </Pressable>
+              <Pressable
+                onPress={
+                  type === "professionals"
+                    ? () => setType("")
+                    : () => setType("professionals")
+                }
+                style={{
+                  padding: 10,
+                  borderWidth: 1,
+                  borderColor:
+                    type === "professionals"
                       ? currentTheme.pink
                       : currentTheme.line,
-                    width: "90%",
-                    alignItems: "center",
-                  }}
+                  borderRadius: 50,
+                  width: "47.5%",
+                  alignItems: "center",
+                }}
+              >
+                <Text
+                  style={{ color: currentTheme.font, letterSpacing: 0.3 }}
+                  numberOfLines={1}
+                  ellipsizeMode={"tail"}
                 >
-                  <Text
+                  {
+                    language?.language?.Marketplace?.marketplace
+                      ?.forProfessionals
+                  }
+                </Text>
+              </Pressable>
+            </View>
+          </View>
+          <View
+            style={{
+              width: "100%",
+              borderWidth: 1,
+              borderColor: currentTheme.pink,
+              padding: 15,
+              borderRadius: 10,
+              marginVertical: 10,
+            }}
+          >
+            <View
+              style={{
+                alignItems: "center",
+                padding: 5,
+                width: "100%",
+                justifyContent: "center",
+                flexDirection: "row",
+                gap: 8,
+              }}
+            >
+              <Entypo name="price-ribbon" size={20} color={currentTheme.font} />
+              <Text
+                style={{
+                  color: currentTheme.pink,
+                  letterSpacing: 0.5,
+                  fontSize: 16,
+                }}
+              >
+                {language?.language?.Marketplace?.marketplace?.brands}:
+              </Text>
+            </View>
+            <View
+              style={{
+                alignItems: "center",
+                gap: 8,
+                marginTop: 10,
+                width: "100%",
+              }}
+            >
+              {brands?.map((item, index) => {
+                return (
+                  <Pressable
+                    key={index}
+                    onPress={
+                      brands?.length > 1 && brand?.includes(item)
+                        ? () => setBrands(brand.filter((i, x) => i !== item))
+                        : brands?.length > 1 && !brand?.includes(item)
+                        ? () => setBrands([...brand, item])
+                        : undefined
+                    }
                     style={{
-                      letterSpacing: 0.3,
-                      color:
-                        brands?.length > 1
-                          ? currentTheme.font
-                          : currentTheme.disabled,
+                      padding: 10,
+                      paddingHorizontal: 15,
+                      borderRadius: 50,
+                      borderWidth: 1,
+
+                      borderColor: brand?.includes(item)
+                        ? currentTheme.pink
+                        : currentTheme.line,
+                      width: "90%",
+                      alignItems: "center",
                     }}
                   >
-                    {item}
-                  </Text>
-                </Pressable>
-              );
-            })}
+                    <Text
+                      style={{
+                        letterSpacing: 0.3,
+                        color:
+                          brands?.length > 1
+                            ? currentTheme.font
+                            : currentTheme.disabled,
+                      }}
+                    >
+                      {item}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
           </View>
-        </View>
-        <View
-          style={{
-            width: "100%",
-            // marginVertical: 10,
-            borderWidth: 1,
-            borderColor: currentTheme.line,
+          <View
+            style={{
+              width: "100%",
+              // marginVertical: 10,
+              borderWidth: 1,
+              borderColor: currentTheme.pink,
 
-            padding: 15,
-            borderRadius: 10,
-          }}
-        >
-          <View style={{ alignItems: "center", padding: 5, width: "100%" }}>
-            <Text
+              padding: 15,
+              borderRadius: 10,
+            }}
+          >
+            <View
               style={{
-                color: currentTheme.pink,
-                letterSpacing: 0.5,
-                fontSize: 16,
-              }}
-            >
-              {language?.language?.Marketplace?.marketplace?.priceRange}:
-            </Text>
-          </View>
-          <View style={styles.priceInputContainer}>
-            <TextInput
-              style={[
-                styles.priceInput,
-                {
-                  color: currentTheme.font,
-                  borderColor:
-                    minPrice === "" ? currentTheme.line : currentTheme.pink,
-                },
-              ]}
-              keyboardType="number-pad"
-              placeholder={
-                language?.language?.Marketplace?.marketplace?.minPrice
-              }
-              value={minPrice}
-              onChangeText={(val) => setMinPrice(val)}
-              placeholderTextColor={currentTheme.disabled}
-            />
-            <TextInput
-              style={[
-                styles.priceInput,
-                {
-                  color: currentTheme.font,
-                  borderColor:
-                    maxPrice === "" ? currentTheme.line : currentTheme.pink,
-                },
-              ]}
-              keyboardType="number-pad"
-              placeholder={
-                language?.language?.Marketplace?.marketplace?.maxPrice
-              }
-              value={maxPrice}
-              onChangeText={(val) => setMaxPrice(val)}
-              placeholderTextColor={currentTheme.disabled}
-            />
-          </View>
-        </View>
-        <View
-          style={{
-            width: "100%",
-            marginTop: 10,
-            borderWidth: 1,
-            borderColor: currentTheme.line,
-
-            padding: 15,
-            borderRadius: 10,
-          }}
-        >
-          <View style={{ alignItems: "center", padding: 5, width: "100%" }}>
-            <Text
-              style={{
-                color: currentTheme.pink,
-                letterSpacing: 0.5,
-                fontSize: 16,
-              }}
-            >
-              {language?.language?.Marketplace?.marketplace?.discounts}:
-            </Text>
-          </View>
-          <View style={styles.priceInputContainer}>
-            <Pressable
-              onPress={
-                discounts === "with"
-                  ? () => setDiscounts("")
-                  : () => setDiscounts("with")
-              }
-              style={{
-                padding: 10,
-                borderWidth: 1,
-                borderColor:
-                  discounts === "with" ? currentTheme.pink : currentTheme.line,
-                borderRadius: 50,
-                width: "47.5%",
                 alignItems: "center",
+                padding: 5,
+                width: "100%",
+                justifyContent: "center",
+                flexDirection: "row",
+                gap: 8,
               }}
             >
+              <FontAwesome5
+                name="money-bill-alt"
+                size={15}
+                color={currentTheme.font}
+              />
               <Text
-                style={{ color: currentTheme.font, letterSpacing: 0.3 }}
-                numberOfLines={1}
-                ellipsizeMode={"tail"}
+                style={{
+                  color: currentTheme.pink,
+                  letterSpacing: 0.5,
+                  fontSize: 16,
+                }}
               >
-                {language?.language?.Marketplace?.marketplace?.onlyWith}
+                {language?.language?.Marketplace?.marketplace?.priceRange}:
               </Text>
-            </Pressable>
-            <Pressable
-              onPress={
-                discounts === "without"
-                  ? () => setDiscounts("")
-                  : () => setDiscounts("without")
-              }
+            </View>
+            <View style={styles.priceInputContainer}>
+              <TextInput
+                style={[
+                  styles.priceInput,
+                  {
+                    color: currentTheme.font,
+                    borderColor:
+                      minPrice === "" ? currentTheme.line : currentTheme.pink,
+                  },
+                ]}
+                keyboardType="number-pad"
+                placeholder={
+                  language?.language?.Marketplace?.marketplace?.minPrice
+                }
+                value={minPrice}
+                onChangeText={(val) => setMinPrice(val)}
+                placeholderTextColor={currentTheme.disabled}
+              />
+              <TextInput
+                style={[
+                  styles.priceInput,
+                  {
+                    color: currentTheme.font,
+                    borderColor:
+                      maxPrice === "" ? currentTheme.line : currentTheme.pink,
+                  },
+                ]}
+                keyboardType="number-pad"
+                placeholder={
+                  language?.language?.Marketplace?.marketplace?.maxPrice
+                }
+                value={maxPrice}
+                onChangeText={(val) => setMaxPrice(val)}
+                placeholderTextColor={currentTheme.disabled}
+              />
+            </View>
+          </View>
+          <View
+            style={{
+              width: "100%",
+              marginTop: 10,
+              borderWidth: 1,
+              borderColor: currentTheme.pink,
+
+              padding: 15,
+              borderRadius: 10,
+            }}
+          >
+            <View
               style={{
-                padding: 10,
-                borderWidth: 1,
-                borderColor:
+                alignItems: "center",
+                padding: 5,
+                width: "100%",
+                flexDirection: "row",
+                justifyContent: "center",
+                gap: 8,
+              }}
+            >
+              <MaterialCommunityIcons
+                name="sale"
+                size={18}
+                color={currentTheme.font}
+              />
+              <Text
+                style={{
+                  color: currentTheme.pink,
+                  letterSpacing: 0.5,
+                  fontSize: 16,
+                }}
+              >
+                {language?.language?.Marketplace?.marketplace?.discounts}:
+              </Text>
+            </View>
+            <View style={styles.priceInputContainer}>
+              <Pressable
+                onPress={
+                  discounts === "with"
+                    ? () => setDiscounts("")
+                    : () => setDiscounts("with")
+                }
+                style={{
+                  padding: 10,
+                  borderWidth: 1,
+                  borderColor:
+                    discounts === "with"
+                      ? currentTheme.pink
+                      : currentTheme.line,
+                  borderRadius: 50,
+                  width: "47.5%",
+                  alignItems: "center",
+                }}
+              >
+                <Text
+                  style={{ color: currentTheme.font, letterSpacing: 0.3 }}
+                  numberOfLines={1}
+                  ellipsizeMode={"tail"}
+                >
+                  {language?.language?.Marketplace?.marketplace?.onlyWith}
+                </Text>
+              </Pressable>
+              <Pressable
+                onPress={
                   discounts === "without"
-                    ? currentTheme.pink
-                    : currentTheme.line,
-                borderRadius: 50,
-                width: "47.5%",
-                alignItems: "center",
-              }}
-            >
-              <Text
-                style={{ color: currentTheme.font, letterSpacing: 0.3 }}
-                numberOfLines={1}
-                ellipsizeMode={"tail"}
+                    ? () => setDiscounts("")
+                    : () => setDiscounts("without")
+                }
+                style={{
+                  padding: 10,
+                  borderWidth: 1,
+                  borderColor:
+                    discounts === "without"
+                      ? currentTheme.pink
+                      : currentTheme.line,
+                  borderRadius: 50,
+                  width: "47.5%",
+                  alignItems: "center",
+                }}
               >
-                {language?.language?.Marketplace?.marketplace?.onlyWithout}
-              </Text>
-            </Pressable>
+                <Text
+                  style={{ color: currentTheme.font, letterSpacing: 0.3 }}
+                  numberOfLines={1}
+                  ellipsizeMode={"tail"}
+                >
+                  {language?.language?.Marketplace?.marketplace?.onlyWithout}
+                </Text>
+              </Pressable>
+            </View>
           </View>
-        </View>
-        <View
-          style={{
-            width: "100%",
-            marginVertical: 10,
-            borderWidth: 1,
-            borderColor: currentTheme.line,
-            padding: 15,
-            borderRadius: 10,
-          }}
-        >
-          <View style={{ alignItems: "center", padding: 5, width: "100%" }}>
-            <Text
+          <View
+            style={{
+              width: "100%",
+              marginVertical: 10,
+              borderWidth: 1,
+              borderColor: currentTheme.pink,
+              padding: 15,
+              borderRadius: 10,
+            }}
+          >
+            <View
               style={{
-                color: currentTheme.pink,
-                letterSpacing: 0.5,
-                fontSize: 16,
-              }}
-            >
-              {language?.language?.Marketplace?.marketplace?.sex}:
-            </Text>
-          </View>
-          <View style={styles.priceInputContainer}>
-            <Pressable
-              onPress={
-                sex === "women" ? () => setSex("all") : () => setSex("women")
-              }
-              style={{
-                padding: 10,
-                borderWidth: 1,
-                borderColor:
-                  sex === "women" ? currentTheme.pink : currentTheme.line,
-                borderRadius: 50,
-                width: "47.5%",
                 alignItems: "center",
+                padding: 5,
+                width: "100%",
+                flexDirection: "row",
+                justifyContent: "center",
+                gap: 8,
               }}
             >
-              <Text style={{ color: currentTheme.font, letterSpacing: 0.3 }}>
-                {language?.language?.Marketplace?.marketplace?.women}
-              </Text>
-            </Pressable>
-            <Pressable
-              onPress={
-                sex === "men" ? () => setSex("all") : () => setSex("men")
-              }
-              style={{
-                padding: 10,
-                borderWidth: 1,
-                borderColor:
-                  sex === "men" ? currentTheme.pink : currentTheme.line,
-                borderRadius: 50,
-                width: "47.5%",
-                alignItems: "center",
-              }}
-            >
-              <Text style={{ color: currentTheme.font, letterSpacing: 0.3 }}>
-                {language?.language?.Marketplace?.marketplace?.men}
-              </Text>
-            </Pressable>
-          </View>
-        </View>
-        <View
-          style={{
-            width: "100%",
-            borderWidth: 1,
-            borderColor: currentTheme.line,
-
-            padding: 15,
-            borderRadius: 10,
-          }}
-        >
-          <View style={{ alignItems: "center", padding: 5, width: "100%" }}>
-            <Text
-              style={{
-                color: currentTheme.pink,
-                letterSpacing: 0.5,
-                fontSize: 16,
-              }}
-            >
-              {language?.language?.Marketplace?.marketplace?.type}:
-            </Text>
-          </View>
-          <View style={styles.priceInputContainer}>
-            <Pressable
-              onPress={
-                type === "everyone"
-                  ? () => setType("")
-                  : () => setType("everyone")
-              }
-              style={{
-                padding: 10,
-                borderWidth: 1,
-                borderColor:
-                  type === "everyone" ? currentTheme.pink : currentTheme.line,
-                borderRadius: 50,
-                width: "47.5%",
-                alignItems: "center",
-              }}
-            >
+              <FontAwesome
+                name="intersex"
+                size={18}
+                color={currentTheme.font}
+              />
               <Text
-                style={{ color: currentTheme.font, letterSpacing: 0.3 }}
-                numberOfLines={1}
-                ellipsizeMode={"tail"}
+                style={{
+                  color: currentTheme.pink,
+                  letterSpacing: 0.5,
+                  fontSize: 16,
+                }}
               >
-                {language?.language?.Marketplace?.marketplace?.forEveryone}
+                {language?.language?.Marketplace?.marketplace?.sex}:
               </Text>
-            </Pressable>
-            <Pressable
-              onPress={
-                type === "professionals"
-                  ? () => setType("")
-                  : () => setType("professionals")
-              }
-              style={{
-                padding: 10,
-                borderWidth: 1,
-                borderColor:
-                  type === "professionals"
-                    ? currentTheme.pink
-                    : currentTheme.line,
-                borderRadius: 50,
-                width: "47.5%",
-                alignItems: "center",
-              }}
-            >
-              <Text
-                style={{ color: currentTheme.font, letterSpacing: 0.3 }}
-                numberOfLines={1}
-                ellipsizeMode={"tail"}
+            </View>
+            <View style={styles.priceInputContainer}>
+              <Pressable
+                onPress={
+                  sex === "women" ? () => setSex("all") : () => setSex("women")
+                }
+                style={{
+                  padding: 10,
+                  borderWidth: 1,
+                  borderColor:
+                    sex === "women" ? currentTheme.pink : currentTheme.line,
+                  borderRadius: 50,
+                  width: "47.5%",
+                  alignItems: "center",
+                }}
               >
-                {language?.language?.Marketplace?.marketplace?.forProfessionals}
-              </Text>
-            </Pressable>
+                <Text style={{ color: currentTheme.font, letterSpacing: 0.3 }}>
+                  {language?.language?.Marketplace?.marketplace?.women}
+                </Text>
+              </Pressable>
+              <Pressable
+                onPress={
+                  sex === "men" ? () => setSex("all") : () => setSex("men")
+                }
+                style={{
+                  padding: 10,
+                  borderWidth: 1,
+                  borderColor:
+                    sex === "men" ? currentTheme.pink : currentTheme.line,
+                  borderRadius: 50,
+                  width: "47.5%",
+                  alignItems: "center",
+                }}
+              >
+                <Text style={{ color: currentTheme.font, letterSpacing: 0.3 }}>
+                  {language?.language?.Marketplace?.marketplace?.men}
+                </Text>
+              </Pressable>
+            </View>
           </View>
-        </View>
-      </ScrollView>
+        </ScrollView>
+      </BlurView>
       <View
         style={{
           height: 80,

@@ -7,8 +7,9 @@ import {
   View,
   Dimensions,
   Animated,
-  ActivityIndicator,
+  ImageBackground,
 } from "react-native";
+import { ActivityIndicator } from "react-native-paper";
 import React, { useState, useEffect, useRef } from "react";
 import { Language } from "../../context/language";
 import { darkTheme, lightTheme } from "../../context/theme";
@@ -23,6 +24,7 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import CoverSlider from "../../Marketplace/components/coverSlider";
 import { setRerenderProducts } from "../../redux/Marketplace";
+import { TextInput } from "react-native-gesture-handler";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -128,63 +130,132 @@ const Main = ({ setScrollY, scrollY }) => {
   };
 
   return (
-    <>
-      <Animated.View
-        style={{
-          opacity: opacityValue,
-          transform: [{ scale: 1.2 }],
-          alignItems: "center",
-          width: "100%",
-        }}
-      >
-        <ActivityIndicator
-          color={currentTheme.pink}
-          style={{ position: "absolute", top: 15, zIndex: -1 }}
-        />
-      </Animated.View>
-      <Animated.ScrollView
-        contentContainerStyle={{ gap: 0, paddingBottom: 30 }}
-        showsVerticalScrollIndicator={false}
-        bounces={Platform.OS === "ios" ? false : undefined}
-        overScrollMode={Platform.OS === "ios" ? "never" : "always"}
-        onScroll={onScroll}
-        scrollEventThrottle={16}
-        ref={scrollRef}
+    <ImageBackground
+      style={{
+        flex: 1,
+        width: "100%",
+        height: "100%",
+      }}
+      source={theme ? require("../../assets/background.jpg") : null}
+    >
+      <View
         style={{
           flex: 1,
-          transform: [{ translateY: transformScroll }],
-          backgroundColor: currentTheme.background,
+          backgroundColor: theme ? "rgba(0,0,0,0.6)" : currentTheme.background,
         }}
       >
-        <CoverSlider />
-        {/*  */}
-        <ListComponent
-          list={randomList}
-          navigation={navigation}
-          currentTheme={currentTheme}
-          title={language?.language?.Marketplace?.marketplace?.popularProducts}
-        />
+        <Animated.View
+          style={{
+            opacity: opacityValue,
+            transform: [{ scale: 1.2 }],
+            alignItems: "center",
+            width: "100%",
+          }}
+        >
+          <ActivityIndicator
+            color={currentTheme.pink}
+            style={{ position: "absolute", top: 15, zIndex: -1 }}
+            size={20}
+          />
+        </Animated.View>
+        <Animated.ScrollView
+          contentContainerStyle={{ gap: 0, paddingBottom: 30, paddingTop: 10 }}
+          showsVerticalScrollIndicator={false}
+          onScroll={onScroll}
+          scrollEventThrottle={16}
+          ref={scrollRef}
+          style={{
+            flex: 1,
+            transform: [{ translateY: transformScroll }],
+          }}
+        >
+          <Pressable onPress={() => navigation.navigate("Search")}>
+            <View
+              style={{
+                paddingHorizontal: 15,
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 5,
+              }}
+            >
+              <View
+                style={{
+                  width: "100%",
+                  height: 40,
+                  borderRadius: 50,
+                  borderWidth: 1,
+                  borderColor: currentTheme.line,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  // justifyContent: "center",
+                  paddingHorizontal: 15,
+                  // marginLeft: "3%",
+                }}
+              >
+                <View>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      gap: 8,
+                      alignItems: "center",
+                    }}
+                  >
+                    <FontAwesome
+                      name="search"
+                      size={20}
+                      color={currentTheme.pink}
+                    />
+                    <TextInput
+                      placeholder={
+                        language?.language?.Marketplace?.marketplace?.search
+                      }
+                      placeholderTextColor={currentTheme.disabled}
+                      style={{
+                        width: "90%",
+                        height: "100%",
+                        color: currentTheme.font,
+                        letterSpacing: 0.3,
+                      }}
+                      editable={false}
+                      onPressIn={() => navigation.navigate("Search")}
+                    />
+                  </View>
+                </View>
+              </View>
+            </View>
+          </Pressable>
+          <CoverSlider />
+          {/*  */}
+          <ListComponent
+            list={randomList}
+            navigation={navigation}
+            currentTheme={currentTheme}
+            title={
+              language?.language?.Marketplace?.marketplace?.popularProducts
+            }
+          />
 
-        {/* <ListComponent
+          {/* <ListComponent
         list={randomList}
         navigation={navigation}
         currentTheme={currentTheme}
         title="Popular"
       /> */}
-        {/* <ListComponent
+          {/* <ListComponent
         list={latestList}
         navigation={navigation}
         currentTheme={currentTheme}
         title="Latest"
       /> */}
-        {/* <ListComponent
+          {/* <ListComponent
         list={randomList}
         navigation={navigation}
         currentTheme={currentTheme}
         title="Last Solds"
       /> */}
-      </Animated.ScrollView>
-    </>
+        </Animated.ScrollView>
+      </View>
+    </ImageBackground>
   );
 };
 
@@ -272,7 +343,7 @@ const ListComponent = ({ currentTheme, list, navigation, title }) => {
                     flex: 1,
                     borderWidth: 1,
                     borderColor: currentTheme.line,
-                    borderRadius: 10,
+                    borderRadius: 20,
                     // padding: 8,
                     gap: 10,
                     alignItems: "center",
@@ -288,9 +359,8 @@ const ListComponent = ({ currentTheme, list, navigation, title }) => {
                       paddingHorizontal: 4,
                     }}
                   >
-                    {item.owner.cover?.url ? (
+                    {item.owner.cover?.length > 0 ? (
                       <Pressable
-                        style={{ padding: 8 }}
                         onPress={() =>
                           navigation.navigate("User", {
                             user: item.owner,
@@ -298,9 +368,9 @@ const ListComponent = ({ currentTheme, list, navigation, title }) => {
                         }
                       >
                         <CacheableImage
-                          key={item.owner.cover?.url}
-                          source={{ uri: item.owner.cover?.url }}
-                          style={{ width: 40, height: 40, borderRadius: 50 }}
+                          key={item.owner.cover}
+                          source={{ uri: item.owner.cover }}
+                          style={{ width: 25, height: 25, borderRadius: 50 }}
                         />
                       </Pressable>
                     ) : (
@@ -363,7 +433,7 @@ const ListComponent = ({ currentTheme, list, navigation, title }) => {
                       style={{
                         width: "97%",
                         aspectRatio: 1,
-                        borderRadius: 5,
+                        borderRadius: 10,
                       }}
                     />
                   </TouchableOpacity>

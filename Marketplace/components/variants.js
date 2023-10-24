@@ -3,7 +3,6 @@ import {
   StyleSheet,
   Text,
   View,
-  ActivityIndicator,
   Modal,
   TouchableOpacity,
   Pressable,
@@ -19,6 +18,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { FontAwesome, FontAwesome5, MaterialIcons } from "@expo/vector-icons";
 import axios from "axios";
 import { CacheableImage } from "../../components/cacheableImage";
+import { ActivityIndicator } from "react-native-paper";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 

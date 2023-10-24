@@ -41,13 +41,11 @@ export const PersonalInfo = () => {
   // define current user
   const currentUser = useSelector((state) => state.storeUser.currentUser);
 
-  console.log(currentUser);
-
   // define editing mode
   const [isEditing, setIsEditing] = useState(false);
   const [editableUser, setEditableUser] = useState({ ...currentUser });
   const [countryCode, setCountryCode] = useState(currentUser.phone.countryCode);
-  const [callingCode, setCallingCode] = useState(currentUser.phone.collingCode);
+  const [callingCode, setCallingCode] = useState(currentUser.phone.callingCode);
 
   // alert message
   const [alert, setAlert] = useState({ active: false, text: "", type: "" });
@@ -95,7 +93,6 @@ export const PersonalInfo = () => {
         telegram: editableUser?.media?.telegram,
       },
     };
-    setIsEditing(false);
     dispatch(setCurrentUser(User));
     try {
       await axios.patch(backendUrl + "/api/v1/users/" + currentUser._id, {
@@ -117,6 +114,7 @@ export const PersonalInfo = () => {
           telegram: editableUser?.media?.telegram,
         },
       });
+      setIsEditing(false);
       dispatch(setRerenderCurrentUser());
     } catch (error) {
       Alert.alert(error.response.data.message);

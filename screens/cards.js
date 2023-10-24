@@ -1,7 +1,7 @@
 import axios from "axios";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  ActivityIndicator,
+  // ActivityIndicator,
   Dimensions,
   FlatList,
   RefreshControl,
@@ -15,6 +15,8 @@ import { Card } from "../components/profileCard";
 import LoadingSkeleton from "../components/skeltonCards";
 import { darkTheme, lightTheme } from "../context/theme";
 import { setCleanUp, setCardRefreshControl } from "../redux/rerenders";
+import { BlurView } from "expo-blur";
+import { ActivityIndicator } from "react-native-paper";
 
 /**
  * Cards Screen component
@@ -62,10 +64,14 @@ export const Cards = ({ navigation, setScrollY }) => {
 
   // defines backend url
   const backendUrl = useSelector((state) => state.storeApp.backendUrl);
+  // defines backend url
+  const cardRefreshControl = useSelector(
+    (state) => state.storeRerenders.cardRefreshControl
+  );
 
   // useEffect hook to get data from the API
   useEffect(() => {
-    const Getting = async () => {
+    const GettingUsersCards = async () => {
       openLoading();
       try {
         const response = await axios.get(
@@ -93,8 +99,17 @@ export const Cards = ({ navigation, setScrollY }) => {
         }, 200);
       }
     };
-    Getting();
-  }, [cleanUp, location]);
+    GettingUsersCards();
+  }, [
+    search,
+    filter,
+    specialists,
+    salons,
+    shops,
+    city,
+    district,
+    cardRefreshControl,
+  ]);
 
   const flatListRef = useRef();
 
@@ -104,12 +119,8 @@ export const Cards = ({ navigation, setScrollY }) => {
     setScrollY(offsetY);
   }, []);
 
-  // Fetching rerenderUserList flag from Redux store
-  const rerenderUserList = useSelector(
-    (state) => state.storeRerenders.rerenderUserList
-  );
   // Function to get users with cards from the API
-  const GetUsersWithCards = async (currentPage) => {
+  const AddUsersCards = async (currentPage) => {
     try {
       const response = await axios.get(
         `${backendUrl}/api/v1/cards?search=${search}&filter=${filter}&type=${
@@ -148,7 +159,7 @@ export const Cards = ({ navigation, setScrollY }) => {
     }
   };
 
-  // zoom to top on change dependency
+  // simple zoom to top on change dependency (special function to zoomToTop)
   const zoomToTop = useSelector((state) => state.storeApp.zoomToTop);
   let firstRend = useRef();
   useEffect(() => {
@@ -159,7 +170,9 @@ export const Cards = ({ navigation, setScrollY }) => {
     flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
   }, [zoomToTop]);
 
-  // refresh inidcator animation
+  /**
+   * refresh inidcator animation
+   */
   const opacityValue = useRef(new Animated.Value(0)).current;
   const transformScroll = useRef(new Animated.Value(0)).current;
 
@@ -212,6 +225,7 @@ export const Cards = ({ navigation, setScrollY }) => {
         <ActivityIndicator
           color={currentTheme.pink}
           style={{ position: "absolute", top: 15, zIndex: -1 }}
+          size={20}
         />
       </Animated.View>
 
@@ -240,7 +254,6 @@ export const Cards = ({ navigation, setScrollY }) => {
           style={{
             flex: 1,
             transform: [{ translateY: transformScroll }],
-            backgroundColor: currentTheme.background,
           }}
           renderItem={({ item, index }) => {
             return (
@@ -256,7 +269,7 @@ export const Cards = ({ navigation, setScrollY }) => {
             );
           }}
           onEndReached={() => {
-            GetUsersWithCards(page + 1);
+            AddUsersCards(page + 1);
             setPage(page + 1);
           }}
           onEndReachedThreshold={0.9}

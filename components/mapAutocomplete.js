@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import { View, Animated } from "react-native";
 import { StyleSheet, Dimensions } from "react-native";
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
@@ -29,6 +29,9 @@ const GoogleAutocomplete = ({ address, setAddress, currentTheme }) => {
     }).start();
   };
 
+  // this state used to show/hide password when input
+  const [addressFocused, setAddressFocused] = useState(false);
+
   const styles = StyleSheet.create({
     container: {
       width: SCREEN_WIDTH * 0.9,
@@ -54,7 +57,7 @@ const GoogleAutocomplete = ({ address, setAddress, currentTheme }) => {
       fontSize: 14,
       // borderRadius: 50,
       borderBottomWidth: 1,
-      borderColor: currentTheme.line,
+      borderColor: addressFocused ? currentTheme.pink : currentTheme.line,
       backgroundColor: currentTheme.background, // Add this line
     },
     description: {
@@ -118,6 +121,12 @@ const GoogleAutocomplete = ({ address, setAddress, currentTheme }) => {
           onChangeText: handleChangeText,
           placeholderTextColor: currentTheme.disabled, // Add this line
           fontSize: 14,
+          onFocus: () => {
+            setAddressFocused(true);
+          },
+          onBlur: () => {
+            setAddressFocused(false);
+          },
         }}
         styles={styles}
         nearbyPlacesAPI="GooglePlacesSearch"

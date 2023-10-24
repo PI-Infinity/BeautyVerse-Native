@@ -51,13 +51,9 @@ export const Search = ({}) => {
       let lab = opt.label.split("-");
       dispatch(setSearchInput(lab[lab?.length - 1]));
       dispatch(setSearch(value?.value?.toLowerCase()));
-      dispatch(setCleanUp());
+
       setTimeout(() => {
-        if (routeName === "Search1") {
-          navigation.navigate("cards");
-        } else {
-          navigation.navigate("Feeds");
-        }
+        navigation.navigate("cards");
       }, 1000);
     },
     [dispatch, proceduresOptions]
@@ -67,13 +63,9 @@ export const Search = ({}) => {
 
   const handleGo = (value) => {
     dispatch(setSearch(search));
-    dispatch(setCleanUp());
+
     setTimeout(() => {
-      if (routeName === "Search1") {
-        navigation.navigate("cards");
-      } else {
-        navigation.navigate("Feeds");
-      }
+      navigation.navigate("cards");
     }, 1000);
   };
 
@@ -127,8 +119,6 @@ export const Search = ({}) => {
       <ScrollView
         contentContainerStyle={{ gap: 5, marginTop: 10 }}
         style={{ width: "90%" }}
-        bounces={Platform.OS === "ios" ? false : undefined}
-        overScrollMode={Platform.OS === "ios" ? "never" : "always"}
       >
         {filteredProcedures.map((item, index) => {
           if (index < qnt) {

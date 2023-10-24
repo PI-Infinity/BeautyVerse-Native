@@ -2,7 +2,6 @@ import { FontAwesome, Fontisto, MaterialIcons } from "@expo/vector-icons";
 import axios from "axios";
 import React, { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
   Alert,
   Dimensions,
   Image,
@@ -14,6 +13,7 @@ import {
   Vibration,
   View,
 } from "react-native";
+import { ActivityIndicator } from "react-native-paper";
 import { useSelector } from "react-redux";
 import { Language } from "../../context/language";
 import { darkTheme, lightTheme } from "../../context/theme";

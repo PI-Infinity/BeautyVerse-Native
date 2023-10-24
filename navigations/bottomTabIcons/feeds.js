@@ -6,11 +6,21 @@ import {
   useRoute,
 } from "@react-navigation/native";
 import React, { useContext, useEffect, useRef } from "react";
-import { Animated, Pressable, View, Dimensions } from "react-native";
+import {
+  Animated,
+  Pressable,
+  View,
+  Dimensions,
+  TouchableOpacity,
+} from "react-native";
 import { useDispatch } from "react-redux";
 import { RouteNameContext } from "../../context/routName";
 import { setZoomToTop } from "../../redux/app";
-import { setCleanUp, setFeedRefreshControl } from "../../redux/rerenders";
+import {
+  setCleanUp,
+  setFeedRefreshControl,
+  setRerenderCurrentUser,
+} from "../../redux/rerenders";
 import * as Haptics from "expo-haptics";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -60,7 +70,12 @@ export const CustomTabBarFeedsIcon = ({
       }}
     >
       <Pressable
-        style={{ flex: 1 }}
+        style={{
+          flex: 1,
+
+          width: "100%",
+          alignItems: "center",
+        }}
         onPress={() => {
           if (isFocused) {
             if (routeName === "Feeds") {

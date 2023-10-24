@@ -59,6 +59,12 @@ export const CustomTabBarChatIcon = ({ color, currentTheme, focused }) => {
       }}
     >
       <Pressable
+        style={{
+          flex: 1,
+
+          width: "100%",
+          alignItems: "center",
+        }}
         onPress={() => {
           if (isFocused) {
             if (routeName === "Chats") {

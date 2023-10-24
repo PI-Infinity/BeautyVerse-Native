@@ -12,11 +12,12 @@ import {
   Text,
   View,
   TouchableOpacity,
-  ActivityIndicator,
   ScrollView,
   StyleSheet,
   Animated,
+  Modal,
 } from "react-native";
+import { ActivityIndicator } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 import AlertMessage from "../components/alertMessage";
 import { Feed } from "../components/feedCard/feedCard";
@@ -27,6 +28,9 @@ import { setCleanUp, setFeedRefreshControl } from "../redux/rerenders";
 import { setLoading, setZoomToTop } from "../redux/app";
 import * as Location from "expo-location";
 import GetSharedFeed from "../components/getSharedFeed";
+import { ScrollGallery } from "./user/scrollGallery";
+import { Language } from "../context/language";
+import { BlurView } from "expo-blur";
 
 /**
  * Feeds screen
@@ -42,12 +46,7 @@ export const Feeds = ({
   firstLoading,
   setFirstLoading,
 }) => {
-  // refresh state
-  const refresh = useSelector(
-    (state) => state.storeRerenders.feedRefreshControl
-  );
-
-  // defines when screen focused
+  // defines when screen is focused
   const isFocused = useIsFocused();
 
   // defines theme context
@@ -61,12 +60,12 @@ export const Feeds = ({
   const currentUser = useSelector((state) => state.storeUser.currentUser);
 
   /*
-   * users states with last feed
+   * feeds list state (For You & Followings)
    */
   const [feeds, setFeeds] = useState([]);
   const [followingsList, setFollowingsList] = useState([]);
 
-  // defines navigator of for you list or followings list
+  // defines navigator (for you list or followings list)
   const [activeList, setActiveList] = useState(false);
 
   /*
@@ -79,24 +78,18 @@ export const Feeds = ({
   // Selector for the cleanup state
   const cleanUp = useSelector((state) => state.storeRerenders.cleanUp);
 
-  // define active app language
-  const lang = useSelector((state) => state.storeApp.language);
-
   // defines backend url
   const backendUrl = useSelector((state) => state.storeApp.backendUrl);
-
-  const [loading, setLoading] = useState(true);
 
   // refresh inidcator animation
   const opacityValue = useRef(new Animated.Value(0)).current;
   const transformScroll = useRef(new Animated.Value(0)).current;
 
   const openLoading = () => {
-    setLoading(true);
     Animated.parallel([
       Animated.timing(opacityValue, {
         toValue: 1,
-        duration: 300,
+        duration: 200,
         useNativeDriver: true,
       }),
       Animated.timing(transformScroll, {
@@ -107,60 +100,59 @@ export const Feeds = ({
     ]).start();
   };
   const closeLoading = () => {
-    setLoading(false);
     Animated.parallel([
       Animated.timing(opacityValue, {
         toValue: 0,
-        duration: 300,
+        duration: 200,
         useNativeDriver: true,
       }),
       Animated.timing(transformScroll, {
         toValue: 0,
-        duration: 200,
+        duration: 300,
         useNativeDriver: true,
       }),
     ]).start();
   };
 
   /**
-   * Get users function when screen loads
+   * Get feeds function when screen loads
    */
-  // Function to get feed data from server
 
-  const Getting = async () => {
+  const GettingFeeds = async () => {
     openLoading();
 
     try {
       const response = await axios.get(
-        `${backendUrl}/api/v1/feeds?check=${currentUser._id}&page=1&followings=false`
+        `${backendUrl}/api/v1/feeds?check=${currentUser._id}&page=1&limit=3`
       );
       setFeeds(response.data.data.feedlist);
       setTimeout(() => {
-        dispatch(setFeedRefreshControl(false));
         closeLoading();
         setFirstLoading(false);
         setPage(1);
       }, 500);
     } catch (error) {
       console.log(error.response.data.message);
-      dispatch(setFeedRefreshControl(false));
       setPage(1);
     }
   };
   useEffect(() => {
-    Getting();
+    GettingFeeds();
   }, [cleanUp]);
 
   // Callback to handle scroll
   const scrollYRefF = useRef(0);
 
+  // followgins page state
+  const [fPage, setFPage] = useState(1);
+
   // Function to get feed data from server
-  const GettingFollowers = async () => {
+  const GetFollowingsFeeds = async () => {
     // setFirstLoading(true);
     openLoading();
     try {
       const response = await axios.get(
-        `${backendUrl}/api/v1/feeds?check=${currentUser._id}&page=1&followings=true`
+        `${backendUrl}/api/v1/feeds/followings?check=${currentUser._id}&page=1&limit=3`
       );
       setFollowingsList(response.data.data.feedlist);
 
@@ -168,30 +160,64 @@ export const Feeds = ({
         dispatch(setFeedRefreshControl(false));
         closeLoading();
         setFirstLoading(false);
-        setPage(1);
+        setFPage(1);
       }, 500);
     } catch (error) {
       console.log(error.response.data.message);
       dispatch(setFeedRefreshControl(false));
-      setPage(1);
+      setFPage(1);
     }
   };
   // getting followings feeds
   useEffect(() => {
-    GettingFollowers();
+    GetFollowingsFeeds();
   }, [cleanUp]);
 
   /**
-   * Function to get new users with feeds and adding them in user state while user scrolling to bottom
+   * Function to get new feeds and adding them in state while user scrolling to bottom
+   * (used for both, For You and for Followings feeds)
    *  */
-  const AddUsersWithFeeds = async (currentPage) => {
+  const AddFeeds = async (currentPage) => {
     try {
       const response = await axios.get(
-        `${backendUrl}/api/v1/feeds?page=${currentPage}&check=${currentUser._id}&followings=${activeList}`
+        `${backendUrl}/api/v1/feeds?page=${currentPage}&check=${currentUser._id}&limit=3`
       );
 
       // Update users' state with new feed data
       setFeeds((prev) => {
+        const newUsers = response.data.data.feedlist;
+        return newUsers.reduce((acc, curr) => {
+          const existingUserIndex = acc.findIndex(
+            (user) => user._id === curr._id
+          );
+          if (existingUserIndex !== -1) {
+            // User already exists, merge the data
+            const mergedUser = { ...acc[existingUserIndex], ...curr };
+            return [
+              ...acc.slice(0, existingUserIndex),
+              mergedUser,
+              ...acc.slice(existingUserIndex + 1),
+            ];
+          } else {
+            // User doesn't exist, add to the end of the array
+            return [...acc, curr];
+          }
+        }, prev);
+      });
+    } catch (error) {
+      console.log(error.response.data.message);
+    }
+    dispatch(setFeedRefreshControl(false));
+  };
+  // adding for followings feeds
+  const AddFollowingsFeeds = async (currentPage) => {
+    try {
+      const response = await axios.get(
+        `${backendUrl}/api/v1/feeds/followings?page=${currentPage}&check=${currentUser._id}&limit=3`
+      );
+
+      // Update users' state with new feed data
+      setFollowingsList((prev) => {
         const newUsers = response.data.data.feedlist;
         return newUsers.reduce((acc, curr) => {
           const existingUserIndex = acc.findIndex(
@@ -243,12 +269,9 @@ export const Feeds = ({
   const AddView = async (userId, itemid) => {
     try {
       if (userId !== currentUser._id) {
-        const response = await axios.patch(
-          backendUrl + "/api/v1/feeds/" + itemid + "/view",
-          {
-            view: currentUser._id,
-          }
-        );
+        await axios.patch(backendUrl + "/api/v1/feeds/" + itemid + "/view", {
+          view: currentUser._id,
+        });
       }
     } catch (error) {
       console.log(error.response.data.message);
@@ -296,11 +319,11 @@ export const Feeds = ({
       firstRend.current = false;
       return;
     }
-    if (!activeList) {
-      flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
-    } else {
-      flatListRefF.current?.scrollToOffset({ offset: 0, animated: true });
-    }
+    // if (!activeList) {
+    flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
+    // } else {
+    flatListRefF.current?.scrollToOffset({ offset: 0, animated: true });
+    // }
     // }
   }, [zoomToTop]);
 
@@ -345,11 +368,31 @@ export const Feeds = ({
     setActiveHelper(false);
   };
 
-  // useEffect()
+  /**
+   * user feeds gallery
+   */
+  const [activeGallery, setActiveGallery] = useState(null);
 
   return (
     <View style={{ flex: 1 }}>
       <GetSharedFeed />
+      {activeGallery && (
+        <Modal isVisible={activeGallery} animationType="slide" transparent>
+          <View
+            style={{
+              flex: 1,
+              paddingTop: SCREEN_HEIGHT / 15,
+              backgroundColor: currentTheme.background,
+            }}
+          >
+            {/* <View style={{ flex: 1, backgroundColor: "green" }}></View> */}
+            <ScrollGallery
+              route={{ params: activeGallery }}
+              setActiveGallery={setActiveGallery}
+            />
+          </View>
+        </Modal>
+      )}
 
       {firstLoading && (
         <View
@@ -358,7 +401,6 @@ export const Feeds = ({
             zIndex: 11111,
             width: SCREEN_WIDTH,
             top: 40,
-            backgroundColor: currentTheme.background,
             height: SCREEN_HEIGHT,
           }}
         >
@@ -393,6 +435,7 @@ export const Feeds = ({
           <ActivityIndicator
             color={currentTheme.pink}
             style={{ position: "absolute", top: 15 }}
+            size={20}
           />
         </Animated.View>
       </View>
@@ -438,14 +481,15 @@ export const Feeds = ({
                   currentIndex={currentIndex}
                   isFocused={isFocused}
                   feedsLength={feeds?.length}
+                  setActiveGallery={setActiveGallery}
                 />
               );
             }}
             onEndReached={() => {
-              AddUsersWithFeeds(page + 1);
+              AddFeeds(page + 1);
               setPage(page + 1);
             }}
-            onEndReachedThreshold={0.5}
+            onEndReachedThreshold={1}
             keyExtractor={(item) => item?._id}
             onViewableItemsChanged={onViewableItemsChangedRef.current}
             viewabilityConfig={viewabilityConfig}
@@ -481,12 +525,13 @@ export const Feeds = ({
                   currentIndex={currentIndex}
                   isFocused={isFocused}
                   feedsLength={feeds?.length}
+                  setActiveGallery={setActiveGallery}
                 />
               );
             }}
             onEndReached={() => {
-              AddUsersWithFeeds(page + 1);
-              setPage(page + 1);
+              AddFollowingsFeeds(fPage + 1);
+              setFPage(fPage + 1);
             }}
             onEndReachedThreshold={0.5}
             keyExtractor={(item) => item?._id}
@@ -522,6 +567,7 @@ const NavigatorComponent = ({
 }) => {
   const fadeInOpacity = useRef(new Animated.Value(0.5)).current;
   const fadeInOpacity2 = useRef(new Animated.Value(0.5)).current;
+  const language = Language();
   useEffect(() => {
     if (!activeList) {
       Animated.timing(fadeInOpacity, {
@@ -530,7 +576,7 @@ const NavigatorComponent = ({
         useNativeDriver: true,
       }).start();
       Animated.timing(fadeInOpacity2, {
-        toValue: 0.5,
+        toValue: 0.3,
         duration: 200,
         useNativeDriver: true,
       }).start();
@@ -541,7 +587,7 @@ const NavigatorComponent = ({
         useNativeDriver: true,
       }).start();
       Animated.timing(fadeInOpacity, {
-        toValue: 0.5,
+        toValue: 0.3,
         duration: 200,
         useNativeDriver: true,
       }).start();
@@ -580,7 +626,7 @@ const NavigatorComponent = ({
             fontSize: 16,
           }}
         >
-          For you
+          {language.language.Main.feedCard.forYou}
         </Animated.Text>
       </TouchableOpacity>
 
@@ -608,7 +654,7 @@ const NavigatorComponent = ({
             fontSize: 16,
           }}
         >
-          Followings
+          {language.language.User.userPage.followings}
         </Animated.Text>
       </TouchableOpacity>
 

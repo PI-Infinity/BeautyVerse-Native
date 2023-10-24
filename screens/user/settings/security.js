@@ -1,12 +1,10 @@
 import { MaterialIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
-import { deleteObject, listAll, ref } from "firebase/storage";
 import React, { useState } from "react";
 import {
   Alert,
   Dimensions,
-  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
@@ -17,7 +15,6 @@ import { useDispatch, useSelector } from "react-redux";
 import DeleteUserPopup from "../../../components/confirmDialog";
 import { Language } from "../../../context/language";
 import { darkTheme, lightTheme } from "../../../context/theme";
-import { storage } from "../../../firebase";
 import { setLoading, setLogoutLoading } from "../../../redux/app";
 import { setCurrentUser } from "../../../redux/user";
 
@@ -93,51 +90,14 @@ export const Security = () => {
    */
 
   const Delete = async () => {
-    let videofileRef = ref(storage, `videos/${currentUser?._id}/`);
-    let imagefileRef = ref(storage, `images/${currentUser?._id}/`);
     try {
-      dispatch(setLogoutLoading(true));
-      await AsyncStorage.removeItem("Beautyverse:currentUser");
+      dispatch(setLoading(true));
       dispatch(setCurrentUser(null));
-      const response = await axios.delete(
-        backendUrl + "/api/v1/users/" + currentUser?._id
-      );
-
-      if (response.status === 204) {
-        // Get the list of all files in video directory and delete them if they exist
-        let videoFiles = await listAll(videofileRef);
-        if (videoFiles.items.length > 0) {
-          videoFiles.items.forEach((videoFile) => {
-            deleteObject(videoFile)
-              .then(() => {
-                console.log("Video object deleted");
-              })
-              .catch((error) => {
-                console.log("Error deleting video object: ", error);
-              });
-          });
-        }
-
-        // Get the list of all files in image directory and delete them if they exist
-        let imageFiles = await listAll(imagefileRef);
-        if (imageFiles.items.length > 0) {
-          imageFiles.items.forEach((imageFile) => {
-            deleteObject(imageFile)
-              .then(() => {
-                console.log("Image object deleted");
-              })
-              .catch((error) => {
-                console.log("Error deleting image object: ", error);
-              });
-          });
-        }
-        setTimeout(() => {
-          dispatch(setLogoutLoading(false));
-        }, 1000);
-        console.log("User deleted successfully");
-      } else {
-        console.log("Something went wrong while deleting the user");
-      }
+      await AsyncStorage.removeItem("Beautyverse:currentUser");
+      await axios.delete(backendUrl + "/api/v1/users/" + currentUser?._id);
+      setTimeout(() => {
+        dispatch(setLoading(false));
+      }, 1000);
     } catch (error) {
       Alert.alert(error.response.data.message);
     }

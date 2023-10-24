@@ -27,7 +27,7 @@ export const Districts = ({ districts, currentTheme }) => {
 
   const handleSearch = (text) => {
     setSearch(text);
-    setFilteredDistricts(
+    setDistrict(
       districts.filter((district) =>
         district.toLowerCase().includes(text.toLowerCase())
       )
@@ -36,7 +36,6 @@ export const Districts = ({ districts, currentTheme }) => {
 
   const handlePress = (district) => {
     dispatch(setDistrict(district));
-    dispatch(setCleanUp());
   };
 
   const RenderedItem = ({ item }) => (

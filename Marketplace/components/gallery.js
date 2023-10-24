@@ -31,7 +31,10 @@ const Gallery = ({ product }) => {
   return (
     <View style={{ alignItems: "center", width: "100%", paddingBottom: 15 }}>
       <ScrollView
-        contentContainerStyle={{ alignItems: "center" }}
+        contentContainerStyle={{
+          alignItems: "center",
+        }}
+        style={{ width: SCREEN_WIDTH - 20, borderRadius: 20 }}
         horizontal
         pagingEnabled
         onScroll={handleScroll}
@@ -44,7 +47,7 @@ const Gallery = ({ product }) => {
           source={{ uri: product.gallery[product.cover]?.url }}
           key={product.gallery[product.cover]?.url}
           style={{
-            width: SCREEN_WIDTH,
+            width: SCREEN_WIDTH - 20,
             aspectRatio: 1,
           }}
         />
@@ -55,7 +58,7 @@ const Gallery = ({ product }) => {
                 source={{ uri: item.url }}
                 key={item.url}
                 style={{
-                  width: SCREEN_WIDTH,
+                  width: SCREEN_WIDTH - 20,
                   aspectRatio: 1,
                 }}
               />

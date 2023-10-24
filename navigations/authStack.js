@@ -8,6 +8,7 @@ import {
   Dimensions,
   TouchableOpacity,
   Pressable,
+  ImageBackground,
 } from "react-native";
 import Welcome from "../screens/welcome";
 import { Login } from "../screens/authentication/login";
@@ -29,6 +30,7 @@ import { SuccessRegister } from "../screens/authentication/SuccessRegister";
 import { Accept } from "../screens/authentication/accept";
 import { FontAwesome } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
+import { BlurView } from "expo-blur";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -48,7 +50,10 @@ export function AuthStack({ route }) {
     <Stack.Navigator
       screenOptions={{
         cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS, // Apply custom transition
-        cardStyle: { backgroundColor: "transparent" }, // Set card background to transparent
+        cardStyle: {
+          backgroundColor: "transparent",
+        },
+        transparentHeader: true,
       }}
     >
       {/** Main welcome screen */}
@@ -59,7 +64,6 @@ export function AuthStack({ route }) {
           title: "Welcome",
           headerStyle: {
             height: SCREEN_HEIGHT / 9,
-            backgroundColor: currentTheme.background,
             elevation: 0,
             shadowOpacity: 0,
             borderBottomWidth: 0,
@@ -70,9 +74,7 @@ export function AuthStack({ route }) {
             fontSize: 18,
             letterSpacing: 0.5,
           },
-          cardStyle: {
-            backgroundColor: currentTheme.background,
-          },
+
           headerTitle: () => (
             <View
               style={{

@@ -1,23 +1,20 @@
 // DeleteFeedPopup.js
-import axios from "axios";
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Animated,
   Easing,
-  Modal,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
   TouchableOpacity,
+  Text,
   View,
+  Modal,
+  StyleSheet,
+  ScrollView,
+  Platform,
 } from "react-native";
+import { lightTheme, darkTheme } from "../../context/theme";
 import { useSelector } from "react-redux";
-import { darkTheme, lightTheme } from "../../context/theme";
-
-/**
- * Reports component which opens on press 3 dots top of the feed card
- */
+import axios from "axios";
+import { BlurView } from "expo-blur";
 
 export const Reports = ({
   isVisible,
@@ -26,27 +23,18 @@ export const Reports = ({
   contentOwner,
   contentId,
 }) => {
-  // define animation state
   const [animation] = useState(new Animated.Value(0));
-
-  // define theme state
   const theme = useSelector((state) => state.storeApp.theme);
+  const currentUser = useSelector((state) => state.storeUser.currentUser);
   const currentTheme = theme ? darkTheme : lightTheme;
 
-  // define current user state
-  const currentUser = useSelector((state) => state.storeUser.currentUser);
-
-  // define which report is active
   const [active, setActive] = useState(null);
-
-  // backend url
-  const backendUrl = useSelector((state) => state.storeApp.backendUrl);
 
   // send report
   const SendReport = async () => {
     const { number, ...activeWithoutNumber } = active;
     try {
-      await axios.post(backendUrl + "/api/v1/reports", {
+      await axios.post("https://beautyverse.herokuapp.com/api/v1/reports", {
         ...number,
         ...activeWithoutNumber,
       });
@@ -55,54 +43,29 @@ export const Reports = ({
     }
   };
 
-  // open and hide reports component
-
-  useEffect(() => {
-    if (isVisible) {
-      Animated.timing(animation, {
-        toValue: 1,
-        duration: 200,
-        easing: Easing.out(Easing.ease),
-        useNativeDriver: true,
-      }).start();
-    } else {
-      Animated.timing(animation, {
-        toValue: 0,
-        duration: 200,
-        easing: Easing.in(Easing.ease),
-        useNativeDriver: true,
-      }).start();
-    }
-  }, [isVisible]);
-
-  const translateY = animation.interpolate({
-    inputRange: [0, 1],
-    outputRange: [300, 0],
-  });
-
-  const opacity = animation.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0, 0.5],
-  });
-
   return (
-    <Modal transparent visible={isVisible} onRequestClose={onClose}>
-      <Animated.View style={[styles.background, { opacity }]}>
+    <Modal
+      transparent
+      visible={isVisible}
+      onRequestClose={onClose}
+      animationType="slide"
+    >
+      <Animated.View style={[styles.background, { opacity: 0 }]}>
         <TouchableOpacity style={styles.fill} onPress={onClose} />
       </Animated.View>
       <Animated.View
         style={[
           styles.container,
           {
-            transform: [{ translateY }],
-            backgroundColor: currentTheme.background2,
+            backgroundColor: currentTheme.background,
+            borderWidth: 1.5,
+            borderColor: currentTheme.pink,
+            borderBottomWidth: 0,
           },
         ]}
       >
         <ScrollView
           showsVerticalScrollIndicator={false}
-          bounces={Platform.OS === "ios" ? false : undefined}
-          overScrollMode={Platform.OS === "ios" ? "never" : "always"}
           contentContainerStyle={{ gap: 10, paddingBottom: 20 }}
           style={{ height: 500 }}
         >
@@ -122,11 +85,9 @@ export const Reports = ({
             style={[
               styles.item,
               {
-                borderColor: currentTheme.line,
-                backgroundColor:
-                  active?.number === 1
-                    ? currentTheme.disabled
-                    : "rgba(0,0,0,0)",
+                borderColor:
+                  active?.number === 1 ? currentTheme.pink : currentTheme.line,
+                borderWidth: 1,
               },
             ]}
           >
@@ -151,11 +112,9 @@ export const Reports = ({
             style={[
               styles.item,
               {
-                borderColor: currentTheme.line,
-                backgroundColor:
-                  active?.number === 2
-                    ? currentTheme.disabled
-                    : "rgba(0,0,0,0)",
+                borderColor:
+                  active?.number === 2 ? currentTheme.pink : currentTheme.line,
+                borderWidth: 1,
               },
             ]}
           >
@@ -179,11 +138,9 @@ export const Reports = ({
             style={[
               styles.item,
               {
-                borderColor: currentTheme.line,
-                backgroundColor:
-                  active?.number === 3
-                    ? currentTheme.disabled
-                    : "rgba(0,0,0,0)",
+                borderColor:
+                  active?.number === 3 ? currentTheme.pink : currentTheme.line,
+                borderWidth: 1,
               },
             ]}
           >
@@ -209,11 +166,9 @@ export const Reports = ({
             style={[
               styles.item,
               {
-                borderColor: currentTheme.line,
-                backgroundColor:
-                  active?.number === 4
-                    ? currentTheme.disabled
-                    : "rgba(0,0,0,0)",
+                borderColor:
+                  active?.number === 4 ? currentTheme.pink : currentTheme.line,
+                borderWidth: 1,
               },
             ]}
           >
@@ -238,11 +193,9 @@ export const Reports = ({
             style={[
               styles.item,
               {
-                borderColor: currentTheme.line,
-                backgroundColor:
-                  active?.number === 5
-                    ? currentTheme.disabled
-                    : "rgba(0,0,0,0)",
+                borderColor:
+                  active?.number === 5 ? currentTheme.pink : currentTheme.line,
+                borderWidth: 1,
               },
             ]}
           >
@@ -267,11 +220,9 @@ export const Reports = ({
             style={[
               styles.item,
               {
-                borderColor: currentTheme.line,
-                backgroundColor:
-                  active?.number === 6
-                    ? currentTheme.disabled
-                    : "rgba(0,0,0,0)",
+                borderColor:
+                  active?.number === 6 ? currentTheme.pink : currentTheme.line,
+                borderWidth: 1,
               },
             ]}
           >
@@ -296,11 +247,9 @@ export const Reports = ({
             style={[
               styles.item,
               {
-                borderColor: currentTheme.line,
-                backgroundColor:
-                  active?.number === 7
-                    ? currentTheme.disabled
-                    : "rgba(0,0,0,0)",
+                borderColor:
+                  active?.number === 7 ? currentTheme.pink : currentTheme.line,
+                borderWidth: 1,
               },
             ]}
           >
@@ -324,11 +273,9 @@ export const Reports = ({
             style={[
               styles.item,
               {
-                borderColor: currentTheme.line,
-                backgroundColor:
-                  active?.number === 8
-                    ? currentTheme.disabled
-                    : "rgba(0,0,0,0)",
+                borderColor:
+                  active?.number === 8 ? currentTheme.pink : currentTheme.line,
+                borderWidth: 1,
               },
             ]}
           >

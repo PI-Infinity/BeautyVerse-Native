@@ -10,7 +10,12 @@ import { useSelector, useDispatch } from "react-redux";
 import { setType } from "../../redux/auth";
 import { Language } from "../../context/language";
 import { lightTheme, darkTheme } from "../../context/theme";
-import { MaterialIcons, FontAwesome, Entypo } from "@expo/vector-icons";
+import {
+  MaterialIcons,
+  FontAwesome,
+  Entypo,
+  Fontisto,
+} from "@expo/vector-icons";
 
 /*
   Register Screen,
@@ -156,11 +161,7 @@ export const Type = ({ navigation }) => {
           navigation.navigate("Accept");
         }}
       >
-        <MaterialIcons
-          name="add-business"
-          size={26}
-          color={currentTheme.pink}
-        />
+        <Fontisto name="shopping-bag-1" size={25} color={currentTheme.pink} />
         <Text style={[styles.boxText, { color: currentTheme.font }]}>
           {language?.language?.Auth?.auth?.shop}
         </Text>
@@ -188,8 +189,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     width: "100%",
-    justifyContent: "center",
     alignItems: "center",
+    paddingTop: 30,
 
     // marginBottom: 50,
   },

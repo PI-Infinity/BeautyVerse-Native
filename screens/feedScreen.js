@@ -5,7 +5,6 @@ import axios from "axios";
 import * as Haptics from "expo-haptics";
 import { useEffect, useRef, useState } from "react";
 import {
-  ActivityIndicator,
   Alert,
   Animated,
   Dimensions,
@@ -45,6 +44,7 @@ import {
 import SmoothModal from "../screens/user/editPostPopup";
 import { sendNotification } from "../components/pushNotifications";
 import { Circle } from "../components/skeltons";
+import { BlurView } from "expo-blur";
 /**
  * Feed screen uses when navigate to only one feed screen
  */
@@ -468,14 +468,14 @@ export const FeedItem = ({ route }) => {
         ? props.feed.fileHeight
         : props.feed.fileWidth;
 
-    let percented = originalWidth / SCREEN_WIDTH;
+    let percented = originalWidth / (SCREEN_WIDTH - 20);
 
     hght = originalHeight / percented;
   } else if (props?.feed?.images) {
     let originalHeight = props.feed.fileHeight;
     let originalWidth = props.feed.fileWidth;
 
-    let percented = originalWidth / SCREEN_WIDTH;
+    let percented = originalWidth / (SCREEN_WIDTH - 20);
     hght = originalHeight / percented;
   }
 
@@ -500,6 +500,7 @@ export const FeedItem = ({ route }) => {
   const scrollViewRef = useRef();
 
   return (
+    // <BlurView tint="extra-dark" intensity={90} style={{ flex: 1 }}>
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
@@ -510,9 +511,9 @@ export const FeedItem = ({ route }) => {
       >
         <Animated.View
           style={{
-            width: SCREEN_WIDTH,
-            backgroundColor: currentTheme.background,
+            width: SCREEN_WIDTH - 20,
             opacity: fadeAnim,
+            marginLeft: 10,
           }}
         >
           {feedOption && (
@@ -538,7 +539,6 @@ export const FeedItem = ({ route }) => {
                 paddingHorizontal: 15,
                 paddingVertical: 10,
                 zIndex: 120,
-                backgroundColor: currentTheme.background,
               }}
             >
               <TopSection
@@ -619,6 +619,8 @@ export const FeedItem = ({ route }) => {
               maxHeight: 640,
               overflow: "hidden",
               justifyContent: "center",
+              alignItems: "center",
+              borderRadius: 20,
             }}
           >
             {props?.feed?.images?.length > 1 && (
@@ -650,43 +652,47 @@ export const FeedItem = ({ route }) => {
                 {loadVideo && (
                   <View
                     style={{
-                      width: "100%",
+                      width: SCREEN_WIDTH - 20,
                       height: "100%",
-                      backgroundColor: currentTheme.background2,
                       position: "absolute",
                       alignItems: "center",
                       justifyContent: "center",
+                      borderRadius: 20,
+                      overflow: "hidden",
                     }}
                   >
-                    <Circle />
+                    <Circle borderRadius={20} />
                   </View>
                 )}
-                <CacheableVideo
-                  videoRef={videoRef}
-                  delayLongPress={250}
-                  style={{
-                    height:
-                      props.feed.fileHeight >= props.feed.fileWidth
-                        ? hght
-                        : props.feed.fileWidth,
-                  }}
-                  source={{
-                    uri: props.feed.video,
-                  }}
-                  onPlaybackStatusUpdate={onPlaybackStatusUpdate}
-                  rate={1.0}
-                  volume={1.0}
-                  isMuted={volume ? true : false}
-                  shouldPlay={true}
-                  isLooping
-                  resizeMode="contain"
-                  onLoad={
-                    () =>
-                      // setTimeout(() => {
-                      setLoadVideo(false)
-                    // }, 200)
-                  }
-                />
+                <BlurView intensity={20} tint="light">
+                  <CacheableVideo
+                    videoRef={videoRef}
+                    delayLongPress={250}
+                    style={{
+                      borderRadius: 20,
+                      height:
+                        props.feed.fileHeight >= props.feed.fileWidth
+                          ? hght
+                          : props.feed.fileWidth,
+                    }}
+                    source={{
+                      uri: props.feed.video,
+                    }}
+                    onPlaybackStatusUpdate={onPlaybackStatusUpdate}
+                    rate={1.0}
+                    volume={1.0}
+                    isMuted={volume ? true : false}
+                    shouldPlay={true}
+                    isLooping
+                    resizeMode="contain"
+                    onLoad={
+                      () =>
+                        // setTimeout(() => {
+                        setLoadVideo(false)
+                      // }, 200)
+                    }
+                  />
+                </BlurView>
               </>
             ) : (
               <ScrollView
@@ -702,35 +708,39 @@ export const FeedItem = ({ route }) => {
                       {loadImage && (
                         <View
                           style={{
-                            width: "100%",
-                            height: hght > 642 ? 642 : hght + 2,
+                            width: SCREEN_WIDTH - 20,
+                            height: hght > 642 ? 642 : hght,
                             backgroundColor: currentTheme.background2,
                             position: "absolute",
                             alignItems: "center",
                             justifyContent: "center",
+                            borderRadius: 20,
                           }}
                         >
-                          <Circle />
+                          <Circle borderRadius={20} />
                         </View>
                       )}
-                      <ZoomableImage
-                        style={{
-                          height: hght > 642 ? 642 : hght + 2,
-                          maxHeight: 642,
-                          width: SCREEN_WIDTH,
-                          zIndex: 100,
-                          resizeMode: hght > 642 ? "cover" : "contain",
-                        }}
-                        source={{
-                          uri: item.url,
-                        }}
-                        onLoad={
-                          () =>
-                            // setTimeout(() => {
-                            setLoadImage(false)
-                          // }, 200)
-                        }
-                      />
+                      <BlurView intensity={20} tint="light">
+                        <ZoomableImage
+                          style={{
+                            height: hght > 642 ? 642 : hght,
+                            maxHeight: 642,
+                            width: SCREEN_WIDTH - 20,
+                            borderRadius: 20,
+                            zIndex: 100,
+                            resizeMode: hght > 642 ? "cover" : "contain",
+                          }}
+                          source={{
+                            uri: item.url,
+                          }}
+                          onLoad={
+                            () =>
+                              // setTimeout(() => {
+                              setLoadImage(false)
+                            // }, 200)
+                          }
+                        />
+                      </BlurView>
                     </Pressable>
                   );
                 })}
@@ -828,7 +838,7 @@ export const FeedItem = ({ route }) => {
                 paddingHorizontal: 10,
                 paddingVertical: 10,
                 width: SCREEN_WIDTH,
-                backgroundColor: currentTheme.background,
+
                 justifyContent: "center",
               }}
             >
@@ -877,14 +887,7 @@ export const FeedItem = ({ route }) => {
             )}
           </Text>
           {openReviews && (
-            <View
-              style={[
-                styles.addReview,
-                {
-                  backgroundColor: currentTheme.background,
-                },
-              ]}
-            >
+            <View style={[styles.addReview, {}]}>
               <TextInput
                 style={[
                   styles.reviewInput,
@@ -966,6 +969,7 @@ export const FeedItem = ({ route }) => {
         </Animated.View>
       </ScrollView>
     </KeyboardAvoidingView>
+    // </BlurView>
   );
 };
 
@@ -1134,7 +1138,6 @@ const styles = StyleSheet.create({
   container: {
     width: SCREEN_WIDTH,
     zIndex: 10000,
-    backgroundColor: "#111",
   },
 
   info: { gap: 5 },
@@ -1144,7 +1147,6 @@ const styles = StyleSheet.create({
   starsQnt: { color: "#fff", fontSize: 14, marginLeft: 5 },
   bottomText: { color: "#fff", fontSize: 14 },
   reviews: {
-    backgroundColor: "rgba(15,15,15,0.97)",
     padding: 15,
     paddingBottom: 10,
     paddingTop: 0,
@@ -1154,7 +1156,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     flex: 1,
     minHeight: 45,
-    backgroundColor: "rgba(15,15,15,0.97)",
+
     padding: 0,
     paddingTop: 5,
     paddingBottom: 15,
@@ -1210,7 +1212,6 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 30,
     borderBottomLeftRadius: 20,
     borderWidth: 1,
-    backgroundColor: "rgba(255,255,255,0.01)",
     overflow: "hidden",
     padding: 10,
     paddingTop: 7,

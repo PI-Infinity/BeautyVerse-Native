@@ -4,7 +4,6 @@ import axios from "axios";
 import moment from "moment";
 import React, { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
   Alert,
   Platform,
   Pressable,
@@ -12,6 +11,7 @@ import {
   Text,
   View,
 } from "react-native";
+import { ActivityIndicator } from "react-native-paper";
 import uuid from "react-native-uuid";
 import { useDispatch, useSelector } from "react-redux";
 import { useSocket } from "../../context/socketContext";

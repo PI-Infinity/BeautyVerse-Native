@@ -37,7 +37,6 @@ export const Cities = ({ cities, currentTheme }) => {
   const handlePress = (city) => {
     dispatch(setDistrict(""));
     dispatch(setCity(city));
-    dispatch(setCleanUp());
   };
 
   const RenderedItem = ({ item }) => (

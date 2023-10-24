@@ -1,7 +1,6 @@
 import axios from "axios";
 import React, { useEffect, useRef, useState } from "react";
 import {
-  ActivityIndicator,
   Animated,
   Dimensions,
   StyleSheet,
@@ -9,6 +8,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { ActivityIndicator } from "react-native-paper";
 import { useSelector } from "react-redux";
 import { CacheableImage } from "../../components/cacheableImage";
 import { CacheableVideo } from "../../components/cacheableVideo";
@@ -256,6 +256,7 @@ const styles = StyleSheet.create({
     width: SCREEN_WIDTH,
     maxWidth: SCREEN_WIDTH,
     flex: 1,
+    marginLeft: 2.5,
   },
 });
 
@@ -280,8 +281,10 @@ const FeedItem = (props) => {
     <>
       <TouchableOpacity
         style={{
-          width: SCREEN_WIDTH / 2 - 2,
-          height: SCREEN_WIDTH / 2 - 2,
+          width: SCREEN_WIDTH / 2 - 10,
+          height: SCREEN_WIDTH / 2 - 10,
+          marginLeft: 5,
+          marginBottom: 5,
         }}
         activeOpacity={0.9}
         onPress={() => {
@@ -295,24 +298,26 @@ const FeedItem = (props) => {
           <View
             style={{
               position: "absolute",
-              width: SCREEN_WIDTH / 2 - 2,
+              width: SCREEN_WIDTH / 2 - 10,
               aspectRatio: 1,
-              backgroundColor: "rgba(1,1,1,0.1)",
               alignItems: "center",
               justifyContent: "center",
               overflow: "hidden",
+              borderRadius: 10,
             }}
           >
             <Circle />
           </View>
         )}
-        <Animated.View style={{ opacity: fadeAnim }}>
+        <Animated.View
+          style={{ opacity: fadeAnim, borderRadius: 10, overflow: "hidden" }}
+        >
           {props?.feed.fileFormat === "video" ? (
             <CacheableVideo
               type="userGallery"
               style={{
-                width: SCREEN_WIDTH / 2 - 2,
-                height: SCREEN_WIDTH / 2 - 2,
+                width: SCREEN_WIDTH / 2 - 10,
+                height: SCREEN_WIDTH / 2 - 10,
               }}
               source={{
                 uri: props.feed.video,
@@ -333,8 +338,8 @@ const FeedItem = (props) => {
           ) : (
             <CacheableImage
               style={{
-                width: SCREEN_WIDTH / 2 - 2,
-                height: SCREEN_WIDTH / 2 - 2,
+                width: SCREEN_WIDTH / 2 - 10,
+                height: SCREEN_WIDTH / 2 - 10,
               }}
               source={{
                 uri: props?.feed.images[0].url,
@@ -342,8 +347,8 @@ const FeedItem = (props) => {
               manipulationOptions={[
                 {
                   resize: {
-                    width: SCREEN_WIDTH / 2 - 2,
-                    height: SCREEN_WIDTH / 2 - 2,
+                    width: SCREEN_WIDTH / 2 - 10,
+                    height: SCREEN_WIDTH / 2 - 10,
                   },
                 },
                 { rotate: 90 },

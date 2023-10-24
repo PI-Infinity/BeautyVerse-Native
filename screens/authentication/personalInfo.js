@@ -1,27 +1,19 @@
-import { MaterialIcons } from "@expo/vector-icons";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import { useState } from "react";
 import {
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
+  Dimensions,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
-  Dimensions,
 } from "react-native";
+import CountryPicker from "react-native-country-picker-modal";
 import { useDispatch, useSelector } from "react-redux";
 import AlertMessage from "../../components/alertMessage";
-import VerifyCodePopup from "../../components/inputPopup";
 import GoogleAutocomplete from "../../components/mapAutocomplete";
 import { Language } from "../../context/language";
 import { darkTheme, lightTheme } from "../../context/theme";
-import { setCurrentUser } from "../../redux/auth";
-import { setRerenderCurrentUser } from "../../redux/rerenders";
-import CountryPicker from "react-native-country-picker-modal";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -41,6 +33,11 @@ export const PersonalInfo = ({ navigation }) => {
   const [phone, setPhone] = useState("");
   const [countryCode, setCountryCode] = useState("US");
   const [callingCode, setCallingCode] = useState("1");
+
+  // this state used to show/hide password when input
+  const [nameFocused, setNameFocused] = useState(false);
+
+  const [phoneFocused, setPhoneFocused] = useState(false);
 
   const onSelect = (country) => {
     if (country && country.callingCode && country.callingCode[0]) {
@@ -172,10 +169,12 @@ export const PersonalInfo = ({ navigation }) => {
             styles.input,
             {
               color: currentTheme.font,
-              borderColor: currentTheme.line,
+              borderColor: nameFocused ? currentTheme.pink : currentTheme.line,
             },
           ]}
           onChangeText={(text) => setName(text)}
+          onFocus={() => setNameFocused(true)}
+          onBlur={() => setNameFocused(false)}
         />
       </View>
       <View style={[styles.itemContainer, { marginTop: 0 }]}>
@@ -215,13 +214,17 @@ export const PersonalInfo = ({ navigation }) => {
               styles.input,
               {
                 color: currentTheme.font,
-                borderColor: currentTheme.line,
+                borderColor: phoneFocused
+                  ? currentTheme.pink
+                  : currentTheme.line,
 
                 width: "67%",
                 paddingLeft: 15,
               },
             ]}
             onChangeText={(text) => setPhone(text)}
+            onFocus={() => setPhoneFocused(true)}
+            onBlur={() => setPhoneFocused(false)}
           />
         </View>
       </View>

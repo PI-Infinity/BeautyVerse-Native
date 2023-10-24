@@ -1,18 +1,28 @@
 // screens/ChatRoomScreen.js
+import { useIsFocused, useNavigation } from "@react-navigation/native";
 import axios from "axios";
 import React, { useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Alert, Platform, View } from "react-native";
-import { useDispatch, useSelector } from "react-redux";
 import {
-  setRerederRooms,
-  setRerenderScroll,
-  updateRoom,
-} from "../../redux/chat";
-import { Input } from "../../screens/chat/input";
-import { Messages } from "../../screens/chat/messages";
-import { useIsFocused, useNavigation } from "@react-navigation/native";
+  Alert,
+  Dimensions,
+  Platform,
+  Pressable,
+  View,
+  Text,
+} from "react-native";
+import { useDispatch, useSelector } from "react-redux";
 import { useSocket } from "../../context/socketContext";
 import { darkTheme, lightTheme } from "../../context/theme";
+import { setRerenderScroll } from "../../redux/chat";
+import { Input } from "../../screens/chat/input";
+import { Messages } from "../../screens/chat/messages";
+import AIConsultant from "./AIConsultant";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { Language } from "../../context/language";
+import { BlurView } from "expo-blur";
+import { ActivityIndicator } from "react-native-paper";
+
+const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
 /**
  * Chat room
@@ -32,6 +42,9 @@ export const Room = ({ route }) => {
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
 
+  // defines language
+  const language = Language();
+
   // defines loading state
   const [loading, setLoading] = useState(true);
 
@@ -48,6 +61,12 @@ export const Room = ({ route }) => {
 
   // define current user
   const currentUser = useSelector((state) => state.storeUser.currentUser);
+
+  // defines target user
+  const [targetUser, setTargetUser] = useState(null);
+
+  // defines bot answers or not
+  const [bot, setBot] = useState(false);
 
   // define target member
   let targetChatMember;
@@ -190,8 +209,121 @@ export const Room = ({ route }) => {
   // messages scroll ref
   const flatListRef = useRef(null);
 
+  /**
+   * Bot assistant
+   */
+
+  const [botMessages, setBotMessages] = useState([]);
+  const [input, setInput] = useState("");
+  const lang = useSelector((state) => state.storeApp.language);
+  const [loadingTyping, setLoadingTyping] = useState(true);
+  const [activeBookings, setActiveBookings] = useState([]);
+
+  // dots animation
+  const [dots, setDots] = useState(0);
+
+  useEffect(() => {
+    // Set an interval to update the number of dots
+    const interval = setInterval(() => {
+      setDots((prevDots) => (prevDots + 1) % 4);
+    }, 500); // Change dots every 500ms
+
+    // Clear the interval when the component is unmounted
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    const GetUser = async () => {
+      try {
+        const response = await axios.get(
+          backendUrl + "/api/v1/users/" + targetChatMember.id
+        );
+        setTargetUser(response.data.data.user);
+      } catch (error) {
+        console.log(error.response.data.message);
+      }
+    };
+    const GetBookings = async () => {
+      try {
+        const response = await axios.get(
+          backendUrl +
+            "/api/v1/bookings/" +
+            currentUser._id +
+            `?status=active&date=""
+          }&createdAt=""&procedure=""`
+        );
+        setActiveBookings(response.data.data.bookings);
+      } catch (error) {
+        console.log(error.response.data.message);
+      }
+    };
+    GetUser();
+    GetBookings();
+  }, []);
+
+  /**
+   *
+   * Send message
+   */
+
+  const SendMessage = async (txt) => {
+    setLoadingTyping(true);
+    setInput("");
+
+    // Added this part to ensure user messages are correctly appended.
+    const updatedMessages = [...botMessages, { role: "user", content: txt }];
+    setBotMessages(updatedMessages);
+
+    try {
+      const response = await axios.post(backendUrl + "/ai/assistent", {
+        text: JSON.stringify(updatedMessages),
+      });
+
+      // Use a functional update for state to ensure we always work with the most up-to-date state.
+      setBotMessages((prev) => [
+        ...prev,
+        {
+          content: response.data.data.answer.choices[0].message.content,
+          role: "assistant",
+        },
+      ]);
+      setLoadingTyping(false); // Moved this to a finally block to ensure it always runs
+    } catch (error) {
+      console.log(error.response?.data?.message || error.message);
+    }
+  };
+
+  useEffect(() => {
+    if (bot) {
+      let {
+        notifications,
+        visitors,
+        visitorsStats,
+        feeds,
+        followers,
+        followings,
+        statistics,
+        ...filtered
+      } = targetUser;
+
+      SendMessage(
+        `Hello! you are the personal consultant for ${
+          targetUser.name
+        }. your responses are based solely on the information provided about ${
+          targetUser.name
+        }. You will not use any external or intrinsic knowledge beyond the data provided. If any unrelated topics arise, please remember that you specialize only in the data about ${
+          targetUser.name
+        } and will refrain from discussing other subjects. Feel free to anwer relevant to the provided data! Language setting: ${lang}. Please adhere to this topic, or You might not be able to assist. data: ${JSON.stringify(
+          filtered
+        )}, language: ${lang}, activeBookings: ${JSON.stringify(
+          activeBookings
+        )} . (by this active bookings you can define what time is not available). always try to answer shortly as possible! if role: assistant content includes once "hello", don't say one more time!`
+      );
+    }
+  }, [bot]);
+
   return (
-    <>
+    <BlurView tint="extra-dark" intensity={100} style={{ flex: 1 }}>
       {loading ? (
         <View
           style={{
@@ -204,33 +336,107 @@ export const Room = ({ route }) => {
           <ActivityIndicator color={currentTheme.pink} size="large" />
         </View>
       ) : (
-        <View
-          style={{
-            width: "100%",
-            justifyContent: "space-between",
-            alignItems: "center",
-            zIndex: 100,
-            height: Platform.OS === "ios" ? screenHeight : screenHeight - 410,
-          }}
-        >
-          <Messages
-            messages={messages}
-            messagesLength={messagesLength}
-            setMessages={setMessages}
-            setPage={setPage}
-            navigation={navigation}
-            AddMessages={AddMessages}
-            loading={loadingMore}
-            setLoading={setLoadingMore}
-            flatListRef={flatListRef}
-          />
-          <Input
-            targetUser={targetChatMember}
-            setMessages={setMessages}
-            flatListRef={flatListRef}
-          />
-        </View>
+        <>
+          {!bot && (
+            <View
+              style={{
+                width: "100%",
+                justifyContent: "space-between",
+                alignItems: "center",
+                zIndex: 100,
+                height:
+                  Platform.OS === "ios" ? screenHeight : screenHeight - 410,
+              }}
+            >
+              <Messages
+                messages={messages}
+                messagesLength={messagesLength}
+                setMessages={setMessages}
+                setPage={setPage}
+                navigation={navigation}
+                AddMessages={AddMessages}
+                loading={loadingMore}
+                setLoading={setLoadingMore}
+                flatListRef={flatListRef}
+              />
+              {targetUser &&
+                targetUser.type !== "user" &&
+                !targetUser.online &&
+                !bot && (
+                  <View
+                    style={{
+                      paddingHorizontal: 15,
+                      alignItems: "center",
+                      marginVertical: 15,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        color: currentTheme.disabled,
+                        letterSpacing: 0.3,
+                        textAlign: "center",
+                        lineHeight: 18,
+                      }}
+                    >
+                      {`${targetUser?.name}` +
+                        language?.language?.Chat?.chat?.assistantOffer}
+                    </Text>
+                    <Pressable
+                      onPress={() => setBot(true)}
+                      style={{
+                        margin: 8,
+                        backgroundColor: currentTheme.pink,
+                        borderRadius: 50,
+                        padding: 8,
+                        width: 170,
+                        alignItems: "center",
+                        flexDirection: "row",
+                        justifyContent: "center",
+                        gap: 8,
+                      }}
+                    >
+                      <MaterialCommunityIcons
+                        name="robot-love-outline"
+                        size={20}
+                        color="#fff"
+                      />
+                      <Text
+                        style={{
+                          color: currentTheme.font,
+                          letterSpacing: 0.3,
+                          fontWeight: "bold",
+                        }}
+                      >
+                        {language?.language?.Chat?.chat?.aiConsultant}
+                      </Text>
+                    </Pressable>
+                  </View>
+                )}
+              <Input
+                targetUser={targetChatMember}
+                setMessages={setMessages}
+                flatListRef={flatListRef}
+              />
+            </View>
+          )}
+        </>
       )}
-    </>
+      {bot && targetUser?.type !== "user" && (
+        <AIConsultant
+          SCREEN_HEIGHT={SCREEN_HEIGHT}
+          SCREEN_WIDTH={SCREEN_WIDTH}
+          bot={bot}
+          setBot={setBot}
+          SendMessage={SendMessage}
+          botMessages={botMessages}
+          input={input}
+          setInput={setInput}
+          dots={dots}
+          currentTheme={currentTheme}
+          loadingTyping={loadingTyping}
+          setBotMessages={setBotMessages}
+        />
+      )}
+    </BlurView>
   );
 };

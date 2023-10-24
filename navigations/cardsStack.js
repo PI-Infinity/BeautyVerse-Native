@@ -15,6 +15,7 @@ import {
   Text,
   TouchableOpacity,
   View,
+  ImageBackground,
 } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 import { CacheableImage } from "../components/cacheableImage";
@@ -43,7 +44,9 @@ import {
 } from "../redux/filter";
 import { setCleanUp } from "../redux/rerenders";
 import Product from "../Marketplace/screens/product";
-import Mirror from "../Mirror/screens/mirror";
+// import Mirror from "../Mirror/screens/mirror";
+import { setLocation } from "../redux/app";
+import { BlurView } from "expo-blur";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 const Stack = createStackNavigator();
@@ -138,125 +141,161 @@ export function CardsStack({ navigation, setScrollY }) {
     dispatch(setFilterBadgeSum(sum));
   }, [sum]);
 
-  return (
-    <Stack.Navigator
-      screenOptions={{
-        cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS, // Apply custom transition
-        cardStyle: { backgroundColor: "transparent" }, // Set card background to transparent
-      }}
-    >
-      {/** main card list screen  */}
-      <Stack.Screen
-        name="cards"
-        children={() => (
-          <Cards navigation={navigation} setScrollY={setScrollY} />
-        )}
-        // component={Mirror}
-        options={{
-          headerStyle: {
-            height: SCREEN_HEIGHT / 9,
-            backgroundColor: currentTheme.background,
-            shadowColor: currentTheme.line,
-            borderBottomWidth: 0,
-          },
-          headerTintColor: currentTheme.font,
-          headerTitleStyle: {
-            fontWeight: "bold",
-            fontSize: 24,
-            letterSpacing: 0.5,
-          },
-          cardStyle: {
-            backgroundColor: currentTheme.background,
-          },
-          headerTitleAlign: "center", // Center align the header title
+  /**
+   * blur
+   */
 
-          headerTitle: ({ focused }) => (
-            <View
-              style={{
-                height: "100%",
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "space-between",
-                width: SCREEN_WIDTH - 15,
-                overflow: "hidden",
-              }}
-            >
+  const blur = useSelector((state) => state.storeApp.blur);
+
+  return (
+    <ImageBackground
+      style={{
+        flex: 1,
+        width: "100%",
+        height: "100%",
+      }}
+      source={theme ? require("../assets/background.jpg") : null}
+    >
+      <>
+        {blur && (
+          <BlurView
+            style={{
+              width: SCREEN_WIDTH,
+              height: SCREEN_HEIGHT,
+              position: "absolute",
+              zIndex: 1000,
+              top: 0,
+              left: 0,
+            }}
+            // style={styles.blurView}
+            tint="dark" // or 'dark'
+            intensity={40}
+          ></BlurView>
+        )}
+      </>
+      <Stack.Navigator
+        screenOptions={{
+          cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS, // Apply custom transition
+          cardStyle: { backgroundColor: "transparent" }, // Set card background to transparent
+        }}
+      >
+        {/** main card list screen  */}
+        <Stack.Screen
+          name="cards"
+          children={() => (
+            <Cards navigation={navigation} setScrollY={setScrollY} />
+          )}
+          // component={Mirror}
+          options={{
+            headerStyle: {
+              height: SCREEN_HEIGHT / 9,
+              backgroundColor: currentTheme.background,
+              shadowColor: currentTheme.line,
+              borderBottomWidth: 0,
+            },
+            headerTintColor: currentTheme.font,
+            headerTitleStyle: {
+              fontWeight: "bold",
+              fontSize: 24,
+              letterSpacing: 0.5,
+            },
+            cardStyle: {
+              backgroundColor: theme
+                ? "rgba(0,0,0,0.6)"
+                : currentTheme.background,
+            },
+            headerTitleAlign: "center", // Center align the header title
+
+            headerTitle: ({ focused }) => (
               <View
                 style={{
+                  height: "100%",
                   flexDirection: "row",
                   alignItems: "center",
-                  paddingBottom: 5,
+                  justifyContent: "space-between",
+                  width: "100%",
+                  overflow: "hidden",
                 }}
               >
-                <Text
+                <View style={{ flex: 0.5, height: 20 }}></View>
+                <View
                   style={{
-                    fontSize: 28,
-                    fontWeight: "bold",
-                    color: currentTheme.font,
-                    letterSpacing: 1,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    paddingBottom: 5,
                   }}
                 >
-                  Beauty
-                </Text>
-                <Text
-                  style={{
-                    fontSize: 28,
-                    fontWeight: "bold",
-                    color: currentTheme.pink,
-                    letterSpacing: 1,
-                  }}
-                >
-                  Verse
-                </Text>
-              </View>
-              <Pressable
-                onPress={() => navigation.navigate("Filter")}
-                style={{
-                  // height: 80,
-                  // width: 60,
-                  alignItems: "center",
-                }}
-              >
-                {/** badge for filter */}
-                {sum > 0 && (
-                  <View
+                  <Text
                     style={{
-                      width: "auto",
-                      minWidth: 15,
-                      height: 15,
-                      backgroundColor: currentTheme.pink,
-                      borderRadius: 50,
-                      alignItems: "center",
-                      justifyContent: "center",
-                      zIndex: 10,
-                      position: "absolute",
-                      top: 5,
-                      right: 10,
-                      marginBottom: 2,
-                      shadowColor: "#000",
-                      shadowOffset: {
-                        width: 0,
-                        height: 3, // negative value places shadow on top
-                      },
-                      shadowOpacity: 0.2,
-                      shadowRadius: 2,
-                      elevation: 1,
+                      fontSize: 29,
+                      fontWeight: "bold",
+                      color: currentTheme.font,
+                      letterSpacing: 1,
                     }}
                   >
-                    <Text
+                    Beauty
+                  </Text>
+                  <Text
+                    style={{
+                      fontSize: 29,
+                      fontWeight: "bold",
+                      color: currentTheme.pink,
+                      letterSpacing: 1,
+                    }}
+                  >
+                    Verse
+                  </Text>
+                </View>
+                <Pressable
+                  onPress={() => navigation.navigate("Filter")}
+                  style={{
+                    height: 30,
+                    // width: 60,
+                    alignItems: "center",
+                    flex: 0.5,
+                  }}
+                >
+                  {/** badge for filter */}
+                  {sum > 0 && (
+                    <View
                       style={{
-                        color: "#f1f1f1",
-                        fontSize: 10,
-                        fontWeight: "bold",
-                        letterSpacing: 0.15,
+                        width: "auto",
+                        minWidth: 15,
+                        height: 15,
+                        backgroundColor: currentTheme.pink,
+                        borderRadius: 50,
+                        alignItems: "center",
+                        justifyContent: "center",
+                        zIndex: 10,
+                        position: "absolute",
+                        top: -5,
+                        right: 0,
+                        marginBottom: 2,
+                        shadowColor: "#000",
+                        shadowOffset: {
+                          width: 0,
+                          height: 3, // negative value places shadow on top
+                        },
+                        shadowOpacity: 0.2,
+                        shadowRadius: 2,
+                        elevation: 1,
                       }}
                     >
-                      {sum}
-                    </Text>
-                  </View>
-                )}
+                      <Text
+                        style={{
+                          color: "#f1f1f1",
+                          fontSize: 10,
+                          fontWeight: "bold",
+                          letterSpacing: 0.15,
+                        }}
+                      >
+                        {sum}
+                      </Text>
+                    </View>
+                  )}
 
-                {/* {focused ? (
+                  {/* {focused ? (
                   <FontAwesome
                     name="arrow-up"
                     size={27}
@@ -264,438 +303,92 @@ export function CardsStack({ navigation, setScrollY }) {
                     style={{ paddingTop: 5 }}
                   />
                 ) : ( */}
-                <View
-                  style={{
-                    // backgroundColor: "red",
-                    height: 50,
-                    width: SCREEN_WIDTH / 3,
-                    alignItems: "flex-end",
-                    justifyContent: "center",
-                    // overflow: "hidden",
-                    paddingRight: 10,
-                    paddingBottom: 5,
-                  }}
-                >
-                  <Fontisto
-                    name="earth"
-                    size={90}
-                    color={currentTheme.disabled}
+                  <View
                     style={{
+                      height: 30,
+                      flex: 0.5,
+                      width: SCREEN_WIDTH / 3.5,
+                      alignItems: "flex-end",
+                      justifyContent: "center",
                       position: "absolute",
-                      top: 0,
-                      zIndex: -1,
-                      opacity: 0.1,
-                      right: -18,
+
+                      // overflow: "hidden",
                     }}
-                  />
+                  >
+                    <Fontisto
+                      name="earth"
+                      size={120}
+                      color={currentTheme.disabled}
+                      style={{
+                        position: "absolute",
+                        top: 10,
+                        zIndex: -1,
+                        opacity: 0.1,
+                        right: 10,
+                      }}
+                    />
 
-                  <Feather
-                    name="search"
-                    size={28}
-                    color={currentTheme.disabled}
-                  />
-                  {/* )} */}
-                </View>
-              </Pressable>
-            </View>
-          ),
-        }}
-      />
-      {/** user screen in cards, visit page, that component gettings props "visitPage", so from this component only can to visit page, current user can't modify any data from there  */}
-      <Stack.Screen
-        name="User"
-        component={User}
-        options={({ route, navigation }) => ({
-          headerBackTitleVisible: false,
-          title: route.params.user.name,
-          headerStyle: {
-            height: SCREEN_HEIGHT / 9,
-            backgroundColor: currentTheme.background,
-            elevation: 0,
-            shadowOpacity: 0,
-            borderBottomWidth: 0,
-          },
-          headerTintColor: currentTheme.font,
-          headerTitleStyle: {
-            fontWeight: "bold",
-            fontSize: 18,
-            letterSpacing: 0.5,
-          },
-          cardStyle: {
-            backgroundColor: currentTheme.background,
-          },
-          headerTitleAlign: "center", // Center align the header title
-          headerLeft: () => (
-            <TouchableOpacity
-              activeOpacity={0.9}
-              onPress={() => navigation.goBack()}
-              style={{ padding: 8, paddingLeft: 15 }}
-            >
-              <FontAwesome
-                name="arrow-left"
-                color={currentTheme.pink}
-                size={22}
-              />
-            </TouchableOpacity>
-          ),
-          headerTitle: (props) => (
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "center",
-                flex: 1,
-                width: "100%",
-                gap: 5,
-              }}
-            >
-              <Text
-                style={{
-                  fontSize: 18,
-                  letterSpacing: 0.5,
-                  color: currentTheme.font,
-                  fontWeight: "bold",
-                }}
+                    <Feather
+                      name="search"
+                      size={30}
+                      style={{ marginRight: 10 }}
+                      color={currentTheme.disabled}
+                    />
+                    {/* )} */}
+                  </View>
+                </Pressable>
+              </View>
+            ),
+          }}
+        />
+        {/** user screen in cards, visit page, that component gettings props "visitPage", so from this component only can to visit page, current user can't modify any data from there  */}
+        <Stack.Screen
+          name="User"
+          component={User}
+          options={({ route, navigation }) => ({
+            headerBackTitleVisible: false,
+            title: route.params.user.name,
+            headerStyle: {
+              height: SCREEN_HEIGHT / 9,
+              backgroundColor: currentTheme.background,
+              elevation: 0,
+              shadowOpacity: 0,
+              borderBottomWidth: 0,
+            },
+            headerTintColor: currentTheme.font,
+            headerTitleStyle: {
+              fontWeight: "bold",
+              fontSize: 18,
+              letterSpacing: 0.5,
+            },
+            cardStyle: {
+              backgroundColor: currentTheme.background,
+            },
+            headerTitleAlign: "center", // Center align the header title
+            headerLeft: () => (
+              <TouchableOpacity
+                activeOpacity={0.9}
+                onPress={() => navigation.goBack()}
+                style={{ padding: 8, paddingLeft: 15 }}
               >
-                {route.params.user.name}
-              </Text>
-              {route.params.user.subscription.status === "active" && (
-                <MaterialIcons name="verified" size={14} color="#F866B1" />
-              )}
-            </View>
-          ),
-          headerRight: (props) => {
-            if (
-              currentUser?.type.toLowerCase() !== "beautycenter" &&
-              currentUser?.type.toLowerCase() !== "shop"
-            ) {
-              return (
-                <View style={{ marginRight: 20 }}>
-                  {route.params?.user?._id !== currentUser._id &&
-                    currentUser.type !== "beautycenter" &&
-                    currentUser?.type !== "shop" &&
-                    route.params?.user.type !== "shop" &&
-                    route.params?.user.type !== "user" &&
-                    route.params.user.subscription.status === "active" && (
-                      <TouchableOpacity
-                        acitveOpacity={0.3}
-                        onPress={() =>
-                          navigation.navigate("Send Booking", {
-                            user: route.params.user,
-                          })
-                        }
-                      >
-                        <FontAwesome
-                          name="calendar"
-                          size={18}
-                          color={currentTheme.font}
-                        />
-                      </TouchableOpacity>
-                    )}
-                </View>
-              );
-            }
-          },
-        })}
-      />
-      <Stack.Screen
-        name="UserVisit"
-        component={User}
-        options={({ route, navigation }) => ({
-          headerBackTitleVisible: false,
-          headerTitleAlign: "center",
-          headerLeft: () => (
-            <TouchableOpacity
-              activeOpacity={0.9}
-              onPress={() => navigation.goBack()}
-              style={{ padding: 8, paddingLeft: 15 }}
-            >
-              <FontAwesome
-                name="arrow-left"
-                color={currentTheme.pink}
-                size={22}
-              />
-            </TouchableOpacity>
-          ),
-          headerTitle: (props) => (
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "center",
-                flex: 1,
-                width: "100%",
-                gap: 5,
-              }}
-            >
-              <Text
-                style={{
-                  fontSize: 18,
-                  letterSpacing: 0.5,
-                  color: currentTheme.font,
-                  fontWeight: "bold",
-                }}
-              >
-                {route.params.user.name}
-              </Text>
-              {route.params.user.subscription.status === "active" && (
-                <MaterialIcons name="verified" size={14} color="#F866B1" />
-              )}
-            </View>
-          ),
-          headerRight: (props) => {
-            if (
-              currentUser?.type.toLowerCase() !== "beautycenter" &&
-              currentUser?.type.toLowerCase() !== "shop"
-            ) {
-              return (
-                <View style={{ marginRight: 20 }}>
-                  {route.params?.user?._id !== currentUser._id &&
-                    currentUser.type !== "beautycenter" &&
-                    currentUser?.type !== "shop" &&
-                    route.params?.user.type !== "shop" &&
-                    route.params?.user.type !== "user" &&
-                    route.params.user.subscription.status === "active" && (
-                      <TouchableOpacity
-                        acitveOpacity={0.3}
-                        onPress={() =>
-                          navigation.navigate("Send Booking", {
-                            user: route.params.user,
-                          })
-                        }
-                      >
-                        <FontAwesome
-                          name="calendar"
-                          size={18}
-                          color={currentTheme.font}
-                        />
-                      </TouchableOpacity>
-                    )}
-                </View>
-              );
-            }
-          },
-
-          headerStyle: {
-            height: SCREEN_HEIGHT / 9,
-            backgroundColor: currentTheme.background,
-
-            elevation: 0,
-            shadowOpacity: 0,
-            borderBottomWidth: 0,
-          },
-          headerTintColor: currentTheme.font,
-          headerTitleStyle: {
-            fontWeight: "bold",
-            fontSize: 18,
-            letterSpacing: 0.5,
-          },
-          cardStyle: {
-            backgroundColor: currentTheme.background,
-          },
-        })}
-      />
-      {/* sent booking screen */}
-      <Stack.Screen
-        name="Send Booking"
-        component={SendBooking}
-        options={({ route, navigation }) => ({
-          headerBackTitleVisible: false,
-          title: language?.language?.Bookings?.bookings?.createBooking,
-          headerStyle: {
-            height: SCREEN_HEIGHT / 9,
-            backgroundColor: currentTheme.background,
-            elevation: 0,
-            shadowOpacity: 0,
-            borderBottomWidth: 0,
-          },
-          headerTintColor: currentTheme.font,
-          headerTitleStyle: {
-            fontWeight: "bold",
-            fontSize: 18,
-            letterSpacing: 0.5,
-          },
-          cardStyle: {
-            backgroundColor: currentTheme.background,
-          },
-        })}
-      />
-      <Stack.Screen
-        name="Sent Bookings"
-        component={SentBookings}
-        options={({ route, navigation }) => ({
-          headerBackTitleVisible: false,
-          title: language?.language?.User?.userPage?.sentBookings,
-          headerStyle: {
-            height: SCREEN_HEIGHT / 9,
-            backgroundColor: currentTheme.background,
-            elevation: 0,
-            shadowOpacity: 0,
-            borderBottomWidth: 0,
-          },
-          headerTintColor: currentTheme.font,
-          headerTitleStyle: {
-            fontWeight: "bold",
-            fontSize: 18,
-            letterSpacing: 0.5,
-          },
-          cardStyle: {
-            backgroundColor: currentTheme.background,
-          },
-        })}
-      />
-      {/** user feed list screen, after press to feed from user page, user can visit to target user's feeds  */}
-      <Stack.Screen
-        name="ScrollGallery"
-        component={ScrollGallery}
-        options={({ route, navigation }) => ({
-          headerBackTitleVisible: false,
-          headerLeft: () => (
-            <TouchableOpacity
-              activeOpacity={0.9}
-              onPress={() => navigation.goBack()}
-              style={{ padding: 8, paddingLeft: 15 }}
-            >
-              <FontAwesome
-                name="arrow-left"
-                color={currentTheme.pink}
-                size={22}
-              />
-            </TouchableOpacity>
-          ),
-          title: "Feeds",
-          headerStyle: {
-            height: SCREEN_HEIGHT / 9,
-            backgroundColor: currentTheme.background,
-
-            elevation: 0,
-            shadowOpacity: 0,
-            borderBottomWidth: 0,
-          },
-          headerTintColor: currentTheme.font,
-          headerTitleStyle: {
-            fontWeight: "bold",
-            fontSize: 18,
-            letterSpacing: 0.5,
-          },
-          cardStyle: {
-            backgroundColor: currentTheme.background,
-          },
-        })}
-      />
-      <Stack.Screen
-        name="Room"
-        component={Room}
-        initialParams={{ screenHeight }}
-        options={({ navigation, route }) => ({
-          headerBackTitleVisible: false,
-          // title: "name",
-          headerStyle: {
-            height: SCREEN_HEIGHT / 9,
-            backgroundColor: currentTheme.background,
-
-            elevation: 0,
-            shadowOpacity: 0,
-            borderBottomWidth: 0,
-          },
-          headerLeft: () => (
-            <TouchableOpacity
-              activeOpacity={0.9}
-              onPress={() => navigation.goBack()}
-              style={{ padding: 8, paddingLeft: 15 }}
-            >
-              <FontAwesome
-                name="arrow-left"
-                color={currentTheme.pink}
-                size={22}
-              />
-            </TouchableOpacity>
-          ),
-          headerTitle: (props) => {
-            return (
-              <Pressable
-                onPress={() =>
-                  navigation.navigate("User", {
-                    user: route.params.user,
-                  })
-                }
+                <FontAwesome
+                  name="arrow-left"
+                  color={currentTheme.pink}
+                  size={22}
+                />
+              </TouchableOpacity>
+            ),
+            headerTitle: (props) => (
+              <View
                 style={{
                   flexDirection: "row",
                   alignItems: "center",
-                  gap: 10,
                   justifyContent: "center",
-                  width: SCREEN_WIDTH - 150,
+                  flex: 1,
+                  width: "100%",
+                  gap: 5,
                 }}
               >
-                {route.params.user?.cover?.length > 0 ? (
-                  <View>
-                    {route.params.user?.online && (
-                      <View
-                        style={{
-                          width: 10,
-                          height: 10,
-                          backgroundColor: "#3bd16f",
-                          borderRadius: 50,
-                          position: "absolute",
-                          zIndex: 100,
-                          right: 0,
-                          bottom: 0,
-                          borderWidth: 1.5,
-                          borderColor: currentTheme.background,
-                        }}
-                      ></View>
-                    )}
-                    <CacheableImage
-                      source={{ uri: route.params.user?.cover }}
-                      style={{
-                        height: 30,
-                        width: 30,
-                        borderRadius: 50,
-                        resizeMode: "cover",
-                      }}
-                      manipulationOptions={[
-                        { resize: { width: 30, height: 30 } },
-                        { rotate: 90 },
-                      ]}
-                    />
-                  </View>
-                ) : (
-                  <View>
-                    {route.params.user?.online && (
-                      <View
-                        style={{
-                          width: 10,
-                          height: 10,
-                          backgroundColor: "#3bd16f",
-                          borderRadius: 50,
-                          position: "absolute",
-                          zIndex: 100,
-                          right: 1,
-                          bottom: 1,
-                          borderWidth: 1.5,
-                          borderColor: currentTheme.background,
-                        }}
-                      ></View>
-                    )}
-                    <View
-                      style={{
-                        width: 35,
-                        height: 35,
-                        borderRadius: 50,
-                        alignItems: "center",
-                        justifyContent: "center",
-                        backgroundColor: currentTheme.line,
-                      }}
-                    >
-                      <FontAwesome
-                        name="user"
-                        size={20}
-                        color={currentTheme.disabled}
-                      />
-                    </View>
-                  </View>
-                )}
-
                 <Text
                   style={{
                     fontSize: 18,
@@ -704,270 +397,625 @@ export function CardsStack({ navigation, setScrollY }) {
                     fontWeight: "bold",
                   }}
                 >
-                  {route.params.user?.name}
+                  {route.params.user.name}
                 </Text>
-              </Pressable>
-            );
-          },
-          headerTintColor: currentTheme.font,
-          headerTitleStyle: {
-            fontWeight: "bold",
-            letterSpacing: 0.5,
-            fontSize: 18,
-          },
-          cardStyle: {
-            backgroundColor: currentTheme.background,
-          },
-        })}
-      />
-      <Stack.Screen
-        name="UserFeed"
-        component={FeedItem}
-        options={({ route, navigation }) => ({
-          headerBackTitleVisible: false,
-          headerLeft: () => (
-            <TouchableOpacity
-              activeOpacity={0.9}
-              onPress={() => navigation.goBack()}
-              style={{ padding: 8, paddingLeft: 15 }}
-            >
-              <FontAwesome
-                name="arrow-left"
-                color={currentTheme.pink}
-                size={22}
-              />
-            </TouchableOpacity>
-          ),
-          title: language?.language?.Main?.feedCard?.feed,
-          headerStyle: {
-            height: SCREEN_HEIGHT / 9,
-            backgroundColor: currentTheme.background,
-
-            elevation: 0,
-            shadowOpacity: 0,
-            borderBottomWidth: 0,
-          },
-          headerTintColor: currentTheme.font,
-          headerTitleStyle: {
-            fontWeight: "bold",
-            fontSize: 18,
-            letterSpacing: 0.5,
-          },
-          cardStyle: {
-            backgroundColor: currentTheme.background,
-          },
-        })}
-      />
-      {/** filter screen */}
-      <Stack.Screen
-        name="Filter"
-        component={Filter}
-        options={{
-          headerBackTitleVisible: false,
-          title: language?.language?.Main?.filter?.filter,
-          headerStyle: {
-            height: SCREEN_HEIGHT / 9,
-            backgroundColor: currentTheme.background,
-            shadowOpacity: 0,
-            borderBottomWidth: 0,
-            shadowColor: "#000",
-          },
-          headerTintColor: currentTheme.font,
-          headerTitleStyle: {
-            fontWeight: "bold",
-            fontSize: 18,
-            letterSpacing: 0.5,
-          },
-          cardStyle: {
-            backgroundColor: currentTheme.background,
-          },
-          headerLeft: () => (
-            <TouchableOpacity
-              activeOpacity={0.9}
-              onPress={() => navigation.navigate("cards")}
-              style={{ padding: 8, paddingLeft: 15 }}
-            >
-              <FontAwesome
-                name="arrow-left"
-                color={currentTheme.pink}
-                size={22}
-              />
-            </TouchableOpacity>
-          ),
-          headerRight: () => (
-            <View style={{ flexDirection: "row", alignItems: "center" }}>
-              {sum > 0 && (
-                <TouchableOpacity
-                  onPress={() => {
-                    // on press can be clean filter and getting starting position, also with clean() function clear imports as default
-                    dispatch(
-                      setCity(
-                        (
-                          currentUser?.address?.find(
-                            (a) =>
-                              a.city?.toLowerCase()?.replace("'", "") ===
-                              location.city
-                          )?.city || currentUser.address[0]?.city
-                        )?.replace("'", "")
-                      )
-                    );
-                    dispatch(setDistrict(""));
-                    dispatch(setFilter(""));
-                    dispatch(setSearch(""));
-                    dispatch(setSpecialists(true));
-                    dispatch(setSalons(true));
-                    dispatch(setCleanUp());
-                    dispatch(setSearchInput(""));
+                {route.params.user.subscription.status === "active" && (
+                  <MaterialIcons name="verified" size={14} color="#F866B1" />
+                )}
+              </View>
+            ),
+            headerRight: (props) => {
+              if (
+                currentUser?.type.toLowerCase() !== "beautycenter" &&
+                currentUser?.type.toLowerCase() !== "shop"
+              ) {
+                return (
+                  <View style={{ marginRight: 20 }}>
+                    {route.params?.user?._id !== currentUser._id &&
+                      currentUser.type !== "beautycenter" &&
+                      currentUser?.type !== "shop" &&
+                      route.params?.user.type !== "shop" &&
+                      route.params?.user.type !== "user" &&
+                      route.params.user.subscription.status === "active" && (
+                        <TouchableOpacity
+                          acitveOpacity={0.3}
+                          onPress={() =>
+                            navigation.navigate("Send Booking", {
+                              user: route.params.user,
+                            })
+                          }
+                        >
+                          <FontAwesome
+                            name="calendar"
+                            size={18}
+                            color={currentTheme.font}
+                          />
+                        </TouchableOpacity>
+                      )}
+                  </View>
+                );
+              }
+            },
+          })}
+        />
+        <Stack.Screen
+          name="UserVisit"
+          component={User}
+          options={({ route, navigation }) => ({
+            headerBackTitleVisible: false,
+            headerTitleAlign: "center",
+            headerLeft: () => (
+              <TouchableOpacity
+                activeOpacity={0.9}
+                onPress={() => navigation.goBack()}
+                style={{ padding: 8, paddingLeft: 15 }}
+              >
+                <FontAwesome
+                  name="arrow-left"
+                  color={currentTheme.pink}
+                  size={22}
+                />
+              </TouchableOpacity>
+            ),
+            headerTitle: (props) => (
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flex: 1,
+                  width: "100%",
+                  gap: 5,
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 18,
+                    letterSpacing: 0.5,
+                    color: currentTheme.font,
+                    fontWeight: "bold",
                   }}
-                  style={{ marginRight: 15, padding: 5 }}
                 >
-                  <View style={{ height: 30, justifyContent: "center" }}>
-                    <View
-                      style={{
-                        width: "auto",
-                        minWidth: 13,
-                        height: 13,
-                        backgroundColor: currentTheme.pink,
-                        borderRadius: 50,
-                        alignItems: "center",
-                        justifyContent: "center",
-                        position: "absolute",
-                        zIndex: 2,
-                        right: -5,
-                        top: 0,
-                      }}
-                    >
-                      <Text
+                  {route.params.user.name}
+                </Text>
+                {route.params.user.subscription.status === "active" && (
+                  <MaterialIcons name="verified" size={14} color="#F866B1" />
+                )}
+              </View>
+            ),
+            headerRight: (props) => {
+              if (
+                currentUser?.type.toLowerCase() !== "beautycenter" &&
+                currentUser?.type.toLowerCase() !== "shop"
+              ) {
+                return (
+                  <View style={{ marginRight: 20 }}>
+                    {route.params?.user?._id !== currentUser._id &&
+                      currentUser.type !== "beautycenter" &&
+                      currentUser?.type !== "shop" &&
+                      route.params?.user.type !== "shop" &&
+                      route.params?.user.type !== "user" &&
+                      route.params.user.subscription.status === "active" && (
+                        <TouchableOpacity
+                          acitveOpacity={0.3}
+                          onPress={() =>
+                            navigation.navigate("Send Booking", {
+                              user: route.params.user,
+                            })
+                          }
+                        >
+                          <FontAwesome
+                            name="calendar"
+                            size={18}
+                            color={currentTheme.font}
+                          />
+                        </TouchableOpacity>
+                      )}
+                  </View>
+                );
+              }
+            },
+
+            headerStyle: {
+              height: SCREEN_HEIGHT / 9,
+              backgroundColor: currentTheme.background,
+
+              elevation: 0,
+              shadowOpacity: 0,
+              borderBottomWidth: 0,
+            },
+            headerTintColor: currentTheme.font,
+            headerTitleStyle: {
+              fontWeight: "bold",
+              fontSize: 18,
+              letterSpacing: 0.5,
+            },
+            cardStyle: {
+              backgroundColor: currentTheme.background,
+            },
+          })}
+        />
+        {/* sent booking screen */}
+        <Stack.Screen
+          name="Send Booking"
+          component={SendBooking}
+          options={({ route, navigation }) => ({
+            headerBackTitleVisible: false,
+            title: language?.language?.Bookings?.bookings?.createBooking,
+            headerStyle: {
+              height: SCREEN_HEIGHT / 9,
+              backgroundColor: currentTheme.background,
+              elevation: 0,
+              shadowOpacity: 0,
+              borderBottomWidth: 0,
+            },
+            headerTintColor: currentTheme.font,
+            headerTitleStyle: {
+              fontWeight: "bold",
+              fontSize: 18,
+              letterSpacing: 0.5,
+            },
+            cardStyle: {
+              backgroundColor: currentTheme.background,
+            },
+          })}
+        />
+        <Stack.Screen
+          name="Sent Bookings"
+          component={SentBookings}
+          options={({ route, navigation }) => ({
+            headerBackTitleVisible: false,
+            title: language?.language?.User?.userPage?.sentBookings,
+            headerStyle: {
+              height: SCREEN_HEIGHT / 9,
+              backgroundColor: currentTheme.background,
+              elevation: 0,
+              shadowOpacity: 0,
+              borderBottomWidth: 0,
+            },
+            headerTintColor: currentTheme.font,
+            headerTitleStyle: {
+              fontWeight: "bold",
+              fontSize: 18,
+              letterSpacing: 0.5,
+            },
+            cardStyle: {
+              backgroundColor: currentTheme.background,
+            },
+          })}
+        />
+        {/** user feed list screen, after press to feed from user page, user can visit to target user's feeds  */}
+        <Stack.Screen
+          name="ScrollGallery"
+          component={ScrollGallery}
+          options={({ route, navigation }) => ({
+            headerBackTitleVisible: false,
+            headerLeft: () => (
+              <TouchableOpacity
+                activeOpacity={0.9}
+                onPress={() => navigation.goBack()}
+                style={{ padding: 8, paddingLeft: 15 }}
+              >
+                <FontAwesome
+                  name="arrow-left"
+                  color={currentTheme.pink}
+                  size={22}
+                />
+              </TouchableOpacity>
+            ),
+            title: "Feeds",
+            headerStyle: {
+              height: SCREEN_HEIGHT / 9,
+              backgroundColor: currentTheme.background,
+
+              elevation: 0,
+              shadowOpacity: 0,
+              borderBottomWidth: 0,
+            },
+            headerTintColor: currentTheme.font,
+            headerTitleStyle: {
+              fontWeight: "bold",
+              fontSize: 18,
+              letterSpacing: 0.5,
+            },
+            cardStyle: {
+              backgroundColor: currentTheme.background,
+            },
+          })}
+        />
+        <Stack.Screen
+          name="Room"
+          component={Room}
+          initialParams={{ screenHeight }}
+          options={({ navigation, route }) => ({
+            headerBackTitleVisible: false,
+            // title: "name",
+            headerStyle: {
+              height: SCREEN_HEIGHT / 9,
+              backgroundColor: currentTheme.background,
+
+              elevation: 0,
+              shadowOpacity: 0,
+              borderBottomWidth: 0,
+            },
+            headerLeft: () => (
+              <TouchableOpacity
+                activeOpacity={0.9}
+                onPress={() => navigation.goBack()}
+                style={{ padding: 8, paddingLeft: 15 }}
+              >
+                <FontAwesome
+                  name="arrow-left"
+                  color={currentTheme.pink}
+                  size={22}
+                />
+              </TouchableOpacity>
+            ),
+            headerTitle: (props) => {
+              return (
+                <Pressable
+                  onPress={() =>
+                    navigation.navigate("User", {
+                      user: route.params.user,
+                    })
+                  }
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 10,
+                    justifyContent: "center",
+                    width: SCREEN_WIDTH - 150,
+                  }}
+                >
+                  {route.params.user?.cover?.length > 0 ? (
+                    <View>
+                      {route.params.user?.online && (
+                        <View
+                          style={{
+                            width: 10,
+                            height: 10,
+                            backgroundColor: "#3bd16f",
+                            borderRadius: 50,
+                            position: "absolute",
+                            zIndex: 100,
+                            right: 0,
+                            bottom: 0,
+                            borderWidth: 1.5,
+                            borderColor: currentTheme.background,
+                          }}
+                        ></View>
+                      )}
+                      <CacheableImage
+                        source={{ uri: route.params.user?.cover }}
                         style={{
-                          color: "#e5e5e5",
-                          fontSize: 10,
-                          letterSpacing: 1.5,
-                          position: "relative",
-                          left: 1,
+                          height: 30,
+                          width: 30,
+                          borderRadius: 50,
+                          resizeMode: "cover",
+                        }}
+                        manipulationOptions={[
+                          { resize: { width: 30, height: 30 } },
+                          { rotate: 90 },
+                        ]}
+                      />
+                    </View>
+                  ) : (
+                    <View>
+                      {route.params.user?.online && (
+                        <View
+                          style={{
+                            width: 10,
+                            height: 10,
+                            backgroundColor: "#3bd16f",
+                            borderRadius: 50,
+                            position: "absolute",
+                            zIndex: 100,
+                            right: 1,
+                            bottom: 1,
+                            borderWidth: 1.5,
+                            borderColor: currentTheme.background,
+                          }}
+                        ></View>
+                      )}
+                      <View
+                        style={{
+                          width: 35,
+                          height: 35,
+                          borderRadius: 50,
+                          alignItems: "center",
+                          justifyContent: "center",
+                          backgroundColor: currentTheme.line,
                         }}
                       >
-                        {sum}
+                        <FontAwesome
+                          name="user"
+                          size={20}
+                          color={currentTheme.disabled}
+                        />
+                      </View>
+                    </View>
+                  )}
+
+                  <Text
+                    style={{
+                      fontSize: 18,
+                      letterSpacing: 0.5,
+                      color: currentTheme.font,
+                      fontWeight: "bold",
+                    }}
+                  >
+                    {route.params.user?.name}
+                  </Text>
+                </Pressable>
+              );
+            },
+            headerTintColor: currentTheme.font,
+            headerTitleStyle: {
+              fontWeight: "bold",
+              letterSpacing: 0.5,
+              fontSize: 18,
+            },
+            cardStyle: {
+              // backgroundColor: currentTheme.background,
+            },
+          })}
+        />
+        <Stack.Screen
+          name="UserFeed"
+          component={FeedItem}
+          options={({ route, navigation }) => ({
+            headerBackTitleVisible: false,
+            headerLeft: () => (
+              <TouchableOpacity
+                activeOpacity={0.9}
+                onPress={() => navigation.goBack()}
+                style={{ padding: 8, paddingLeft: 15 }}
+              >
+                <FontAwesome
+                  name="arrow-left"
+                  color={currentTheme.pink}
+                  size={22}
+                />
+              </TouchableOpacity>
+            ),
+            title: language?.language?.Main?.feedCard?.feed,
+            headerStyle: {
+              height: SCREEN_HEIGHT / 9,
+              backgroundColor: currentTheme.background,
+
+              elevation: 0,
+              shadowOpacity: 0,
+              borderBottomWidth: 0,
+            },
+            headerTintColor: currentTheme.font,
+            headerTitleStyle: {
+              fontWeight: "bold",
+              fontSize: 18,
+              letterSpacing: 0.5,
+            },
+            cardStyle: {
+              backgroundColor: currentTheme.background,
+            },
+          })}
+        />
+        {/** filter screen */}
+        <Stack.Screen
+          name="Filter"
+          component={Filter}
+          options={{
+            headerBackTitleVisible: false,
+            title: language?.language?.Main?.filter?.filter,
+            headerStyle: {
+              height: SCREEN_HEIGHT / 9,
+              backgroundColor: currentTheme.background,
+              shadowOpacity: 0,
+              borderBottomWidth: 0,
+              shadowColor: "#000",
+            },
+            headerTintColor: currentTheme.font,
+            headerTitleStyle: {
+              fontWeight: "bold",
+              fontSize: 18,
+              letterSpacing: 0.5,
+            },
+            cardStyle: {
+              backgroundColor: currentTheme.background,
+            },
+            headerLeft: () => (
+              <TouchableOpacity
+                activeOpacity={0.9}
+                onPress={() => navigation.navigate("cards")}
+                style={{ padding: 8, paddingLeft: 15 }}
+              >
+                <FontAwesome
+                  name="arrow-left"
+                  color={currentTheme.pink}
+                  size={22}
+                />
+              </TouchableOpacity>
+            ),
+            headerRight: () => (
+              <View style={{ flexDirection: "row", alignItems: "center" }}>
+                {sum > 0 && (
+                  <TouchableOpacity
+                    onPress={() => {
+                      // on press can be clean filter and getting starting position, also with clean() function clear imports as default
+                      dispatch(
+                        setCity(
+                          (
+                            currentUser?.address?.find(
+                              (a) =>
+                                a.city?.toLowerCase()?.replace("'", "") ===
+                                location.city
+                            )?.city || currentUser.address[0]?.city
+                          )?.replace("'", "")
+                        )
+                      );
+                      dispatch(setDistrict(""));
+                      dispatch(setFilter(""));
+                      dispatch(setSearch(""));
+                      dispatch(setSpecialists(true));
+                      dispatch(setSalons(true));
+                      dispatch(setSearchInput(""));
+                      dispatch(
+                        setLocation({
+                          country: currentUser.address[0].country,
+                          city: currentUser.address[0]?.city?.replace("'", ""),
+                          latitude: currentUser.address[0]?.latitude,
+                          longitude: currentUser.address[0]?.longitude,
+                        })
+                      );
+                    }}
+                    style={{ marginRight: 15, padding: 5 }}
+                  >
+                    <View style={{ height: 30, justifyContent: "center" }}>
+                      <View
+                        style={{
+                          width: "auto",
+                          minWidth: 13,
+                          height: 13,
+                          backgroundColor: currentTheme.pink,
+                          borderRadius: 50,
+                          alignItems: "center",
+                          justifyContent: "center",
+                          position: "absolute",
+                          zIndex: 2,
+                          right: -5,
+                          top: 0,
+                        }}
+                      >
+                        <Text
+                          style={{
+                            color: "#e5e5e5",
+                            fontSize: 10,
+                            letterSpacing: 1.5,
+                            position: "relative",
+                            left: 1,
+                          }}
+                        >
+                          {sum}
+                        </Text>
+                      </View>
+
+                      <Text
+                        style={{
+                          color: currentTheme.font,
+                          fontWeight: "bold",
+                          letterSpacing: 0.3,
+                        }}
+                      >
+                        {language?.language?.Main?.filter?.clear}
                       </Text>
                     </View>
+                  </TouchableOpacity>
+                )}
+              </View>
+            ),
+          }}
+        />
+        {/** search screen */}
+        <Stack.Screen
+          name="Search"
+          component={Search}
+          options={({ route, navigation }) => ({
+            headerBackTitleVisible: false,
+            title: language?.language?.Main?.filter?.search,
+            headerStyle: {
+              height: SCREEN_HEIGHT / 9,
+              backgroundColor: currentTheme.background,
 
-                    <Text
-                      style={{
-                        color: currentTheme.font,
-                        fontWeight: "bold",
-                        letterSpacing: 0.3,
-                      }}
-                    >
-                      {language?.language?.Main?.filter?.clear}
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-              )}
-            </View>
-          ),
-        }}
-      />
-      {/** search screen */}
-      <Stack.Screen
-        name="Search"
-        component={Search}
-        options={({ route, navigation }) => ({
-          headerBackTitleVisible: false,
-          title: language?.language?.Main?.filter?.search,
-          headerStyle: {
-            height: SCREEN_HEIGHT / 9,
-            backgroundColor: currentTheme.background,
-
-            elevation: 0,
-            shadowOpacity: 0,
-            borderBottomWidth: 0,
-          },
-          headerTintColor: currentTheme.font,
-          headerTitleStyle: {
-            fontWeight: "bold",
-            fontSize: 18,
-            letterSpacing: 0.5,
-          },
-          cardStyle: {
-            backgroundColor: currentTheme.background,
-          },
-          headerLeft: () => (
-            <TouchableOpacity
-              activeOpacity={0.9}
-              onPress={() => navigation.navigate("Filter1")}
-              style={{ padding: 8, paddingLeft: 15 }}
-            >
-              <FontAwesome
-                name="arrow-left"
-                color={currentTheme.pink}
-                size={22}
-              />
-            </TouchableOpacity>
-          ),
-        })}
-      />
-      {/* product screen */}
-      <Stack.Screen
-        name="Product"
-        component={Product}
-        options={({ route, navigation }) => ({
-          headerBackTitleVisible: false,
-          headerLeft: () => (
-            <TouchableOpacity
-              activeOpacity={0.9}
-              onPress={() => navigation.goBack()}
-              style={{ padding: 8, paddingLeft: 15 }}
-            >
-              <FontAwesome
-                name="arrow-left"
-                color={currentTheme.pink}
-                size={22}
-              />
-            </TouchableOpacity>
-          ),
-          headerRight: () => (
-            <TouchableOpacity
-              activeOpacity={0.9}
-              onPress={() =>
-                navigation.navigate("User", {
-                  user: route.params.product.owner,
-                })
-              }
-              style={{ padding: 8, marginRight: 8 }}
-            >
-              {route.params.product.owner?.cover ? (
-                <CacheableImage
-                  source={{ uri: route.params.product.owner?.cover }}
-                  style={{ width: 25, height: 25, borderRadius: 50 }}
-                />
-              ) : (
+              elevation: 0,
+              shadowOpacity: 0,
+              borderBottomWidth: 0,
+            },
+            headerTintColor: currentTheme.font,
+            headerTitleStyle: {
+              fontWeight: "bold",
+              fontSize: 18,
+              letterSpacing: 0.5,
+            },
+            cardStyle: {
+              backgroundColor: currentTheme.background,
+            },
+            headerLeft: () => (
+              <TouchableOpacity
+                activeOpacity={0.9}
+                onPress={() => navigation.navigate("Filter")}
+                style={{ padding: 8, paddingLeft: 15 }}
+              >
                 <FontAwesome
-                  name="user"
-                  size={20}
-                  color={currentTheme.disabled}
+                  name="arrow-left"
+                  color={currentTheme.pink}
+                  size={22}
                 />
-              )}
-            </TouchableOpacity>
-          ),
-          title: route.params.product.title,
-          headerStyle: {
-            height: SCREEN_HEIGHT / 9,
-            backgroundColor: currentTheme.background,
+              </TouchableOpacity>
+            ),
+          })}
+        />
+        {/* product screen */}
+        <Stack.Screen
+          name="Product"
+          component={Product}
+          options={({ route, navigation }) => ({
+            headerBackTitleVisible: false,
+            headerLeft: () => (
+              <TouchableOpacity
+                activeOpacity={0.9}
+                onPress={() => navigation.goBack()}
+                style={{ padding: 8, paddingLeft: 15 }}
+              >
+                <FontAwesome
+                  name="arrow-left"
+                  color={currentTheme.pink}
+                  size={22}
+                />
+              </TouchableOpacity>
+            ),
+            headerRight: () => (
+              <TouchableOpacity
+                activeOpacity={0.9}
+                onPress={() =>
+                  navigation.navigate("User", {
+                    user: route.params.product.owner,
+                  })
+                }
+                style={{ padding: 8, marginRight: 8 }}
+              >
+                {route.params.product.owner?.cover ? (
+                  <CacheableImage
+                    source={{ uri: route.params.product.owner?.cover }}
+                    style={{ width: 25, height: 25, borderRadius: 50 }}
+                  />
+                ) : (
+                  <FontAwesome
+                    name="user"
+                    size={20}
+                    color={currentTheme.disabled}
+                  />
+                )}
+              </TouchableOpacity>
+            ),
+            title: route.params.product.title,
+            headerStyle: {
+              height: SCREEN_HEIGHT / 9,
+              backgroundColor: currentTheme.background,
 
-            elevation: 0,
-            shadowOpacity: 0,
-            borderBottomWidth: 0,
-          },
-          headerTintColor: currentTheme.font,
-          headerTitleStyle: {
-            fontWeight: "bold",
-            fontSize: 18,
-            letterSpacing: 0.5,
-          },
-          cardStyle: {
-            backgroundColor: currentTheme.background,
-          },
-        })}
-      />
-    </Stack.Navigator>
+              elevation: 0,
+              shadowOpacity: 0,
+              borderBottomWidth: 0,
+            },
+            headerTintColor: currentTheme.font,
+            headerTitleStyle: {
+              fontWeight: "bold",
+              fontSize: 18,
+              letterSpacing: 0.5,
+            },
+            cardStyle: {
+              backgroundColor: currentTheme.background,
+            },
+          })}
+        />
+      </Stack.Navigator>
+    </ImageBackground>
   );
 }

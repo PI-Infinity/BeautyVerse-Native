@@ -4,9 +4,9 @@ import {
   Platform,
   TouchableOpacity,
   Text,
-  ActivityIndicator,
   ScrollView,
 } from "react-native";
+import { ActivityIndicator } from "react-native-paper";
 import { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { lightTheme, darkTheme } from "../../context/theme";

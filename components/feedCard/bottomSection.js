@@ -160,8 +160,6 @@ export const BottomSection = (props) => {
       currentPostTime?.slice(0, -1) + props.language?.language.Main.feedCard.y;
   }
 
-  console.log(props?.savesLength);
-
   useEffect(() => {
     setLoading(false);
   }, [props?.starsLength]);
@@ -499,12 +497,13 @@ export const BottomSection = (props) => {
                   },
                 ]}
               >
-                (
-                {props.savesLength < 1000
-                  ? props.savesLength
-                  : props.savesLength > 1000 && props.savesLength < 1000000
+                ({props?.savesLength}
+                {/* {props.savesLength < 1000
+                  ? parseInt(props.savesLength)
+                  : parseInt(props.savesLength) > 1000 &&
+                    parseInt(props.savesLength) < 1000000
                   ? parseInt(props.savesLength / 1000) + "K+"
-                  : parseInt(props.savesLength / 1000000) + "M+"}
+                  : parseInt(props.savesLength / 1000000) + "M+"} */}
                 )
               </Text>
             </Pressable>

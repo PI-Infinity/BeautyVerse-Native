@@ -1,3 +1,5 @@
+import { FontAwesome } from "@expo/vector-icons";
+
 export const VerseCategories = [
   {
     id: 1,

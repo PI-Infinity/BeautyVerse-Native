@@ -5,7 +5,6 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
-  ActivityIndicator,
   Pressable,
 } from "react-native";
 import React, { useEffect, useState } from "react";
@@ -19,6 +18,7 @@ import { ProceduresOptions } from "../../datas/registerDatas";
 import { CacheableImage } from "../../components/cacheableImage";
 import FilterPopup from "./marketplaceFilter";
 import { Circle } from "../../components/skeltons";
+import { ActivityIndicator } from "react-native-paper";
 
 const Search = () => {
   // language state
@@ -199,6 +199,9 @@ const Search = () => {
     discountsTotal +
     categoryTotal;
 
+  // focus effect for input
+  const [focus, setFocus] = useState(false);
+
   return (
     <View>
       <FilterPopup
@@ -235,7 +238,7 @@ const Search = () => {
             height: 40,
             borderRadius: 50,
             borderWidth: 1,
-            borderColor: currentTheme.line,
+            borderColor: focus ? currentTheme.pink : currentTheme.line,
             flexDirection: "row",
             alignItems: "center",
             // justifyContent: "center",
@@ -261,6 +264,8 @@ const Search = () => {
                   color: currentTheme.font,
                   letterSpacing: 0.3,
                 }}
+                onFocus={() => setFocus(true)}
+                onBlur={() => setFocus(false)}
                 onChangeText={(val) => setSearch(val)}
               />
             </View>
@@ -363,9 +368,8 @@ const ProductItem = ({ item, navigation, currentTheme }) => {
           paddingHorizontal: 4,
         }}
       >
-        {item.owner.cover?.url ? (
+        {item.owner.cover?.length > 0 ? (
           <Pressable
-            style={{ padding: 8 }}
             onPress={() =>
               navigation.navigate("User", {
                 user: item.owner,
@@ -373,9 +377,9 @@ const ProductItem = ({ item, navigation, currentTheme }) => {
             }
           >
             <CacheableImage
-              key={item.owner.cover?.url}
-              source={{ uri: item.owner.cover?.url }}
-              style={{ width: 40, height: 40, borderRadius: 50 }}
+              key={item.owner.cover}
+              source={{ uri: item.owner.cover }}
+              style={{ width: 25, height: 25, borderRadius: 50 }}
             />
           </Pressable>
         ) : (

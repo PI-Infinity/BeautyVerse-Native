@@ -2,17 +2,19 @@ import { useNavigation } from "@react-navigation/native";
 import axios from "axios";
 import React, { useEffect, useRef, useState } from "react";
 import {
-  // PanResponder,
-  ActivityIndicator,
   Alert,
   Animated,
   Dimensions,
+  FlatList,
+  Modal,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
+import { ActivityIndicator } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 import { CacheableImage } from "../../components/cacheableImage";
 import { darkTheme, lightTheme } from "../../context/theme";
@@ -61,11 +63,13 @@ export const AddChat = ({}) => {
   /**
    * Gett followings
    */
+  const [page, setPage] = useState(1);
   useEffect(() => {
-    async function GetAudience(userId) {
+    async function GetAudience() {
       try {
         const response = await fetch(
-          backendUrl + `/api/v1/users/${userId}/followings`
+          backendUrl +
+            `/api/v1/users/${currentUser?._id}/followings?page=1&limit=10`
         );
         const data = await response.json();
         setFollowings(data.data?.followings);
@@ -77,9 +81,43 @@ export const AddChat = ({}) => {
       }
     }
     if (currentUser?._id) {
-      GetAudience(currentUser._id);
+      GetAudience();
     }
   }, [currentUser?._id]);
+
+  const AddAudience = async () => {
+    try {
+      const response = await axios.get(
+        backendUrl +
+          `/api/v1/users/${currentUser?._id}/followings?page=${
+            page + 1
+          }&limit=5`
+      );
+      setFollowings((prev) => {
+        const newUsers = response.data.data.followings;
+        return newUsers.reduce((acc, curr) => {
+          const existingUserIndex = acc.findIndex(
+            (user) => user._id === curr._id
+          );
+          if (existingUserIndex !== -1) {
+            // User already exists, merge the data
+            const mergedUser = { ...acc[existingUserIndex], ...curr };
+            return [
+              ...acc.slice(0, existingUserIndex),
+              mergedUser,
+              ...acc.slice(existingUserIndex + 1),
+            ];
+          } else {
+            // User doesn't exist, add to the end of the array
+            return [...acc, curr];
+          }
+        }, prev);
+      });
+      setPage(page + 1);
+    } catch (error) {
+      console.log(error.response.data.message);
+    }
+  };
 
   /* 
     get chat room function 
@@ -145,57 +183,47 @@ export const AddChat = ({}) => {
   };
 
   // animation for add chat component
-  const translateY = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
-
-  const openAddChat = () => {
-    Animated.timing(translateY, {
-      toValue: 0,
-      duration: 300,
-      useNativeDriver: true,
-    }).start();
-  };
-
-  useEffect(() => {
-    openAddChat();
-    return () => translateY.stopAnimation(); // Stop the animation on unmount
-  }, []);
+  const openAddChat = useSelector((state) => state.storeChat.openAddChat);
 
   return (
-    <Animated.View
-      style={[
-        styles.container,
-        {
-          transform: [
-            {
-              translateY: translateY,
-            },
-          ],
-        },
-      ]}
+    <Modal
+      transparent
+      animationType="slide"
+      isVisible={openAddChat}
+      onRequestClose={() => dispatch(setOpenAddChat(false))}
     >
-      <TouchableOpacity
+      <Pressable
         onPress={() => dispatch(setOpenAddChat(false))}
         style={{
-          backgroundColor: currentTheme.background2,
-          borderWidth: 1,
-          borderColor: currentTheme.line,
-          borderTopLeftRadius: 10,
-          borderTopRightRadius: 10,
           flex: 1,
-          position: "absolute",
-          bottom: 0,
           width: "100%",
           zIndex: 100,
           height: "100%",
+          alignItems: "center",
+          paddingTop: 70,
+          backgroundColor: currentTheme.background2,
         }}
       >
-        <View style={styles.modalContent}>
+        <View
+          style={[
+            styles.modalContent,
+            {
+              backgroundColor: currentTheme.background,
+              borderWidth: 1.5,
+              borderBottomWidth: 0,
+              borderColor: currentTheme.pink,
+              borderTopLeftRadius: 20,
+              borderTopRightRadius: 20,
+              flex: 1,
+            },
+          ]}
+        >
           <View
             style={{ marginBottom: 8, width: "100%", alignItems: "center" }}
           >
-            <Search />
+            <Search search={search} setSearch={setSearch} />
           </View>
-          <ScrollView contentContainerStyle={{ gap: 0 }}>
+          <>
             {loading ? (
               <View
                 style={{
@@ -205,41 +233,34 @@ export const AddChat = ({}) => {
                   justifyContent: "center",
                 }}
               >
-                <ActivityIndicator size="large" color={currentTheme.pink} />
+                <ActivityIndicator size="small" color={currentTheme.pink} />
               </View>
             ) : (
-              <>
-                {followings?.map((item, index) => {
-                  return (
-                    <RenderItem
-                      key={index}
-                      item={item}
-                      GetChatRoom={GetChatRoom}
-                      currentTheme={currentTheme}
-                    />
-                  );
-                })}
-              </>
+              <FlatList
+                data={followings?.filter((i, x) =>
+                  i.name?.toLowerCase()?.includes(search?.toLocaleLowerCase())
+                )}
+                renderItem={({ item, index }) => (
+                  <RenderItem
+                    key={index}
+                    item={item}
+                    GetChatRoom={GetChatRoom}
+                    currentTheme={currentTheme}
+                  />
+                )}
+                keyExtractor={(item, index) => index.toString()}
+                onEndReached={AddAudience} // Add this function to handle the bottom reach
+                onEndReachedThreshold={0.5} // This indicates at what point (as a threshold) should the onEndReached be triggered, 0.5 is halfway.
+              />
             )}
-          </ScrollView>
+          </>
         </View>
-      </TouchableOpacity>
-    </Animated.View>
+      </Pressable>
+    </Modal>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: "#222",
-    borderTopLeftRadius: 10,
-    borderTopRightRadius: 10,
-    flex: 1,
-    position: "absolute",
-    bottom: 0,
-    width: "100%",
-    zIndex: 100,
-    height: "100%",
-  },
   modalContent: {
     padding: 10,
     justifyContent: "center",
@@ -256,12 +277,12 @@ const styles = StyleSheet.create({
   },
   userItem: {
     width: SCREEN_WIDTH - 50,
-    marginBottom: 8,
+    marginBottom: 4,
     flexDirection: "row",
     gap: 15,
     alignItems: "center",
     justifyContent: "space-between",
-    padding: 8,
+    padding: 4,
     borderRadius: 50,
   },
 });
@@ -271,26 +292,9 @@ const styles = StyleSheet.create({
  */
 
 const RenderItem = ({ item, GetChatRoom, currentTheme }) => {
-  // user object state
-  const [userObj, setUserObj] = useState(null);
-
-  // get user object from db
-  const GetUser = async () => {
-    try {
-      const response = await axios.get(
-        backendUrl + `/api/v1/users/${item?._id}`
-      );
-      setUserObj(response.data.data.user);
-    } catch (error) {
-      console.log(error);
-    }
-  };
-  useEffect(() => {
-    GetUser();
-  }, []);
-
   return (
     <TouchableOpacity
+      activeOpacity={0.8}
       style={[
         styles.userItem,
         { borderWidth: 1, borderColor: currentTheme.line },
@@ -302,14 +306,14 @@ const RenderItem = ({ item, GetChatRoom, currentTheme }) => {
             member2Name: item.name,
             member2Cover: item.cover,
           },
-          userObj
+          item
         )
       }
     >
       <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
         {item.cover?.length > 10 ? (
           <View>
-            {userObj?.online && (
+            {item?.online && (
               <View
                 style={{
                   width: 10,
@@ -341,7 +345,7 @@ const RenderItem = ({ item, GetChatRoom, currentTheme }) => {
           </View>
         ) : (
           <View>
-            {userObj?.online && (
+            {item?.online && (
               <View
                 style={{
                   width: 10,

@@ -10,7 +10,11 @@ import { Animated, Pressable, View, Dimensions } from "react-native";
 import { useDispatch } from "react-redux";
 import { RouteNameContext } from "../../context/routName";
 import { setZoomToTop } from "../../redux/app";
-import { setCardRefreshControl, setCleanUp } from "../../redux/rerenders";
+import {
+  setCardRefreshControl,
+  setCleanUp,
+  setRerenderCurrentUser,
+} from "../../redux/rerenders";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -57,7 +61,12 @@ export const CustomTabBarCardsIcon = ({
       }}
     >
       <Pressable
-        style={{}}
+        style={{
+          flex: 1,
+
+          width: "100%",
+          alignItems: "center",
+        }}
         onPress={() => {
           if (isFocused) {
             if (routeName === "cards") {

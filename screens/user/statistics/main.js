@@ -62,13 +62,13 @@ export const Statistics = ({ navigation }) => {
         }}
       >
         <TouchableOpacity
+          activeOpacity={0.8}
           onPress={() =>
             navigation.navigate("Charts", {
               data: statistics,
             })
           }
           style={{
-            // borderWidth: 1, borderColor: currentTheme.line,
             borderWidth: 1,
             borderColor: currentTheme.line,
             borderRadius: 20,

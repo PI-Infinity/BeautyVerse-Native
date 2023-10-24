@@ -25,6 +25,7 @@ const FeedCard = {
     star: "Star",
     comment: "Comment",
     share: "Share",
+    forYou: "For You",
     seeOriginal: "See original",
   },
   ka: {
@@ -53,6 +54,7 @@ const FeedCard = {
     star: "ვარსკვლავი",
     comment: "კომენტარი",
     share: "გაზიარება",
+    forYou: "თქვენთვის",
     seeOriginal: "ორიგინალის ნახვა",
   },
   ru: {
@@ -81,6 +83,7 @@ const FeedCard = {
     star: "Звезда",
     comment: "Комментарий",
     share: "Делиться",
+    forYou: "Для вас",
     seeOriginal: "Посмотреть оригинал",
   },
 };

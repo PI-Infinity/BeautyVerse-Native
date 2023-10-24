@@ -156,9 +156,8 @@ const ProductItem = ({ item, navigation, currentTheme }) => {
           paddingHorizontal: 4,
         }}
       >
-        {item.owner.cover?.url ? (
+        {item.owner.cover?.length > 0 ? (
           <Pressable
-            style={{ padding: 8 }}
             onPress={() =>
               navigation.navigate("User", {
                 user: item.owner,
@@ -166,9 +165,9 @@ const ProductItem = ({ item, navigation, currentTheme }) => {
             }
           >
             <CacheableImage
-              key={item.owner.cover?.url}
-              source={{ uri: item.owner.cover?.url }}
-              style={{ width: 40, height: 40, borderRadius: 50 }}
+              key={item.owner.cover}
+              source={{ uri: item.owner.cover }}
+              style={{ width: 25, height: 25, borderRadius: 50 }}
             />
           </Pressable>
         ) : (

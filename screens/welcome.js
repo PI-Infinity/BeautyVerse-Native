@@ -36,14 +36,12 @@ const Welcome = ({ navigation }) => {
   // language state
   const language = Language();
   const activeLanguage = useSelector((state) => state.storeApp.language);
+  const currentUser = useSelector((state) => state.storeUser.currentUser);
 
   return (
     <ScrollView
       bounces={Platform.OS === "ios" ? false : undefined}
       overScrollMode={Platform.OS === "ios" ? "never" : "always"}
-      style={{
-        backgroundColor: currentTheme.background,
-      }}
       contentContainerStyle={{
         alignItems: "center",
         minHeight: SCREEN_HEIGHT,

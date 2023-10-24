@@ -1,5 +1,5 @@
 // ProceduresList.js
-import { FontAwesome, FontAwesome5 } from "@expo/vector-icons";
+import { Entypo, FontAwesome, FontAwesome5 } from "@expo/vector-icons";
 import React, { useState } from "react";
 import {
   ScrollView,
@@ -125,11 +125,18 @@ export const ProceduresList = ({ targetUser, AddBooking }) => {
                   padding: 15,
                   paddingVertical: 7.5,
                   justifyContent: "space-between",
+                  flexDirection: "row",
                   // alignItems: "center",
-                  gap: 5,
+                  gap: 8,
                   // flexDirection: "row",
                 }}
               >
+                <Entypo
+                  size={18}
+                  color={currentTheme.pink}
+                  name="flow-line"
+                  style={{ transform: [{ rotate: "90deg" }] }}
+                />
                 <View
                   style={{
                     flexDirection: "row",
@@ -266,18 +273,22 @@ const styles = StyleSheet.create({
     alignItems: "center",
     height: 25,
     justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "rgba(0,0,0,0)",
   },
   categoryButtonActive: {
     paddingHorizontal: 15,
     alignItems: "center",
     height: 25,
-    backgroundColor: "#F866B1",
+    borderWidth: 1,
+    borderColor: "#F866B1",
     justifyContent: "center",
     borderRadius: 50,
   },
   buttonText: {
     color: "white",
     fontSize: 14,
+    letterSpacing: 0.3,
   },
   item: {
     flexDirection: "row",

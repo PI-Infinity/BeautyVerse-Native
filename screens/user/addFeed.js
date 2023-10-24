@@ -2,8 +2,9 @@ import { FontAwesome } from "@expo/vector-icons";
 import axios from "axios";
 import { Video } from "expo-av";
 import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
+  Alert,
   Dimensions,
   Image,
   Platform,
@@ -13,9 +14,7 @@ import {
   TextInput,
   TouchableOpacity,
   View,
-  Alert,
 } from "react-native";
-import DocumentPicker from "react-native-document-picker";
 import uuid from "react-native-uuid";
 import { useDispatch, useSelector } from "react-redux";
 import { BackDrop } from "../../components/backDropLoader";
@@ -28,12 +27,13 @@ import { Language } from "../../context/language";
 import { darkTheme, lightTheme } from "../../context/theme";
 import { storage } from "../../firebase";
 import { setRerenderUserFeeds } from "../../redux/rerenders";
+import DraggableItem, { DragableList } from "./draggableList";
 
 /**
  * Add new feed screen
  */
 
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 export const AddFeed = ({ navigation }) => {
   // define language
@@ -149,17 +149,10 @@ export const AddFeed = ({ navigation }) => {
             fileWidth: file[0]?.width,
             owner: currentUser._id,
           };
-          const feedResponse = await axios.post(
-            backendUrl + `/api/v1/feeds`,
-            newFeed
-          );
-
-          const userResponse = await axios.patch(
-            backendUrl + `/api/v1/users/${currentUser?._id}`,
-            {
-              lastPostCreatedAt: new Date(),
-            }
-          );
+          await axios.post(backendUrl + `/api/v1/feeds`, newFeed);
+          await axios.patch(backendUrl + `/api/v1/users/${currentUser?._id}`, {
+            lastPostCreatedAt: new Date(),
+          });
           setTimeout(() => {
             dispatch(setRerenderUserFeeds());
           }, 1000);
@@ -251,20 +244,23 @@ export const AddFeed = ({ navigation }) => {
   let hght;
   if (file?.type === "video") {
     let originalHeight =
-      file?.width > file?.height ? file?.width : file?.height;
-    let originalWidth = file?.width > file?.height ? file?.height : file?.width;
+      file?.width >= file?.height ? file?.width : file?.height;
+    let originalWidth =
+      file?.width >= file?.height ? file?.height : file?.width;
 
-    let wdth = SCREEN_WIDTH;
+    let wdth = SCREEN_WIDTH - 20;
 
     let percented = originalWidth / wdth;
 
     hght = originalHeight / percented;
   } else if (file[0]) {
-    let originalHeight = file[0]?.height;
-    let originalWidth = file[0]?.width;
+    let highestItem = file.sort((a, b) => b.height - a.height)[0];
+    let originalHeight = highestItem?.height;
+    let originalWidth = highestItem?.width;
 
-    let percented = originalWidth / SCREEN_WIDTH;
+    let percented = originalWidth / (SCREEN_WIDTH - 20);
     hght = originalHeight / percented;
+    wdth = originalWidth / percented;
   }
 
   return (
@@ -292,7 +288,6 @@ export const AddFeed = ({ navigation }) => {
           width: SCREEN_WIDTH,
           paddingBottom: 50,
         }}
-        style={{}}
       >
         <View
           style={{
@@ -467,37 +462,54 @@ export const AddFeed = ({ navigation }) => {
           }}
         >
           {file[0] && file?.type !== "video" ? (
-            <ScrollView
-              horizontal
-              pagingEnabled
-              contentContainerStyle={{
-                height: file?.height > file?.width ? hght : SCREEN_WIDTH,
-                maxHeight: 640,
-                justifyContent: "center",
-                alignItems: "center",
-              }}
-            >
-              {file.map((i, x) => {
-                let oh = file[x]?.height;
-                let ow = file[x]?.width;
-                let w = SCREEN_WIDTH;
-                let percented = ow / SCREEN_WIDTH;
-                h = oh / percented;
-                return (
-                  <View key={x} style={{ alignItems: "center" }}>
-                    <Image
+            <>
+              <ScrollView
+                horizontal
+                pagingEnabled
+                contentContainerStyle={{
+                  height: hght > 640 ? 640 : hght,
+                  maxHeight: 640,
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+                style={{
+                  width: SCREEN_WIDTH - 20,
+                  marginLeft: 10,
+                  borderRadius: 20,
+                }}
+              >
+                {file.map((i, x) => {
+                  let oh = i?.height;
+                  let ow = i?.width;
+                  let percented = ow / (SCREEN_WIDTH - 20);
+                  let h = oh / percented;
+                  let w = ow / percented;
+
+                  return (
+                    <View
+                      key={x}
                       style={{
-                        width: SCREEN_WIDTH,
-                        height: h,
-                        maxHeight: 640,
-                        resizeMode: h > 640 ? "cover" : "contain",
+                        width: SCREEN_WIDTH - 20,
+                        alignItems: "center",
+                        justifyContent: "center",
+                        height: hght,
+                        backgroundColor: currentTheme.line,
                       }}
-                      source={{ uri: i.uri }}
-                    />
-                  </View>
-                );
-              })}
-            </ScrollView>
+                    >
+                      <Image
+                        style={{
+                          aspectRatio: 1,
+                          height: h,
+                          maxHeight: 640,
+                          resizeMode: "contain",
+                        }}
+                        source={{ uri: i.uri }}
+                      />
+                    </View>
+                  );
+                })}
+              </ScrollView>
+            </>
           ) : (
             <>
               {file && file?.type === "video" && (
@@ -511,7 +523,6 @@ export const AddFeed = ({ navigation }) => {
                     styles.preview2,
                     {
                       height: file?.height > file?.width ? hght : file?.width,
-
                       width: SCREEN_WIDTH,
                     },
                   ]}
@@ -520,6 +531,83 @@ export const AddFeed = ({ navigation }) => {
             </>
           )}
         </View>
+        <DragableList currentTheme={currentTheme} file={file} />
+
+        {/* <View
+          style={{
+            backgroundColor: currentTheme.background2,
+            overflow: "hidden",
+            width: SCREEN_WIDTH - 20,
+            justifyContent: "center",
+            marginVertical: 15,
+            paddingVertical: 15,
+            borderRadius: 20,
+            borderWidth: 1.5,
+            borderColor: currentTheme.line,
+          }}
+        >
+          {file[0] && file?.type !== "video" && (
+            <>
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  flexWrap: "wrap",
+                  gap: 15,
+                  width: SCREEN_WIDTH - 20,
+                  borderRadius: 20,
+                }}
+              >
+                {file.map((i, x) => {
+                  return (
+                    <View
+                      key={x}
+                      style={{
+                        width: SCREEN_WIDTH / 4,
+                        aspectRatio: 1,
+                        alignItems: "center",
+                        justifyContent: "center",
+                        backgroundColor: currentTheme.line,
+                        borderRadius: 10,
+                        overflow: "hidden",
+                        borderWidth: 2,
+                        borderColor: currentTheme.line,
+                      }}
+                    >
+                      <View
+                        style={{
+                          position: "absolute",
+                          zIndex: 10,
+                          top: 4,
+                          right: 4,
+                        }}
+                      >
+                        <Text
+                          style={{
+                            color: currentTheme.pink,
+                            fontWeight: "bold",
+                          }}
+                        >
+                          {x + 1}
+                        </Text>
+                      </View>
+
+                      <Image
+                        style={{
+                          width: SCREEN_WIDTH / 4,
+                          aspectRatio: 1,
+                          resizeMode: "cover",
+                        }}
+                        source={{ uri: i.uri }}
+                      />
+                    </View>
+                  );
+                })}
+              </View>
+            </>
+          )}
+        </View> */}
 
         <TouchableOpacity
           activeOpacity={0.5}

@@ -9,6 +9,7 @@ import {
   View,
   Dimensions,
   Pressable,
+  ImageBackground,
 } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 import { Language } from "../context/language";
@@ -45,9 +46,6 @@ export function BMSStackSent({}) {
 
   // defines current user
   const currentUser = useSelector((state) => state.storeUser.currentUser);
-
-  // define user location
-  const location = useSelector((state) => state.storeApp.location);
 
   // language context
   const language = Language();
@@ -587,7 +585,7 @@ export function BMSStackSent({}) {
             fontSize: 18,
           },
           cardStyle: {
-            backgroundColor: currentTheme.background,
+            // backgroundColor: currentTheme.background,
           },
         })}
       />

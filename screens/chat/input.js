@@ -19,6 +19,7 @@ import { storage } from "../../firebase";
 import { setRooms, setRerenderScroll, setRerederRooms } from "../../redux/chat";
 import { File } from "../../screens/chat/file";
 import { sendNotification } from "../../components/pushNotifications";
+import { Language } from "../../context/language";
 
 /**
  * Room Input component
@@ -51,9 +52,6 @@ export const Input = ({
 
   // define current chat
   const currentChat = useSelector((state) => state.storeChat.currentChat);
-
-  // chats
-  const rooms = useSelector((state) => state.storeChat.rooms);
 
   // avoid firs render to read message
   const isFirstRender = useRef(true);
@@ -282,6 +280,8 @@ export const Input = ({
     }
   };
 
+  const language = Language();
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -304,7 +304,7 @@ export const Input = ({
         }}
       >
         <TextInput
-          placeholder="Type something.."
+          placeholder={language?.language?.Main?.filter?.typeHere}
           placeholderTextColor={currentTheme.disabled}
           onChangeText={setText}
           value={text}

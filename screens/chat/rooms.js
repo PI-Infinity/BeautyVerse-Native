@@ -2,7 +2,6 @@ import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import axios from "axios";
 import React, { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
   Alert,
   Dimensions,
   Pressable,

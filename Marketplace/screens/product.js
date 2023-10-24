@@ -150,8 +150,6 @@ const Product = ({ route }) => {
       scrollEventThrottle={1}
       ref={scrollRef}
       showsVerticalScrollIndicator={false}
-      bounces={Platform.OS === "ios" ? false : undefined}
-      overScrollMode={Platform.OS === "ios" ? "never" : "always"}
     >
       <Gallery product={product} />
       <View

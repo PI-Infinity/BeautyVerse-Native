@@ -5,7 +5,6 @@ import moment from "moment";
 import "moment-timezone";
 import React, { useEffect, useRef, useState } from "react";
 import {
-  ActivityIndicator,
   Alert,
   Animated,
   KeyboardAvoidingView,
@@ -27,6 +26,7 @@ import { setRerenderBookings } from "../../redux/rerenders";
 import DateAndTimePicker from "../../screens/bookings/dateAndTimePicker";
 import { ProceduresList } from "../../screens/bookings/procedures";
 import { Language } from "../../context/language";
+import { ActivityIndicator } from "react-native-paper";
 
 /**
  * Add new booking manualy from OMS

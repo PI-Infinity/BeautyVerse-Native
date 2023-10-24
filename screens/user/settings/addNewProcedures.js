@@ -3,7 +3,6 @@ import {
   Text,
   View,
   ScrollView,
-  ActivityIndicator,
   Dimensions,
   Alert,
 } from "react-native";
@@ -19,7 +18,7 @@ import {
   AddCurrentUserProcedure,
   RemoveCurrentUserProcedure,
 } from "../../../redux/user";
-import { BackDrop } from "../../../components/backDropLoader";
+import { ActivityIndicator } from "react-native-paper";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 

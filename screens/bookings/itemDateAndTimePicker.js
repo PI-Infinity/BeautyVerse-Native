@@ -7,8 +7,8 @@ import {
   Pressable,
   ScrollView,
   Alert,
-  ActivityIndicator,
 } from "react-native";
+import { ActivityIndicator } from "react-native-paper";
 import { Picker } from "@react-native-picker/picker";
 import Modal from "react-native-modal";
 import { useSelector, useDispatch } from "react-redux";

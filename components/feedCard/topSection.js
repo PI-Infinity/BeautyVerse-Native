@@ -15,6 +15,8 @@ import { Reports } from "../../components/feedCard/reports";
 import GetTimesAgo from "../../functions/getTimesAgo";
 import { setSendReport } from "../../redux/alerts";
 import { Circle } from "../skeltons";
+import { BlurView } from "expo-blur";
+import { setBlur } from "../../redux/app";
 
 /**
  * Top section of feed card
@@ -123,10 +125,19 @@ export const TopSection = (props) => {
             {props.user?.cover?.length > 0 ? (
               <TouchableOpacity
                 activeOpacity={route.name === "Feeds" ? 0.8 : 1}
-                onPress={() =>
-                  navigation.navigate("User", {
-                    user: props.user,
-                  })
+                onPress={
+                  props?.setActiveGallery
+                    ? () => {
+                        props?.setActiveGallery(false);
+                        dispatch(setBlur(false));
+                        navigation.navigate("User", {
+                          user: props.user,
+                        });
+                      }
+                    : () =>
+                        navigation.navigate("User", {
+                          user: props.user,
+                        })
                 }
                 style={{
                   width: 40,
@@ -143,6 +154,10 @@ export const TopSection = (props) => {
                       width: 40,
                       height: 40,
                       borderRadius: 50,
+                      position: "absolute",
+                      zIndex: 1,
+                      alignItems: "center",
+                      justifyContent: "center",
                       overflow: "hidden",
                     }}
                   >
@@ -340,7 +355,10 @@ export const TopSection = (props) => {
                 onPress={
                   props.user._id === currentUser._id && route.name !== "Feeds"
                     ? props?.DotsFunction
-                    : () => setOpenReports(!openReports)
+                    : () => {
+                        setOpenReports(!openReports);
+                        dispatch(setBlur(true));
+                      }
                 }
               >
                 <Entypo
@@ -360,8 +378,14 @@ export const TopSection = (props) => {
                 }}
                 onPress={
                   props.user._id === currentUser._id && route.name !== "Feeds"
-                    ? props?.DotsFunction
-                    : () => setOpenReports(!openReports)
+                    ? () => {
+                        props?.DotsFunction();
+                        dispatch(setBlur(true));
+                      }
+                    : () => {
+                        dispatch(setBlur(true));
+                        setOpenReports(!openReports);
+                      }
                 }
               >
                 <Entypo
@@ -403,9 +427,13 @@ export const TopSection = (props) => {
           contentOwner={props.user?._id}
           contentId={props.user?.feed?._id}
           isVisible={openReports}
-          onClose={() => setOpenReports(false)}
+          onClose={() => {
+            dispatch(setBlur(false));
+            setOpenReports(false);
+          }}
           Press={() => {
             setOpenReports(false);
+            dispatch(setBlur(false));
             dispatch(setSendReport(true));
           }}
         />

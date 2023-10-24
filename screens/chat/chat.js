@@ -1,6 +1,6 @@
 import { useNavigation } from "@react-navigation/native";
 import { useState } from "react";
-import { Animated, StyleSheet } from "react-native";
+import { Animated, ImageBackground, StyleSheet } from "react-native";
 import { useSelector } from "react-redux";
 import { useSocket } from "../../context/socketContext";
 import { AddChat } from "../../screens/chat/addChat";

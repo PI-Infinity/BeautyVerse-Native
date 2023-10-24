@@ -7,10 +7,10 @@ import {
   Platform,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
   Alert,
+  ImageBackground,
 } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 import AlertMessage from "../../components/alertMessage";
@@ -21,6 +21,8 @@ import { darkTheme, lightTheme } from "../../context/theme";
 import { setCurrentUser } from "../../redux/auth";
 import { setRerenderCurrentUser } from "../../redux/rerenders";
 import { BackDrop } from "../../components/backDropLoader";
+import uuid from "react-native-uuid";
+import { TextInput } from "react-native-paper";
 
 export const Identify = ({ navigation }) => {
   // redux toolkit dispatch
@@ -36,6 +38,12 @@ export const Identify = ({ navigation }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+
+  // this state used to show/hide password when input
+  const [emailFocused, setEmailFocused] = useState(false);
+  // this state used to show/hide password when input
+  const [passwordFocused, setPasswordFocused] = useState(false);
+  const [confirmPasswordFocused, setConfirmPasswordFocused] = useState(false);
 
   // type redux state already defined in register screen
   const type = useSelector((state) => state.storeAuth.userType);
@@ -140,11 +148,11 @@ export const Identify = ({ navigation }) => {
           name: "",
           type: "user",
           email: email,
-          phone: {},
+          phone: { phone: uuid.v4(), callingCode: "", countryCode: "" },
           password: password,
           confirmPassword: confirmPassword,
           cover: "",
-          address: {},
+          address: [],
           media: {
             facebook: "",
             instagram: "",
@@ -173,7 +181,7 @@ export const Identify = ({ navigation }) => {
         setCodeInput("");
         setLoading(false);
         // error handlers
-        console.log(err.response);
+        console.log(err.response.data.message);
         setAlert({
           active: true,
           text: err.response.data.message,
@@ -185,7 +193,14 @@ export const Identify = ({ navigation }) => {
     }
   };
   return (
-    <>
+    <ImageBackground
+      style={{
+        flex: 1,
+        width: "100%",
+        height: "100%",
+      }}
+      source={theme ? require("../../assets/background.jpg") : null}
+    >
       <View style={{ position: "absolute" }}>
         {verify && (
           <VerifyCodePopup
@@ -200,7 +215,14 @@ export const Identify = ({ navigation }) => {
       </View>
       <BackDrop loading={loading} setLoading={setLoading} />
       <KeyboardAvoidingView
-        style={styles.keyboardAvoidingContainer}
+        style={[
+          styles.keyboardAvoidingContainer,
+          {
+            backgroundColor: theme
+              ? "rgba(0,0,0,0.6)"
+              : currentTheme.background,
+          },
+        ]}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
         <View style={{ position: "absolute", zIndex: 19000 }}>
@@ -214,28 +236,41 @@ export const Identify = ({ navigation }) => {
         </View>
         <View style={styles.container}>
           <View style={styles.itemContainer}>
-            <Text style={[styles.itemTitle, { color: currentTheme.font }]}>
-              {language?.language?.Auth?.auth?.email}
-            </Text>
             <TextInput
-              placeholder="email@gmail.com"
-              placeholderTextColor={currentTheme.disabled}
+              label="email@gmail.com"
+              onChangeText={(text) => setEmail(text)}
               value={email}
+              autoFocus
+              mode="outlined"
+              outlineStyle={{
+                borderRadius: 20,
+                padding: 0,
+                borderColor: emailFocused
+                  ? currentTheme.pink
+                  : currentTheme.line,
+                backgroundColor: "transparent",
+              }}
               style={[
                 styles.input,
                 {
-                  color: currentTheme.font,
+                  color: currentTheme.pink,
+                  borderColor: currentTheme.line,
+                  backgroundColor: currentTheme.background,
+                  height: 55,
+                  padding: 0,
+                  borderRadius: 50,
                   borderColor: currentTheme.line,
                 },
               ]}
-              onChangeText={(text) => setEmail(text)}
+              textColor={currentTheme.font}
+              theme={{ colors: { primary: currentTheme.pink } }}
+              placeholderTextColor={currentTheme.pink}
+              onFocus={() => setEmailFocused(true)}
+              onBlur={() => setEmailFocused(false)}
             />
           </View>
 
           <View style={styles.itemContainer}>
-            <Text style={[styles.itemTitle, { color: currentTheme.font }]}>
-              {language?.language?.Auth?.auth?.password}
-            </Text>
             <View
               style={{
                 width: "100%",
@@ -245,25 +280,43 @@ export const Identify = ({ navigation }) => {
               }}
             >
               <TextInput
-                placeholder={language?.language?.Auth?.auth?.min8symbols}
-                placeholderTextColor={currentTheme.disabled}
-                value={password}
-                style={[
-                  [
-                    styles.input,
-                    {
-                      borderColor: currentTheme.line,
-                      color: currentTheme.font,
-                    },
-                  ],
-                  { width: "100%" },
-                ]}
                 secureTextEntry={!showPassword}
+                label={language?.language?.Auth?.auth?.password}
                 onChangeText={(text) => setPassword(text)}
+                value={password}
+                mode="outlined"
+                theme={{
+                  colors: {
+                    primary: currentTheme.pink, // color of the underline and the outline
+                  },
+                }}
+                outlineStyle={{
+                  borderRadius: 20,
+                  padding: 0,
+                  backgroundColor: "transparent",
+                  height: 55,
+                  borderColor: passwordFocused
+                    ? currentTheme.pink
+                    : currentTheme.line,
+                }}
+                textColor={currentTheme.font}
+                style={[
+                  styles.input,
+                  {
+                    color: currentTheme.font,
+                    borderColor: currentTheme.pink,
+                    backgroundColor: currentTheme.background,
+                    height: 55,
+                    padding: 0,
+                  },
+                ]}
+                placeholderTextColor={currentTheme.pink}
+                onFocus={() => setPasswordFocused(true)}
+                onBlur={() => setPasswordFocused(false)}
               />
               <TouchableOpacity
                 onPress={() => setShowPassword(!showPassword)}
-                style={{ position: "relative", right: 30 }}
+                style={{ position: "relative", right: 40 }}
               >
                 <Text style={styles.showPasswordText}>
                   {showPassword ? (
@@ -285,9 +338,6 @@ export const Identify = ({ navigation }) => {
           </View>
 
           <View style={styles.itemContainer}>
-            <Text style={[styles.itemTitle, { color: currentTheme.font }]}>
-              {language?.language?.Auth?.auth?.confirmPassword}
-            </Text>
             <View
               style={{
                 width: "100%",
@@ -297,25 +347,43 @@ export const Identify = ({ navigation }) => {
               }}
             >
               <TextInput
-                placeholder={language?.language?.Auth?.auth?.confirmPassword}
-                placeholderTextColor={currentTheme.disabled}
-                value={confirmPassword}
-                style={[
-                  [
-                    styles.input,
-                    {
-                      borderColor: currentTheme.line,
-                      color: currentTheme.font,
-                    },
-                  ],
-                  { width: "100%" },
-                ]}
                 secureTextEntry={!showConfirmPassword}
+                label={language?.language?.Auth?.auth?.confirmPassword}
                 onChangeText={(text) => setConfirmPassword(text)}
+                value={confirmPassword}
+                mode="outlined"
+                theme={{
+                  colors: {
+                    primary: currentTheme.pink, // color of the underline and the outline
+                  },
+                }}
+                outlineStyle={{
+                  borderRadius: 20,
+                  padding: 0,
+                  backgroundColor: "transparent",
+                  height: 55,
+                  borderColor: confirmPasswordFocused
+                    ? currentTheme.pink
+                    : currentTheme.line,
+                }}
+                textColor={currentTheme.font}
+                style={[
+                  styles.input,
+                  {
+                    color: currentTheme.font,
+                    borderColor: currentTheme.pink,
+                    backgroundColor: currentTheme.background,
+                    height: 55,
+                    padding: 0,
+                  },
+                ]}
+                placeholderTextColor={currentTheme.pink}
+                onFocus={() => setConfirmPasswordFocused(true)}
+                onBlur={() => setConfirmPasswordFocused(false)}
               />
               <TouchableOpacity
                 onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-                style={{ position: "relative", right: 30 }}
+                style={{ position: "relative", right: 40 }}
               >
                 <Text style={styles.showPasswordText}>
                   {showConfirmPassword ? (
@@ -367,7 +435,7 @@ export const Identify = ({ navigation }) => {
           </View>
         </View>
       </KeyboardAvoidingView>
-    </>
+    </ImageBackground>
   );
 };
 
@@ -387,18 +455,17 @@ const styles = StyleSheet.create({
     zIndex: 100,
     paddingBottom: 30,
   },
-  itemContainer: { gap: 15, width: "80%", alignItems: "center", zIndex: 100 },
+  itemContainer: { gap: 15, width: "75%", alignItems: "center", zIndex: 100 },
   itemTitle: {
     fontSize: 14,
     zIndex: 100,
   },
   input: {
     width: "100%",
-    height: 40,
-    padding: 10,
+    padding: 12.5,
     fontSize: 14,
-    // borderRadius: 50,
-    borderBottomWidth: 1,
+    borderRadius: 50,
+    letterSpacing: 0.2,
   },
   showPasswordText: {
     fontSize: 12,

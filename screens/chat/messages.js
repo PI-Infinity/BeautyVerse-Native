@@ -1,10 +1,11 @@
 // screens/ChatRoomScreen.js
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, ScrollView, View, Text } from "react-native";
+import { ScrollView, View, Text } from "react-native";
 import { useSelector } from "react-redux";
 import { darkTheme, lightTheme } from "../../context/theme";
 import { Message } from "../../screens/chat/message";
 import { useSocket } from "../../context/socketContext";
+import { ActivityIndicator } from "react-native-paper";
 
 /**
  * Messages list in room

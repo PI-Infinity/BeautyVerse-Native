@@ -2,7 +2,6 @@ import { FontAwesome, MaterialCommunityIcons } from "@expo/vector-icons";
 import axios from "axios";
 import React, { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
   Dimensions,
   FlatList,
   Platform,
@@ -13,6 +12,7 @@ import {
   View,
 } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
+import { ActivityIndicator } from "react-native-paper";
 import { darkTheme, lightTheme } from "../../context/theme";
 import {
   addSentBookings,

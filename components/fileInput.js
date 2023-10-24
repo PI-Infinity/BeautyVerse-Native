@@ -29,7 +29,7 @@ const InputFile = ({ setFile, Cover, currentTheme, title, from }) => {
 
   //resize image
   const ResizeAndCompressImage = async (uri, originalWidth, originalHeight) => {
-    const wdth = originalWidth;
+    const wdth = originalWidth > 1080 ? 1080 : originalWidth;
     const hght = (originalHeight / originalWidth) * wdth;
     try {
       const mobile = await ImageManipulator.manipulateAsync(
@@ -42,6 +42,7 @@ const InputFile = ({ setFile, Cover, currentTheme, title, from }) => {
             },
           },
         ],
+        { compress: 0.8 },
         {
           // compress: 1,
           format: ImageManipulator.SaveFormat.JPEG,

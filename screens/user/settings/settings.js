@@ -64,16 +64,15 @@ export const Settings = ({ navigation }) => {
    * Logout function
    */
   const Logout = async () => {
-    dispatch(setLogoutLoading(true));
+    dispatch(setLoading(true));
     try {
       await axios.patch(backendUrl + "/api/v1/users/" + currentUser._id, {
         pushNotificationToken: "null",
       });
       await AsyncStorage.removeItem("Beautyverse:currentUser");
-      dispatch(setCurrentUser(null));
       dispatch(setRerenderCurrentUser());
       setTimeout(() => {
-        dispatch(setLogoutLoading(false));
+        dispatch(setLoading(false));
       }, 1000);
     } catch (error) {
       console.log(error.response.data.message);

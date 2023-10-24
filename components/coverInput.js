@@ -47,7 +47,7 @@ const InputFile = ({ targetUser, setOpenPopup, editPopup, setEditPopup }) => {
           },
         ],
         {
-          compress: 1,
+          compress: 0.8,
           format: ImageManipulator.SaveFormat.JPEG,
         }
       );

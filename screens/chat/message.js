@@ -4,7 +4,6 @@ import { Video } from "expo-av";
 import { deleteObject, ref } from "firebase/storage";
 import React, { useEffect, useRef, useState } from "react";
 import {
-  ActivityIndicator,
   Dimensions,
   Pressable,
   StyleSheet,
@@ -12,6 +11,7 @@ import {
   Vibration,
   View,
 } from "react-native";
+import { ActivityIndicator } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 import { CacheableImage } from "../../components/cacheableImage";
 import DeleteMessagePopup from "../../components/confirmDialog";

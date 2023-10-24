@@ -66,7 +66,12 @@ export const CustomTabBarMarketplaceIcon = ({
       }}
     >
       <Pressable
-        style={{}}
+        style={{
+          flex: 1,
+
+          width: "100%",
+          alignItems: "center",
+        }}
         onPress={() => {
           if (isFocused) {
             if (routeName === "main") {

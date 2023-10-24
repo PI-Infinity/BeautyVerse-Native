@@ -3,6 +3,9 @@ import {
   MaterialCommunityIcons,
   MaterialIcons,
   Fontisto,
+  FontAwesome,
+  Entypo,
+  Ionicons,
 } from "@expo/vector-icons";
 import React, { useEffect, useState, useContext } from "react";
 import {
@@ -32,6 +35,7 @@ import {
 import { setCleanUp } from "../redux/rerenders";
 import { MapFilter } from "../components/mapFilter";
 import axios from "axios";
+import { BlurView } from "expo-blur";
 
 /**
  * FILTER SCREEN component
@@ -148,7 +152,7 @@ export const Filter = ({ navigation }) => {
       }
     };
     Getting();
-  }, [search, filter, specialists, salons, city, district, cleanUp]);
+  }, [search, filter, specialists, salons, shops, city, district, cleanUp]);
 
   // add feeds
 
@@ -205,8 +209,6 @@ export const Filter = ({ navigation }) => {
         paddingBottom: 40,
       }}
       showsVerticalScrollIndicator={false}
-      bounces={Platform.OS === "ios" ? false : undefined}
-      overScrollMode={Platform.OS === "ios" ? "never" : "always"}
       scrollEnabled={!openCities ? true : false}
     >
       <View style={{ marginBottom: 5, width: "100%" }}>
@@ -214,7 +216,7 @@ export const Filter = ({ navigation }) => {
       </View>
       <View
         style={{
-          width: "100%",
+          width: SCREEN_WIDTH - 20,
           height: SCREEN_HEIGHT / 2,
           // margin: 10,
           overflow: "hidden",
@@ -226,8 +228,8 @@ export const Filter = ({ navigation }) => {
               width: "10%",
               alignItems: "center",
               position: "absolute",
-              bottom: 15,
-              right: 8,
+              bottom: 10,
+              right: 5,
               zIndex: 100000,
               gap: 10,
             }}
@@ -235,7 +237,6 @@ export const Filter = ({ navigation }) => {
             <Pressable
               onPress={() => {
                 dispatch(setSpecialists(!specialists));
-                dispatch(setCleanUp());
               }}
               style={{
                 backgroundColor: currentTheme.background,
@@ -257,7 +258,6 @@ export const Filter = ({ navigation }) => {
             <Pressable
               onPress={() => {
                 dispatch(setSalons(!salons));
-                dispatch(setCleanUp());
               }}
               style={{
                 backgroundColor: currentTheme.background,
@@ -279,7 +279,6 @@ export const Filter = ({ navigation }) => {
             <Pressable
               onPress={() => {
                 dispatch(setShops(!shops));
-                dispatch(setCleanUp());
               }}
               style={{
                 backgroundColor: currentTheme.background,
@@ -421,12 +420,16 @@ export const Filter = ({ navigation }) => {
             setOpenCities(!openCities);
           }}
         >
-          <View
+          <BlurView
+            intensity={60}
+            tint="dark"
             style={{
               width: "100%",
               height: SCREEN_HEIGHT,
               gap: 10,
-              backgroundColor: "rgba(0,0,0,1)",
+              backgroundColor: theme
+                ? "rgba(0, 1, 8, 0.6)"
+                : currentTheme.background,
               paddingTop: 80,
             }}
           >
@@ -493,7 +496,7 @@ export const Filter = ({ navigation }) => {
                 />
               </TouchableOpacity>
             </View>
-          </View>
+          </BlurView>
         </Modal>
       </View>
       <Text
@@ -530,13 +533,20 @@ export const Filter = ({ navigation }) => {
             }}
             onPress={() => {
               dispatch(setFilter(item.value));
-              dispatch(setCleanUp());
             }}
           >
             <View
-              style={{ flexDirection: "row", gap: 0, alignItems: "center" }}
+              style={{ flexDirection: "row", gap: 8, alignItems: "center" }}
             >
-              {/* {item.icon} */}
+              <Entypo
+                size={18}
+                color={
+                  filter === item.value ? currentTheme.pink : currentTheme.font
+                }
+                name="flow-line"
+                style={{ transform: [{ rotate: "90deg" }] }}
+              />
+
               <Text
                 style={{
                   letterSpacing: 0.3,

@@ -2,7 +2,6 @@ import { FontAwesome, FontAwesome5 } from "@expo/vector-icons";
 import axios from "axios";
 import React, { useEffect, useRef, useState } from "react";
 import {
-  ActivityIndicator,
   Alert,
   Animated,
   Dimensions,
@@ -13,6 +12,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { ActivityIndicator } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 import AlertMessage from "../../../components/alertMessage";
 import ProcedureDurationPicker from "../../../components/durationList";

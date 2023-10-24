@@ -3,12 +3,12 @@ import axios from "axios";
 import * as Haptics from "expo-haptics";
 import { useEffect, useRef, useState } from "react";
 import {
-  ActivityIndicator,
   Animated,
   Dimensions,
   Platform,
   Pressable,
   ScrollView,
+  TouchableOpacity,
   View,
 } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
@@ -21,11 +21,14 @@ import { Language } from "../../context/language";
 import { useSocket } from "../../context/socketContext";
 import { darkTheme, lightTheme } from "../../context/theme";
 import feed, { setFeedPost, setVideoVolume } from "../../redux/feed";
-import { setLoading } from "../../redux/app";
+import { setBlur, setLoading } from "../../redux/app";
 import * as Location from "expo-location";
 import * as Notifications from "expo-notifications";
 import { sendNotification } from "../../components/pushNotifications";
 import { Circle } from "../skeltons";
+import GestureTester from "./GestureTester";
+import { setActiveScrollGallery } from "../../redux/fixedComponents";
+import { BlurView } from "expo-blur";
 
 /**
  * Feed Item in feeds screen
@@ -71,7 +74,7 @@ export const Feed = (props) => {
    * in Feeds object is defined user with 5 feeds.
    * when navigate to user's feeds this state will send there for mapping
    */
-  const [userFeeds, setUserFeeds] = useState([]);
+  const [userFeeds, setUserFeeds] = useState(props.feed ? [props.feed] : []);
 
   const backendUrl = useSelector((state) => state.storeApp.backendUrl);
 
@@ -83,10 +86,16 @@ export const Feed = (props) => {
       const response = await axios.get(
         `${backendUrl}/api/v1/feeds/${
           props.feed.owner?._id
-        }/feeds?page=${1}&check=${currentUser?._id}&language=${lang}`
+        }/feeds?page=${1}&check=${currentUser?._id}&language=${lang}&after=${
+          props?.feed?._id
+        }&firstFeed=${props?.feed?._id}&limit=3`
       );
-      setUserFeeds(response.data.data.feeds);
-      setFeedsLength(response.data.result);
+      if (response.data.data.feeds?.length > 0) {
+        setUserFeeds((prev) => prev?.filter((i) => i._id === props?.feed._id));
+        setUserFeeds((prev) => [...prev, ...response.data.data.feeds]);
+
+        setFeedsLength(response.data.result);
+      }
     } catch (error) {
       console.log(error.response.data.message);
     }
@@ -381,7 +390,7 @@ export const Feed = (props) => {
             date: new Date(),
             type: "save",
             status: "unread",
-            feed: `/${userFeeds[activeFeed]?._id}`,
+            feed: `${userFeeds[activeFeed]?._id}`,
           }
         );
         if (props.feed.owner?.pushNotificationToken) {
@@ -547,14 +556,14 @@ export const Feed = (props) => {
         ? props.feed.fileHeight
         : props.feed.fileWidth;
 
-    let percented = originalWidth / SCREEN_WIDTH;
+    let percented = originalWidth / (SCREEN_WIDTH - 20);
 
     hght = originalHeight / percented;
   } else if (props.feed?.images[0]) {
     let originalHeight = props.feed.fileHeight;
     let originalWidth = props.feed.fileWidth;
 
-    let percented = originalWidth / SCREEN_WIDTH;
+    let percented = originalWidth / (SCREEN_WIDTH - 20);
     hght = originalHeight / percented;
   }
 
@@ -562,7 +571,8 @@ export const Feed = (props) => {
     <Animated.View
       style={{
         width: SCREEN_WIDTH,
-        backgroundColor: currentTheme.background,
+        paddingTop: props.feed?.fileFormat === "img" ? 0 : 10,
+        // paddingBottom: props.feed?.fileFormat === "img" ? 0 : 10,
       }}
     >
       {props.feed?.fileFormat === "img" && (
@@ -572,7 +582,6 @@ export const Feed = (props) => {
             paddingHorizontal: 15,
             paddingVertical: 10,
             zIndex: 120,
-            backgroundColor: currentTheme.background,
             justifyContent: "center",
             width: "100%",
           }}
@@ -614,15 +623,19 @@ export const Feed = (props) => {
           justifyContent: "center",
           alignItems: "center",
           width: SCREEN_WIDTH,
+          borderRadius: 20,
+          overflow: "hidden",
+          paddingTop: 2,
         }}
       >
+        {/* <GestureTester /> */}
         {props.feed?.images?.length > 1 && (
           <View
             style={{
               position: "absolute",
               zIndex: 120,
               bottom: 15,
-              right: 15,
+              right: 25,
               borderRadius: 50,
             }}
           >
@@ -678,67 +691,78 @@ export const Feed = (props) => {
             {loadVideo && (
               <View
                 style={{
-                  width: "100%",
+                  width: SCREEN_WIDTH - 20,
                   height: "100%",
-                  backgroundColor: currentTheme.background2,
+                  // backgroundColor: currentTheme.disabled,
                   position: "absolute",
                   zIndex: 1,
                   alignItems: "center",
                   justifyContent: "center",
                   overflow: "hidden",
+                  borderRadius: 20,
                 }}
               >
-                <Circle />
+                <Circle borderRadius={20} />
               </View>
             )}
-
-            <CacheableVideo
-              videoRef={videoRef}
-              key={props.feed.video}
-              onPress={() =>
-                navigation.navigate("ScrollGallery", {
-                  user: props.feed.owner,
-                  scrolableFeeds: userFeeds,
-                  feedsLength: feedsLength,
-                  page: props.page,
-                })
-              }
-              // delayLongPress={80}
-              style={{
-                width: SCREEN_WIDTH,
-                height:
-                  props.feed.fileHeight > props.feed.fileWidth
-                    ? hght
-                    : props.feed.fileWidth,
-              }}
-              source={{
-                uri: props.feed.video,
-              }}
-              rate={1.0}
-              volume={1.0}
-              isMuted={volume ? true : false}
-              shouldPlay={
-                props.currentIndex === props.x && props.isFocused ? true : false
-              }
-              isLooping
-              resizeMode="contain"
-              onLoad={async (response) => {
-                let { status } =
-                  await Location.requestForegroundPermissionsAsync();
-                // setTimeout(() => {
-                setLoadVideo(false);
-                // }, 200);
-                setTimeout(() => {
-                  if (
-                    props.x === props.feedsLength - 1 &&
-                    status !== "denied"
-                  ) {
-                    dispatch(setLoading(false));
-                  }
-                }, 1000);
-              }}
-              from="feedCard"
-            />
+            <BlurView
+              intensity={15}
+              tint="light"
+              style={{ flex: 1, overflow: "hidden", borderRadius: 20 }}
+            >
+              <CacheableVideo
+                videoRef={videoRef}
+                key={props.feed.video}
+                onPress={() => {
+                  dispatch(setBlur(true));
+                  props.setActiveGallery({
+                    user: props.feed.owner,
+                    scrolableFeeds: userFeeds,
+                    feedsLength: feedsLength,
+                    page: props.page,
+                    post: post,
+                  });
+                }}
+                // delayLongPress={80}
+                style={{
+                  borderRadius: 20,
+                  width: SCREEN_WIDTH - 20,
+                  height:
+                    props.feed.fileHeight > props.feed.fileWidth
+                      ? hght
+                      : props.feed.fileWidth,
+                }}
+                source={{
+                  uri: props.feed.video,
+                }}
+                rate={1.0}
+                volume={1.0}
+                isMuted={volume ? true : false}
+                shouldPlay={
+                  props.currentIndex === props.x && props.isFocused
+                    ? true
+                    : false
+                }
+                isLooping
+                resizeMode="contain"
+                onLoad={async (response) => {
+                  let { status } =
+                    await Location.requestForegroundPermissionsAsync();
+                  // setTimeout(() => {
+                  setLoadVideo(false);
+                  // }, 200);
+                  setTimeout(() => {
+                    if (
+                      props.x === props.feedsLength - 1 &&
+                      status !== "denied"
+                    ) {
+                      dispatch(setLoading(false));
+                    }
+                  }, 1000);
+                }}
+                from="feedCard"
+              />
+            </BlurView>
           </>
         ) : (
           <ScrollView
@@ -752,10 +776,12 @@ export const Feed = (props) => {
               overflow: "hidden",
               alignItems: "center",
             }}
+            style={{ width: SCREEN_WIDTH - 20, borderRadius: 20 }}
           >
             {props.feed?.images?.map((itm, x) => {
               return (
-                <Pressable
+                <TouchableOpacity
+                  activeOpacity={0.9}
                   key={x}
                   style={{
                     height:
@@ -765,76 +791,106 @@ export const Feed = (props) => {
                         ? 900
                         : hght,
                     maxHeight: definedDevice === "mobile" ? 642 : 900,
-                    width: SCREEN_WIDTH,
+                    width: SCREEN_WIDTH - 20,
                     overflow: "hidden",
                   }}
-                  onPress={() => {
-                    navigation.navigate("ScrollGallery", {
-                      user: props.feed.owner,
-                      scrolableFeeds: userFeeds,
-                      feedsLength: feedsLength,
-                      page: props.page,
-                      post: post,
-                    });
-                    dispatch(setVideoVolume(true));
-                  }}
+                  // onPress={() => {
+                  //   navigation.navigate("ScrollGallery", {
+                  //     user: props.feed.owner,
+                  //     scrolableFeeds: userFeeds,
+                  //     feedsLength: feedsLength,
+                  //     page: props.page,
+                  //     post: post,
+                  //   });
+                  //   dispatch(setVideoVolume(true));
+                  // }}
+                  onPress={() =>
+                    // dispatch(
+                    //   setActiveScrollGallery({
+                    //     user: props.feed.owner,
+                    //     scrolableFeeds: userFeeds,
+                    //     feedsLength: feedsLength,
+                    //     page: props.page,
+                    //     post: post,
+                    //   })
+                    // );
+
+                    {
+                      dispatch(setBlur(true));
+                      props.setActiveGallery({
+                        user: props.feed.owner,
+                        scrolableFeeds: userFeeds,
+                        feedsLength: feedsLength,
+                        page: props.page,
+                        post: post,
+                      });
+                    }
+                  }
                 >
                   {loadImage && (
                     <View
                       style={{
-                        width: "100%",
+                        width: SCREEN_WIDTH - 20,
                         height:
                           hght > 640 && definedDevice === "mobile"
                             ? 642
                             : hght > 640 && definedDevice !== "mobile"
                             ? 902
                             : hght + 2,
-                        backgroundColor: currentTheme.background2,
+                        // backgroundColor: currentTheme.disabled,
                         position: "absolute",
                         zIndex: 1,
                         alignItems: "center",
                         justifyContent: "center",
                         overflow: "hidden",
+                        borderRadius: "20px",
                       }}
                     >
-                      <Circle />
+                      <Circle borderRadius={20} />
                     </View>
                   )}
-                  <ZoomableImage
-                    key={itm.url}
-                    style={{
-                      height:
-                        hght > 640 && definedDevice === "mobile"
-                          ? 642
-                          : hght > 640 && definedDevice !== "mobile"
-                          ? 902
-                          : hght + 2,
-                      maxHeight: definedDevice === "mobile" ? 642 : 900,
-                      width: SCREEN_WIDTH,
-                      zIndex: 100,
-                      resizeMode: hght > 640 ? "cover" : "contain",
-                    }}
-                    source={{
-                      uri: itm.url,
-                      cache: "reload",
-                    }}
-                    onLoad={async () => {
-                      // setTimeout(() => {
-                      setLoadImage(false);
-                      // }, 200);
-                      let { status } =
-                        await Location.requestForegroundPermissionsAsync();
-                      setTimeout(() => {
-                        if (
-                          props.x + 1 === props.feedsLength - 1 &&
-                          status !== "denied"
-                        ) {
-                          dispatch(setLoading(false));
-                        }
-                      }, 1000);
-                    }}
-                  />
-                </Pressable>
+                  <BlurView
+                    intensity={15}
+                    tint="light"
+                    style={{ borderRadius: 20, width: SCREEN_WIDTH - 20 }}
+                  >
+                    <ZoomableImage
+                      key={itm.url}
+                      style={{
+                        height:
+                          hght > 640 && definedDevice === "mobile"
+                            ? 642
+                            : hght > 640 && definedDevice !== "mobile"
+                            ? 902
+                            : hght + 2,
+                        maxHeight: definedDevice === "mobile" ? 642 : 900,
+                        width: SCREEN_WIDTH - 20,
+                        zIndex: 100,
+                        resizeMode: hght > 640 ? "cover" : "contain",
+                        borderRadius: 20,
+                      }}
+                      source={{
+                        uri: itm.url,
+                        cache: "reload",
+                      }}
+                      onLoad={async () => {
+                        // setTimeout(() => {
+                        setLoadImage(false);
+                        // }, 200);
+                        let { status } =
+                          await Location.requestForegroundPermissionsAsync();
+                        setTimeout(() => {
+                          if (
+                            props.x + 1 === props.feedsLength - 1 &&
+                            status !== "denied"
+                          ) {
+                            dispatch(setLoading(false));
+                          }
+                        }, 1000);
+                      }}
+                    />
+                  </BlurView>
+                </TouchableOpacity>
               );
             })}
           </ScrollView>
@@ -847,7 +903,7 @@ export const Feed = (props) => {
             style={{
               paddingHorizontal: 10,
               paddingVertical: 10,
-              width: SCREEN_WIDTH,
+              width: SCREEN_WIDTH - 20,
               justifyContent: "center",
               position: "absolute",
               bottom: 0,
@@ -881,6 +937,7 @@ export const Feed = (props) => {
           </Pressable>
         )}
       </View>
+
       {props.feed?.fileFormat === "img" && (
         <Pressable
           onPress={(event) => event.stopPropagation()}
@@ -889,7 +946,6 @@ export const Feed = (props) => {
             paddingHorizontal: 10,
             paddingVertical: 10,
             width: SCREEN_WIDTH,
-            backgroundColor: currentTheme.background,
             justifyContent: "center",
           }}
         >

@@ -25,7 +25,7 @@ import {
   setUserProductListingPage,
   setUserProducts,
 } from "../../redux/Marketplace";
-import { ActivityIndicator } from "react-native";
+import { ActivityIndicator } from "react-native-paper";
 import { Circle } from "../../components/skeltons";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");

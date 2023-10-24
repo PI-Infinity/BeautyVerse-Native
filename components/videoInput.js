@@ -22,11 +22,10 @@ const InputVideo = ({ title, setFile, currentTheme, from }) => {
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Videos,
       allowsEditing: true,
-      quality: 1,
+      quality: 0.8,
     });
 
     if (!result.canceled && result.assets && result.assets.length > 0) {
-      console.log(result.assets[0]);
       setFile(result.assets[0]); // Wrap the asset object in an object with an "assets" property
       // setTimeout(() => {
       //   setLoading(false);

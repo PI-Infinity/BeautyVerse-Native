@@ -1,11 +1,10 @@
-import { Entypo, FontAwesome } from "@expo/vector-icons";
+import { Entypo, FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import Slider from "@react-native-community/slider";
-import { useIsFocused } from "@react-navigation/native";
+import { useIsFocused, useNavigation } from "@react-navigation/native";
 import axios from "axios";
 import * as Haptics from "expo-haptics";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  ActivityIndicator,
   Alert,
   Animated,
   Dimensions,
@@ -15,9 +14,13 @@ import {
   StyleSheet,
   Text,
   TextInput,
+  TouchableOpacity,
   Vibration,
   View,
+  FlatList,
+  ImageBackground,
 } from "react-native";
+import { ActivityIndicator } from "react-native-paper";
 import uuid from "react-native-uuid";
 import { useDispatch, useSelector } from "react-redux";
 import AlertMessage from "../../components/alertMessage";
@@ -46,20 +49,23 @@ import SmoothModal from "../../screens/user/editPostPopup";
 import * as Notifications from "expo-notifications";
 import { sendNotification } from "../../components/pushNotifications";
 import { Circle } from "../../components/skeltons";
+import { setBlur } from "../../redux/app";
+import { BlurView } from "expo-blur";
+import { LinearGradient } from "expo-linear-gradient";
 
 /**
  * User feeds scrolling gallery
  * Includes 2 components: User Feeds and Feed Item bellow ScrollGallery
  */
 
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
-export const ScrollGallery = ({ route, navigation }) => {
+export const ScrollGallery = ({ route, setActiveGallery }) => {
+  const props = route.params;
+  // navigation
+  const navigation = useNavigation();
   // define screen is focused or not
   const isFocused = useIsFocused();
-
-  // define props from route
-  const props = route.params;
 
   // app language
   const lang = useSelector((state) => state.storeApp.language);
@@ -82,34 +88,30 @@ export const ScrollGallery = ({ route, navigation }) => {
 
   // add new feeds function
   async function AddFeedObjs(p) {
-    setLoadNewFeeds(true);
     try {
       const response = await axios.get(
-        `${backendUrl}/api/v1/feeds/${props.user?._id}/feeds?page=${p}&check=${currentUser?._id}&language=${lang}`
+        `${backendUrl}/api/v1/feeds/${props.user?._id}/feeds?page=${p}&check=${currentUser?._id}&limit=3`
       );
 
-      setScrollableFeeds((prev) => {
-        const newFeeds = response.data.data?.feeds;
-        if (newFeeds) {
-          const uniqueNewFeeds = newFeeds.filter(
-            (newFeed) => !prev.some((prevFeed) => prevFeed._id === newFeed._id)
-          );
-          return [...prev, ...uniqueNewFeeds];
-        } else {
-          return [...prev];
-        }
-      });
-
-      setTimeout(() => {
-        setLoadNewFeeds(false);
-      }, 10);
+      if (response.data.data?.feeds) {
+        setScrollableFeeds((prev) => {
+          const newFeeds = response.data.data?.feeds;
+          if (newFeeds) {
+            const uniqueNewFeeds = newFeeds.filter(
+              (newFeed) =>
+                !prev.some((prevFeed) => prevFeed._id === newFeed._id)
+            );
+            return [...prev, ...uniqueNewFeeds];
+          } else {
+            return [...prev];
+          }
+        });
+        setPage(p);
+      }
     } catch (error) {
       console.log(error.response.data.message);
     }
   }
-
-  // run add feeds (avoid on screen load first render)
-  const addFeedsFirstRenderAvoid = useRef(true);
 
   // define language context
   const language = Language();
@@ -129,28 +131,46 @@ export const ScrollGallery = ({ route, navigation }) => {
   const scrollViewRef = useRef();
   const [scrollY, setScrollY] = useState(0);
 
-  const FeedItems = useMemo(
-    () =>
-      scrolableFeeds.map((item, index) => {
-        return (
-          <FeedItem
-            key={index}
-            user={props.user}
-            x={index}
-            feed={item}
-            language={language}
-            currentUser={currentUser}
-            navigation={navigation}
-            currentIndex={0}
-            isFocused={isFocused}
-            scrollViewRef={scrollViewRef}
-            scrollY={scrollY}
-            setScrollY={setScrollY}
-          />
-        );
-      }),
-    [scrolableFeeds, language, currentUser, navigation, isFocused]
+  const renderFeedItem = ({ item, index }) => (
+    <FeedItem
+      user={props.user}
+      x={index}
+      feed={item}
+      language={language}
+      currentUser={currentUser}
+      navigation={navigation}
+      currentIndex={0}
+      isFocused={isFocused}
+      scrollViewRef={scrollViewRef}
+      scrollY={scrollY}
+      setScrollY={setScrollY}
+      setActiveGallery={setActiveGallery}
+    />
   );
+
+  // const FeedItems = useMemo(
+  //   () =>
+  //     scrolableFeeds.map((item, index) => {
+  //       return (
+  //         <FeedItem
+  //           key={index}
+  //           user={props.user}
+  //           x={index}
+  //           feed={item}
+  //           language={language}
+  //           currentUser={currentUser}
+  //           navigation={navigation}
+  //           currentIndex={0}
+  //           isFocused={isFocused}
+  //           scrollViewRef={scrollViewRef}
+  //           scrollY={scrollY}
+  //           setScrollY={setScrollY}
+  //           setActiveGallery={setActiveGallery}
+  //         />
+  //       );
+  //     }),
+  //   [scrolableFeeds, language, currentUser, navigation, isFocused]
+  // );
 
   // send report
   const sendReport = useSelector((state) => state.storeAlerts.sendReport);
@@ -171,29 +191,102 @@ export const ScrollGallery = ({ route, navigation }) => {
     }
   };
 
+  const [loadingList, setLoadingList] = useState(true);
+
+  useEffect(() => {
+    setLoadingList(false);
+  }, [scrolableFeeds]);
+
   return (
-    <View>
-      <AlertMessage
-        isVisible={sendReport}
-        onClose={() => dispatch(setSendReport(false))}
-        type="success"
-        text="The Report sent succesfully!"
-      />
-      <ScrollView
-        contentContainerStyle={{ paddingBottom: 50 }}
-        showsVerticalScrollIndicator={false}
-        onScroll={handleScroll}
-        scrollEventThrottle={16}
-        ref={scrollViewRef}
-        // bounces={Platform.OS === "ios" ? false : undefined}
-        // overScrollMode={Platform.OS === "ios" ? "never" : "always"}
+    <ImageBackground
+      style={{
+        flex: 1,
+        width: "100%",
+        height: "100%",
+      }}
+      source={theme ? require("../../assets/background.jpg") : null}
+    >
+      <View
+        style={{
+          flex: 1,
+          width: "100%",
+          height: "100%",
+          backgroundColor: theme ? "rgba(0,0,0,0.7)" : currentTheme.background,
+        }}
       >
-        {FeedItems}
-        {loadNewFeeds ? (
-          <ActivityIndicator size="small" color={currentTheme.pink} />
-        ) : null}
-      </ScrollView>
-    </View>
+        <AlertMessage
+          isVisible={sendReport}
+          onClose={() => dispatch(setSendReport(false))}
+          type="success"
+          text="The Report sent succesfully!"
+        />
+        <View
+          style={{
+            // width: "100%",
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+            paddingVertical: 8,
+            paddingHorizontal: 15,
+          }}
+        >
+          <View style={{ flex: 1, alignItems: "center" }}></View>
+          <View style={{ flex: 1, alignItems: "center" }}>
+            <Text
+              style={{
+                color: currentTheme.font,
+                fontWeight: "bold",
+                fontSize: 20,
+                letterSpacing: 0.5,
+              }}
+            >
+              {language.language.User.userPage.feeds}
+            </Text>
+          </View>
+          <Pressable
+            style={{ flex: 1, alignItems: "flex-end" }}
+            onPress={() => {
+              dispatch(setBlur(false));
+              setActiveGallery(null);
+            }}
+          >
+            <MaterialIcons
+              name="arrow-drop-down"
+              size={30}
+              color={currentTheme.pink}
+            />
+          </Pressable>
+        </View>
+        {loadingList ? (
+          <ActivityIndicator color="red" size={20} />
+        ) : (
+          <FlatList
+            onScroll={handleScroll}
+            data={scrolableFeeds}
+            renderItem={renderFeedItem}
+            keyExtractor={(item, index) => index.toString()}
+            contentContainerStyle={{
+              paddingBottom: 50,
+            }}
+            showsVerticalScrollIndicator={false}
+          />
+          // <ScrollView
+          //   contentContainerStyle={{
+          //     paddingBottom: 50,
+          //     minHeight: props?.feeds?.length > 1 ? "auto" : SCREEN_HEIGHT,
+          //   }}
+          //   showsVerticalScrollIndicator={false}
+          //   onScroll={handleScroll}
+          //   scrollEventThrottle={16}
+          //   ref={scrollViewRef}
+          //   // bounces={Platform.OS === "ios" ? false : undefined}
+          //   // overScrollMode={Platform.OS === "ios" ? "never" : "always"}
+          // >
+          //   {FeedItems}
+          // </ScrollView>
+        )}
+      </View>
+    </ImageBackground>
   );
 };
 
@@ -699,14 +792,14 @@ const FeedItem = (props) => {
         ? props.feed.fileHeight
         : props.feed.fileWidth;
 
-    let percented = originalWidth / SCREEN_WIDTH;
+    let percented = originalWidth / (SCREEN_WIDTH - 20);
 
     hght = originalHeight / percented;
   } else if (props?.feed?.images) {
     let originalHeight = props.feed.fileHeight;
     let originalWidth = props.feed.fileWidth;
 
-    let percented = originalWidth / SCREEN_WIDTH;
+    let percented = originalWidth / (SCREEN_WIDTH - 20);
     hght = originalHeight / percented;
   }
 
@@ -737,7 +830,6 @@ const FeedItem = (props) => {
         style={{
           // maxHeight: props.screenHeight,
           width: SCREEN_WIDTH,
-          backgroundColor: currentTheme.background,
           opacity: fadeAnim,
         }}
       >
@@ -762,7 +854,6 @@ const FeedItem = (props) => {
               paddingHorizontal: 15,
               paddingVertical: 10,
               zIndex: 120,
-              backgroundColor: currentTheme.background,
             }}
           >
             <TopSection
@@ -782,6 +873,7 @@ const FeedItem = (props) => {
               createdAt={props.feed.createdAt}
               DotsFunction={() => setFeedOption(!feedOption)}
               fileFormat={props.feed.fileFormat}
+              setActiveGallery={props.setActiveGallery}
             />
           </View>
         )}
@@ -798,7 +890,7 @@ const FeedItem = (props) => {
         {props?.feed?.fileFormat === "video" && (
           <View
             style={{
-              paddingHorizontal: 10,
+              paddingHorizontal: 15,
               paddingVertical: 10,
               position: "absolute",
               top: 0,
@@ -822,6 +914,7 @@ const FeedItem = (props) => {
               createdAt={props.feed.createdAt}
               DotsFunction={() => setFeedOption(!feedOption)}
               fileFormat={props.feed.fileFormat}
+              setActiveGallery={props.setActiveGallery}
             />
             {props?.feed?.post?.length > 0 && (
               <View style={{ marginTop: 10 }}>
@@ -838,10 +931,14 @@ const FeedItem = (props) => {
         <View
           name="main-section"
           style={{
+            width: SCREEN_WIDTH - 20,
             height: hght > 640 ? 640 : hght,
-            maxHeight: 640,
+            maxHeight: 642,
             overflow: "hidden",
-            justifyContent: "center",
+            // justifyContent: "center",
+            borderRadius: 20,
+            alignItems: "center",
+            marginLeft: 10,
           }}
         >
           {props?.feed?.images?.length > 1 && (
@@ -869,27 +966,29 @@ const FeedItem = (props) => {
             </View>
           )}
           {props?.feed?.fileFormat === "video" ? (
-            <>
+            <BlurView intensity={20} tint="light">
               {loadVideo && (
-                <View
+                <TouchableOpacity
+                  activeOpacity={0.9}
                   style={{
-                    width: "100%",
+                    width: SCREEN_WIDTH - 20,
                     height: "100%",
-                    backgroundColor: currentTheme.background2,
                     position: "absolute",
                     zIndex: 1,
                     alignItems: "center",
                     justifyContent: "center",
+                    overflow: "hidden",
+                    borderRadius: 20,
                   }}
                 >
-                  <Circle />
-                </View>
+                  <Circle borderRadius={20} />
+                </TouchableOpacity>
               )}
               <CacheableVideo
                 videoRef={videoRef}
-                onLongPress={() => props.navigation.goBack()}
-                delayLongPress={250}
                 style={{
+                  borderRadius: 20,
+                  width: SCREEN_WIDTH - 20,
                   height:
                     props.feed.fileHeight >= props.feed.fileWidth
                       ? hght
@@ -916,7 +1015,7 @@ const FeedItem = (props) => {
                   // }, 200)
                 }
               />
-            </>
+            </BlurView>
           ) : (
             <ScrollView
               horizontal
@@ -927,59 +1026,66 @@ const FeedItem = (props) => {
             >
               {props?.feed?.images.map((item, index) => {
                 return (
-                  <Pressable
+                  <TouchableOpacity
+                    activeOpacity={1}
                     key={index}
-                    onLongPress={() => props.navigation.goBack()}
                     delayLongPress={200}
                     style={{ height: "100%" }}
                   >
                     {loadImage && (
-                      <View
+                      <TouchableOpacity
+                        activeOpacity={0.9}
                         style={{
-                          height: hght > 642 ? 642 : hght + 2,
-                          width: SCREEN_WIDTH,
-                          backgroundColor: currentTheme.background2,
+                          height: hght > 642 ? 642 : hght,
+                          width: SCREEN_WIDTH - 20,
+                          // backgroundColor: currentTheme.background2,
                           position: "absolute",
                           zIndex: 1,
                           alignItems: "center",
                           justifyContent: "center",
+                          borderRadius: 20,
+                          overflow: "hidden",
                         }}
                       >
-                        <Circle />
-                      </View>
+                        <Circle borderRadius={20} />
+                      </TouchableOpacity>
                     )}
-                    <ZoomableImage
-                      style={{
-                        height: hght > 642 ? 642 : hght + 2,
-                        maxHeight: 642,
-                        width: SCREEN_WIDTH,
-                        zIndex: 100,
-                        resizeMode: hght > 642 ? "cover" : "contain",
-                      }}
-                      source={{
-                        uri: item.url,
-                      }}
-                      onLoad={
-                        () =>
-                          // setTimeout(() => {
-                          setLoadImage(false)
-                        // }, 200)
-                      }
-                    />
-                  </Pressable>
+                    <BlurView intensity={20} tint="light">
+                      <ZoomableImage
+                        style={{
+                          height: hght > 642 ? 642 : hght,
+                          maxHeight: 642,
+                          width: SCREEN_WIDTH - 20,
+                          zIndex: 100,
+                          resizeMode: hght > 642 ? "cover" : "contain",
+                          borderRadius: 20,
+                        }}
+                        source={{
+                          uri: item.url,
+                        }}
+                        onLoad={
+                          () =>
+                            // setTimeout(() => {
+                            setLoadImage(false)
+                          // }, 200)
+                        }
+                      />
+                    </BlurView>
+                  </TouchableOpacity>
                 );
               })}
             </ScrollView>
           )}
           {props?.feed?.fileFormat === "video" && (
-            <Pressable
+            <TouchableOpacity
+              activeOpacity={0.9}
               onPress={(event) => event.stopPropagation()}
               name="bottom-section"
               style={{
                 paddingHorizontal: 10,
                 paddingTop: 30,
                 paddingVertical: 10,
-                width: SCREEN_WIDTH,
+                width: SCREEN_WIDTH - 20,
                 justifyContent: "center",
                 position: "absolute",
                 bottom: 0,
@@ -997,7 +1103,7 @@ const FeedItem = (props) => {
                     flexDirection: "row",
                     alignItems: "center",
                     gap: 2,
-                    minWidth: "20%",
+                    minWidth: "25%",
                   }}
                 >
                   <Text style={[styles.duration, { flex: 1 }]}>
@@ -1054,7 +1160,7 @@ const FeedItem = (props) => {
                   UnSaveFeed={UnSaveFeed}
                 />
               </View>
-            </Pressable>
+            </TouchableOpacity>
           )}
         </View>
         {props?.feed?.fileFormat === "img" && (
@@ -1064,7 +1170,6 @@ const FeedItem = (props) => {
               paddingHorizontal: 10,
               paddingVertical: 10,
               width: SCREEN_WIDTH,
-              backgroundColor: currentTheme.background,
               justifyContent: "center",
             }}
           >
@@ -1255,8 +1360,6 @@ const ReviewItem = ({
     definedTime =
       currentPostTime?.slice(0, -1) + language?.language.Main.feedCard.y;
   }
-
-  console.log(item);
 
   return (
     <View style={styles.reviewItem}>

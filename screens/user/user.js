@@ -11,7 +11,6 @@ import axios from "axios";
 import * as Haptics from "expo-haptics";
 import { useEffect, useRef, useState } from "react";
 import {
-  ActivityIndicator,
   Alert,
   Animated,
   Dimensions,
@@ -25,6 +24,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { ActivityIndicator } from "react-native-paper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useDispatch, useSelector } from "react-redux";
 import { CacheableImage } from "../../components/cacheableImage";
@@ -839,6 +839,7 @@ export const User = ({ navigation, user, variant, setScrollY }) => {
           <ActivityIndicator
             color={currentTheme.pink}
             style={{ position: "absolute", top: 15 }}
+            size={20}
           />
         </Animated.View>
       </View>
