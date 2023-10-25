@@ -10,6 +10,10 @@ import {
   StyleSheet,
 } from "react-native";
 
+/**
+ * confirm dialog before finish actions
+ */
+
 const DeleteFeedPopup = ({
   isVisible,
   onClose,

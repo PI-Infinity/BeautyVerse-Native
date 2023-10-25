@@ -1,28 +1,35 @@
 {
   "expo": {
-    "name": "Beautyverse",
+    "name": "BeautyVerse",
     "slug": "beautyverse-app",
-    "version": "1.0.0",
+    "owner": "beautyverse",
+    "description": "Everything about Beauty and Care",
+    "version": "1.1.6",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
+    "scheme": "beautyverse",
     "splash": {
-      "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#050505"
     },
     "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.beautyverse.beautyverseapp"
+      "bundleIdentifier": "com.beautyverse.beautyverseapp",
+      "buildNumber": "1.2.7",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "This app uses the location to show where you are on the map"
+      }
     },
     "android": {
       "package": "com.beautyverse.beautyverseapp",
       "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
-      }
+        "backgroundColor": "#050505"
+      },
+      "permissions": ["ACCESS_COARSE_LOCATION", "ACCESS_FINE_LOCATION"]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -31,6 +38,7 @@
       "eas": {
         "projectId": "37189233-2858-485c-8b5d-e64f15e8f22d"
       }
-    }
+    },
+    "plugins": ["expo-localization"]
   }
 }

@@ -1,46 +1,62 @@
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  StyleSheet,
-  KeyboardAvoidingView,
-  Dimensions,
-  Alert,
-  Platform,
-} from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import axios from "axios";
 import React, { useState } from "react";
+import {
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { useDispatch, useSelector } from "react-redux";
 import SelectAutocomplete from "../../components/autocomplete";
 import Select from "../../components/select";
-import { useSelector, useDispatch } from "react-redux";
+import { Language } from "../../context/language";
+import { darkTheme, lightTheme } from "../../context/theme";
 import { ProceduresOptions } from "../../datas/registerDatas";
 import { setRerenderCurrentUser } from "../../redux/rerenders";
-import axios from "axios";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Language } from "../../context/language";
-import { lightTheme, darkTheme } from "../../context/theme";
+import { useNavigation } from "@react-navigation/native";
 
-const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
+/*
+  Business register screen for specialists and beauty salons, to complete registere process
+*/
 
-const Business = ({ navigation }) => {
+const Business = () => {
+  // defines navigation
+  const navigation = useNavigation();
+  // defined procedure list
   const proceduresOptions = ProceduresOptions();
+  // theme context
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
-
+  // language context
   const language = Language();
+  // redux toolkit dispatch
   const dispatch = useDispatch();
 
+  // procedures state
   const [procedures, setProcedures] = useState([]);
+  // working days state
   const [wd, setWd] = useState([]);
 
+  // current user state which defined in prev auth screens
   const currentUser = useSelector((state) => state.storeAuth.currentUser);
 
+  // backend url
+  const backendUrl = useSelector((state) => state.storeApp.backendUrl);
+
+  /**
+   * this function completes register process for specialists and salons
+   */
   const FillUp = async (e) => {
     try {
       if (procedures?.length > 0) {
-        // Signup user
+        // Signup user and add procedures and working infos
         const response = await axios.patch(
-          "https://beautyverse.herokuapp.com/api/v1/users/" + currentUser?._id,
+          backendUrl + "/api/v1/users/" + currentUser?._id,
           {
             procedures: procedures?.map((item, index) => {
               return { value: item.value };
@@ -50,17 +66,14 @@ const Business = ({ navigation }) => {
             }),
           }
         );
-        await AsyncStorage.setItem(
-          "Beautyverse:currentUser",
-          JSON.stringify(response.data.data.updatedUser)
-        );
-        dispatch(setRerenderCurrentUser());
-        // navigation.navigate(`/users/${currentUser?._id}`);
+        // // complete register, save user info in async storage
+        navigation.navigate("Accept");
       } else {
         Alert.alert(language?.language?.Auth?.auth?.pleaseInput);
       }
     } catch (err) {
-      Alert.alert(err.response.data.message);
+      console.log(err.response);
+      Alert.alert(err.response);
     }
   };
 
@@ -83,9 +96,9 @@ const Business = ({ navigation }) => {
             marginTop: 20,
           }}
         >
-          Select procedures:
+          {language?.language?.Auth?.auth?.selectProcedures}
         </Text>
-        {/* <View style={styles.itemContainer}>
+        <View style={styles.itemContainer}>
           <Text style={[styles.itemTitle, { color: currentTheme.font }]}>
             {" "}
             {language?.language?.Auth?.auth?.procedures}
@@ -97,7 +110,7 @@ const Business = ({ navigation }) => {
             setState={setProcedures}
             currentTheme={currentTheme}
           />
-        </View> */}
+        </View>
         <View style={styles.itemContainer}>
           <Text style={[styles.itemTitle, { color: currentTheme.font }]}>
             {" "}
@@ -109,10 +122,7 @@ const Business = ({ navigation }) => {
           </View>
         </View>
         <TouchableOpacity style={styles.button} onPress={FillUp}>
-          <Text style={styles.buttonText}>
-            {" "}
-            {language?.language?.Auth?.auth?.register}
-          </Text>
+          <Text style={styles.buttonText}>Next</Text>
         </TouchableOpacity>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -123,15 +133,12 @@ export default Business;
 
 const styles = StyleSheet.create({
   container: {
-    // height: SCREEN_HEIGHT,
     width: "100%",
-    // gap: 20,
     alignItems: "center",
     paddingBottom: 60,
   },
   title: {
     fontSize: 24,
-    color: "#fff",
     marginBottom: 20,
     fontWeight: "bold",
     textAlign: "center",
@@ -139,7 +146,6 @@ const styles = StyleSheet.create({
   itemContainer: { gap: 10, width: "100%", alignItems: "center" },
   itemTitle: {
     fontSize: 14,
-    color: "#fff",
     fontWeight: "bold",
   },
   button: {
@@ -151,8 +157,8 @@ const styles = StyleSheet.create({
     borderRadius: 50,
   },
   buttonText: {
-    color: "#fff",
     textAlign: "center",
     fontWeight: "bold",
+    color: "#fff",
   },
 });

@@ -1,19 +1,26 @@
-import { View, Text, StyleSheet, Dimensions, Pressable } from "react-native";
-import React from "react";
-import { Language } from "../../context/language";
-import { lightTheme, darkTheme } from "../../context/theme";
-import { useSelector, useDispatch } from "react-redux";
-import { workingDaysOptions } from "../../datas/registerDatas";
 import { Ionicons } from "@expo/vector-icons";
+import React from "react";
+import { Dimensions, Pressable, StyleSheet, Text, View } from "react-native";
+import { useSelector } from "react-redux";
+import { Language } from "../../context/language";
+import { darkTheme, lightTheme } from "../../context/theme";
+import { workingDaysOptions } from "../../datas/registerDatas";
 
-const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
+/**
+ * Working info component in user screen
+ */
+
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 export const WorkingInfo = ({ targetUser, navigation }) => {
+  // define some context
   const language = Language();
-  const currentUser = useSelector((state) => state.storeUser.currentUser);
-  const lang = useSelector((state) => state.storeApp.language);
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
+
+  // define some states
+  const currentUser = useSelector((state) => state.storeUser.currentUser);
+  const lang = useSelector((state) => state.storeApp.language);
 
   return (
     <View style={{ width: SCREEN_WIDTH, alignItems: "center", marginTop: 15 }}>
@@ -38,7 +45,7 @@ export const WorkingInfo = ({ targetUser, navigation }) => {
           } else if (lang === "ka") {
             labelLang = label?.ka;
           } else {
-            labelLang === label?.ru;
+            labelLang = label?.ru;
           }
 
           return (
@@ -51,7 +58,9 @@ export const WorkingInfo = ({ targetUser, navigation }) => {
                 style={[
                   styles.option,
                   {
-                    backgroundColor: currentTheme.background2,
+                    // backgroundColor: currentTheme.background2,
+                    borderWidth: 1,
+                    borderColor: currentTheme.line,
                     borderRadius: 50,
                   },
                 ]}
@@ -95,85 +104,45 @@ export const WorkingInfo = ({ targetUser, navigation }) => {
           );
         })
       ) : (
-        <>
-          {targetUser._id === currentUser._id ? (
-            <Pressable
-              onPress={() => navigation.navigate("Working info")}
-              style={{
-                width: "30%",
-                height: 35,
-                borderRadius: 10,
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Ionicons
-                name="add-circle"
-                color={currentTheme.disabled}
-                size={34}
-              />
-            </Pressable>
-          ) : (
-            <View>
-              <Text
-                style={{ color: currentTheme.disabled, letterSpacing: 0.2 }}
-              >
-                Not found
-              </Text>
-            </View>
-          )}
-        </>
-      )}
-      <Text
-        style={{
-          marginVertical: 15,
-          color: currentTheme.font,
-          fontWeight: "bold",
-          marginTop: 25,
-          letterSpacing: 0.3,
-        }}
-      >
-        Experience
-      </Text>
-      {targetUser?.experience?.length > 0 ? (
-        <View
-          style={{
-            width: "90%",
-            backgroundColor: currentTheme.background2,
-            padding: 10,
-            borderRadius: 10,
-          }}
-        >
-          <Text
-            style={{
-              color: currentTheme.font,
-              lineHeight: 22,
-              letterSpacing: 0.2,
-            }}
-          >
-            {targetUser?.experience}
+        <View>
+          <Text style={{ color: currentTheme.disabled, letterSpacing: 0.2 }}>
+            Not found
           </Text>
         </View>
-      ) : (
+      )}
+      {targetUser?.experience?.length > 0 && (
         <>
-          {targetUser._id === currentUser._id ? (
-            <Pressable
-              onPress={() => navigation.navigate("Working info")}
+          <Text
+            style={{
+              marginVertical: 15,
+              color: currentTheme.font,
+              fontWeight: "bold",
+              marginTop: 25,
+              letterSpacing: 0.3,
+            }}
+          >
+            Experience
+          </Text>
+
+          <View
+            style={{
+              width: "90%",
+              backgroundColor: currentTheme.background2,
+              padding: 10,
+              paddingHorizontal: 15,
+              borderRadius: 5,
+            }}
+          >
+            <Text
               style={{
-                width: "30%",
-                height: 35,
-                borderRadius: 10,
-                alignItems: "center",
-                justifyContent: "center",
+                color: currentTheme.font,
+                lineHeight: 22,
+                letterSpacing: 0.2,
               }}
             >
-              <Ionicons name="add-circle" color={currentTheme.pink} size={30} />
-            </Pressable>
-          ) : (
-            <View>
-              <Text style={{ color: currentTheme.disabled }}>Not found</Text>
-            </View>
-          )}
+              {targetUser?.experience}
+            </Text>
+          </View>
         </>
       )}
     </View>
@@ -182,7 +151,6 @@ export const WorkingInfo = ({ targetUser, navigation }) => {
 
 const styles = StyleSheet.create({
   option: {
-    backgroundColor: "rgba(255,255,255,0.05)",
     borderRadius: 5,
     padding: 10,
     marginTop: 5,

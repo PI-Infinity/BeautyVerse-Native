@@ -1,15 +1,11 @@
-import React, { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  ActivityIndicator,
-  StyleSheet,
-  Modal,
-  Pressable,
-} from "react-native";
-import { lightTheme, darkTheme } from "../context/theme";
-import { useSelector, useDispatch } from "react-redux";
+import React from "react";
+import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import { useSelector } from "react-redux";
+import { darkTheme, lightTheme } from "../context/theme";
+
+/**
+ * Video uploading percentage component
+ */
 
 export const UploaderPercentage = ({
   loading,

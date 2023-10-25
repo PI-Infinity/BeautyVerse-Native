@@ -1,28 +1,32 @@
-import React, { useState, useEffect } from "react";
+import { MaterialIcons } from "@expo/vector-icons";
+import axios from "axios";
+import { deleteObject, listAll, ref } from "firebase/storage";
+import React, { useEffect, useState } from "react";
 import {
   Modal,
+  Platform,
+  StyleSheet,
+  Text,
+  TextInput,
   TouchableOpacity,
   View,
-  Text,
-  StyleSheet,
-  TextInput,
-  Platform,
 } from "react-native";
-import axios from "axios";
-import { useSelector, useDispatch } from "react-redux";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import { useDispatch, useSelector } from "react-redux";
+import { BackDrop } from "../../components/backDropLoader";
+import { darkTheme, lightTheme } from "../../context/theme";
+import { storage } from "../../firebase";
 import {
   setCleanUp,
-  setRerenderUserFeed,
   setRerenderUserFeeds,
-  setRerenderCurrentUser,
   setRerenderUserList,
 } from "../../redux/rerenders";
-import { lightTheme, darkTheme } from "../../context/theme";
-import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
-import { MaterialIcons } from "@expo/vector-icons";
-import { ref, listAll, deleteObject } from "firebase/storage";
-import { storage } from "../../firebase";
-import { BackDrop } from "../../components/backDropLoader";
+import { setBlur } from "../../redux/app";
+import { BlurView } from "expo-blur";
+
+/**
+ * Edit post popup component
+ */
 
 const SmoothModal = ({
   visible,
@@ -35,51 +39,68 @@ const SmoothModal = ({
   setPost,
   navigation,
 }) => {
+  // define text state
   const [text, setText] = useState("");
+
+  // define redux dispatch
   const dispatch = useDispatch();
+
+  // define theme state
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
 
+  // define current user
   const currentUser = useSelector((state) => state.storeUser.currentUser);
 
   useEffect(() => {
-    setText(post);
+    setText(post?.original);
   }, []);
 
+  // on save function
   const handleSave = () => {
     onSave(text);
     setText("");
     UpdatePost();
+    dispatch(setBlur(false));
   };
 
+  // on cancel functions
   const handleCancel = () => {
     onClose();
     setText("");
+    dispatch(setBlur(false));
   };
 
+  // backend url
+  const backendUrl = useSelector((state) => state.storeApp.backendUrl);
+
+  // loading state
+  const [loading, setLoading] = useState(false);
+
+  // update post
   const UpdatePost = async () => {
     try {
-      setPost(text);
-      await axios.patch(
-        `https://beautyverse.herokuapp.com/api/v1/users/${currentUser?._id}/feeds/${itemId}`,
+      const response = await axios.patch(
+        backendUrl + `/api/v1/feeds/${itemId}`,
         {
           post: text,
         }
       );
-      handleCancel();
+      setPost(response.data.data.feed);
       dispatch(setCleanUp());
       dispatch(setRerenderUserFeeds());
+
+      handleCancel();
     } catch (error) {
       console.log(error.response.data.message);
     }
   };
 
-  const [loading, setLoading] = useState(false);
-
+  /**
+   * Delete post
+   */
   const Deleting = async () => {
     setLoading(true);
-
-    const values = [];
 
     // Create a reference to the file to delete
     let fileRef;
@@ -89,20 +110,21 @@ const SmoothModal = ({
       fileRef = ref(storage, `images/${currentUser?._id}/feeds/${itemName}`);
     }
 
-    // remove feed
-    const url = `https://beautyverse.herokuapp.com/api/v1/users/${currentUser?._id}/feeds/${itemId}`;
-    const response = await fetch(url, { method: "DELETE" })
-      .then((response) => response.json())
-      .then(async (data) => {
-        // Delete the file
+    // remove feed from DB
+    try {
+      const url = backendUrl + `/api/v1/feeds/${itemId}`;
+      const resp = await axios.delete(url);
+
+      if (resp) {
+        // Delete the file from cloud
         if (fileFormat === "video") {
           deleteObject(fileRef).then(() => {
-            console.log("delete video running..");
             handleCancel();
             setTimeout(() => {
               dispatch(setRerenderUserFeeds());
               dispatch(setRerenderUserList());
               setLoading(false);
+              dispatch(setBlur(false));
               navigation.navigate("UserProfile");
             }, 500);
           });
@@ -116,6 +138,7 @@ const SmoothModal = ({
                     dispatch(setRerenderUserFeeds());
                     dispatch(setRerenderUserList());
                     setLoading(false);
+                    dispatch(setBlur(false));
                     navigation.navigate("UserProfile");
                   }, 500);
                 });
@@ -125,15 +148,15 @@ const SmoothModal = ({
               console.log("error : " + error);
             });
         }
-      })
-      .catch((error) => {
-        console.log("Error fetching data:", error);
-      });
+      }
+    } catch (error) {
+      console.log(error.response.data.message);
+    }
   };
 
   return (
     <Modal
-      animationType="fade"
+      animationType="fadeIn"
       transparent={true}
       visible={visible}
       onRequestClose={handleCancel}
@@ -157,10 +180,17 @@ const SmoothModal = ({
           enableOnAndroid={true}
           enableAutomaticScroll={Platform.OS === "ios"}
         >
-          <View
+          <BlurView
+            tint={theme ? "extra-dark" : "light"}
+            intensity={60}
             style={[
               styles.modalContent,
-              { backgroundColor: currentTheme.background },
+              {
+                borderRadius: 20,
+                backgroundColor: theme
+                  ? "rgba(0, 1, 8, 0.8)"
+                  : currentTheme.background,
+              },
             ]}
           >
             <View
@@ -182,7 +212,7 @@ const SmoothModal = ({
                 Edit Post:
               </Text>
               <Text style={{ color: currentTheme.font, fontSize: 12 }}>
-                ({text.length})
+                ({text?.length ? text?.length : "0"})
               </Text>
             </View>
             <TextInput
@@ -206,7 +236,7 @@ const SmoothModal = ({
               <TouchableOpacity
                 style={[
                   styles.modalCancelButton,
-                  { backgroundColor: currentTheme.background2 },
+                  { backgroundColor: currentTheme.disabled },
                 ]}
                 onPress={handleCancel}
               >
@@ -264,7 +294,7 @@ const SmoothModal = ({
                 <MaterialIcons name="delete" size={24} color="red" />
               </TouchableOpacity>
             </View>
-          </View>
+          </BlurView>
         </KeyboardAwareScrollView>
       </TouchableOpacity>
     </Modal>
@@ -276,13 +306,14 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    // backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
   modalContent: {
-    backgroundColor: "#fff",
-    borderRadius: 10,
+    overflow: "hidden",
     padding: 20,
     width: "90%",
+    height: "100%",
+    justifyContent: "space-evenly",
   },
   modalTitle: {
     fontSize: 18,
@@ -292,10 +323,11 @@ const styles = StyleSheet.create({
   modalTextInput: {
     borderWidth: 1,
     borderColor: "#ccc",
-    borderRadius: 5,
+    borderRadius: 10,
     paddingHorizontal: 10,
     paddingVertical: 5,
     marginBottom: 10,
+    minHeight: 150,
   },
   modalButtonsContainer: {
     flexDirection: "row",

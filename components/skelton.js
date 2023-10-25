@@ -2,11 +2,18 @@ import React, { useEffect, useState } from "react";
 import { Animated, StyleSheet, View } from "react-native";
 import { lightTheme, darkTheme } from "../context/theme";
 import { useSelector } from "react-redux";
+import { BlurView } from "expo-blur";
+
+/**
+ * Skelton component
+ */
 
 const LoadingSkeleton = () => {
+  // define theme
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
 
+  // define animation
   const animatedValue = useState(new Animated.Value(0))[0];
 
   useEffect(() => {
@@ -37,9 +44,13 @@ const LoadingSkeleton = () => {
   };
 
   return (
-    <View style={{ gap: 8 }}>
+    <BlurView
+      tint={theme ? "dark" : "light"}
+      intensity={60}
+      style={{ flex: 1 }}
+    >
       <View
-        style={[styles.skeleton, { backgroundColor: currentTheme.background2 }]}
+        style={[styles.skeleton, { backgroundColor: currentTheme.background }]}
       >
         <View
           style={{
@@ -451,7 +462,7 @@ const LoadingSkeleton = () => {
           />
         </View>
       </View>
-    </View>
+    </BlurView>
   );
 };
 

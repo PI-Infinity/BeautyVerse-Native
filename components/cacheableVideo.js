@@ -1,8 +1,10 @@
-import React, { useState, useEffect, useRef } from "react";
 import { Video } from "expo-av";
-import * as FileSystem from "expo-file-system";
 import * as Crypto from "expo-crypto";
-import { View, Pressable, Text, StyleSheet } from "react-native";
+import * as FileSystem from "expo-file-system";
+import React, { useEffect, useState } from "react";
+import { Pressable, StyleSheet } from "react-native";
+
+// cacheing video
 
 export const CacheableVideo = (props) => {
   const [source, setSource] = useState(null);

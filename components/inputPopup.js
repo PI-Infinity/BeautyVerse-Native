@@ -1,33 +1,34 @@
 import React, { useState } from "react";
 import {
-  View,
+  KeyboardAvoidingView,
+  Modal,
+  StyleSheet,
   Text,
   TextInput,
-  Button,
-  StyleSheet,
-  Modal,
-  KeyboardAvoidingView,
   TouchableOpacity,
+  View,
 } from "react-native";
+import { useSelector } from "react-redux";
 import { Language } from "../context/language";
-import { lightTheme, darkTheme } from "../context/theme";
-import { useSelector, useDispatch } from "react-redux";
+import { darkTheme, lightTheme } from "../context/theme";
+
+/**
+ * authentication email Verification code input popup
+ */
 
 const InputPopup = (props) => {
   const language = Language();
-  const [email, setEmail] = useState("");
 
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
 
   const handleSend = () => {
-    // Your send logic here
     props.setFunction();
-    // props.setOpen(false);
   };
 
   const handleCancel = () => {
     props.setOpen(false);
+    props.setCode("");
   };
 
   return (
@@ -56,21 +57,10 @@ const InputPopup = (props) => {
                     },
                   ]}
                 >
-                  {language?.language?.Auth?.auth?.successRegister}
+                  {language?.language?.Auth?.auth?.verifyCodeSent}
                 </Text>
               )}
-              <Text
-                style={[
-                  styles.modalText,
-                  {
-                    fontSize: 16,
-                    color: currentTheme.font,
-                    letterSpacing: 0.3,
-                  },
-                ]}
-              >
-                Verification code has been sent to email!
-              </Text>
+
               <TextInput
                 style={[
                   styles.input,
@@ -79,6 +69,7 @@ const InputPopup = (props) => {
                     color: currentTheme.font,
                   },
                 ]}
+                autoFocus
                 onChangeText={(text) => props.setCode(text)}
                 value={props.code}
                 placeholder={language?.language?.Auth?.auth?.verificationCode}
@@ -106,7 +97,7 @@ const InputPopup = (props) => {
                   onPress={handleSend}
                 >
                   <Text style={styles.buttonText}>
-                    {language?.language?.Auth?.auth?.send}
+                    {language?.language?.Auth?.auth?.verify}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -136,6 +127,7 @@ const styles = StyleSheet.create({
     padding: 20,
     alignItems: "center",
     width: "80%",
+    marginTop: 100,
   },
   modalText: {
     marginBottom: 15,

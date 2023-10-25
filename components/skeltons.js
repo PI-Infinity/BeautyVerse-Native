@@ -2,8 +2,11 @@ import React, { useEffect, useState } from "react";
 import { Animated, StyleSheet, View } from "react-native";
 import { lightTheme, darkTheme } from "../context/theme";
 import { useSelector } from "react-redux";
+import { BlurView } from "expo-blur";
 
-export const Circle = () => {
+// define skelotns
+
+export const Circle = ({ borderRadius }) => {
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
 
@@ -37,28 +40,32 @@ export const Circle = () => {
   };
 
   return (
-    <View style={{ gap: 8 }}>
-      <Animated.View
+    <BlurView
+      tint="light"
+      intensity={20}
+      style={{
+        width: "100%",
+        height: "100%",
+        borderRadius: borderRadius ? borderRadius : 0,
+      }}
+    >
+      {/* <Animated.View
         style={[
           styles.circle,
           animatedStyle,
-          { backgroundColor: currentTheme.pink },
+          {
+            // backgroundColor: currentTheme.disabled,
+            borderRadius: borderRadius ? borderRadius : 0,
+          },
         ]}
-      />
-    </View>
+      /> */}
+    </BlurView>
   );
 };
 
 const styles = StyleSheet.create({
-  skeleton: {
-    // flexDirection: "column",
-    padding: 10,
-    paddingHorizontal: 15,
-    opacity: 0.3,
-  },
   circle: {
-    width: 100,
-    height: 100,
-    borderRadius: 100,
+    width: "100%",
+    height: "100%",
   },
 });

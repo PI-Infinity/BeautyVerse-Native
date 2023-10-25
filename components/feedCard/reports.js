@@ -14,6 +14,7 @@ import {
 import { lightTheme, darkTheme } from "../../context/theme";
 import { useSelector } from "react-redux";
 import axios from "axios";
+import { BlurView } from "expo-blur";
 
 export const Reports = ({
   isVisible,
@@ -42,52 +43,29 @@ export const Reports = ({
     }
   };
 
-  useEffect(() => {
-    if (isVisible) {
-      Animated.timing(animation, {
-        toValue: 1,
-        duration: 200,
-        easing: Easing.out(Easing.ease),
-        useNativeDriver: true,
-      }).start();
-    } else {
-      Animated.timing(animation, {
-        toValue: 0,
-        duration: 200,
-        easing: Easing.in(Easing.ease),
-        useNativeDriver: true,
-      }).start();
-    }
-  }, [isVisible]);
-
-  const translateY = animation.interpolate({
-    inputRange: [0, 1],
-    outputRange: [300, 0],
-  });
-
-  const opacity = animation.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0, 0.5],
-  });
-
   return (
-    <Modal transparent visible={isVisible} onRequestClose={onClose}>
-      <Animated.View style={[styles.background, { opacity }]}>
+    <Modal
+      transparent
+      visible={isVisible}
+      onRequestClose={onClose}
+      animationType="slide"
+    >
+      <Animated.View style={[styles.background, { opacity: 0 }]}>
         <TouchableOpacity style={styles.fill} onPress={onClose} />
       </Animated.View>
       <Animated.View
         style={[
           styles.container,
           {
-            transform: [{ translateY }],
-            backgroundColor: currentTheme.background2,
+            backgroundColor: currentTheme.background,
+            borderWidth: 1.5,
+            borderColor: currentTheme.pink,
+            borderBottomWidth: 0,
           },
         ]}
       >
         <ScrollView
           showsVerticalScrollIndicator={false}
-          bounces={Platform.OS === "ios" ? false : undefined}
-          overScrollMode={Platform.OS === "ios" ? "never" : "always"}
           contentContainerStyle={{ gap: 10, paddingBottom: 20 }}
           style={{ height: 500 }}
         >
@@ -107,11 +85,9 @@ export const Reports = ({
             style={[
               styles.item,
               {
-                borderColor: currentTheme.line,
-                backgroundColor:
-                  active?.number === 1
-                    ? currentTheme.disabled
-                    : "rgba(0,0,0,0)",
+                borderColor:
+                  active?.number === 1 ? currentTheme.pink : currentTheme.line,
+                borderWidth: 1,
               },
             ]}
           >
@@ -136,11 +112,9 @@ export const Reports = ({
             style={[
               styles.item,
               {
-                borderColor: currentTheme.line,
-                backgroundColor:
-                  active?.number === 2
-                    ? currentTheme.disabled
-                    : "rgba(0,0,0,0)",
+                borderColor:
+                  active?.number === 2 ? currentTheme.pink : currentTheme.line,
+                borderWidth: 1,
               },
             ]}
           >
@@ -164,11 +138,9 @@ export const Reports = ({
             style={[
               styles.item,
               {
-                borderColor: currentTheme.line,
-                backgroundColor:
-                  active?.number === 3
-                    ? currentTheme.disabled
-                    : "rgba(0,0,0,0)",
+                borderColor:
+                  active?.number === 3 ? currentTheme.pink : currentTheme.line,
+                borderWidth: 1,
               },
             ]}
           >
@@ -194,11 +166,9 @@ export const Reports = ({
             style={[
               styles.item,
               {
-                borderColor: currentTheme.line,
-                backgroundColor:
-                  active?.number === 4
-                    ? currentTheme.disabled
-                    : "rgba(0,0,0,0)",
+                borderColor:
+                  active?.number === 4 ? currentTheme.pink : currentTheme.line,
+                borderWidth: 1,
               },
             ]}
           >
@@ -223,11 +193,9 @@ export const Reports = ({
             style={[
               styles.item,
               {
-                borderColor: currentTheme.line,
-                backgroundColor:
-                  active?.number === 5
-                    ? currentTheme.disabled
-                    : "rgba(0,0,0,0)",
+                borderColor:
+                  active?.number === 5 ? currentTheme.pink : currentTheme.line,
+                borderWidth: 1,
               },
             ]}
           >
@@ -252,11 +220,9 @@ export const Reports = ({
             style={[
               styles.item,
               {
-                borderColor: currentTheme.line,
-                backgroundColor:
-                  active?.number === 6
-                    ? currentTheme.disabled
-                    : "rgba(0,0,0,0)",
+                borderColor:
+                  active?.number === 6 ? currentTheme.pink : currentTheme.line,
+                borderWidth: 1,
               },
             ]}
           >
@@ -281,11 +247,9 @@ export const Reports = ({
             style={[
               styles.item,
               {
-                borderColor: currentTheme.line,
-                backgroundColor:
-                  active?.number === 7
-                    ? currentTheme.disabled
-                    : "rgba(0,0,0,0)",
+                borderColor:
+                  active?.number === 7 ? currentTheme.pink : currentTheme.line,
+                borderWidth: 1,
               },
             ]}
           >
@@ -309,11 +273,9 @@ export const Reports = ({
             style={[
               styles.item,
               {
-                borderColor: currentTheme.line,
-                backgroundColor:
-                  active?.number === 8
-                    ? currentTheme.disabled
-                    : "rgba(0,0,0,0)",
+                borderColor:
+                  active?.number === 8 ? currentTheme.pink : currentTheme.line,
+                borderWidth: 1,
               },
             ]}
           >

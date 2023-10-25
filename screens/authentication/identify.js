@@ -1,150 +1,186 @@
+import { MaterialIcons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import axios from "axios";
 import { useState } from "react";
 import {
-  View,
+  KeyboardAvoidingView,
+  Platform,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
+  View,
   Alert,
-  Platform,
-  KeyboardAvoidingView,
-  TouchableWithoutFeedback,
-  Keyboard,
-  ScrollView,
-  Dimensions,
+  ImageBackground,
 } from "react-native";
-import { setRerenderCurrentUser } from "../../redux/rerenders";
-import { useSelector, useDispatch } from "react-redux";
-import { setCurrentUser } from "../../redux/auth";
+import { useDispatch, useSelector } from "react-redux";
+import AlertMessage from "../../components/alertMessage";
 import VerifyCodePopup from "../../components/inputPopup";
 import GoogleAutocomplete from "../../components/mapAutocomplete";
-import axios from "axios";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { MaterialIcons } from "@expo/vector-icons";
 import { Language } from "../../context/language";
-import { lightTheme, darkTheme } from "../../context/theme";
-import CountryCodePicker from "../../components/countryCodePicker";
-import AlertMessage from "../../components/alertMessage";
+import { darkTheme, lightTheme } from "../../context/theme";
+import { setCurrentUser } from "../../redux/auth";
+import { setRerenderCurrentUser } from "../../redux/rerenders";
+import { BackDrop } from "../../components/backDropLoader";
+import uuid from "react-native-uuid";
+import { TextInput } from "react-native-paper";
 
-const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
-
-const Identify = ({ navigation }) => {
+export const Identify = ({ navigation }) => {
+  // redux toolkit dispatch
   const dispatch = useDispatch();
+  //language context
   const language = Language();
-  const [name, setName] = useState("");
-  const type = useSelector((state) => state.storeAuth.userType);
-  const [email, setEmail] = useState("");
-  const [address, setAddress] = useState({});
 
+  // theme redux state and context
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
 
-  const [phone, setPhone] = useState("");
+  // identify states
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
+  // this state used to show/hide password when input
+  const [emailFocused, setEmailFocused] = useState(false);
+  // this state used to show/hide password when input
+  const [passwordFocused, setPasswordFocused] = useState(false);
+  const [confirmPasswordFocused, setConfirmPasswordFocused] = useState(false);
+
+  // type redux state already defined in register screen
+  const type = useSelector((state) => state.storeAuth.userType);
+
+  // show password states
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  // verify email
+
+  // verify email states
   const [verify, setVerify] = useState(false);
   const [code, setCode] = useState("");
+  const [codeInput, setCodeInput] = useState("");
+
+  const [loading, setLoading] = useState(false);
 
   // alert message
   const [alert, setAlert] = useState({ active: false, text: "", type: "" });
 
-  async function Verify() {
-    try {
-      const response = await axios.post(
-        "https://beautyverse.herokuapp.com/api/v1/verifyEmail",
-        {
-          email: email,
-          code: code,
-        }
-      );
+  /**
+   * Send verify email
+   */
 
-      const newUser = response.data.data.newUser;
-
-      if (newUser?.type === "user") {
-        await AsyncStorage.setItem(
-          "Beautyverse:currentUser",
-          JSON.stringify(newUser)
-        );
-        dispatch(setRerenderCurrentUser());
-      } else {
-        dispatch(setCurrentUser(newUser));
-        navigation.navigate("Business");
-        setVerify(false);
-        setEmail("");
-        setPassword("");
-        setConfirmPassword("");
-        setAddress("");
-        setPhone("");
-        setName("");
-      }
-    } catch (err) {
-      setAlert({
+  const SendEmail = async () => {
+    if (
+      email?.length < 1 ||
+      password?.length < 1 ||
+      confirmPassword?.length < 1
+    ) {
+      return setAlert({
         active: true,
-        text: err.response.data.message,
+        text: language?.language?.Auth?.auth?.successRegister,
         type: "error",
       });
-      console.log(err.response.data.message.toString());
     }
-  }
+    if (!email?.includes("@") || email?.length < 6 || email?.length > 40) {
+      return setAlert({
+        active: true,
+        text: language?.language?.Auth?.auth?.pleaseInput,
+        type: "error",
+      });
+    }
+
+    let reg = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w\w+)+$/;
+    if (reg.test(email) === false) {
+      return setAlert({
+        active: true,
+        text: language?.language?.Auth?.auth?.wrongEmail,
+        type: "error",
+      });
+    }
+
+    if (password?.length < 8 || password?.length > 40) {
+      return setAlert({
+        active: true,
+        text: language?.language?.Auth?.auth?.wrongPassword,
+        type: "error",
+      });
+    }
+    if (password !== confirmPassword) {
+      return setAlert({
+        active: true,
+        text: language?.language?.Auth?.auth?.differentPasswords,
+        type: "error",
+      });
+    }
+    try {
+      const response = await axios.post(
+        backendUrl + "/api/v1/sendVerifyEmail",
+        {
+          email: email,
+        }
+      );
+      if (response.data.user) {
+        dispatch(setCurrentUser(response.data.user));
+      }
+      setCode(response.data.code);
+      setVerify(true);
+    } catch (error) {
+      setAlert({
+        active: true,
+        text: error.response.data.message,
+        type: "error",
+      });
+    }
+  };
+
+  // backend url
+  const backendUrl = useSelector((state) => state.storeApp.backendUrl);
 
   /**
    * Registration
    */
 
   const Register = async (e) => {
-    if (phone?.includes("+")) {
+    setLoading(true);
+    // console.log(code);
+    // if hone includes country code continue, if not alert error
+    if (code === codeInput) {
       try {
         // Signup user
-        const response = await axios.post(
-          "https://beautyverse.herokuapp.com/api/v1/signup",
-          {
-            name: name,
-            type: type,
-            email: email,
-            phone: phone,
-            password: password,
-            confirmPassword: confirmPassword,
-            cover: "",
-            address: {
-              country: address.country,
-              region: address.region,
-              city: address.city,
-              district: address.district,
-              street: address.street,
-              number: address.number,
-              latitude: address.latitude,
-              longitude: address.longitude,
-            },
-            media: {
-              facebook: "",
-              instagram: "",
-              tiktok: "",
-              youtube: "",
-              telegram: false,
-              whatsapp: false,
-            },
-            experience: "",
-            orders: [],
-            subscription: { status: "inactive" },
-            notifications: [
-              {
-                senderId: "Beautyverse",
-                text: "Welcome Beautyverse",
-                // text: `${language?.language.Auth.auth.successRegister}`,
-                date: new Date(),
-                type: "welcome",
-                status: "unread",
-                feed: "",
-              },
-            ],
-          }
-        );
-        await setVerify(true);
+        const response = await axios.post(backendUrl + "/api/v1/signup", {
+          name: "",
+          type: "user",
+          email: email,
+          phone: { phone: uuid.v4(), callingCode: "", countryCode: "" },
+          password: password,
+          confirmPassword: confirmPassword,
+          cover: "",
+          address: [],
+          media: {
+            facebook: "",
+            instagram: "",
+            tiktok: "",
+            youtube: "",
+            telegram: false,
+            whatsapp: false,
+          },
+          experience: "",
+          subscription: { status: "active" },
+          notifications: [],
+          active: false,
+          registerStage: "identify",
+        });
+        // after send data to db, open email verify popup
+        setVerify(false);
+        dispatch(setCurrentUser(response.data.newUser));
+        setCode("");
+        setCodeInput("");
+        navigation.navigate("SuccessRegister");
+        setTimeout(() => {
+          setLoading(false);
+        }, 1000);
       } catch (err) {
+        setCode("");
+        setCodeInput("");
+        setLoading(false);
+        // error handlers
         console.log(err.response.data.message);
         setAlert({
           active: true,
@@ -153,30 +189,40 @@ const Identify = ({ navigation }) => {
         });
       }
     } else {
-      setAlert({
-        active: true,
-        text: "Invalid phone number! Please include your country code at the beginning. An example of a correct format is +995 555 555 555.",
-        type: "error",
-      });
+      Alert.alert(language?.language?.Auth?.auth?.wrongVerifyCode);
     }
   };
   return (
-    <>
+    <ImageBackground
+      style={{
+        flex: 1,
+        width: "100%",
+        height: "100%",
+      }}
+      source={theme ? require("../../assets/background.jpg") : null}
+    >
       <View style={{ position: "absolute" }}>
         {verify && (
           <VerifyCodePopup
-            code={code}
-            setCode={setCode}
-            setFunction={Verify}
+            code={codeInput}
+            setCode={setCodeInput}
+            setFunction={Register}
             open={verify}
             setOpen={setVerify}
             registerMessages={true}
           />
         )}
       </View>
-
+      <BackDrop loading={loading} setLoading={setLoading} />
       <KeyboardAvoidingView
-        style={styles.keyboardAvoidingContainer}
+        style={[
+          styles.keyboardAvoidingContainer,
+          {
+            backgroundColor: theme
+              ? "rgba(0,0,0,0.6)"
+              : currentTheme.background,
+          },
+        ]}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
         <View style={{ position: "absolute", zIndex: 19000 }}>
@@ -189,79 +235,42 @@ const Identify = ({ navigation }) => {
           />
         </View>
         <View style={styles.container}>
-          <View style={{ position: "absolute", zIndex: 20000 }}></View>
           <View style={styles.itemContainer}>
-            <Text style={[styles.itemTitle, { color: currentTheme.font }]}>
-              {language?.language?.Auth?.auth?.name}
-            </Text>
             <TextInput
-              placeholder="Your or Business name"
-              placeholderTextColor={currentTheme.disabled}
-              value={name}
-              style={[
-                styles.input,
-                {
-                  // backgroundColor: currentTheme.background2,
-                  color: currentTheme.font,
-                  borderColor: currentTheme.line,
-                },
-              ]}
-              onChangeText={(text) => setName(text)}
-            />
-          </View>
-          <View style={styles.itemContainer}>
-            <Text style={[styles.itemTitle, { color: currentTheme.font }]}>
-              {language?.language?.Auth?.auth?.address}
-            </Text>
-            <GoogleAutocomplete
-              address={address}
-              setAddress={setAddress}
-              currentTheme={currentTheme}
-            />
-          </View>
-          <View style={styles.itemContainer}>
-            <Text style={[styles.itemTitle, { color: currentTheme.font }]}>
-              {language?.language?.Auth?.auth?.email}
-            </Text>
-            <TextInput
-              placeholder="email@gmail.com"
-              placeholderTextColor={currentTheme.disabled}
-              value={email}
-              style={[
-                styles.input,
-                {
-                  // backgroundColor: currentTheme.background2,
-                  color: currentTheme.font,
-                  borderColor: currentTheme.line,
-                },
-              ]}
+              label="email@gmail.com"
               onChangeText={(text) => setEmail(text)}
-            />
-          </View>
-          {/* <CountryCodePicker /> */}
-          <View style={[styles.itemContainer, { marginTop: 0 }]}>
-            <Text style={[styles.itemTitle, { color: currentTheme.font }]}>
-              {language?.language?.Auth?.auth?.phone}
-            </Text>
-            <TextInput
-              placeholder="ex: +000000000"
-              placeholderTextColor={currentTheme.disabled}
-              value={phone}
+              value={email}
+              autoFocus
+              mode="outlined"
+              outlineStyle={{
+                borderRadius: 20,
+                padding: 0,
+                borderColor: emailFocused
+                  ? currentTheme.pink
+                  : currentTheme.line,
+                backgroundColor: "transparent",
+              }}
               style={[
                 styles.input,
                 {
-                  // backgroundColor: currentTheme.background2,
-                  color: currentTheme.font,
+                  color: currentTheme.pink,
+                  borderColor: currentTheme.line,
+                  backgroundColor: currentTheme.background,
+                  height: 55,
+                  padding: 0,
+                  borderRadius: 50,
                   borderColor: currentTheme.line,
                 },
               ]}
-              onChangeText={(text) => setPhone(text)}
+              textColor={currentTheme.font}
+              theme={{ colors: { primary: currentTheme.pink } }}
+              placeholderTextColor={currentTheme.pink}
+              onFocus={() => setEmailFocused(true)}
+              onBlur={() => setEmailFocused(false)}
             />
           </View>
+
           <View style={styles.itemContainer}>
-            <Text style={[styles.itemTitle, { color: currentTheme.font }]}>
-              {language?.language?.Auth?.auth?.password}
-            </Text>
             <View
               style={{
                 width: "100%",
@@ -271,26 +280,43 @@ const Identify = ({ navigation }) => {
               }}
             >
               <TextInput
-                placeholder="min 8 symbols"
-                placeholderTextColor={currentTheme.disabled}
-                value={password}
-                style={[
-                  [
-                    styles.input,
-                    {
-                      // backgroundColor: currentTheme.background2,
-                      borderColor: currentTheme.line,
-                      color: currentTheme.font,
-                    },
-                  ],
-                  { width: "100%" },
-                ]}
                 secureTextEntry={!showPassword}
+                label={language?.language?.Auth?.auth?.password}
                 onChangeText={(text) => setPassword(text)}
+                value={password}
+                mode="outlined"
+                theme={{
+                  colors: {
+                    primary: currentTheme.pink, // color of the underline and the outline
+                  },
+                }}
+                outlineStyle={{
+                  borderRadius: 20,
+                  padding: 0,
+                  backgroundColor: "transparent",
+                  height: 55,
+                  borderColor: passwordFocused
+                    ? currentTheme.pink
+                    : currentTheme.line,
+                }}
+                textColor={currentTheme.font}
+                style={[
+                  styles.input,
+                  {
+                    color: currentTheme.font,
+                    borderColor: currentTheme.pink,
+                    backgroundColor: currentTheme.background,
+                    height: 55,
+                    padding: 0,
+                  },
+                ]}
+                placeholderTextColor={currentTheme.pink}
+                onFocus={() => setPasswordFocused(true)}
+                onBlur={() => setPasswordFocused(false)}
               />
               <TouchableOpacity
                 onPress={() => setShowPassword(!showPassword)}
-                style={{ position: "relative", right: 30 }}
+                style={{ position: "relative", right: 40 }}
               >
                 <Text style={styles.showPasswordText}>
                   {showPassword ? (
@@ -312,9 +338,6 @@ const Identify = ({ navigation }) => {
           </View>
 
           <View style={styles.itemContainer}>
-            <Text style={[styles.itemTitle, { color: currentTheme.font }]}>
-              {language?.language?.Auth?.auth?.confirmPassword}
-            </Text>
             <View
               style={{
                 width: "100%",
@@ -324,26 +347,43 @@ const Identify = ({ navigation }) => {
               }}
             >
               <TextInput
-                placeholder={language?.language?.Auth?.auth?.confirmPassword}
-                placeholderTextColor={currentTheme.disabled}
-                value={confirmPassword}
-                style={[
-                  [
-                    styles.input,
-                    {
-                      // backgroundColor: currentTheme.background2,
-                      borderColor: currentTheme.line,
-                      color: currentTheme.font,
-                    },
-                  ],
-                  { width: "100%" },
-                ]}
                 secureTextEntry={!showConfirmPassword}
+                label={language?.language?.Auth?.auth?.confirmPassword}
                 onChangeText={(text) => setConfirmPassword(text)}
+                value={confirmPassword}
+                mode="outlined"
+                theme={{
+                  colors: {
+                    primary: currentTheme.pink, // color of the underline and the outline
+                  },
+                }}
+                outlineStyle={{
+                  borderRadius: 20,
+                  padding: 0,
+                  backgroundColor: "transparent",
+                  height: 55,
+                  borderColor: confirmPasswordFocused
+                    ? currentTheme.pink
+                    : currentTheme.line,
+                }}
+                textColor={currentTheme.font}
+                style={[
+                  styles.input,
+                  {
+                    color: currentTheme.font,
+                    borderColor: currentTheme.pink,
+                    backgroundColor: currentTheme.background,
+                    height: 55,
+                    padding: 0,
+                  },
+                ]}
+                placeholderTextColor={currentTheme.pink}
+                onFocus={() => setConfirmPasswordFocused(true)}
+                onBlur={() => setConfirmPasswordFocused(false)}
               />
               <TouchableOpacity
                 onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-                style={{ position: "relative", right: 30 }}
+                style={{ position: "relative", right: 40 }}
               >
                 <Text style={styles.showPasswordText}>
                   {showConfirmPassword ? (
@@ -363,16 +403,39 @@ const Identify = ({ navigation }) => {
               </TouchableOpacity>
             </View>
           </View>
-          <TouchableOpacity style={styles.button} onPress={Register}>
+          <TouchableOpacity style={styles.button} onPress={SendEmail}>
             <Text style={styles.buttonText}>
-              {type === "user"
-                ? language?.language?.Auth?.auth?.register
-                : language?.language?.Auth?.auth?.next}
+              {language?.language?.Auth?.auth?.register}
             </Text>
           </TouchableOpacity>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 5,
+              marginTop: 10,
+            }}
+          >
+            <Text style={[styles.loginQuestion, { color: currentTheme.font }]}>
+              {language?.language?.Auth?.auth?.havea}
+            </Text>
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => navigation.navigate("Login")}
+            >
+              <Text
+                style={[
+                  styles.login,
+                  { color: currentTheme.pink, fontWeight: "bold" },
+                ]}
+              >
+                {language?.language?.Auth?.auth?.login}
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </KeyboardAvoidingView>
-    </>
+    </ImageBackground>
   );
 };
 
@@ -392,26 +455,17 @@ const styles = StyleSheet.create({
     zIndex: 100,
     paddingBottom: 30,
   },
-  itemContainer: { gap: 15, width: "80%", alignItems: "center", zIndex: 100 },
+  itemContainer: { gap: 15, width: "75%", alignItems: "center", zIndex: 100 },
   itemTitle: {
     fontSize: 14,
     zIndex: 100,
   },
   input: {
     width: "100%",
-    height: 40,
-    padding: 10,
+    padding: 12.5,
     fontSize: 14,
-    // borderRadius: 50,
-    borderBottomWidth: 1,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 3, // negative value places shadow on top
-    },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
+    borderRadius: 50,
+    letterSpacing: 0.2,
   },
   showPasswordText: {
     fontSize: 12,
@@ -433,5 +487,3 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
 });
-
-export default Identify;

@@ -1,275 +1,689 @@
-import {
-  View,
-  Text,
-  ActivityIndicator,
-  Dimensions,
-  Image,
-  Pressable,
-} from "react-native";
-import React, { useState, useEffect } from "react";
+import { FontAwesome } from "@expo/vector-icons";
 import axios from "axios";
-import { useSelector, useDispatch } from "react-redux";
-import Collapsible from "react-native-collapsible";
-import { AudienceList } from "../../screens/user/audienceList";
-import { MaterialIcons, FontAwesome } from "@expo/vector-icons";
+import React, { useEffect, useState } from "react";
+import {
+  Dimensions,
+  FlatList,
+  Modal,
+  Pressable,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { ActivityIndicator } from "react-native-paper";
+import { useSelector } from "react-redux";
 import { CacheableImage } from "../../components/cacheableImage";
-import { lightTheme, darkTheme } from "../../context/theme";
+import { Circle } from "../../components/skeltons";
+import { Language } from "../../context/language";
+import { darkTheme, lightTheme } from "../../context/theme";
+import { useNavigation } from "@react-navigation/native";
+import { BlurView } from "expo-blur";
+
+/**
+ * audience component in user screen
+ */
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
-export const Audience = ({
-  targetUser,
-  navigation,
-  renderCheck,
-  setRenderCheck,
-}) => {
+export const Audience = ({ targetUser, navigation }) => {
+  // defines language
+  const language = Language();
+  // defines theme
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
 
+  // define loading state
   const [loading, setLoading] = React.useState(true);
 
+  // define followers and followings states
   const [followers, setFollowers] = useState([]);
+  const [followersLength, setFollowersLength] = useState(null);
   const [followings, setFollowings] = useState([]);
+  const [followingsLength, setFollowingsLength] = useState(null);
 
-  const [openFollowers, setOpenFollowers] = useState(true);
-  const [openFollowings, setOpenFollowings] = useState(true);
+  // define open/hide followers list states
+  const [openFollowers, setOpenFollowers] = useState(false);
+  const [openFollowings, setOpenFollowings] = useState(false);
 
+  // define addational render state
   const [render, setRender] = useState(false);
 
-  useEffect(() => {
-    async function GetAudience(userId) {
-      const response = await fetch(
-        `https://beautyverse.herokuapp.com/api/v1/users/${targetUser?._id}/followings`
-      )
-        .then((response) => response.json())
-        .then((data) => {
-          setFollowings({
-            length: data.result,
-            list: data.data.followings,
-          });
-        })
-        .catch((error) => {
-          console.log("Error fetching data:", error);
-        });
-    }
-    if (targetUser?._id) {
-      GetAudience();
-    }
-  }, [targetUser?._id, render]);
-  useEffect(() => {
-    async function GetAudience(userId) {
-      const response = await fetch(
-        `https://beautyverse.herokuapp.com/api/v1/users/${targetUser?._id}/followers`
-      )
-        .then((response) => response.json())
-        .then((data) => {
-          setFollowers({
-            length: data.result,
-            list: data.data.followers,
-          });
+  // backend url
+  const backendUrl = useSelector((state) => state.storeApp.backendUrl);
 
-          setTimeout(() => {
-            setLoading(false);
-          }, 400);
-        })
-        .catch((error) => {
-          console.log("Error fetching data:", error);
-        });
+  /**
+   * Get Audience
+   */
+
+  // get followings
+  const [followingsPage, setFollowingsPage] = useState(1);
+  useEffect(() => {
+    async function GetAudience() {
+      try {
+        const response = await axios.get(
+          backendUrl +
+            `/api/v1/users/${targetUser?._id}/followings?page=1&limit=10`
+        );
+        setFollowings(response.data.data.followings);
+        setFollowingsLength(response.data.result);
+      } catch (error) {
+        console.log(error.response.data.message);
+      }
     }
-    if (targetUser?._id) {
+    if (targetUser) {
       GetAudience();
     }
-  }, [targetUser?._id, render]);
+  }, [render]);
+
+  // get followers
+  const [followersPage, setFollowersPage] = useState(1);
+  useEffect(() => {
+    async function GetAudience() {
+      try {
+        const response = await axios.get(
+          backendUrl +
+            `/api/v1/users/${targetUser?._id}/followers?page=1&limit=10`
+        );
+        setFollowers(response.data.data.followers);
+        setFollowersLength(response.data.result);
+        setTimeout(() => {
+          setLoading(false);
+        }, 500);
+      } catch (error) {
+        console.log(error.response.data.message);
+      }
+    }
+
+    if (targetUser) {
+      GetAudience();
+    }
+  }, [render]);
 
   return (
-    <View>
-      {loading ? (
-        <View
+    <>
+      <View>
+        {loading ? (
+          <View
+            style={{
+              flex: 1,
+              height: "100%",
+              alignItems: "center",
+              justifyContent: "center",
+              height: SCREEN_HEIGHT / 1.5,
+            }}
+          >
+            <ActivityIndicator size="large" color={currentTheme.pink} />
+          </View>
+        ) : (
+          <View
+            style={{ flex: 1, alignItems: "center", gap: 5, marginTop: 30 }}
+          >
+            <TouchableOpacity
+              activeOpacity={0.8}
+              style={{
+                padding: 15,
+                paddingVertical: 10,
+                width: "90%",
+                borderRadius: 50,
+                borderWidth: 1,
+                borderColor: currentTheme.background2,
+                alignItems: "center",
+                flexDirection: "row",
+                gap: 20,
+              }}
+              onPress={() => setOpenFollowers(true)}
+            >
+              <Text
+                style={{
+                  color: currentTheme.font,
+                  letterSpacing: 0.3,
+                  fontWeight: "bold",
+                }}
+              >
+                {language?.language?.User?.userPage?.followers} (
+                {followersLength})
+              </Text>
+              <View style={{ flexDirection: "row", gap: -10 }}>
+                {followers?.map((item, index) => {
+                  if (index < 3) {
+                    return (
+                      <Pressable
+                        key={index}
+                        onPress={() =>
+                          navigation.navigate("UserVisit", {
+                            user: item,
+                          })
+                        }
+                      >
+                        {item?.cover?.length > 0 ? (
+                          <CoverImg item={item} currentTheme={currentTheme} />
+                        ) : (
+                          <View>
+                            {item.online && (
+                              <View
+                                style={{
+                                  width: 10,
+                                  height: 10,
+                                  backgroundColor: "#3bd16f",
+                                  borderRadius: 50,
+                                  position: "absolute",
+                                  zIndex: 100,
+                                  right: 5,
+                                  bottom: 1,
+                                  borderWidth: 1.5,
+                                  borderColor: currentTheme.background,
+                                }}
+                              ></View>
+                            )}
+                            <View
+                              style={{
+                                borderRadius: 100,
+                                width: 40,
+                                aspectRatio: 1,
+                                alignItems: "center",
+                                justifyContent: "center",
+                                backgroundColor: "rgba(255,255,255,0.1)",
+                              }}
+                            >
+                              <FontAwesome
+                                name="user"
+                                size={20}
+                                color="#e5e5e5"
+                              />
+                            </View>
+                          </View>
+                        )}
+                      </Pressable>
+                    );
+                  }
+                })}
+              </View>
+              {followersLength > 3 && (
+                <Text
+                  style={{
+                    color: currentTheme.font,
+                    letterSpacing: 0.2,
+                    position: "relative",
+                    right: 5,
+                  }}
+                >
+                  +{followersLength - 3}
+                </Text>
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              activeOpacity={0.8}
+              style={{
+                padding: 15,
+                paddingVertical: 10,
+                width: "90%",
+                borderRadius: 50,
+                borderWidth: 1,
+                borderColor: currentTheme.background2,
+                alignItems: "center",
+                flexDirection: "row",
+                gap: 15,
+              }}
+              onPress={() => setOpenFollowings(true)}
+            >
+              <Text
+                style={{
+                  color: currentTheme.font,
+                  letterSpacing: 0.3,
+                  fontWeight: "bold",
+                }}
+              >
+                {language?.language?.User?.userPage?.followings} (
+                {followingsLength})
+              </Text>
+              <View style={{ flexDirection: "row", gap: -10 }}>
+                {followings?.map((item, index) => {
+                  if (index < 3) {
+                    return (
+                      <Pressable
+                        key={index}
+                        onPress={() =>
+                          navigation.navigate("UserVisit", {
+                            user: item,
+                          })
+                        }
+                      >
+                        {item?.cover?.length > 0 ? (
+                          <CoverImg item={item} currentTheme={currentTheme} />
+                        ) : (
+                          <View>
+                            {item.online && (
+                              <View
+                                style={{
+                                  width: 10,
+                                  height: 10,
+                                  backgroundColor: "#3bd16f",
+                                  borderRadius: 50,
+                                  position: "absolute",
+                                  zIndex: 100,
+                                  right: 5,
+                                  bottom: 1,
+                                  borderWidth: 1.5,
+                                  borderColor: currentTheme.background,
+                                }}
+                              ></View>
+                            )}
+                            <View
+                              style={{
+                                borderRadius: 100,
+                                width: 40,
+                                aspectRatio: 1,
+                                alignItems: "center",
+                                justifyContent: "center",
+                                backgroundColor: "rgba(255,255,255,0.1)",
+                              }}
+                            >
+                              <FontAwesome
+                                name="user"
+                                size={20}
+                                color="#e5e5e5"
+                              />
+                            </View>
+                          </View>
+                        )}
+                      </Pressable>
+                    );
+                  }
+                })}
+              </View>
+              {followingsLength > 3 && (
+                <Text
+                  style={{
+                    color: currentTheme.font,
+                    letterSpacing: 0.2,
+                    position: "relative",
+                    right: 5,
+                  }}
+                >
+                  +{followingsLength - 3}
+                </Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        )}
+      </View>
+      {openFollowings && (
+        <ListModal
+          list={followings}
+          openModal={openFollowings}
+          setOpenModal={setOpenFollowings}
+          currentTheme={currentTheme}
+          page={followingsPage}
+          setPage={setFollowingsPage}
+          setList={setFollowings}
+          from="followings"
+          targetUser={targetUser}
+          theme={theme}
+        />
+      )}
+      {openFollowers && (
+        <ListModal
+          list={followers}
+          openModal={openFollowers}
+          setOpenModal={setOpenFollowers}
+          currentTheme={currentTheme}
+          page={followersPage}
+          setPage={setFollowersPage}
+          setList={setFollowers}
+          from="followers"
+          targetUser={targetUser}
+          theme={theme}
+        />
+      )}
+    </>
+  );
+};
+
+/**
+ * List modal
+ */
+
+const ListModal = ({
+  list,
+  setList,
+  openModal,
+  setOpenModal,
+  currentTheme,
+  from,
+  targetUser,
+  page,
+  setPage,
+  theme,
+}) => {
+  const [loading, setLoading] = useState(true);
+
+  const language = Language();
+
+  // backend url
+  const backendUrl = useSelector((state) => state.storeApp.backendUrl);
+
+  const AddAudience = async () => {
+    try {
+      const response = await axios.get(
+        backendUrl +
+          `/api/v1/users/${targetUser?._id}/${from}?page=${page + 1}&limit=5`
+      );
+      setPage(page + 1);
+      setList((prev) => {
+        const newUsers =
+          from === "followings"
+            ? response.data.data.followings
+            : response.data.data.followers;
+        return newUsers.reduce((acc, curr) => {
+          const existingUserIndex = acc.findIndex(
+            (user) => user._id === curr._id
+          );
+          if (existingUserIndex !== -1) {
+            // User already exists, merge the data
+            const mergedUser = { ...acc[existingUserIndex], ...curr };
+            return [
+              ...acc.slice(0, existingUserIndex),
+              mergedUser,
+              ...acc.slice(existingUserIndex + 1),
+            ];
+          } else {
+            // User doesn't exist, add to the end of the array
+            return [...acc, curr];
+          }
+        }, prev);
+      });
+    } catch (error) {
+      console.log(error.response.data.message);
+    }
+  };
+
+  useEffect(() => {
+    setTimeout(() => {
+      setLoading(false);
+    }, 500);
+  }, []);
+  return (
+    <Modal
+      transparent
+      animationType="slide"
+      isVisible={openModal}
+      onRequestClose={() => setOpenModal(false)}
+    >
+      <BlurView
+        style={{
+          flex: 1,
+          backgroundColor: theme
+            ? "rgba(0, 1, 8, 0.8)"
+            : currentTheme.background,
+        }}
+        tint="dark"
+        intensity={60}
+      >
+        <Pressable
+          onPress={() => setOpenModal(false)}
           style={{
             flex: 1,
+            width: "100%",
+            zIndex: 100,
             height: "100%",
             alignItems: "center",
-            justifyContent: "center",
-            height: SCREEN_HEIGHT / 1.5,
+            paddingTop: 70,
           }}
         >
-          <ActivityIndicator size="large" color={currentTheme.pink} />
-        </View>
-      ) : (
-        <View style={{ flex: 1, alignItems: "center", gap: 5, marginTop: 30 }}>
-          <Pressable
-            style={{
-              padding: 10,
-              paddingVertical: 10,
-              width: "80%",
-              borderRadius: 5,
-              borderWidth: 1,
-              borderColor: currentTheme.background2,
-              alignItems: "center",
-              flexDirection: "row",
-              gap: 20,
-            }}
-            onPress={() => setOpenFollowers(!openFollowers)}
+          <View
+            style={[
+              styles.modalContent,
+              {
+                borderWidth: 1.5,
+                borderBottomWidth: 0,
+                borderColor: currentTheme.pink,
+                borderTopLeftRadius: 20,
+                borderTopRightRadius: 20,
+                flex: 1,
+                overflow: "hidden",
+                paddingTop: 30,
+              },
+            ]}
           >
-            <Text style={{ color: currentTheme.font, letterSpacing: 0.2 }}>
-              Followers ({followers?.length})
+            <Text
+              style={{
+                marginVertical: 12.5,
+                color: currentTheme.font,
+                letterSpacing: 0.5,
+                fontSize: 16,
+                fontWeight: "bold",
+              }}
+            >
+              {from === "followers"
+                ? language?.language?.User?.userPage?.followers
+                : language?.language?.User?.userPage?.followings}
             </Text>
-            <View style={{ flexDirection: "row", gap: -10 }}>
-              {followers.list?.map((item, index) => {
-                if (index < 3) {
-                  return (
-                    <Pressable
-                      key={index}
-                      onPress={() =>
-                        navigation.navigate("UserVisit", {
-                          user: item,
-                        })
-                      }
-                    >
-                      {item?.cover?.length > 0 ? (
-                        <CacheableImage
-                          source={{ uri: item?.cover }}
-                          style={{
-                            width: 40,
-                            height: 40,
-                            borderRadius: 50,
-                            borderWidth: 1,
-                            borderColor: "#ddd",
-                          }}
-                          manipulationOptions={[
-                            { resize: { width: 40, height: 40 } },
-                            { rotate: 90 },
-                          ]}
-                        />
-                      ) : (
-                        <View
-                          style={{
-                            borderRadius: 100,
-                            width: 40,
-                            aspectRatio: 1,
-                            alignItems: "center",
-                            justifyContent: "center",
-                            backgroundColor: "rgba(255,255,255,0.1)",
-                          }}
-                        >
-                          <FontAwesome name="user" size={20} color="#e5e5e5" />
-                        </View>
-                      )}
-                    </Pressable>
-                  );
-                }
-              })}
+            <View
+              style={{ marginBottom: 8, width: "100%", alignItems: "center" }}
+            >
+              {/* <Search /> */}
             </View>
-            <Text style={{ color: currentTheme.font, letterSpacing: 0.2 }}>
-              {"+" + followers.length > 3 && followers.length - 3}
-            </Text>
-            <MaterialIcons
-              name={openFollowers ? "arrow-drop-up" : "arrow-drop-down"}
-              color={currentTheme.pink}
-              size={18}
-              style={{ marginLeft: "auto" }}
-            />
-          </Pressable>
-          <Collapsible collapsed={openFollowers}>
-            <AudienceList
-              list={followers?.list}
-              targetUser={targetUser}
-              navigation={navigation}
-              type="followers"
-              render={render}
-              setRender={setRender}
-              renderCheck={renderCheck}
-              setRenderCheck={setRenderCheck}
-            />
-          </Collapsible>
-          <Pressable
-            style={{
-              padding: 10,
-              paddingVertical: 10,
-              width: "80%",
-              borderRadius: 5,
-              borderWidth: 1,
-              borderColor: currentTheme.background2,
-              alignItems: "center",
-              flexDirection: "row",
-              gap: 20,
-            }}
-            onPress={() => setOpenFollowings(!openFollowings)}
-          >
-            <Text style={{ color: currentTheme.font, letterSpacing: 0.2 }}>
-              Followings ({followings?.length})
-            </Text>
-            <View style={{ flexDirection: "row", gap: -10 }}>
-              {followings.list?.map((item, index) => {
-                if (index < 4) {
-                  return (
-                    <Pressable
-                      key={index}
-                      onPress={() =>
-                        navigation.navigate("UserVisit", {
-                          user: item,
-                        })
-                      }
-                    >
-                      {item.cover?.length > 0 ? (
-                        <CacheableImage
-                          key={index}
-                          source={{ uri: item?.cover }}
-                          style={{
-                            width: 40,
-                            height: 40,
-                            borderRadius: 50,
-                            borderWidth: 1,
-                            borderColor: "#ddd",
-                          }}
-                          manipulationOptions={[
-                            { resize: { width: 40, height: 40 } },
-                            { rotate: 90 },
-                          ]}
-                        />
-                      ) : (
-                        <View
-                          style={{
-                            borderRadius: 100,
-                            width: 40,
-                            aspectRatio: 1,
-                            alignItems: "center",
-                            justifyContent: "center",
-                            backgroundColor: "rgba(255,255,255,0.1)",
-                          }}
-                        >
-                          <FontAwesome name="user" size={20} color="#e5e5e5" />
-                        </View>
-                      )}
-                    </Pressable>
-                  );
-                }
-              })}
+            <View>
+              {loading ? (
+                <View
+                  style={{
+                    flex: 1,
+                    height: 500,
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <ActivityIndicator size="small" color={currentTheme.pink} />
+                </View>
+              ) : (
+                <FlatList
+                  data={list}
+                  renderItem={({ item, index }) => {
+                    return (
+                      <RenderItem
+                        key={index}
+                        item={item}
+                        currentTheme={currentTheme}
+                        setOpenModal={setOpenModal}
+                      />
+                    );
+                  }}
+                  keyExtractor={(item, index) => index.toString()}
+                  onEndReached={AddAudience} // Add this function to handle the bottom reach
+                  onEndReachedThreshold={0.5} // This indicates at what point (as a threshold) should the onEndReached be triggered, 0.5 is halfway.
+                />
+              )}
             </View>
-            <Text style={{ color: currentTheme.font, letterSpacing: 0.2 }}>
-              {"+" + followings.length > 3 && followings.length - 3}
-            </Text>
-            <MaterialIcons
-              name={openFollowings ? "arrow-drop-up" : "arrow-drop-down"}
-              color={currentTheme.pink}
-              size={18}
-              style={{ marginLeft: "auto" }}
+          </View>
+        </Pressable>
+      </BlurView>
+    </Modal>
+  );
+};
+
+const styles = StyleSheet.create({
+  modalContent: {
+    padding: 10,
+    justifyContent: "center",
+    borderRadius: 4,
+    alignItems: "center",
+    width: "100%",
+  },
+  searchInput: {
+    height: 40,
+    borderColor: "gray",
+    borderWidth: 1,
+    marginBottom: 10,
+    paddingLeft: 5,
+  },
+  userItem: {
+    width: SCREEN_WIDTH - 50,
+    marginBottom: 4,
+    flexDirection: "row",
+    gap: 15,
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: 4,
+    borderRadius: 50,
+  },
+});
+
+const RenderItem = ({ item, currentTheme, setOpenModal }) => {
+  const navigation = useNavigation();
+  return (
+    <TouchableOpacity
+      activeOpacity={0.8}
+      style={[
+        styles.userItem,
+        { borderWidth: 1, borderColor: currentTheme.line },
+      ]}
+      onPress={() => {
+        navigation.navigate("UserVisit", { user: item });
+        setOpenModal(false);
+      }}
+    >
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+        {item.cover?.length > 10 ? (
+          <View>
+            {item?.online && (
+              <View
+                style={{
+                  width: 10,
+                  height: 10,
+                  backgroundColor: "#3bd16f",
+                  borderRadius: 50,
+                  position: "absolute",
+                  zIndex: 100,
+                  right: 1,
+                  bottom: 1,
+                  borderWidth: 1.5,
+                  borderColor: currentTheme.background,
+                }}
+              ></View>
+            )}
+            <CacheableImage
+              style={{
+                height: 40,
+                width: 40,
+                borderRadius: 50,
+                resizeMode: "cover",
+              }}
+              source={{ uri: item.cover }}
+              manipulationOptions={[
+                { resize: { width: 40, height: 40 } },
+                { rotate: 90 },
+              ]}
             />
-          </Pressable>
-          <Collapsible collapsed={openFollowings}>
-            <AudienceList
-              list={followings?.list}
-              targetUser={targetUser}
-              navigation={navigation}
-              type="followings"
-              render={render}
-              setRender={setRender}
-              renderCheck={renderCheck}
-              setRenderCheck={setRenderCheck}
-            />
-          </Collapsible>
-        </View>
+          </View>
+        ) : (
+          <View>
+            {item?.online && (
+              <View
+                style={{
+                  width: 10,
+                  height: 10,
+                  backgroundColor: "#3bd16f",
+                  borderRadius: 50,
+                  position: "absolute",
+                  zIndex: 100,
+                  right: 1,
+                  bottom: 1,
+                  borderWidth: 1.5,
+                  borderColor: currentTheme.background,
+                }}
+              ></View>
+            )}
+            <View
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: 50,
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: currentTheme.line,
+              }}
+            >
+              <FontAwesome name="user" size={24} color="#e5e5e5" />
+            </View>
+          </View>
+        )}
+        <Text
+          style={{
+            fontSize: 14,
+            fontWeight: "bold",
+            color: "#e5e5e5",
+            letterSpacing: 0.2,
+          }}
+        >
+          {item?.name}
+        </Text>
+      </View>
+      <Text
+        style={{
+          fontSize: 14,
+          color: currentTheme.disabled,
+          letterSpacing: 0.2,
+          paddingRight: 8,
+        }}
+      >
+        {item.type === "beautycenter"
+          ? "Beauty Salon"
+          : item.type === "specialist"
+          ? "Specialist"
+          : item?.type}
+      </Text>
+    </TouchableOpacity>
+  );
+};
+
+const CoverImg = ({ item, currentTheme }) => {
+  const [loadingImg, setLoadingImg] = useState(true);
+  return (
+    <View>
+      {item.online && (
+        <View
+          style={{
+            width: 10,
+            height: 10,
+            backgroundColor: "#3bd16f",
+            borderRadius: 50,
+            position: "absolute",
+            zIndex: 100,
+            right: 1,
+            bottom: 1,
+            borderWidth: 1.5,
+            borderColor: currentTheme.background,
+          }}
+        ></View>
       )}
+      <View
+        style={{
+          width: 40,
+          height: 40,
+          borderRadius: 50,
+          overflow: "hidden",
+        }}
+      >
+        {loadingImg && <Circle />}
+
+        <CacheableImage
+          source={{ uri: item.cover }}
+          style={{
+            width: 40,
+            height: 40,
+            borderRadius: 50,
+            borderWidth: 1.5,
+            borderColor: currentTheme.pink,
+          }}
+          manipulationOptions={[
+            { resize: { width: 40, height: 40 } },
+            { rotate: 90 },
+          ]}
+          onLoad={() => setLoadingImg(false)}
+        />
+      </View>
     </View>
   );
 };

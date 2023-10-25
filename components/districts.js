@@ -1,19 +1,23 @@
-import React, { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  FlatList,
-  TextInput,
-  Dimensions,
-} from "react-native";
-import { useSelector, useDispatch } from "react-redux";
-import { setDistrict } from "../redux/filter"; // Import the setCity action from your actions file
 import { MaterialIcons } from "@expo/vector-icons";
+import React, { useState } from "react";
+import {
+  Dimensions,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { useDispatch, useSelector } from "react-redux";
+import { setDistrict } from "../redux/filter"; // Import the setCity action from your actions file
 import { setCleanUp } from "../redux/rerenders";
 
-const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
+/**
+ * Defines districts in filter
+ */
+
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 export const Districts = ({ districts, currentTheme }) => {
   const dispatch = useDispatch();
@@ -23,7 +27,7 @@ export const Districts = ({ districts, currentTheme }) => {
 
   const handleSearch = (text) => {
     setSearch(text);
-    setFilteredDistricts(
+    setDistrict(
       districts.filter((district) =>
         district.toLowerCase().includes(text.toLowerCase())
       )
@@ -32,21 +36,35 @@ export const Districts = ({ districts, currentTheme }) => {
 
   const handlePress = (district) => {
     dispatch(setDistrict(district));
-    dispatch(setCleanUp());
   };
 
   const RenderedItem = ({ item }) => (
-    <TouchableOpacity
-      style={styles.cityItem}
+    <Pressable
+      style={[
+        styles.cityItem,
+        {
+          padding: 5,
+          borderRadius: 50,
+          backgroundColor: currentTheme.background2,
+        },
+      ]}
       activeOpacity={0.5}
       onPress={() => handlePress(selectedDistrict === item ? "" : item)}
     >
-      <Text style={{ color: currentTheme.font }}>{item}</Text>
+      <Text
+        style={{
+          color: currentTheme.pink,
+          // fontWeight: "bold",
+          letterSpacing: 0.3,
+        }}
+      >
+        {item}
+      </Text>
 
       {selectedDistrict === item && (
         <MaterialIcons name="done" color="#F866b1" size={16} />
       )}
-    </TouchableOpacity>
+    </Pressable>
   );
 
   return (

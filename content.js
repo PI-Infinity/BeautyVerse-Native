@@ -1,28 +1,47 @@
-import { useState, useEffect, useRef } from "react";
-import { View, Text, StyleSheet, Dimensions, StatusBar } from "react-native";
-import { useSelector, useDispatch } from "react-redux";
-import { BottomTabNavigator } from "./navigations/bottomTab";
-import { AuthStack } from "./navigations/authStack";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
-import { setLoading, setMachineId, setTheme, setLanguage } from "./redux/app";
-import { setCurrentUser } from "./redux/user";
+import Constants from "expo-constants";
+import * as Location from "expo-location";
+import { useEffect, useRef, useState } from "react";
+import { ImageBackground, StatusBar, View } from "react-native";
+import { useDispatch, useSelector } from "react-redux";
 import { io } from "socket.io-client";
-import { lightTheme, darkTheme } from "./context/theme";
-import SafeAreaViewRN from "react-native";
-import { SafeAreaView as SafeAreaViewContext } from "react-native-safe-area-context";
-import { setRerenderNotifcations } from "./redux/rerenders";
+import LoadingScreen from "./components/loadingScreen";
+import PushNotifications from "./components/pushNotifications";
+import { SocketContext } from "./context/socketContext";
+import { darkTheme, lightTheme } from "./context/theme";
+import { AuthStack } from "./navigations/authStack";
+import { BottomTabNavigator } from "./navigations/bottomTab";
+import {
+  setLanguage,
+  setLoading,
+  setLocation,
+  setMachineId,
+  setTheme,
+} from "./redux/app";
+import { setCity } from "./redux/filter";
+import {
+  setRerenderCurrentUser,
+  setRerenderNotifcations,
+} from "./redux/rerenders";
+import { setCurrentUser } from "./redux/user";
+import { Update } from "./screens/update";
 
-const SafeAreaView =
-  Platform.OS === "android" ? SafeAreaViewContext : SafeAreaViewRN.SafeAreaView;
-
-const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
+/* main content component of app */
 
 const Content = () => {
+  // define dispatch to send data to redux toolkit
   const dispatch = useDispatch();
+
+  // defines backend url
+  const backendUrl = useSelector((state) => state.storeApp.backendUrl);
 
   // Get the loading state from the app's Redux store
   const loading = useSelector((state) => state.storeApp.loading);
+
+  // theme state, from redux
+  const theme = useSelector((state) => state.storeApp.theme);
+  const currentTheme = theme ? darkTheme : lightTheme;
 
   // Get the current user from the user's Redux store
   const currentUser = useSelector((state) => state.storeUser.currentUser);
@@ -31,6 +50,46 @@ const Content = () => {
   const rerenderCurrentUser = useSelector(
     (state) => state.storeRerenders.rerenderCurrentUser
   );
+
+  /**
+   * define app version
+   *  */
+  const currentVersion = Constants.manifest.version;
+  const [appVersion, setAppVersion] = useState(null);
+
+  function versionToNumber(version) {
+    return version?.split(".").map(Number);
+  }
+
+  const current = versionToNumber(currentVersion);
+  const app = versionToNumber(appVersion);
+
+  useEffect(() => {
+    const DefineAppVersion = async () => {
+      try {
+        const response = await axios.get(backendUrl + "/version");
+        setAppVersion(response.data);
+      } catch (error) {
+        console.log(error.response);
+      }
+    };
+    DefineAppVersion();
+  }, []);
+  /**
+   * Define machine unique id
+   */
+  useEffect(() => {
+    const GetMachineId = async () => {
+      try {
+        const response = await axios.get(backendUrl + "/machineId");
+        // dave id in redux
+        dispatch(setMachineId(response.data));
+      } catch (error) {
+        console.log(error.response.data.message);
+      }
+    };
+    GetMachineId();
+  }, []);
 
   // get theme and language values saved in async storage, if nulls give them true asa dark them, en for english language
   useEffect(() => {
@@ -62,23 +121,61 @@ const Content = () => {
   const socket = useRef();
 
   useEffect(() => {
-    // Connect to the server's socket.io instance
-    socket.current = io("https://beautyverse.herokuapp.com");
+    socket.current = io(backendUrl);
   }, []);
 
-  // avoid first loading, connect only when user is defined
-  const socketRef = useRef(true);
-
   useEffect(() => {
-    if (socketRef.current) {
-      // Skip the first render to prevent the addUser event from being emitted before the current user is set
-      socketRef.current = false;
+    if (currentUser) {
+      // Emit the addUser event to the server's socket.io instances
+      socket.current.emit("addUser", currentUser?._id);
+    }
+  }, [currentUser]);
+
+  /**
+   * define user location
+   */
+
+  async function getLocationAsync(usr) {
+    // Ask for permission to access location
+    let { status } = await Location.requestForegroundPermissionsAsync();
+
+    // if location not granted, app location equals user main (1) address
+    if (status !== "granted") {
+      dispatch(
+        setLocation({
+          country: usr.address[0].country,
+          city: usr.address[0]?.city.replace("'", ""),
+          latitude: usr.address[0].latitude,
+          longitude: usr.address[0].longitude,
+        })
+      );
+      dispatch(setCity(usr.address[0].city?.replace("'", "")));
       return;
     }
-    // Emit the addUser event to the server's socket.io instance
-    socket.current.emit("addUser", currentUser?._id);
-    socket.current.on("getUsers", (users) => {});
-  }, [currentUser]);
+
+    // if location is granted get user geo location
+    try {
+      // setLocationLoader(true);
+      let location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Lowest,
+      });
+      let reverseGeocode = await Location.reverseGeocodeAsync(location.coords);
+      if (reverseGeocode[0].city) {
+        dispatch(
+          setLocation({
+            country: reverseGeocode[0].country,
+            city: reverseGeocode[0].city?.replace("'", ""),
+            latitude: location.coords.latitude,
+            longitude: location.coords.longitude,
+          })
+        );
+        dispatch(setCity(reverseGeocode[0].city?.replace("'", "")));
+      }
+    } catch (error) {
+      console.log(error);
+      // Handle the error here - you could set an error state, show an error message, etc.
+    }
+  }
 
   /**
    * Import current user from AsyncStorage
@@ -96,68 +193,62 @@ const Content = () => {
         dispatch(setCurrentUser(null));
         setTimeout(() => {
           dispatch(setLoading(false));
-        }, 1000);
+        }, 500);
       }
     };
-    GetUser();
-  }, [rerenderCurrentUser]);
+    if (appVersion) {
+      GetUser();
+    }
+  }, [rerenderCurrentUser, appVersion]);
 
-  // after getting current user from localstorage, get user data from data base
+  // after getting current user from localstorage, get user data from mongoDB
+  const cleanUp = useSelector((state) => state.storeRerenders.cleanUp);
   useEffect(() => {
     const GetUser = async () => {
       try {
         // Make a request to get the current user's data from the server
         const response = await axios.get(
-          `https://beautyverse.herokuapp.com/api/v1/users/${currUser?._id}`
+          `${backendUrl}/api/v1/users/${currUser?._id}`
         );
         // Set the current user in the user's Redux store
-        await dispatch(setCurrentUser(response.data.data.user));
-        dispatch(setRerenderNotifcations());
-        setTimeout(() => {
+        if (response.data.data.user) {
+          await getLocationAsync(response.data.data.user);
+          dispatch(setCurrentUser(response.data.data.user));
           dispatch(setLoading(false));
-        }, 1000);
+        } else {
+          AsyncStorage.removeItem("Beautyverse:currentUser");
+          dispatch(setLoading(false));
+        }
+
+        dispatch(setRerenderNotifcations());
       } catch (error) {
         console.log(error.response.data.message);
-        setTimeout(() => {
-          dispatch(setLoading(false));
-        }, 1000);
+        dispatch(setLoading(false));
       }
     };
     if (currUser) {
       // Call GetUser if currUser is not null
       GetUser();
     }
-  }, [currUser]);
+  }, [currUser, cleanUp]);
+
+  // rerender current user after some real time updates (notifications in this moment)
+  useEffect(() => {
+    socket.current.on("userUpdate", () => {
+      dispatch(setRerenderCurrentUser());
+    });
+  }, []);
 
   /**
-   * Define machine unique id
+   * define user's last visit date
    */
 
   useEffect(() => {
-    const GetMachineId = async () => {
-      const response = await axios.get(
-        "https://beautyverse.herokuapp.com/machineId"
-      );
-      // dave id in redux
-      dispatch(setMachineId(response.data));
-    };
-    try {
-      GetMachineId();
-    } catch (error) {
-      console.log(error.response.data.message);
-    }
-  }, []);
-
-  // define user's last visit date
-  useEffect(() => {
     const GetLastVisit = async () => {
       try {
-        await axios.patch(
-          `https://beautyverse.herokuapp.com/api/v1/users/${currentUser?._id}`,
-          {
-            lastLoginAt: new Date(),
-          }
-        );
+        await axios.patch(`${backendUrl}/api/v1/users/${currentUser?._id}`, {
+          lastLoginAt: new Date(),
+        });
       } catch (error) {
         console.log(error.response.data.message);
       }
@@ -165,57 +256,47 @@ const Content = () => {
     if (currentUser) {
       GetLastVisit();
     }
-  }, []);
-
-  // theme state, from redux
-  const theme = useSelector((state) => state.storeApp.theme);
-  const currentTheme = theme ? darkTheme : lightTheme;
+  }, [currentUser]);
 
   return (
-    <>
-      {loading && (
-        // Show a loading screen if the app is still loading
-        <View
-          style={[styles.loading, { backgroundColor: currentTheme.background }]}
-        >
-          <Text style={[styles.loadingText, { color: "#F866B1" }]}>Beauty</Text>
-          <Text style={[styles.loadingText, { color: currentTheme.font }]}>
-            verse
-          </Text>
-        </View>
-      )}
-      <StatusBar
-        barStyle={!theme ? "dark-content" : "light-content"}
-        backgroundColor={currentTheme.background}
-      />
-      {
-        // Render the navigation stack based on whether there is a current user or not
-        currentUser ? <BottomTabNavigator socket={socket} /> : <AuthStack />
-      }
-    </>
+    <ImageBackground
+      style={{
+        flex: 1,
+        width: "100%",
+        height: "100%",
+      }}
+      source={theme ? require("./assets/background.jpg") : null}
+    >
+      <View
+        style={{
+          flex: 1,
+          width: "100%",
+          height: "100%",
+          backgroundColor: !theme ? currentTheme.background : "rgba(0,0,0,0.5)",
+        }}
+      >
+        {current > app && (
+          <Update currentVersion={currentVersion} appVersion={appVersion} />
+        )}
+        {currentUser && <PushNotifications currentUser={currentUser} />}
+        {loading && <LoadingScreen currentTheme={currentTheme} theme={theme} />}
+        <StatusBar
+          barStyle={!theme ? "dark-content" : "light-content"}
+          backgroundColor={currentTheme.background}
+        />
+        {
+          // Render the navigation stack based on whether there is a current user or not
+          currentUser ? (
+            <SocketContext.Provider value={socket.current}>
+              <BottomTabNavigator />
+            </SocketContext.Provider>
+          ) : (
+            <AuthStack />
+          )
+        }
+      </View>
+    </ImageBackground>
   );
 };
 
 export default Content;
-
-const styles = StyleSheet.create({
-  // Define styles for the app
-
-  loading: {
-    flex: 1,
-    position: "absolute",
-    backgroundColor: "#111",
-    zIndex: 100000,
-    width: SCREEN_WIDTH,
-    height: SCREEN_HEIGHT,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  loadingText: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: "#fff",
-    letterSpacing: 1,
-  },
-});

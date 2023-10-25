@@ -1,21 +1,27 @@
-import React, { useState, useEffect } from "react";
-import {
-  View,
-  TextInput,
-  Text,
-  TouchableOpacity,
-  ScrollView,
-  StyleSheet,
-  Alert,
-} from "react-native";
-import { ListItem, Icon, Button } from "react-native-elements";
-import Collapsible from "react-native-collapsible";
 import { Entypo, MaterialIcons } from "@expo/vector-icons";
+import React, { useEffect, useState } from "react";
+import {
+  Alert,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import Collapsible from "react-native-collapsible";
+import { Language } from "../context/language";
+
+/**
+ * autocomplete filter shows search variants when searching
+ */
 
 const Autocomplete = ({ data, setState, currentTheme }) => {
   const [search, setSearch] = useState("");
   const [filteredData, setFilteredData] = useState([]);
   const [selectedItems, setSelectedItems] = useState([]);
+
+  // defines language
+  const language = Language();
 
   useEffect(() => {
     setFilteredData(data);
@@ -86,9 +92,9 @@ const Autocomplete = ({ data, setState, currentTheme }) => {
           }}
           value={search}
           onChangeText={handleSearch}
-          placeholder="Search procedure..."
+          placeholder={language?.language?.Auth?.auth?.searchProcedure}
           placeholderTextColor={currentTheme.disabled}
-          onFocus={() => setHide(false)}
+          // onFocus={() => setHide(false)}
         />
         {search?.length > 0 && (
           <MaterialIcons
@@ -101,20 +107,20 @@ const Autocomplete = ({ data, setState, currentTheme }) => {
         )}
       </View>
 
+      <TouchableOpacity
+        onPress={() => setHide(!hide)}
+        style={{
+          flex: 1,
+          alignItems: "center",
+          backgroundColor: "rgba(255,255,255,0.03)",
+          borderRadius: 50,
+          padding: 2.5,
+        }}
+      >
+        <Entypo name="select-arrows" color="#F866B1" size={20} />
+      </TouchableOpacity>
       <Collapsible collapsed={hide}>
         <View style={styles.scrollView}>
-          <TouchableOpacity
-            onPress={() => setHide(true)}
-            style={{
-              flex: 1,
-              alignItems: "center",
-              backgroundColor: "rgba(255,255,255,0.03)",
-              borderRadius: 50,
-              padding: 2.5,
-            }}
-          >
-            <Entypo name="select-arrows" color="#F866B1" size={20} />
-          </TouchableOpacity>
           {filteredData
             .filter((item) => {
               const hyphenCount = (item.value.match(/-/g) || []).length;
@@ -157,14 +163,6 @@ const styles = StyleSheet.create({
     height: 35,
     borderRadius: 50,
     marginTop: 15,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 3, // negative value places shadow on top
-    },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
   },
   scrollView: {
     // height: 300,

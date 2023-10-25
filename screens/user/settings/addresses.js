@@ -1,220 +1,362 @@
 import {
+  Entypo,
+  FontAwesome5,
+  Ionicons,
+  MaterialCommunityIcons,
+  MaterialIcons,
+} from "@expo/vector-icons";
+import axios from "axios";
+import React, { useEffect, useRef, useState } from "react";
+import {
+  Alert,
+  Dimensions,
+  Platform,
+  Pressable,
+  ScrollView,
   StyleSheet,
   Text,
-  View,
-  Dimensions,
-  Pressable,
   TouchableOpacity,
   Vibration,
-  Alert,
-  ScrollView,
-  Platform,
+  View,
 } from "react-native";
-import React, { useState, useRef } from "react";
-import axios from "axios";
-import { useSelector, useDispatch } from "react-redux";
-import { setRerenderCurrentUser } from "../../../redux/rerenders";
-import { MaterialIcons, FontAwesome5, Entypo } from "@expo/vector-icons";
-import GoogleAutocomplete from "../../../components/mapAutocomplete";
+import { ActivityIndicator } from "react-native-paper";
+import { useDispatch, useSelector } from "react-redux";
 import { BackDrop } from "../../../components/backDropLoader";
-import { Language } from "../../../context/language";
 import Map from "../../../components/map";
-import { lightTheme, darkTheme } from "../../../context/theme";
+import GoogleAutocomplete from "../../../components/mapAutocomplete";
+import { Language } from "../../../context/language";
+import { darkTheme, lightTheme } from "../../../context/theme";
+import { setRerenderCurrentUser } from "../../../redux/rerenders";
+import DeleteDialog from "../../../components/confirmDialog";
+import { setCurrentUser } from "../../../redux/user";
+import { useNavigation } from "@react-navigation/native";
+
+/**
+ * Addreses screen in settings
+ */
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
 export const Addresses = () => {
+  // define language
   const language = Language();
+  //define redux dispatch
   const dispatch = useDispatch();
-  const [add, setAdd] = useState(false);
-  const currentUser = useSelector((state) => state.storeUser.currentUser);
 
+  // defines navigation
+  const navigation = useNavigation();
+
+  // define current user
+  const [addresses, setAddresses] = useState([]);
+
+  // define current user
+  const currentUser = useSelector((state) => state.storeUser.currentUser);
+  useEffect(() => {
+    setAddresses(currentUser.address);
+  }, [currentUser]);
+
+  // define theme
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
 
-  const mapViewRef = useRef();
+  // define adding open/hide state
+  const [add, setAdd] = useState(false);
 
-  const [loading, setLoading] = useState(false);
+  // define loadings
+  const [loading, setLoading] = useState(true);
+  const [loader, setLoader] = useState(true);
 
-  const [address, setAddress] = useState("");
+  // delete dialog state
+  const [deleteDialog, setDeleteDialog] = useState(false);
+  // new state to store the ID of the item to be deleted
+  const [toDelete, setToDelete] = useState(null);
 
-  // address
-
-  const Add = async () => {
-    setLoading(true);
-    try {
-      if (address.country?.length > 0) {
-        const response = await axios.post(
-          `https://beautyverse.herokuapp.com/api/v1/users/${currentUser?._id}/address`,
-          {
-            country: address.country,
-            region: address.region,
-            city: address.city,
-            district: address.district,
-            street: address.street,
-            number: address.streetNumber,
-            latitude: address.latitude,
-            longitude: address.longitude,
-          }
-        );
-        const data = await response.data;
-        dispatch(setRerenderCurrentUser());
-        setAddress("");
-        setLoading(false);
-      } else {
-        setAddress("");
-        setLoading(false);
-      }
-    } catch (error) {
-      Alert.alert(error.response.data.message);
-      setLoading(false);
-    }
-  };
+  // backend url
+  const backendUrl = useSelector((state) => state.storeApp.backendUrl);
 
   // delete address
-  const DeleteAddress = async (itemId) => {
+
+  const DeleteAddress = async () => {
     setLoading(true);
-    Vibration.vibrate();
-    if (currentUser?.address?.length > 1) {
-      try {
-        const url = `https://beautyverse.herokuapp.com/api/v1/users/${currentUser._id}/address/${itemId}`;
-        const response = await axios.delete(url);
-        dispatch(setRerenderCurrentUser());
-        setLoading(false);
-      } catch (error) {
-        console.log("Error fetching data:", error);
-        setLoading(false);
-      }
-    } else {
-      Alert.alert("Cant delete last address");
+
+    try {
+      const updatedAddresses = addresses.filter(
+        (address) => address._id !== toDelete
+      );
+
+      setAddresses(updatedAddresses);
+
+      const url = `${backendUrl}/api/v1/users/${currentUser._id}/address/${toDelete}`;
+      await axios.delete(url);
+
+      dispatch(setRerenderCurrentUser());
+      setLoading(false);
+      setToDelete(null); // clear the toDelete state after deleting
+    } catch (error) {
+      console.log("Error fetching data:", error);
       setLoading(false);
     }
   };
+  useEffect(() => {
+    setTimeout(() => {
+      setLoading(false);
+      setLoader(false);
+    }, 300);
+  }, [addresses]);
 
   return (
-    <View style={{ width: SCREEN_WIDTH, alignItems: "center", marginTop: 20 }}>
-      {!add ? (
-        <Pressable onPress={() => setAdd(true)} style={{ padding: 10 }}>
-          <MaterialIcons name="add" color="#F866B1" size={24} />
-        </Pressable>
-      ) : (
-        <Pressable onPress={() => setAdd(false)} style={{ padding: 10 }}>
-          <FontAwesome5 name="times" color="red" size={24} />
-        </Pressable>
-      )}
-
-      {add && (
-        <GoogleAutocomplete
-          setAddress={setAddress}
-          currentTheme={currentTheme}
-        />
-      )}
-      {loading && <BackDrop loading={loading} setLoading={setLoading} />}
-      {address?.city?.length > 0 && (
-        <Pressable
+    <>
+      {loader ? (
+        <View
           style={{
+            height: 500,
+            width: "100%",
             alignItems: "center",
-            padding: 10,
-            borderRadius: 5,
-            backgroundColor: "#F866B1",
-            marginTop: 5,
-            marginBottom: 10,
+            justifyContent: "center",
           }}
-          onPress={() => Add()}
         >
-          <Text style={{ color: currentTheme.font }}>
-            {language?.language?.Main.filter.save}
-          </Text>
-        </Pressable>
-      )}
-      <ScrollView
-        bounces={Platform.OS === "ios" ? false : undefined}
-        overScrollMode={Platform.OS === "ios" ? "never" : "always"}
-        style={{ height: add ? SCREEN_HEIGHT / 1.7 : SCREEN_HEIGHT / 1.4 }}
-      >
-        {currentUser?.address.map((item, index) => {
-          return (
-            <TouchableOpacity
-              activeOpacity={0.5}
-              key={index}
-              onLongPress={
-                currentUser?.address.length > 1
-                  ? () => {
-                      DeleteAddress(item._id);
-                    }
-                  : undefined
-              }
-              delayLongPress={300}
-              style={{
-                padding: 10,
-                backgroundColor: currentTheme.background2,
-                borderRadius: 10,
-                margin: 2.5,
-                flexDirection: "row",
-                width: SCREEN_WIDTH - 30,
-                gap: 30,
-                shadowColor: "#000",
-                shadowOffset: {
-                  width: 0,
-                  height: 3, // negative value places shadow on top
-                },
-                shadowOpacity: 0.05,
-                shadowRadius: 2,
-                elevation: 1,
+          <ActivityIndicator size="large" color={currentTheme.pink} />
+        </View>
+      ) : (
+        <View
+          style={{
+            width: SCREEN_WIDTH,
+            alignItems: "center",
+            marginTop: 20,
+          }}
+        >
+          {loading && <BackDrop loading={loading} setLoading={setLoading} />}
+          {deleteDialog && (
+            <DeleteDialog
+              isVisible={deleteDialog}
+              onClose={() => {
+                setDeleteDialog(false);
+                setToDelete(null); // clear the toDelete state when the dialog is closed
               }}
-            >
-              <View style={{ gap: 10 }}>
-                <View style={{ flexDirection: "row", alignItems: "center" }}>
-                  <Entypo
-                    name="location-pin"
-                    color={currentTheme.pink}
-                    size={20}
-                  />
-                  <Text
-                    style={{ color: currentTheme.font, fontWeight: "bold" }}
-                  >
-                    {language?.language?.User.userPage.address}: N
-                    <Text style={{ fontWeight: "normal" }}>{index + 1}</Text>
-                  </Text>
-                </View>
-                <Map
-                  latitude={item?.latitude}
-                  longitude={item.longitude}
-                  height={100}
-                />
-              </View>
-              <View style={{ gap: 5 }}>
-                <Text style={{ color: currentTheme.font, fontWeight: "bold" }}>
-                  {language?.language?.Main.filter.country}:{"  "}
-                  <Text style={{ fontWeight: "normal" }}>{item?.country}</Text>
-                </Text>
-                <Text style={{ color: currentTheme.font, fontWeight: "bold" }}>
-                  {language?.language?.Main.filter.region}:{"  "}
-                  <Text style={{ fontWeight: "normal" }}>{item?.region}</Text>
-                </Text>
-                <Text style={{ color: currentTheme.font, fontWeight: "bold" }}>
-                  {language?.language?.Main.filter.city}:{"  "}
-                  <Text style={{ fontWeight: "normal" }}>{item?.city}</Text>
-                </Text>
-                <Text style={{ color: currentTheme.font, fontWeight: "bold" }}>
-                  {language?.language?.Main.filter.district}:{"  "}
-                  <Text style={{ fontWeight: "normal" }}>{item?.district}</Text>
-                </Text>
-                <Text style={{ color: currentTheme.font, fontWeight: "bold" }}>
-                  {language?.language?.Main.filter.street}:{"  "}
-                  <Text style={{ fontWeight: "normal" }}>{item?.street}</Text>
-                </Text>
-                <Text style={{ color: currentTheme.font, fontWeight: "bold" }}>
-                  {language?.language?.Main.filter.streetNumber}:{"  "}
-                  <Text style={{ fontWeight: "normal" }}>{item?.number}</Text>
-                </Text>
-              </View>
-            </TouchableOpacity>
-          );
-        })}
-      </ScrollView>
-    </View>
+              onDelete={DeleteAddress}
+              title="Are you sure to delete this address?"
+              delet="Delete"
+              cancel="Cancel"
+            />
+          )}
+          <ScrollView
+            bounces={Platform.OS === "ios" ? false : undefined}
+            overScrollMode={Platform.OS === "ios" ? "never" : "always"}
+          >
+            {addresses.map((item, index) => {
+              return (
+                <TouchableOpacity
+                  onPress={() =>
+                    navigation.navigate("EditAddress", { address: item })
+                  }
+                  activeOpacity={0.5}
+                  key={index}
+                  style={{
+                    padding: 10,
+                    // backgroundColor: currentTheme.background2,
+                    borderRadius: 10,
+                    borderWidth: 1,
+                    borderColor: currentTheme.line,
+                    margin: 2.5,
+                    paddingRight: 8,
+                    flexDirection: "row",
+                    width: SCREEN_WIDTH - 30,
+                    gap: 30,
+                    shadowColor: "#000",
+                    shadowOffset: {
+                      width: 0,
+                      height: 3, // negative value places shadow on top
+                    },
+                    shadowOpacity: 0.05,
+                    shadowRadius: 2,
+                    elevation: 1,
+                    overflow: "hidden",
+                  }}
+                >
+                  {addresses?.length > 1 && (
+                    <Ionicons
+                      style={{
+                        position: "absolute",
+                        right: 8,
+                        top: 8,
+                        zIndex: 999,
+                      }}
+                      name="remove"
+                      size={20}
+                      color="red"
+                      onPress={() => {
+                        Vibration.vibrate();
+                        setToDelete(item._id); // set the ID of the item to delete
+                        setDeleteDialog(true);
+                      }}
+                    />
+                  )}
+                  <View style={{ gap: 10 }}>
+                    <View
+                      style={{ flexDirection: "row", alignItems: "flex-end" }}
+                    >
+                      <Entypo
+                        name="location-pin"
+                        color={currentTheme.pink}
+                        size={20}
+                      />
+                      <Text
+                        style={{
+                          color: currentTheme.font,
+                          fontWeight: "bold",
+                          letterSpacing: 0.3,
+                        }}
+                      >
+                        {index === 0
+                          ? "Main address"
+                          : language?.language?.User.userPage.address}
+                        {index !== 0 && (
+                          <Text
+                            style={{
+                              fontWeight: "bold",
+                              letterSpacing: 0.3,
+                            }}
+                          >
+                            : N
+                          </Text>
+                        )}
+                        {index !== 0 && (
+                          <Text
+                            style={{
+                              fontWeight: "bold",
+                              letterSpacing: 0.3,
+                            }}
+                          >
+                            {index + 1}
+                          </Text>
+                        )}
+                      </Text>
+                    </View>
+                    <View style={{ height: 100, width: SCREEN_WIDTH / 3 }}>
+                      <Map
+                        latitude={item?.latitude}
+                        longitude={item.longitude}
+                        height={100}
+                      />
+                    </View>
+                  </View>
+                  <View style={{ gap: 5, marginTop: 3 }}>
+                    <Text
+                      style={{
+                        color: currentTheme.font,
+                        fontWeight: "bold",
+                        letterSpacing: 0.3,
+                      }}
+                    >
+                      {language?.language?.Main.filter.country}:{"  "}
+                      <Text
+                        style={{
+                          fontWeight: "normal",
+                          color: currentTheme.pink,
+                          letterSpacing: 0.3,
+                        }}
+                      >
+                        {item?.country}
+                      </Text>
+                    </Text>
+                    <Text
+                      style={{
+                        color: currentTheme.font,
+                        fontWeight: "bold",
+                        width: "95%",
+                        flexWrap: "nowrap",
+                      }}
+                    >
+                      {language?.language?.Main.filter.region}:{"  "}
+                      <Text
+                        style={{
+                          fontWeight: "normal",
+                          color: currentTheme.pink,
+                          letterSpacing: 0.3,
+                        }}
+                      >
+                        {item?.region}
+                      </Text>
+                    </Text>
+                    <Text
+                      style={{
+                        color: currentTheme.font,
+                        fontWeight: "bold",
+                        letterSpacing: 0.3,
+                      }}
+                    >
+                      {language?.language?.Main.filter.city}:{"  "}
+                      <Text
+                        style={{
+                          fontWeight: "normal",
+                          color: currentTheme.pink,
+                          letterSpacing: 0.3,
+                        }}
+                      >
+                        {item?.city}
+                      </Text>
+                    </Text>
+                    <Text
+                      style={{
+                        color: currentTheme.font,
+                        fontWeight: "bold",
+                        letterSpacing: 0.3,
+                      }}
+                    >
+                      {language?.language?.Main.filter.district}:{"  "}
+                      <Text
+                        style={{
+                          fontWeight: "normal",
+                          color: currentTheme.pink,
+                          letterSpacing: 0.3,
+                        }}
+                      >
+                        {item?.district}
+                      </Text>
+                    </Text>
+                    <Text
+                      style={{
+                        color: currentTheme.font,
+                        fontWeight: "bold",
+                        letterSpacing: 0.3,
+                      }}
+                    >
+                      {language?.language?.Main.filter.street}:{"  "}
+                      <Text
+                        style={{
+                          fontWeight: "normal",
+                          color: currentTheme.pink,
+                          letterSpacing: 0.3,
+                        }}
+                      >
+                        {item?.street}
+                      </Text>
+                    </Text>
+                    <Text
+                      style={{
+                        color: currentTheme.font,
+                        fontWeight: "bold",
+                        letterSpacing: 0.3,
+                      }}
+                    >
+                      {language?.language?.Main.filter.streetNumber}:{"  "}
+                      <Text
+                        style={{
+                          fontWeight: "normal",
+                          color: currentTheme.pink,
+                          letterSpacing: 0.3,
+                        }}
+                      >
+                        {item?.number}
+                      </Text>
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        </View>
+      )}
+    </>
   );
 };
-
-const styles = StyleSheet.create({});

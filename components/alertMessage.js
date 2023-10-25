@@ -1,19 +1,21 @@
 // DeleteFeedPopup.js
-import React, { useState, useEffect } from "react";
+import { MaterialIcons } from "@expo/vector-icons";
+import React, { useEffect, useState } from "react";
 import {
   Animated,
   Easing,
-  TouchableOpacity,
-  Text,
-  View,
   Modal,
   StyleSheet,
-  ScrollView,
-  Platform,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
-import { lightTheme, darkTheme } from "../context/theme";
 import { useSelector } from "react-redux";
-import { MaterialIcons } from "@expo/vector-icons";
+import { darkTheme, lightTheme } from "../context/theme";
+
+/**
+ * Alert component
+ */
 
 const AlertMessage = ({ isVisible, onClose, type, text, Press }) => {
   const [animation] = useState(new Animated.Value(0));

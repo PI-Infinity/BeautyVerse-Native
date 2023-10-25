@@ -1,9 +1,16 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { workingDaysOptions } from "../datas/registerDatas";
+import { useSelector } from "react-redux";
+
+/**
+ * Select component
+ */
 
 const Select = ({ state, setState, currentTheme }) => {
   const [selectedOptions, setSelectedOptions] = useState([]);
+
+  const lang = useSelector((state) => state.storeApp.language);
 
   const handleSelect = (option) => {
     if (selectedOptions.includes(option)) {
@@ -12,20 +19,24 @@ const Select = ({ state, setState, currentTheme }) => {
       setSelectedOptions(newSelectedOptions);
       setState((prev) => prev.filter((item) => item !== option.value));
     } else {
-      // If the option is not selected, add it to the array
-      const newSelectedOptions = [...selectedOptions, option];
-      setSelectedOptions(newSelectedOptions);
-      setState((prev) => {
-        if (!prev.includes(option.value)) {
-          return [...prev, option.value];
-        } else {
-          // return the existing state without changes because the item is already in the array
-          return prev;
-        }
-      });
+      // If the option is "everyDay" or "workingDays", remove all other options
+      if (option.value === "everyDay" || option.value === "workingDays") {
+        setSelectedOptions([option]);
+        setState([option.value]);
+      } else {
+        // If any other option is selected, remove "everyDay" and "workingDays" from the selection
+        const newSelectedOptions = selectedOptions.filter(
+          (o) => o.value !== "everyDay" && o.value !== "workingDays"
+        );
+        setSelectedOptions([...newSelectedOptions, option]);
+        setState((prev) =>
+          prev
+            .filter((item) => item !== "everyDay" && item !== "workingDays")
+            .concat(option.value)
+        );
+      }
     }
   };
-
   return (
     <View style={styles.container}>
       {workingDaysOptions.map((option, index) => (
@@ -49,7 +60,7 @@ const Select = ({ state, setState, currentTheme }) => {
                 : { color: currentTheme.font },
             ]}
           >
-            {option.en}
+            {lang === "en" ? option.en : lang === "ru" ? option.ru : option.ka}
           </Text>
         </TouchableOpacity>
       ))}
@@ -67,6 +78,7 @@ const styles = StyleSheet.create({
   option: {
     padding: 10,
     borderRadius: 50,
+    alignItems: "center",
   },
   optionText: {
     fontSize: 16,

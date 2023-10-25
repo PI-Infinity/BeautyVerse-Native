@@ -1,73 +1,98 @@
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  Dimensions,
-  Alert,
-  KeyboardAvoidingView,
-} from "react-native";
-import { useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { setCurrentUser } from "../../redux/auth";
-import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import axios from "axios";
+import { useEffect, useState } from "react";
+import {
+  Keyboard,
+  KeyboardAvoidingView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+  ImageBackground,
+} from "react-native";
+import { useDispatch, useSelector } from "react-redux";
+import AlertMessage from "../../components/alertMessage";
 import EmailPopup from "../../components/inputPopup";
+import { Language } from "../../context/language";
+import { darkTheme, lightTheme } from "../../context/theme";
+import { setCurrentUser } from "../../redux/auth";
 import { setRerenderCurrentUser } from "../../redux/rerenders";
 import PasswordRessetPopup from "../../screens/authentication/resetPassword";
-import { Language } from "../../context/language";
-import { lightTheme, darkTheme } from "../../context/theme";
-import AlertMessage from "../../components/alertMessage";
+import { BackDrop } from "../../components/backDropLoader";
+import { TextInput } from "react-native-paper";
+import { MaterialIcons } from "@expo/vector-icons";
 
-const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
+/**
+ * Login Screen
+ */
 
 export const Login = ({ navigation }) => {
+  // login email and password states
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
+  // show password states
+  const [showPassword, setShowPassword] = useState(false);
+
+  // define languuage context
   const language = Language();
 
+  // use redux toolkit dispatch
   const dispatch = useDispatch();
 
+  // define theme state
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
-
-  // verify email
-  const [verify, setVerify] = useState(false);
-  const [code, setCode] = useState("");
 
   // alert message
   const [alert, setAlert] = useState({ active: false, text: "", type: "" });
 
+  // defines loading backdrop
+  const [loading, setLoading] = useState(false);
+
+  // defines location
+  const location = useSelector((state) => state.storeApp.location);
+
+  // backend url
+  const backendUrl = useSelector((state) => state.storeApp.backendUrl);
+
+  /**
+   * Login function
+   */
   const Login = async () => {
+    setLoading(true);
     try {
+      // post login to backend
       await axios
-        .post("https://beautyverse.herokuapp.com/api/v1/login", {
+        .post(backendUrl + "/api/v1/login", {
           email: email,
           password: password,
         })
         .then(async (data) => {
-          if (data.data.filteredUser.verifiedEmail) {
-            if (
-              data.data.filteredUser.type !== "user" &&
-              data.data.filteredUser.procedures?.length < 1
-            ) {
-              dispatch(setCurrentUser(data.data.filteredUser));
-              navigation.navigate("Business");
-            } else {
-              await AsyncStorage.setItem(
-                "Beautyverse:currentUser",
-                JSON.stringify(data.data.filteredUser)
-              );
-              dispatch(setRerenderCurrentUser());
-            }
+          if (
+            data.data.filteredUser?.registerStage === "done" ||
+            !data.data.filteredUser?.registerStage
+          ) {
+            await AsyncStorage.setItem(
+              "Beautyverse:currentUser",
+              JSON.stringify(data.data.filteredUser)
+            );
+
+            // after save user to async storage, rerender user info to complete login and navigate to main content
+            dispatch(setRerenderCurrentUser());
+            setTimeout(() => {
+              setLoading(false);
+            }, 1000);
           } else {
-            setVerify(true);
+            dispatch(setCurrentUser(data.data.filteredUser));
+            navigation.navigate("PersonalInfo");
+            setLoading(false);
           }
         });
     } catch (err) {
       console.log(err.response.data.message);
+      setLoading(false);
+      // alert errors to be visible for users
       setAlert({
         active: true,
         text: err.response.data.message,
@@ -76,53 +101,23 @@ export const Login = ({ navigation }) => {
     }
   };
 
-  async function Verify() {
-    try {
-      const response = await axios.post(
-        "https://beautyverse.herokuapp.com/api/v1/verifyEmail",
-        {
-          email: email,
-          code: code,
-        }
-      );
-
-      const newUser = response.data.data.newUser;
-
-      if (newUser?.type === "user") {
-        await AsyncStorage.setItem(
-          "Beautyverse:currentUser",
-          JSON.stringify(newUser)
-        );
-        dispatch(setRerenderCurrentUser());
-      } else {
-        dispatch(setCurrentUser(newUser));
-        navigation.navigate("Business");
-      }
-    } catch (err) {
-      setAlert({
-        active: true,
-        text: err.response.data.message,
-        type: "error",
-      });
-      console.log(err.response.data.message);
-    }
-  }
-
+  /**
+   * this is states for reset passwords.
+   * email input and to open/close reset password popup
+   */
   const [emailInput, setEmailInput] = useState("");
   const [resetPopup, setResetPopup] = useState(false);
 
   /**
    * send email to reset password
+   * after send request, user gettings link to navigate to beautyverse web, where user can set new password
    */
 
   async function SendEmail() {
     try {
-      const response = await axios.post(
-        "https://beautyverse.herokuapp.com/api/v1/forgotPassword",
-        {
-          email: emailInput,
-        }
-      );
+      await axios.post(backendUrl + "/api/v1/forgotPassword", {
+        email: emailInput,
+      });
       // If the email is sent successfully, handle the response here
       setAlert({
         active: true,
@@ -139,20 +134,58 @@ export const Login = ({ navigation }) => {
     setResetPopup(false);
   }
 
+  // this state used to show/hide password when input
+  const [emailFocused, setEmailFocused] = useState(false);
+  // this state used to show/hide password when input
+  const [passwordFocused, setPasswordFocused] = useState(false);
+
+  /**
+   * this functions below defines keyboard height of device
+   */
+  async function onKeyboardDidShow(e) {
+    if (passwordFocused) {
+      await AsyncStorage.setItem(
+        "Beautyverse:keyboardHeight",
+        JSON.stringify(e.endCoordinates.height + 45)
+      );
+    }
+  }
+  useEffect(() => {
+    const keyboardDidShowListener = Keyboard.addListener(
+      "keyboardDidShow",
+      onKeyboardDidShow
+    );
+    return () => {
+      keyboardDidShowListener.remove();
+    };
+  }, [passwordFocused]);
+
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      style={{ flex: 1 }}
+    <ImageBackground
+      style={{
+        flex: 1,
+        width: "100%",
+        height: "100%",
+      }}
+      source={theme ? require("../../assets/background.jpg") : null}
     >
-      <AlertMessage
-        isVisible={alert.active}
-        type={alert.type}
-        text={alert.text}
-        onClose={() => setAlert({ active: false, text: "" })}
-        Press={() => setAlert({ active: false, text: "" })}
-      />
-      <View style={styles.container}>
-        <View style={{ position: "absolute" }}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{
+          flex: 1,
+          backgroundColor: theme ? "rgba(0,0,0,0.6)" : currentTheme.background,
+        }}
+      >
+        <BackDrop loading={loading} setLoading={setLoading} />
+        <AlertMessage
+          isVisible={alert.active}
+          type={alert.type}
+          text={alert.text}
+          onClose={() => setAlert({ active: false, text: "" })}
+          Press={() => setAlert({ active: false, text: "" })}
+        />
+        <View style={styles.container}>
+          {/* <View style={{ position: "absolute" }}>
           {verify && (
             <EmailPopup
               setFunction={Verify}
@@ -162,70 +195,153 @@ export const Login = ({ navigation }) => {
               setOpen={setVerify}
             />
           )}
-        </View>
-        <View style={{ position: "absolute" }}>
-          {resetPopup && (
-            <PasswordRessetPopup
-              email={emailInput}
-              setEmail={setEmailInput}
-              isVisible={resetPopup}
-              onClose={() => setResetPopup(false)}
-              onSend={SendEmail}
+        </View> */}
+          <View style={{ position: "absolute" }}>
+            {resetPopup && (
+              <PasswordRessetPopup
+                email={emailInput}
+                setEmail={setEmailInput}
+                isVisible={resetPopup}
+                onClose={() => setResetPopup(false)}
+                onSend={SendEmail}
+              />
+            )}
+          </View>
+          <View style={styles.itemContainer}>
+            <TextInput
+              label={language?.language?.Auth?.auth?.email}
+              onChangeText={(text) => setEmail(text)}
+              value={email}
+              autoFocus
+              mode="outlined"
+              outlineStyle={{
+                borderRadius: 20,
+                padding: 0,
+                borderColor: emailFocused
+                  ? currentTheme.pink
+                  : currentTheme.line,
+                backgroundColor: "transparent",
+              }}
+              style={[
+                styles.input,
+                {
+                  color: currentTheme.pink,
+                  borderColor: currentTheme.line,
+                  backgroundColor: currentTheme.background,
+                  height: 55,
+                  padding: 0,
+                  borderRadius: 50,
+                  borderColor: currentTheme.line,
+                },
+              ]}
+              textColor={currentTheme.font}
+              theme={{ colors: { primary: currentTheme.pink } }}
+              placeholderTextColor={currentTheme.pink}
+              onFocus={() => setEmailFocused(true)}
+              onBlur={() => setEmailFocused(false)}
             />
-          )}
-        </View>
-        <TextInput
-          placeholder={language?.language?.Auth?.auth?.email}
-          onChangeText={(text) => setEmail(text)}
-          value={email}
-          autoFocus
-          style={[
-            styles.input,
-            {
-              color: currentTheme.font,
-              // backgroundColor: currentTheme.background2,
-              borderColor: currentTheme.line,
-            },
-          ]}
-          placeholderTextColor={currentTheme.disabled}
-        />
-        <TextInput
-          secureTextEntry
-          placeholder={language?.language?.Auth?.auth?.password}
-          onChangeText={(text) => setPassword(text)}
-          value={password}
-          style={[
-            styles.input,
-            {
-              color: currentTheme.font,
-              // backgroundColor: currentTheme.background2,
-              borderColor: currentTheme.line,
-            },
-          ]}
-          placeholderTextColor={currentTheme.disabled}
-        />
-        <TouchableOpacity style={styles.button} onPress={Login}>
-          <Text style={styles.buttonText}>
-            {language?.language?.Auth?.auth?.login}
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => setResetPopup(true)}>
-          <Text style={[styles.forgot, { color: currentTheme.font }]}>
-            {language?.language?.Auth?.auth?.forgot}
-          </Text>
-        </TouchableOpacity>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
-          <Text style={[styles.registerQuestion, { color: currentTheme.font }]}>
-            {language?.language?.Auth?.auth?.dontHave}{" "}
-          </Text>
-          <TouchableOpacity onPress={() => navigation.navigate("Register")}>
-            <Text style={[styles.register, { color: currentTheme.pink }]}>
-              {language?.language?.Auth?.auth?.register}
+          </View>
+          <View style={styles.itemContainer}>
+            <View
+              style={{
+                width: "100%",
+                alignItems: "center",
+                flexDirection: "row",
+                gap: 10,
+              }}
+            >
+              <TextInput
+                secureTextEntry={!showPassword}
+                label={language?.language?.Auth?.auth?.password}
+                onChangeText={(text) => setPassword(text)}
+                value={password}
+                mode="outlined"
+                theme={{
+                  colors: {
+                    primary: currentTheme.pink, // color of the underline and the outline
+                  },
+                }}
+                outlineStyle={{
+                  borderRadius: 20,
+                  padding: 0,
+                  backgroundColor: "transparent",
+                  height: 55,
+                  borderColor: passwordFocused
+                    ? currentTheme.pink
+                    : currentTheme.line,
+                }}
+                textColor={currentTheme.font}
+                style={[
+                  styles.input,
+                  {
+                    color: currentTheme.font,
+                    borderColor: currentTheme.pink,
+                    backgroundColor: currentTheme.background,
+                    height: 55,
+                    padding: 0,
+                  },
+                ]}
+                placeholderTextColor={currentTheme.pink}
+                onFocus={() => setPasswordFocused(true)}
+                onBlur={() => setPasswordFocused(false)}
+              />
+              <TouchableOpacity
+                onPress={() => setShowPassword(!showPassword)}
+                style={{ position: "relative", right: 40 }}
+              >
+                <Text style={styles.showPasswordText}>
+                  {showPassword ? (
+                    <MaterialIcons
+                      name="remove-red-eye"
+                      color="#e5e5e5"
+                      size={16}
+                    />
+                  ) : (
+                    <MaterialIcons
+                      name="panorama-fisheye"
+                      color="#e5e5e5"
+                      size={16}
+                    />
+                  )}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+          <TouchableOpacity
+            style={[
+              styles.button,
+              {
+                backgroundColor: currentTheme.pink,
+                borderWidth: 1,
+                borderColor: currentTheme.line,
+              },
+            ]}
+            onPress={Login}
+          >
+            <Text style={[styles.buttonText, { color: "#fff" }]}>
+              {language?.language?.Auth?.auth?.login}
             </Text>
           </TouchableOpacity>
+          <TouchableOpacity onPress={() => setResetPopup(true)}>
+            <Text style={[styles.forgot, { color: currentTheme.font }]}>
+              {language?.language?.Auth?.auth?.forgot}
+            </Text>
+          </TouchableOpacity>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+            <Text
+              style={[styles.registerQuestion, { color: currentTheme.font }]}
+            >
+              {language?.language?.Auth?.auth?.dontHave}{" "}
+            </Text>
+            <TouchableOpacity onPress={() => navigation.navigate("Identify")}>
+              <Text style={[styles.register, { color: currentTheme.pink }]}>
+                {language?.language?.Auth?.auth?.register}
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
-    </KeyboardAvoidingView>
+      </KeyboardAvoidingView>
+    </ImageBackground>
   );
 };
 
@@ -242,24 +358,16 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: "bold",
-    color: "#e5e5e5",
     marginBottom: 20,
   },
+  itemContainer: { gap: 15, width: "75%", alignItems: "center", zIndex: 100 },
   input: {
-    width: "80%",
+    width: "100%",
     padding: 12.5,
     fontSize: 14,
-    color: "#e5e5e5",
-    borderBottomWidth: 1,
+    borderRadius: 50,
     letterSpacing: 0.2,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 3, // negative value places shadow on top
-    },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
+    // backgroundColor: "transparent",
   },
   button: {
     width: "45%",
@@ -270,13 +378,12 @@ const styles = StyleSheet.create({
     borderRadius: 50,
   },
   buttonText: {
-    color: "#e5e5e5",
     textAlign: "center",
     letterSpacing: 0.2,
     fontWeight: "bold",
+    color: "#fff",
   },
   forgot: {
-    color: "#e5e5e5",
     textAlign: "center",
     marginTop: 10,
     marginBottom: 10,
@@ -284,7 +391,6 @@ const styles = StyleSheet.create({
     textDecorationLine: "underline",
   },
   registerQuestion: {
-    color: "#e5e5e5",
     textAlign: "center",
     letterSpacing: 0.2,
   },

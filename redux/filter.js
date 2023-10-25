@@ -6,6 +6,7 @@ const initialState = {
   filter: "",
   specialists: true,
   salons: true,
+  shops: true,
   country: "",
   city: "",
   district: "",
@@ -32,6 +33,9 @@ export const Filter = createSlice({
     setSalons: (state, action) => {
       state.salons = action.payload;
     },
+    setShops: (state, action) => {
+      state.shops = action.payload;
+    },
     setCity: (state, action) => {
       state.city = action.payload;
     },
@@ -50,6 +54,7 @@ export const {
   setFilter,
   setSpecialists,
   setSalons,
+  setShops,
   setCity,
   setDistrict,
   setFilterBadgeSum,

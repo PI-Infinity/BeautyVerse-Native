@@ -1,92 +1,72 @@
-import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import {
-  View,
-  Text,
-  Dimensions,
-  Pressable,
-  Image,
-  StyleSheet,
-  FlatList,
+  Feather,
+  FontAwesome,
+  MaterialCommunityIcons,
+  MaterialIcons,
+} from "@expo/vector-icons";
+import { useEffect, useRef, useState } from "react";
+import {
   Animated,
+  Dimensions,
+  StyleSheet,
+  Text,
+  Easing,
   TouchableOpacity,
-  Platform,
+  View,
 } from "react-native";
-import { FontAwesome } from "@expo/vector-icons";
-import { Entypo } from "@expo/vector-icons";
-import { useSelector, useDispatch } from "react-redux";
-import axios from "axios";
-import { Skeleton } from "@rneui/themed";
-import GetTimesAgo from "../functions/getTimesAgo";
-import { useNavigation } from "@react-navigation/native";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { Feather } from "@expo/vector-icons";
-import { Language } from "../context/language";
+import { useDispatch, useSelector } from "react-redux";
 import { CacheableImage } from "../components/cacheableImage";
-import { MaterialIcons } from "@expo/vector-icons";
-import { lightTheme, darkTheme } from "../context/theme";
-import { LinearGradient } from "expo-linear-gradient";
+import { Language } from "../context/language";
+import { darkTheme, lightTheme } from "../context/theme";
+import { Circle } from "./skeltons";
+import axios from "axios";
 
-const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
+/**
+ * Profile card component in cards screen
+ */
+
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 export const Card = (props) => {
+  // define navigation
   const navigation = props.navigation;
-  const language = Language();
-  const dispatch = useDispatch();
-  const [page, setPage] = useState(1);
 
+  // define language
+  const language = Language();
+  // define language state
+  const lang = useSelector((state) => state.storeApp.language);
+
+  // define theme
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
 
+  // define loading
   const [loading, setLoading] = useState(false);
 
-  const lang = useSelector((state) => state.storeApp.language);
-
-  const currentUser = useSelector((state) => state.storeUser.currentUser);
-  // capitalize first letters
-
+  // capitalize first letters function
   function capitalizeFirstLetter(string) {
     return string?.charAt(0).toUpperCase() + string?.slice(1);
   }
 
+  // capitalize and define user's type
   const t = capitalizeFirstLetter(props?.user.type);
 
   let type;
   if (props.user.type === "specialist") {
-    if (lang === "en") {
-      type = t;
-    } else if (lang === "ka") {
-      type = "სპეციალისტი";
-    } else {
-      type = language?.language?.Main?.feedCard?.specialist;
-    }
+    type = language?.language?.Main?.feedCard?.specialist;
+  } else if (props.user.type === "shop") {
+    type = language?.language?.Marketplace?.marketplace?.shop;
   } else {
     type = language?.language?.Auth?.auth?.beautySalon;
   }
 
-  /**
-   * Define start total
-   */
-  const [stars, setStars] = useState([]);
-
-  async function GetStars() {
-    const response = await fetch(
-      `https://beautyverse.herokuapp.com/api/v1/users/${props?.user._id}/stars`
-    )
-      .then((response) => response.json())
-      .then(async (data) => {
-        setStars(data.data.stars);
-      })
-      .catch((error) => {
-        console.log("Error fetching data:", error);
-      });
-  }
-
-  useEffect(() => {
-    GetStars();
-  }, []);
+  // define active address
+  const city = useSelector((state) => state.storeFilter.city);
+  const definedAddress = props?.user?.address.find(
+    (item) => item?.city.replace("'", "") === city
+  );
 
   // fade in
-
   const fadeAnim = useRef(new Animated.Value(0)).current; // Initial value for opacity: 0
 
   useEffect(() => {
@@ -101,10 +81,15 @@ export const Card = (props) => {
     <>
       {loading ? (
         <View
-          style={[styles.container, { borderColor: currentTheme.lin }]}
+          style={[styles.container, { borderColor: currentTheme.line }]}
         ></View>
       ) : (
-        <View style={[styles.container, { borderColor: currentTheme.line }]}>
+        <View
+          style={[
+            styles.container,
+            { borderColor: currentTheme.line, paddingHorizontal: 10 },
+          ]}
+        >
           <View
             style={{
               flexDirection: "row",
@@ -112,7 +97,7 @@ export const Card = (props) => {
               alignItems: "center",
               width: "100%",
               paddingLeft: 5,
-              backgroundColor: currentTheme.background,
+              // backgroundColor: currentTheme.background,
               gap: 0,
             }}
           >
@@ -125,21 +110,62 @@ export const Card = (props) => {
           </View>
 
           <TouchableOpacity
-            activeOpacity={0.5}
+            activeOpacity={0.9}
             onPress={() => navigation.navigate("User", { user: props.user })}
           >
+            {props.user?.online && (
+              <View
+                style={{
+                  padding: 5,
+                  paddingVertical: 1.5,
+                  backgroundColor: "#3bd16f",
+                  borderRadius: 50,
+                  position: "absolute",
+                  zIndex: 100,
+                  left: 3,
+                  top: 3,
+
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 4,
+                }}
+              >
+                <View
+                  style={{
+                    width: 5,
+                    height: 5,
+                    backgroundColor: "#fff",
+                    borderRadius: 10,
+                  }}
+                ></View>
+                <Text
+                  style={{ color: "#fff", fontSize: 8, fontWeight: "bold" }}
+                >
+                  Online
+                </Text>
+              </View>
+            )}
             <Animated.View styles={{ opacity: fadeAnim }}>
-              {props.user.cover?.length > 0 ? (
-                <View style={{ width: "100%", aspectRatio: 1 }}>
+              {props.user.cover?.url?.length > 0 ||
+              props.user?.cover?.length ? (
+                <View
+                  style={{
+                    width: "100%",
+                    aspectRatio: 1,
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
                   <CacheableImage
+                    key={props.user?.cover?.url || props.user?.cover}
                     style={{
-                      width: "100%",
+                      width: "90%",
                       aspectRatio: 0.99,
                       resizeMode: "cover",
-                      // borderRadius: 10,
+                      borderRadius: 10,
                     }}
                     source={{
-                      uri: props.user.cover,
+                      uri: props.user?.cover?.url || props.user?.cover,
                     }}
                     onLoad={() => setLoading(false)}
                     onError={() => console.log("Error loading image")}
@@ -153,10 +179,14 @@ export const Card = (props) => {
                     alignItems: "center",
                     justifyContent: "center",
                     // borderWidth: 1,
-                    borderColor: currentTheme.pink2,
+                    // borderColor: currentTheme.pink2,
                   }}
                 >
-                  <FontAwesome name="user" size={80} color="#e5e5e5" />
+                  <FontAwesome
+                    name="user"
+                    size={80}
+                    color={currentTheme.disabled}
+                  />
                 </View>
               )}
             </Animated.View>
@@ -194,25 +224,25 @@ export const Card = (props) => {
               numberOfLines={1}
               ellipsizeMode={"tail"}
             >
-              {props.user.address[0].city.replace("'", "")}
-              {props.user.address[0].district &&
-                " - " + props.user.address[0].district}
+              {definedAddress?.city.replace("'", "")}
+              {definedAddress?.district && " - " + definedAddress?.district}
+              {!definedAddress?.district &&
+                definedAddress?.street &&
+                " - " + definedAddress?.street}
             </Text>
           </View>
           <View
             style={[
               styles.starsContainer,
               {
+                backgroundColor: theme
+                  ? "rgba(255, 255, 255, 0.08)"
+                  : "rgba(0,0,0,0.03)",
+                borderRadius: 50,
                 justifyContent: "center",
-                shadowColor: "#000",
-                shadowOffset: {
-                  width: 0,
-                  height: 1, // negative value places shadow on top
-                },
-                shadowOpacity: 0.1,
-                shadowRadius: 1,
-                elevation: 1,
-                backgroundColor: currentTheme.background2,
+                // borderTopWidth: 1.5,
+                // borderBottomWidth: 1.5,
+                // borderColor: currentTheme.line,
               },
             ]}
           >
@@ -234,7 +264,7 @@ export const Card = (props) => {
                 name="star-o"
               />
               <Text style={[styles.stars, { color: currentTheme.font }]}>
-                {stars}
+                {props.user?.totalStars}
               </Text>
             </View>
             <View
@@ -258,6 +288,29 @@ export const Card = (props) => {
                 {props?.user?.followersLength}
               </Text>
             </View>
+            {props?.user?.rating && (
+              <View
+                style={{
+                  gap: 5,
+                  alignItems: "center",
+                  flexDirection: "row",
+                  // backgroundColor: currentTheme.background2,
+                  padding: 5,
+                  borderRadius: 3,
+                }}
+              >
+                <FontAwesome
+                  style={[
+                    styles.stars,
+                    { color: currentTheme.pink, fontSize: 14 },
+                  ]}
+                  name="heart"
+                />
+                <Text style={[styles.stars, { color: currentTheme.font }]}>
+                  {props?.user?.rating.toFixed(1)}
+                </Text>
+              </View>
+            )}
           </View>
         </View>
       )}
@@ -267,8 +320,8 @@ export const Card = (props) => {
 
 const styles = StyleSheet.create({
   container: {
-    width: "50%",
-    height: 365,
+    width: SCREEN_WIDTH / 2,
+    height: SCREEN_WIDTH / 2 + 140,
     // backgroundColor: "rgba(255,255,255,0.01)",
     // margin: 5,
     // borderRadius: 5,
@@ -301,20 +354,12 @@ const styles = StyleSheet.create({
     letterSpacing: 0.2,
   },
   starsContainer: {
-    width: "90%",
+    width: "100%",
     margin: 10,
     alignItems: "center",
     flexDirection: "row",
     justifyContent: "center",
     gap: 0,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 0.2, // negative value places shadow on top
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    borderRadius: 50,
   },
   stars: {
     fontSize: 14,

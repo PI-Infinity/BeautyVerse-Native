@@ -1,46 +1,63 @@
-import React, { useState, useRef } from "react";
-import {
-  View,
-  FlatList,
-  TextInput,
-  TouchableOpacity,
-  Animated,
-  Text,
-  StyleSheet,
-  Dimensions,
-  Alert,
-  ScrollView,
-  Platform,
-} from "react-native";
-import { MaterialIcons, FontAwesome5, FontAwesome } from "@expo/vector-icons";
-import { useSelector, useDispatch } from "react-redux";
-import { ProceduresOptions } from "../../../datas/registerDatas";
+import { FontAwesome, FontAwesome5 } from "@expo/vector-icons";
 import axios from "axios";
-import { setRerenderCurrentUser } from "../../../redux/rerenders";
+import React, { useEffect, useRef, useState } from "react";
 import {
-  setCurrentUser,
-  UpdateCurrentUserProcedure,
-  AddCurrentUserProcedure,
-  RemoveCurrentUserProcedure,
-} from "../../../redux/user";
-import SearchableSelect from "../../../components/searchableSelect";
-import Collapsible from "react-native-collapsible";
-import { lightTheme, darkTheme } from "../../../context/theme";
+  Alert,
+  Animated,
+  Dimensions,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { ActivityIndicator } from "react-native-paper";
+import { useDispatch, useSelector } from "react-redux";
 import AlertMessage from "../../../components/alertMessage";
 import ProcedureDurationPicker from "../../../components/durationList";
 import ProcedurePricePicker from "../../../components/priceList";
+import SearchableSelect from "../../../components/searchableSelect";
+import { darkTheme, lightTheme } from "../../../context/theme";
+import { ProceduresOptions } from "../../../datas/registerDatas";
+import { setRerenderCurrentUser } from "../../../redux/rerenders";
+import {
+  AddCurrentUserProcedure,
+  RemoveCurrentUserProcedure,
+  UpdateCurrentUserProcedure,
+} from "../../../redux/user";
+import DeleteDialog from "../../../components/confirmDialog";
+import { setLoading } from "../../../redux/app";
+import { BackDrop } from "../../../components/backDropLoader";
+import { Language } from "../../../context/language";
+
+/**
+ * User procedures in settings
+ */
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
 export const Procedures = () => {
+  // define redux dispatch
   const dispatch = useDispatch();
+
+  // defines language
+  const language = Language();
+
+  // define procedures option
   const proceduresOptions = ProceduresOptions();
 
+  // define loader
+  const [loader, setLoader] = useState(true);
+  const [loading, setLoading] = useState(false);
+
+  // define theme
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
 
+  // split procedures value to find label
   const splited = proceduresOptions
-    ?.map((item, index) => {
+    ?.map((item) => {
       let spltd = item?.value?.split(" - ");
       // Check if ' -' appears exactly 2 times
       if (spltd.length > 1) {
@@ -49,31 +66,18 @@ export const Procedures = () => {
     })
     .filter(Boolean);
 
+  // define current user
   const currentUser = useSelector((state) => state.storeUser.currentUser);
 
   // add procedure success message
   const [success, setSuccess] = useState(false);
   // remove procedure success message
-  const [deleteSuccess, setDeleteSuccess] = useState(false);
-
-  const [add, setAdd] = useState(false);
-  const [newProcedures, setNewProcedures] = useState([]);
+  const [ItemId, setItemId] = useState(null);
 
   const [proc, setProc] = useState(null);
 
   // edit price popup
   const [editPrice, setEditPrice] = useState(false);
-  const fadePriceAnim = useRef(new Animated.Value(0)).current;
-  const showPriceModal = () => {
-    setEditPrice(true);
-    Animated.timing(fadePriceAnim, {
-      toValue: 1,
-      duration: 200,
-      useNativeDriver: true,
-    }).start();
-  };
-
-  const [priceInput, setPriceInput] = useState("");
 
   // open duration popup
   const [visible, setVisible] = useState(false);
@@ -88,30 +92,32 @@ export const Procedures = () => {
     }).start();
   };
 
-  // add procedure
-  const AddProcedure = async (val) => {
-    let ifInclude = currentUser?.procedures.find(
-      (item) => item.value.toLowerCase() === val?.toLowerCase()
-    );
-    if (ifInclude) {
-      Alert.alert("Procedure already defined in your list!");
-    } else {
-      try {
-        setAdd(false);
-        dispatch(AddCurrentUserProcedure({ value: val }));
-        const response = await axios.post(
-          `https://beautyverse.herokuapp.com/api/v1/users/${currentUser?._id}/procedures`,
-          {
-            value: val,
-          }
-        );
-        setSuccess(true);
-        dispatch(setRerenderCurrentUser());
-      } catch (error) {
-        Alert.alert(error.data.response.message);
-      }
-    }
-  };
+  // backend url
+  const backendUrl = useSelector((state) => state.storeApp.backendUrl);
+
+  // // add procedure
+  // const AddProcedure = async (val) => {
+  //   let ifInclude = currentUser?.procedures.find(
+  //     (item) => item.value.toLowerCase() === val?.toLowerCase()
+  //   );
+  //   if (ifInclude) {
+  //     Alert.alert("Procedure already defined in your list!");
+  //   } else {
+  //     try {
+  //       dispatch(AddCurrentUserProcedure({ value: val }));
+  //       const response = await axios.post(
+  //         backendUrl + `/api/v1/users/${currentUser?._id}/procedures`,
+  //         {
+  //           value: val,
+  //         }
+  //       );
+  //       setSuccess(true);
+  //       dispatch(setRerenderCurrentUser());
+  //     } catch (error) {
+  //       Alert.alert(error.data.response.message);
+  //     }
+  //   }
+  // };
 
   // edit procedure
   const EditProcedure = async (val) => {
@@ -123,8 +129,6 @@ export const Procedures = () => {
         value: proc?.value,
         duration: val.duration,
         price: proc?.price,
-
-        // price: priceInput?.length > 0 ? priceInput : proc?.price ? proc.price,
       };
     } else if (val.price) {
       updatedProcedure = {
@@ -132,8 +136,6 @@ export const Procedures = () => {
         value: proc?.value,
         duration: proc?.duration,
         price: val?.price,
-
-        // price: priceInput?.length > 0 ? priceInput : proc?.price ? proc.price,
       };
     }
 
@@ -143,15 +145,17 @@ export const Procedures = () => {
         updatedProcedure,
       })
     );
+    setEditPrice(false);
+
     try {
       await axios.patch(
-        "https://beautyverse.herokuapp.com/api/v1/users/" +
+        backendUrl +
+          "/api/v1/users/" +
           currentUser._id +
           "/procedures/" +
           proc._id,
         val
       );
-      setEditPrice(false);
       setVisible(false);
       dispatch(setRerenderCurrentUser());
     } catch (error) {
@@ -160,15 +164,21 @@ export const Procedures = () => {
     }
   };
 
-  // delete service
+  // delete procedure item
   const Deleting = async (itemId) => {
+    setLoading(true);
     if (currentUser?.procedures?.length > 1) {
       dispatch(RemoveCurrentUserProcedure(itemId));
-      const url = `https://beautyverse.herokuapp.com/api/v1/users/${currentUser?._id}/procedures/${itemId}`;
+      const url =
+        backendUrl + `/api/v1/users/${currentUser?._id}/procedures/${itemId}`;
       const response = await fetch(url, { method: "DELETE" })
         .then((response) => response.json())
         .then(() => dispatch(setRerenderCurrentUser()))
-        .then(() => setDeleteSuccess(true))
+        .then(() =>
+          setTimeout(() => {
+            setLoading(false);
+          }, 1000)
+        )
         .catch((error) => {
           console.log("Error fetching data:", error);
         });
@@ -177,248 +187,318 @@ export const Procedures = () => {
     }
   };
 
+  // define categories
+  const [categories, setCategories] = useState([]);
+
+  // define active category
+  const [active, setActive] = useState("all");
+
+  useEffect(() => {
+    const cats = Array.from(
+      new Set(currentUser.procedures.map((item) => item?.value.split(" - ")[0]))
+    );
+    setCategories(
+      cats.map((item, index) => {
+        let lab = proceduresOptions.find((it) => {
+          return it?.value?.toLowerCase().includes(item?.toLowerCase());
+        });
+        return lab;
+      })
+    );
+    setActive("all");
+  }, [currentUser.procedures]);
+
+  useEffect(() => {
+    setTimeout(() => {
+      setLoader(false);
+    }, 100);
+  }, []);
+
   return (
-    <View
-      style={{
-        width: SCREEN_WIDTH,
-        paddingBottom: 15,
-        alignItems: "center",
-        paddingHorizontal: 20,
-      }}
-    >
-      <AlertMessage
-        isVisible={success}
-        onClose={() => setSuccess(false)}
-        Press={() => setSuccess(false)}
-        type="success"
-        text="Procedure added successfully!"
-      />
-      <AlertMessage
-        isVisible={deleteSuccess}
-        onClose={() => setDeleteSuccess(false)}
-        Press={() => setDeleteSuccess(false)}
-        type="success"
-        text="Procedure deleted successfully!"
-      />
-      <Text
-        style={{
-          fontSize: 16,
-          fontWeight: "bold",
-          marginTop: 20,
-          color: currentTheme.font,
-          letterSpacing: 0.3,
-        }}
-      >
-        Add new procedure:
-      </Text>
-      <View style={{ width: "100%", marginTop: 10, alignItems: "center" }}>
+    <>
+      <BackDrop loading={loading} setLoading={setLoading} />
+      {loader ? (
         <View
           style={{
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 10,
-            height: SCREEN_HEIGHT / 5,
-            letterSpacing: 0.2,
-          }}
-        >
-          <SearchableSelect
-            data={splited}
-            onItemSelected={AddProcedure}
-            currentTheme={currentTheme}
-          />
-        </View>
-        <Text
-          style={{
-            fontSize: 16,
-            fontWeight: "bold",
-            marginTop: 30,
-            color: currentTheme.font,
-            letterSpacing: 0.3,
-          }}
-        >
-          Current procedures:
-        </Text>
-        <ScrollView
-          style={{
-            height: SCREEN_HEIGHT / 2,
+            height: 500,
             width: "100%",
-            marginTop: 10,
+            alignItems: "center",
+            justifyContent: "center",
           }}
-          bounces={Platform.OS === "ios" ? false : undefined}
-          overScrollMode={Platform.OS === "ios" ? "never" : "always"}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 30 }}
         >
-          {currentUser.procedures.map((item, index) => {
-            const label = splited.find((c) => item.value === c.value);
-            return (
-              <View
-                style={[
-                  styles.item,
-                  {
-                    backgroundColor: currentTheme.background2,
-                    gap: 8,
-                  },
-                ]}
-                key={index}
+          <ActivityIndicator size="large" color={currentTheme.pink} />
+        </View>
+      ) : (
+        <View
+          style={{
+            width: SCREEN_WIDTH,
+            paddingBottom: 15,
+            alignItems: "center",
+            paddingHorizontal: 20,
+          }}
+        >
+          <DeleteDialog
+            isVisible={success}
+            onClose={() => setSuccess(false)}
+            onDelete={() => Deleting(ItemId)}
+            delet="Remove"
+            cancel="Cancel"
+            title="Are you sure to want to delete this procedure?"
+          />
+          <View style={{ width: "100%", marginTop: 10, alignItems: "center" }}>
+            {categories?.length > 1 && (
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                style={styles.navigator}
+                contentContainerStyle={{
+                  flexDirection: "row",
+                  paddingRight: 30,
+                }}
               >
-                <View>
+                <TouchableOpacity
+                  onPress={() => setActive("all")}
+                  style={
+                    active === "all"
+                      ? styles.categoryButtonActive
+                      : styles.categoryButton
+                  }
+                >
                   <Text
-                    style={{ color: currentTheme.font, letterSpacing: 0.2 }}
+                    style={[
+                      styles.buttonText,
+                      { color: active === "all" ? "#111" : "#ccc" },
+                    ]}
                   >
-                    {label?.label}
+                    {language?.language?.User?.userPage?.all}
                   </Text>
-                </View>
-                <View style={{ flexDirection: "row" }}>
+                </TouchableOpacity>
+                {categories?.map((cat, index) => (
                   <TouchableOpacity
-                    onPress={() => {
-                      setEditPrice(true);
-                      setProc(item);
-                    }}
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      borderWidth: 1,
-                      borderColor: currentTheme.line,
-                      borderRadius: 5,
-                      padding: 5,
-                      paddingVertical: 2.5,
-                      width: 70,
-                    }}
+                    key={index}
+                    onPress={() => setActive(cat?.value)}
+                    style={
+                      active.toLowerCase() === cat?.value.toLowerCase()
+                        ? styles.categoryButtonActive
+                        : styles.categoryButton
+                    }
                   >
                     <Text
-                      style={{
-                        color: currentTheme.font,
-                        padding: 5,
-                        letterSpacing: 0.2,
-                      }}
+                      style={[
+                        styles.buttonText,
+                        {
+                          color:
+                            active.toLowerCase() === cat?.value.toLowerCase()
+                              ? "#111"
+                              : "#ccc",
+                        },
+                      ]}
                     >
-                      {item.price}
+                      {cat?.label}
                     </Text>
-
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            )}
+            <ScrollView
+              style={{
+                // height: SCREEN_HEIGHT / 2,
+                width: "100%",
+                marginTop: 10,
+              }}
+              bounces={Platform.OS === "ios" ? false : undefined}
+              overScrollMode={Platform.OS === "ios" ? "never" : "always"}
+              // showsVerticalScrollIndicator={false}
+              contentContainerStyle={{ paddingBottom: 30 }}
+            >
+              {currentUser.procedures
+                .filter((item) => {
+                  if (active === "all" || categories?.length < 1) {
+                    return item;
+                  } else if (
+                    item?.value.toLowerCase().includes(active.toLowerCase())
+                  ) {
+                    return item;
+                  }
+                })
+                .map((item, index) => {
+                  const label = splited.find((c) => item?.value === c.value);
+                  return (
                     <View
-                      style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: 10,
-                        // backgroundColor: "yellow",
-                      }}
+                      style={[
+                        styles.item,
+                        {
+                          backgroundColor: currentTheme.background2,
+                          gap: 8,
+                        },
+                      ]}
+                      key={index}
                     >
-                      {currentUser?.currency === "Dollar" ? (
-                        <FontAwesome
-                          name="dollar"
-                          color={currentTheme.pink}
-                          size={14}
-                        />
-                      ) : currentUser?.currency === "Euro" ? (
-                        <FontAwesome
-                          name="euro"
-                          color={currentTheme.pink}
-                          size={14}
-                        />
-                      ) : (
+                      <View>
                         <Text
                           style={{
-                            fontWeight: "bold",
-                            color: currentTheme.pink,
-                            fontSize: 14,
+                            color: currentTheme.font,
+                            letterSpacing: 0.2,
                           }}
                         >
-                          {"\u20BE"}
+                          {label?.label}
                         </Text>
+                      </View>
+                      <View style={{ flexDirection: "row" }}>
+                        <TouchableOpacity
+                          onPress={() => {
+                            setEditPrice(true);
+                            setProc(item);
+                          }}
+                          style={{
+                            flexDirection: "row",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            borderWidth: 1,
+                            borderColor: currentTheme.line,
+                            borderRadius: 5,
+                            padding: 5,
+                            paddingVertical: 2.5,
+                            width: 70,
+                          }}
+                        >
+                          <Text
+                            style={{
+                              color: currentTheme.font,
+                              padding: 5,
+                              letterSpacing: 0.2,
+                            }}
+                          >
+                            {item.price}
+                          </Text>
+
+                          <View
+                            style={{
+                              flexDirection: "row",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              gap: 10,
+                            }}
+                          >
+                            {currentUser?.currency === "Dollar" ? (
+                              <FontAwesome
+                                name="dollar"
+                                color={currentTheme.pink}
+                                size={14}
+                              />
+                            ) : currentUser?.currency === "Euro" ? (
+                              <FontAwesome
+                                name="euro"
+                                color={currentTheme.pink}
+                                size={14}
+                              />
+                            ) : (
+                              <Text
+                                style={{
+                                  fontWeight: "bold",
+                                  color: currentTheme.pink,
+                                  fontSize: 14,
+                                }}
+                              >
+                                {"\u20BE"}
+                              </Text>
+                            )}
+                          </View>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                          acitveOpacity={2}
+                          onPress={() => {
+                            showDurationModal();
+                            setProc(item);
+                          }}
+                          style={{
+                            flexDirection: "row",
+                            alignItems: "center",
+                            borderWidth: 1,
+                            borderColor: currentTheme.line,
+                            padding: 5,
+                            paddingVertical: 2.5,
+                            width: item.duration ? 120 : 50,
+                            justifyContent: "center",
+                            marginLeft: 8,
+                            borderRadius: 5,
+                          }}
+                        >
+                          {item.duration && (
+                            <Text
+                              style={{
+                                color: currentTheme.font,
+                                padding: 5,
+                                letterSpacing: 0.2,
+                              }}
+                            >
+                              {item.duration < 60
+                                ? item.duration + " min."
+                                : item.duration >= 60
+                                ? Math.floor(item.duration / 60) +
+                                  "h" +
+                                  (item.duration % 60 > 0
+                                    ? " " + (item.duration % 60) + " min."
+                                    : "")
+                                : "0h"}
+                            </Text>
+                          )}
+                          <FontAwesome5
+                            name="clock"
+                            color={currentTheme.pink}
+                            size={16}
+                          />
+                        </TouchableOpacity>
+                      </View>
+                      {currentUser?.procedures?.length > 1 && (
+                        <View
+                          style={{ position: "absolute", top: 8, right: 8 }}
+                        >
+                          <TouchableOpacity
+                            onPress={() => {
+                              setItemId(item._id);
+                              setSuccess(true);
+                            }}
+                            style={{ flex: 0.5, alignItems: "flex-end" }}
+                          >
+                            <FontAwesome5 name="times" color="red" size={20} />
+                          </TouchableOpacity>
+                        </View>
                       )}
                     </View>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    acitveOpacity={2}
-                    onPress={() => {
-                      showDurationModal();
-                      setProc(item);
-                    }}
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      borderWidth: 1,
-                      borderColor: currentTheme.line,
-                      padding: 5,
-                      paddingVertical: 2.5,
-                      width: item.duration ? 120 : 50,
-                      justifyContent: "center",
-                      marginLeft: 8,
-                      borderRadius: 5,
-                    }}
-                  >
-                    {item.duration && (
-                      <Text
-                        style={{
-                          color: currentTheme.font,
-                          padding: 5,
-                          letterSpacing: 0.2,
-                        }}
-                      >
-                        {item.duration < 60
-                          ? item.duration + " min."
-                          : item.duration >= 60
-                          ? Math.floor(item.duration / 60) +
-                            "h" +
-                            (item.duration % 60 > 0
-                              ? " " + (item.duration % 60) + " min."
-                              : "")
-                          : "0h"}
-                      </Text>
-                    )}
-                    <FontAwesome5
-                      name="clock"
-                      color={currentTheme.pink}
-                      size={16}
-                    />
-                  </TouchableOpacity>
-                </View>
-                <View style={{ position: "absolute", top: 8, right: 8 }}>
-                  <TouchableOpacity
-                    onPress={() => Deleting(item._id)}
-                    style={{ flex: 0.5, alignItems: "flex-end" }}
-                  >
-                    <FontAwesome5 name="times" color="red" size={20} />
-                  </TouchableOpacity>
-                </View>
-              </View>
-            );
-          })}
-          <ProcedurePricePicker
-            currentTheme={currentTheme}
-            isVisible={editPrice}
-            closeModal={EditProcedure}
-            oldPrice={proc?.price}
-            // fadeAnim={fadeDurationAnim}
-          />
-          <ProcedureDurationPicker
-            currentTheme={currentTheme}
-            visible={visible}
-            setVisible={setVisible}
-            fadeAnim={fadeDurationAnim}
-            EditProcedure={EditProcedure}
-          />
-        </ScrollView>
-      </View>
-    </View>
+                  );
+                })}
+              <ProcedurePricePicker
+                currentTheme={currentTheme}
+                isVisible={editPrice}
+                setEditPrice={setEditPrice}
+                closeModal={EditProcedure}
+                oldPrice={proc?.price}
+                // fadeAnim={fadeDurationAnim}
+              />
+              <ProcedureDurationPicker
+                currentTheme={currentTheme}
+                visible={visible}
+                setVisible={setVisible}
+                fadeAnim={fadeDurationAnim}
+                EditProcedure={EditProcedure}
+              />
+            </ScrollView>
+          </View>
+        </View>
+      )}
+    </>
   );
 };
 const styles = StyleSheet.create({
   item: {
-    // flexDirection: "row",
-    // justifyContent: "space-between",
-    // alignItems: "center",
     borderRadius: 5,
     paddingHorizontal: 15,
     paddingVertical: 5,
     justifyContent: "center",
     marginHorizontal: 0,
     marginTop: 5,
-    // height: 40,
   },
   input: {
     borderColor: "#333",
@@ -433,5 +513,29 @@ const styles = StyleSheet.create({
     color: "white",
     fontSize: 14,
     letterSpacing: 0.2,
+  },
+  navigator: {
+    width: "100%",
+    marginTop: 10,
+    paddingLeft: 15,
+  },
+  categoryButton: {
+    borderRadius: 50,
+    paddingHorizontal: 15,
+    alignItems: "center",
+    height: 25,
+    justifyContent: "center",
+  },
+  categoryButtonActive: {
+    paddingHorizontal: 15,
+    alignItems: "center",
+    height: 25,
+    backgroundColor: "#F866B1",
+    justifyContent: "center",
+    borderRadius: 50,
+  },
+  buttonText: {
+    color: "white",
+    fontSize: 14,
   },
 });

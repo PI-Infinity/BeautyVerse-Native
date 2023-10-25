@@ -1,11 +1,14 @@
 import React, { useState } from "react";
-import { Modal, View, Button, Text, TextInput } from "react-native";
+import { Modal, View, Button, Text, TextInput, Alert } from "react-native";
+
+// price list component
 
 const PricePickerPopup = ({
   isVisible,
   closeModal,
   oldPrice,
   currentTheme,
+  setEditPrice,
 }) => {
   const [selectedValue, setSelectedValue] = useState(null);
 
@@ -31,7 +34,7 @@ const PricePickerPopup = ({
         >
           <Text style={{ color: currentTheme.font }}>Enter a price:</Text>
           <TextInput
-            placeholder={oldPrice?.toString()}
+            placeholder={oldPrice ? oldPrice?.toString() : "eg: 50"}
             placeholderTextColor="gray"
             style={{
               color: currentTheme.font,
@@ -41,6 +44,7 @@ const PricePickerPopup = ({
               borderRadius: 50,
               borderWidth: 1,
               borderColor: currentTheme.line,
+              backgroundColor: currentTheme.line,
             }}
             onChangeText={(text) => setSelectedValue(text)}
             value={selectedValue?.toString()}
@@ -49,12 +53,16 @@ const PricePickerPopup = ({
           <Button
             title="Save"
             color={currentTheme.pink}
-            onPress={() => {
-              closeModal({ price: selectedValue ? selectedValue : oldPrice });
-              setTimeout(() => {
-                setSelectedValue("");
-              }, 1000);
-            }}
+            onPress={
+              selectedValue
+                ? () => {
+                    closeModal({ price: selectedValue });
+                    setTimeout(() => {
+                      setSelectedValue("");
+                    }, 1000);
+                  }
+                : () => setEditPrice(false)
+            }
           />
         </View>
       </View>

@@ -1,35 +1,51 @@
 import {
+  FontAwesome,
+  MaterialCommunityIcons,
+  MaterialIcons,
+} from "@expo/vector-icons";
+import React, { useEffect, useState } from "react";
+import {
+  Dimensions,
   StyleSheet,
   Text,
-  View,
   TouchableOpacity,
-  Dimensions,
+  View,
 } from "react-native";
-import React, { useState, useEffect } from "react";
-import axios from "axios";
 import { useSelector } from "react-redux";
-import { lightTheme, darkTheme } from "../../../context/theme";
-import { MaterialIcons } from "@expo/vector-icons";
+import { darkTheme, lightTheme } from "../../../context/theme";
+import axios from "axios";
 
-const { height: hght, width: SCREEN_WIDTH } = Dimensions.get("window");
+/**
+ * Define statistics component in user screen
+ */
+
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 export const Statistics = ({ navigation }) => {
-  const [statistics, setStatistics] = useState([]);
+  // define current user
   const currentUser = useSelector((state) => state.storeUser.currentUser);
+
+  // define theme
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
+
+  // defines backend url
+  const backendUrl = useSelector((state) => state.storeApp.backendUrl);
+
+  // define statistics state
+  const [statistics, setStatistics] = useState([]);
+
+  // get statistics from backend
   useEffect(() => {
     async function GetStats() {
-      const response = await fetch(
-        `https://beautyverse.herokuapp.com/api/v1/users/${currentUser?._id}/statistics`
-      )
-        .then((response) => response.json())
-        .then((data) => {
-          setStatistics(data.data.data);
-        })
-        .catch((error) => {
-          console.log("Error fetching data:", error);
-        });
+      try {
+        const response = await axios.get(
+          backendUrl + `/api/v1/users/${currentUser?._id}/statistics`
+        );
+        setStatistics(response.data.data.data);
+      } catch (error) {
+        console.log(error.response.data.message);
+      }
     }
     if (currentUser) {
       GetStats();
@@ -46,13 +62,15 @@ export const Statistics = ({ navigation }) => {
         }}
       >
         <TouchableOpacity
+          activeOpacity={0.8}
           onPress={() =>
             navigation.navigate("Charts", {
               data: statistics,
             })
           }
           style={{
-            backgroundColor: currentTheme.background2,
+            borderWidth: 1,
+            borderColor: currentTheme.line,
             borderRadius: 20,
             paddingHorizontal: 20,
             paddingVertical: 10,
@@ -95,7 +113,7 @@ export const Statistics = ({ navigation }) => {
         <View
           style={[
             styles.sectionContainer,
-            { backgroundColor: currentTheme.background2 },
+            { borderWidth: 1, borderColor: currentTheme.line },
           ]}
         >
           <Text
@@ -106,43 +124,62 @@ export const Statistics = ({ navigation }) => {
           >
             Today:
           </Text>
-          <Text
-            style={[
-              styles.itemTitle,
-              { color: currentTheme.font, letterSpacing: 0.2 },
-            ]}
-          >
-            Visitors: {statistics?.visitors?.daily}
-          </Text>
-          <Text
-            style={[
-              styles.itemTitle,
-              { color: currentTheme.font, letterSpacing: 0.2 },
-            ]}
-          >
-            Feeds: {statistics?.feeds?.daily}
-          </Text>
-          <Text
-            style={[
-              styles.itemTitle,
-              { color: currentTheme.font, letterSpacing: 0.2 },
-            ]}
-          >
-            Stars: {statistics?.stars?.daily}
-          </Text>
-          <Text
-            style={[
-              styles.itemTitle,
-              { color: currentTheme.font, letterSpacing: 0.2 },
-            ]}
-          >
-            Followers: {statistics?.followers?.daily}
-          </Text>
+          <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
+            <FontAwesome name="eye" size={18} color={currentTheme.pink} />
+            <Text
+              style={[
+                styles.itemTitle,
+                { color: currentTheme.font, letterSpacing: 0.2 },
+              ]}
+            >
+              Visitors: {statistics?.visitors?.daily}
+            </Text>
+          </View>
+          <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
+            <MaterialCommunityIcons
+              name="cards-variant"
+              size={18}
+              color={currentTheme.pink}
+            />
+
+            <Text
+              style={[
+                styles.itemTitle,
+                { color: currentTheme.font, letterSpacing: 0.2 },
+              ]}
+            >
+              Feeds: {statistics?.feeds?.daily}
+            </Text>
+          </View>
+          <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
+            <FontAwesome name="star-o" size={18} color={currentTheme.pink} />
+
+            <Text
+              style={[
+                styles.itemTitle,
+                { color: currentTheme.font, letterSpacing: 0.2 },
+              ]}
+            >
+              Stars: {statistics?.stars?.daily}
+            </Text>
+          </View>
+          <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
+            <FontAwesome name="heart" size={18} color={currentTheme.pink} />
+            <Text
+              style={[
+                styles.itemTitle,
+                { color: currentTheme.font, letterSpacing: 0.2 },
+              ]}
+            >
+              Followers: {statistics?.followers?.daily}
+            </Text>
+          </View>
         </View>
+
         <View
           style={[
             styles.sectionContainer,
-            { backgroundColor: currentTheme.background2 },
+            { borderWidth: 1, borderColor: currentTheme.line },
           ]}
         >
           <Text
@@ -153,43 +190,62 @@ export const Statistics = ({ navigation }) => {
           >
             Last month:
           </Text>
-          <Text
-            style={[
-              styles.itemTitle,
-              { color: currentTheme.font, letterSpacing: 0.2 },
-            ]}
-          >
-            Visitors: {statistics?.visitors?.monthly}
-          </Text>
-          <Text
-            style={[
-              styles.itemTitle,
-              { color: currentTheme.font, letterSpacing: 0.2 },
-            ]}
-          >
-            Feeds: {statistics?.feeds?.monthly}
-          </Text>
-          <Text
-            style={[
-              styles.itemTitle,
-              { color: currentTheme.font, letterSpacing: 0.2 },
-            ]}
-          >
-            Stars: {statistics?.stars?.monthly}
-          </Text>
-          <Text
-            style={[
-              styles.itemTitle,
-              { color: currentTheme.font, letterSpacing: 0.2 },
-            ]}
-          >
-            Followers: {statistics?.followers?.monthly}
-          </Text>
+
+          <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
+            <FontAwesome name="eye" size={18} color={currentTheme.pink} />
+
+            <Text
+              style={[
+                styles.itemTitle,
+                { color: currentTheme.font, letterSpacing: 0.2 },
+              ]}
+            >
+              Visitors: {statistics?.visitors?.monthly}
+            </Text>
+          </View>
+          <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
+            <MaterialCommunityIcons
+              name="cards-variant"
+              size={18}
+              color={currentTheme.pink}
+            />
+            <Text
+              style={[
+                styles.itemTitle,
+                { color: currentTheme.font, letterSpacing: 0.2 },
+              ]}
+            >
+              Feeds: {statistics?.feeds?.monthly}
+            </Text>
+          </View>
+          <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
+            <FontAwesome name="star-o" size={18} color={currentTheme.pink} />
+            <Text
+              style={[
+                styles.itemTitle,
+                { color: currentTheme.font, letterSpacing: 0.2 },
+              ]}
+            >
+              Stars: {statistics?.stars?.monthly}
+            </Text>
+          </View>
+          <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
+            <FontAwesome name="heart" size={16} color={currentTheme.pink} />
+            <Text
+              style={[
+                styles.itemTitle,
+                { color: currentTheme.font, letterSpacing: 0.2 },
+              ]}
+            >
+              Followers: {statistics?.followers?.monthly}
+            </Text>
+          </View>
         </View>
+
         <View
           style={[
             styles.sectionContainer,
-            { backgroundColor: currentTheme.background2 },
+            { borderWidth: 1, borderColor: currentTheme.line },
           ]}
         >
           <Text
@@ -200,43 +256,61 @@ export const Statistics = ({ navigation }) => {
           >
             Last year:
           </Text>
-          <Text
-            style={[
-              styles.itemTitle,
-              { color: currentTheme.font, letterSpacing: 0.2 },
-            ]}
-          >
-            Visitors: {statistics?.visitors?.yearly}
-          </Text>
-          <Text
-            style={[
-              styles.itemTitle,
-              { color: currentTheme.font, letterSpacing: 0.2 },
-            ]}
-          >
-            Feeds: {statistics?.feeds?.yearly}
-          </Text>
-          <Text
-            style={[
-              styles.itemTitle,
-              { color: currentTheme.font, letterSpacing: 0.2 },
-            ]}
-          >
-            Stars: {statistics?.stars?.yearly}
-          </Text>
-          <Text
-            style={[
-              styles.itemTitle,
-              { color: currentTheme.font, letterSpacing: 0.2 },
-            ]}
-          >
-            Followers: {statistics?.followers?.yearly}
-          </Text>
+
+          <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
+            <FontAwesome name="eye" size={18} color={currentTheme.pink} />
+
+            <Text
+              style={[
+                styles.itemTitle,
+                { color: currentTheme.font, letterSpacing: 0.2 },
+              ]}
+            >
+              Visitors: {statistics?.visitors?.yearly}
+            </Text>
+          </View>
+          <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
+            <MaterialCommunityIcons
+              name="cards-variant"
+              size={18}
+              color={currentTheme.pink}
+            />
+            <Text
+              style={[
+                styles.itemTitle,
+                { color: currentTheme.font, letterSpacing: 0.2 },
+              ]}
+            >
+              Feeds: {statistics?.feeds?.yearly}
+            </Text>
+          </View>
+          <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
+            <FontAwesome name="star-o" size={18} color={currentTheme.pink} />
+            <Text
+              style={[
+                styles.itemTitle,
+                { color: currentTheme.font, letterSpacing: 0.2 },
+              ]}
+            >
+              Stars: {statistics?.stars?.yearly}
+            </Text>
+          </View>
+          <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
+            <FontAwesome name="heart" size={16} color={currentTheme.pink} />
+            <Text
+              style={[
+                styles.itemTitle,
+                { color: currentTheme.font, letterSpacing: 0.2 },
+              ]}
+            >
+              Followers: {statistics?.followers?.yearly}
+            </Text>
+          </View>
         </View>
         <View
           style={[
             styles.sectionContainer,
-            { backgroundColor: currentTheme.background2 },
+            { borderWidth: 1, borderColor: currentTheme.line },
           ]}
         >
           <Text
@@ -247,38 +321,56 @@ export const Statistics = ({ navigation }) => {
           >
             All time:
           </Text>
-          <Text
-            style={[
-              styles.itemTitle,
-              { color: currentTheme.font, letterSpacing: 0.2 },
-            ]}
-          >
-            Feeds: {statistics?.feeds?.all}
-          </Text>
-          <Text
-            style={[
-              styles.itemTitle,
-              { color: currentTheme.font, letterSpacing: 0.2 },
-            ]}
-          >
-            Stars: {statistics?.stars?.all}
-          </Text>
-          <Text
-            style={[
-              styles.itemTitle,
-              { color: currentTheme.font, letterSpacing: 0.2 },
-            ]}
-          >
-            Followers: {statistics?.followers?.all}
-          </Text>
-          <Text
-            style={[
-              styles.itemTitle,
-              { color: currentTheme.font, letterSpacing: 0.2 },
-            ]}
-          >
-            Followings: {statistics?.followings?.all}
-          </Text>
+
+          <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
+            <MaterialCommunityIcons
+              name="cards-variant"
+              size={18}
+              color={currentTheme.pink}
+            />
+            <Text
+              style={[
+                styles.itemTitle,
+                { color: currentTheme.font, letterSpacing: 0.2 },
+              ]}
+            >
+              Feeds: {statistics?.feeds?.all}
+            </Text>
+          </View>
+          <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
+            <FontAwesome name="star-o" size={18} color={currentTheme.pink} />
+            <Text
+              style={[
+                styles.itemTitle,
+                { color: currentTheme.font, letterSpacing: 0.2 },
+              ]}
+            >
+              Stars: {statistics?.stars?.all}
+            </Text>
+          </View>
+          <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
+            <FontAwesome name="heart" size={16} color={currentTheme.pink} />
+
+            <Text
+              style={[
+                styles.itemTitle,
+                { color: currentTheme.font, letterSpacing: 0.2 },
+              ]}
+            >
+              Followers: {statistics?.followers?.all}
+            </Text>
+          </View>
+          <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
+            <FontAwesome name="heart" size={16} color={currentTheme.pink} />
+            <Text
+              style={[
+                styles.itemTitle,
+                { color: currentTheme.font, letterSpacing: 0.2 },
+              ]}
+            >
+              Followings: {statistics?.followings?.all}
+            </Text>
+          </View>
         </View>
       </View>
     </>

@@ -1,24 +1,30 @@
-import { useState, useEffect, useRef } from "react";
-import {
-  StyleSheet,
-  Text,
-  View,
-  ScrollView,
-  Image,
-  ActivityIndicator,
-  Dimensions,
-  TouchableOpacity,
-  Pressable,
-  Alert,
-  Vibration,
-  Platform,
-} from "react-native";
-import React from "react";
-import { useSelector, useDispatch } from "react-redux";
-import { lightTheme, darkTheme } from "../../context/theme";
+import { FontAwesome, Fontisto, MaterialIcons } from "@expo/vector-icons";
 import axios from "axios";
+import React, { useEffect, useState } from "react";
+import {
+  Alert,
+  Dimensions,
+  Image,
+  Platform,
+  Pressable,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  Vibration,
+  View,
+} from "react-native";
+import { ActivityIndicator } from "react-native-paper";
+import { useSelector } from "react-redux";
+import { Language } from "../../context/language";
+import { darkTheme, lightTheme } from "../../context/theme";
+import GetTimesAgo from "../../functions/getTimesAgo";
 import { setRerenderCurrentUser } from "../../redux/rerenders";
-import { MaterialIcons, FontAwesome } from "@expo/vector-icons";
+
+/**
+ * this file includes 2 components (list and item)
+ * Define notifications screen
+ * Bellow notification item component
+ */
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -26,9 +32,9 @@ export const Notifications = ({
   notifications,
   navigation,
   setNotifications,
+  setUnreadNotifications,
 }) => {
-  const dispatch = useDispatch();
-  // curent user
+  // current user
   const currentUser = useSelector((state) => state.storeUser.currentUser);
 
   // theme state
@@ -38,9 +44,13 @@ export const Notifications = ({
   // loading state
   const [loading, setLoading] = useState(true);
 
+  // backend url
+  const backendUrl = useSelector((state) => state.storeApp.backendUrl);
+
   // read notification
   const ReadNotification = async (id) => {
     try {
+      setUnreadNotifications((prev) => prev - 1);
       setNotifications((prev) => {
         return prev.map((item) => {
           // Check if the current item's _id matches the given id
@@ -55,13 +65,12 @@ export const Notifications = ({
           return item;
         });
       });
-      const response = await axios.patch(
-        `https://beautyverse.herokuapp.com/api/v1/users/${currentUser?._id}/notifications/${id}`,
+      await axios.patch(
+        backendUrl + `/api/v1/users/${currentUser?._id}/notifications/${id}`,
         {
           status: "read",
         }
       );
-      // dispatch(setRerenderCurrentUser());
     } catch (error) {
       console.log(error.response.data.message);
     }
@@ -75,6 +84,7 @@ export const Notifications = ({
 
   return (
     <ScrollView
+      scrollEventThrottle={16}
       style={{ flex: 1, backgroundColor: currentTheme.background }}
       bounces={Platform.OS === "ios" ? false : undefined}
       overScrollMode={Platform.OS === "ios" ? "never" : "always"}
@@ -110,7 +120,6 @@ export const Notifications = ({
                 currentTheme={currentTheme}
                 navigation={navigation}
                 ReadNotification={ReadNotification}
-                setLoading={setLoading}
                 currentUser={currentUser}
                 setNotifications={setNotifications}
                 notifications={notifications}
@@ -136,47 +145,60 @@ export const Notifications = ({
   );
 };
 
-const styles = StyleSheet.create({});
+/**
+ * Notification item component
+ */
 
 const NotificationItem = ({
   item,
   currentTheme,
   navigation,
   ReadNotification,
-  setLoading,
   currentUser,
   setNotifications,
   notifications,
 }) => {
-  let feed = item?.feed?.split("/");
+  // define screen id by query split
+  let feed = item?.feed;
 
+  // backend url
+  const backendUrl = useSelector((state) => state.storeApp.backendUrl);
+
+  // define some states
+  const [loadCover, setLoadCover] = useState(true);
   const [feedObj, setFeedObj] = useState(null);
   const [user, setUser] = useState(null);
+  const [product, setProduct] = useState(null);
 
+  // define language
+  const language = Language();
+
+  // define rerender user feed state
   const rerenderUserFeed = useSelector(
     (state) => state.storeRerenders.rerenderUserFeed
   );
 
-  async function GetFeedObj(currentPage) {
+  // get feed from DB
+  async function GetFeedObj() {
     try {
-      if (item?.type !== "welcome") {
+      if (item?.type !== "welcome" && item?.type !== "follow" && item.feed) {
         let response = await axios.get(
-          `https://beautyverse.herokuapp.com/api/v1/users/${
-            currentUser?._id
-          }/feeds/${feed[feed?.length - 1]}?check=${currentUser._id}`
+          backendUrl + `/api/v1/feeds/${feed}?check=${currentUser._id}`
         );
 
-        setFeedObj(response.data.data.feedObj);
+        setFeedObj(response.data.data.feed);
       }
     } catch (error) {
       console.log(error.response.data.message);
     }
   }
-  async function GetUser(currentPage) {
+
+  // Get user from DB
+  async function GetUser() {
     try {
       if (item?.type !== "welcome") {
         let res = await axios.get(
-          `https://beautyverse.herokuapp.com/api/v1/users/${item?.senderId}`
+          backendUrl + `/api/v1/users/${item?.senderId}`
         );
         setUser(res.data.data.user);
       }
@@ -184,25 +206,53 @@ const NotificationItem = ({
       console.log(error.response.data.message);
     }
   }
+  // Get product from DB
+  async function GetProduct() {
+    try {
+      if (item?.type === "saveProduct") {
+        let res = await axios.get(
+          backendUrl + `/api/v1/marketplace/${item?.product}`
+        );
+        setProduct(res.data.data.product);
+      }
+    } catch (error) {
+      console.log(error.response.data.message);
+    }
+  }
 
-  const handlePress = () => {
-    if (feedObj) {
-      navigation.navigate("UserFeed", {
-        user: currentUser,
-        feed: feedObj,
-      });
-    } else {
-      Alert.alert("Feed not defined");
+  if (item.type === "saveProduct") {
+    console.log(product);
+  }
+
+  // on press navigate to feed screen
+  const handlePress = (x) => {
+    if (x === "feed") {
+      if (feedObj) {
+        navigation.navigate("UserFeed", {
+          user: currentUser,
+          feed: feedObj,
+        });
+      } else {
+        Alert.alert("Feed not defined");
+      }
+    } else if (x === "product") {
+      if (product) {
+        navigation.navigate("Product", {
+          product: product,
+        });
+      } else {
+        Alert.alert("Product not defined");
+      }
     }
   };
 
   useEffect(() => {
     GetFeedObj();
     GetUser();
-  }, [rerenderUserFeed]);
+    GetProduct();
+  }, [rerenderUserFeed, item]);
 
   // delete notification
-
   const DeleteNotification = async () => {
     try {
       Vibration.vibrate();
@@ -211,13 +261,96 @@ const NotificationItem = ({
       );
       setNotifications(updatedNotifications);
       await axios.delete(
-        `https://beautyverse.herokuapp.com/api/v1/users/${currentUser?._id}/notifications/${item?._id}`
+        backendUrl +
+          `/api/v1/users/${currentUser?._id}/notifications/${item?._id}`
       );
       console.log("deleted");
     } catch (error) {
       console.log(error.response.data.message);
     }
   };
+
+  /**
+   * Define notification time
+   */
+  const notifiyTime = GetTimesAgo(new Date(item.date).getTime());
+
+  let definedTime;
+  if (notifiyTime?.includes("min")) {
+    definedTime =
+      notifiyTime?.slice(0, -3) + language?.language.Main.feedCard.min;
+  } else if (notifiyTime?.includes("h")) {
+    definedTime =
+      notifiyTime?.slice(0, -1) + language?.language.Main.feedCard.h;
+  } else if (notifiyTime?.includes("d")) {
+    definedTime =
+      notifiyTime?.slice(0, -1) + language?.language.Main.feedCard.d;
+  } else if (notifiyTime?.includes("j")) {
+    definedTime =
+      notifiyTime?.slice(0, -1) + language?.language.Main.feedCard.justNow;
+  } else if (notifiyTime?.includes("w")) {
+    definedTime =
+      notifiyTime?.slice(0, -1) + language?.language.Main.feedCard.w;
+  } else if (notifiyTime?.includes("mo")) {
+    definedTime =
+      notifiyTime?.slice(0, -2) + " " + language?.language.Main.feedCard.mo;
+  } else if (notifiyTime?.includes("y")) {
+    definedTime =
+      notifiyTime?.slice(0, -1) + language?.language.Main.feedCard.y;
+  }
+
+  // define text
+  const lang = useSelector((state) => state.storeApp.language);
+  let text;
+  if (item.type === "star") {
+    if (lang === "en") {
+      text = "Added star on your feed";
+    } else if (lang === "ru") {
+      text = "Добавлена звезда к вашей ленте";
+    } else if (lang === "ka") {
+      text = "მიანიჭა ვარსკვლავი თქვენ პოსტს";
+    }
+  } else if (item.type === "save") {
+    if (lang === "en") {
+      text = "Saved your feed";
+    } else if (lang === "ru") {
+      text = "Ваша лента сохранена";
+    } else if (lang === "ka") {
+      text = "შეინახა თქვენი პოსტი";
+    }
+  } else if (item.type === "share") {
+    if (lang === "en") {
+      text = "Shared your feed";
+    } else if (lang === "ru") {
+      text = "Ваша лента поделилась";
+    } else if (lang === "ka") {
+      text = "გააზიარა თქვენი პოსტი";
+    }
+  } else if (item.type === "review") {
+    if (lang === "en") {
+      text = "Reviewed your feed";
+    } else if (lang === "ru") {
+      text = "Ваша лента была просмотрена";
+    } else if (lang === "ka") {
+      text = "შეაფასა თქვენი პოსტი";
+    }
+  } else if (item.type === "follow") {
+    if (lang === "en") {
+      text = "Started following you";
+    } else if (lang === "ru") {
+      text = "Начал следовать за вами";
+    } else if (lang === "ka") {
+      text = "გამოიწერა თქვენი გვერდი";
+    }
+  } else if (item.type === "saveProduct") {
+    if (lang === "en") {
+      text = "Saved your product";
+    } else if (lang === "ru") {
+      text = "Сохранил ваш продукт";
+    } else if (lang === "ka") {
+      text = "შეინახა თქვენი პროდუქტი";
+    }
+  }
 
   return (
     <>
@@ -235,22 +368,44 @@ const NotificationItem = ({
             borderWidth: 1,
             borderColor: currentTheme.line,
           }}
-          onPress={() => ReadNotification(item?._id)}
+          onPress={
+            item.status === "unread"
+              ? () => ReadNotification(item?._id)
+              : undefined
+          }
           onLongPress={DeleteNotification}
           delayLongPress={250}
         >
           <TouchableOpacity
             activeOpacity={0.3}
-            onPress={() =>
-              navigation.navigate("UserVisit", {
-                user: user,
-              })
+            onPress={
+              user
+                ? () =>
+                    navigation.navigate("UserVisit", {
+                      user: user,
+                    })
+                : undefined
             }
           >
+            {loadCover && item?.senderCover?.length > 10 && (
+              <View
+                style={{
+                  position: "absolute",
+                  zIndex: 1000,
+                  width: "100%",
+                  height: "100%",
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <ActivityIndicator size="small" color={currentTheme.pink} />
+              </View>
+            )}
             {item?.senderCover?.length > 10 ? (
               <Image
                 source={{ uri: item?.senderCover }}
                 style={{ height: 40, width: 40, borderRadius: 50 }}
+                onLoad={() => setLoadCover(false)}
               />
             ) : (
               <View style={{ padding: 5 }}>
@@ -270,16 +425,36 @@ const NotificationItem = ({
               justifyContent: "center",
             }}
           >
-            <Text
+            <View
               style={{
-                color:
-                  item?.status === "unread" ? "#f1f1f1" : currentTheme.font,
-                fontWeight: "bold",
-                fontSize: 14,
+                flexDirection: "row",
+                width: "100%",
+                alignItems: "center",
+                gap: 8,
               }}
             >
-              {item?.senderName}
-            </Text>
+              <Text
+                style={{
+                  color:
+                    item?.status === "unread" ? "#f1f1f1" : currentTheme.font,
+                  fontWeight: "bold",
+                  fontSize: 14,
+                }}
+              >
+                {item?.senderName}
+              </Text>
+              <Text
+                style={{
+                  color:
+                    item?.status === "unread"
+                      ? "#f1f1f1"
+                      : currentTheme.disabled,
+                  fontSize: 12,
+                }}
+              >
+                {definedTime}.
+              </Text>
+            </View>
             <Text
               style={{
                 color:
@@ -287,15 +462,18 @@ const NotificationItem = ({
                 fontSize: 12,
               }}
             >
-              {item?.text}
+              {text}
             </Text>
           </View>
           <View style={{ flexDirection: "row", gap: 20, marginLeft: "auto" }}>
-            {(item?.type === "star" || item?.type === "review") && (
+            {(item?.type === "star" ||
+              item?.type === "review" ||
+              item?.type === "save" ||
+              item?.type === "share") && (
               <TouchableOpacity
                 activeOpacity={0.3}
                 style={{ alignItems: "flex-end" }}
-                onPress={handlePress}
+                onPress={() => handlePress("feed")}
               >
                 <FontAwesome
                   style={{ marginLeft: "auto" }}
@@ -309,18 +487,49 @@ const NotificationItem = ({
                 />
               </TouchableOpacity>
             )}
-            <FontAwesome
-              style={{ marginLeft: "auto" }}
-              name={
-                item?.type === "star"
-                  ? "star-o"
-                  : item?.type === "follow"
-                  ? "check" // Replace 'user-plus' with the desired icon for 'follow'
-                  : "comment" // Replace 'default-icon' with the desired default icon
-              }
-              size={16}
-              color={item?.status === "unread" ? "#f1f1f1" : currentTheme.pink}
-            />
+            {item.type === "saveProduct" && (
+              <TouchableOpacity
+                activeOpacity={0.3}
+                style={{ alignItems: "flex-end" }}
+                onPress={() => handlePress("product")}
+              >
+                <Fontisto
+                  style={{ marginLeft: "auto" }}
+                  name="shopping-bag-1"
+                  size={18}
+                  color={
+                    item?.status === "unread"
+                      ? "#f1f1f1"
+                      : currentTheme.disabled
+                  }
+                />
+              </TouchableOpacity>
+            )}
+            {item?.type === "save" || item?.type === "saveProduct" ? (
+              <MaterialIcons
+                style={{ marginLeft: "auto" }}
+                name="save-alt"
+                size={17}
+                color={
+                  item?.status === "unread" ? "#f1f1f1" : currentTheme.pink
+                }
+              />
+            ) : (
+              <FontAwesome
+                style={{ marginLeft: "auto" }}
+                name={
+                  item?.type === "star"
+                    ? "star-o"
+                    : item?.type === "follow"
+                    ? "check"
+                    : "comment" // Replace 'default-icon' with the desired default icon
+                }
+                size={16}
+                color={
+                  item?.status === "unread" ? "#f1f1f1" : currentTheme.pink
+                }
+              />
+            )}
           </View>
         </Pressable>
       ) : (
@@ -346,16 +555,11 @@ const NotificationItem = ({
           onLongPress={DeleteNotification}
           delayLongPress={250}
         >
-          {item?.senderCover?.length > 0 ? (
-            <Image
-              source={{ uri: item?.cover }}
-              style={{ height: 40, width: 40, borderRadius: 50 }}
-            />
-          ) : (
-            <View style={{ padding: 5 }}>
-              <FontAwesome name="user" size={24} color={currentTheme.pink} />
-            </View>
-          )}
+          <Image
+            source={require("../../assets/icon.png")}
+            style={{ height: 40, width: 40, borderRadius: 50 }}
+          />
+
           <View
             style={{
               gap: 2.5,

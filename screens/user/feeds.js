@@ -1,52 +1,68 @@
-import {
-  View,
-  Text,
-  FlatList,
-  StyleSheet,
-  Image,
-  Dimensions,
-  Pressable,
-  ActivityIndicator,
-  TouchableOpacity,
-  Vibration,
-  Animated,
-} from "react-native";
-import React, { useEffect, useState, useRef } from "react";
-import { useSelector, useDispatch } from "react-redux";
 import axios from "axios";
-import { ScrollGallery } from "../../screens/user/scrollGallery";
-import DeleteFeedPopup from "../../components/confirmDialog";
-import { ref, listAll, deleteObject } from "firebase/storage";
-import { storage } from "../../firebase";
-import { setRerenderUserFeed } from "../../redux/rerenders";
+import React, { useEffect, useRef, useState } from "react";
+import {
+  Animated,
+  Dimensions,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { ActivityIndicator } from "react-native-paper";
+import { useSelector } from "react-redux";
 import { CacheableImage } from "../../components/cacheableImage";
-import { Language } from "../../context/language";
-import { Video, ResizeMode } from "expo-av";
 import { CacheableVideo } from "../../components/cacheableVideo";
-import { lightTheme, darkTheme } from "../../context/theme";
-import { BackDrop } from "../../components/backDropLoader";
+import { darkTheme, lightTheme } from "../../context/theme";
+import { Circle } from "../../components/skeltons";
+
+/**
+ * File includes 2 components (list, item)
+ * User feeds component in user screen
+ * Bellow Feed Item of feeds
+ */
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
-export const Feeds = ({ targetUser, navigation, variant }) => {
+export const Feeds = ({
+  targetUser,
+  navigation,
+  variant,
+  page,
+  feedsLength,
+  setFeedsLength,
+  feeds,
+  setFeeds,
+}) => {
+  // define loading
   const [loading, setLoading] = useState(true);
+
+  // define theme
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
-  const [feeds, setFeeds] = useState([]);
-  const [feedsLength, setFeedsLength] = useState(0);
-  const [page, setPage] = useState(1);
+
+  // define current user
   const currentUser = useSelector((state) => state.storeUser.currentUser);
+  const lang = useSelector((state) => state.storeApp.language);
+
+  // define rerender user feeds in user screen
   const rerenderUserFeeds = useSelector(
     (state) => state.storeRerenders.rerenderUserFeeds
   );
 
+  // backend url
+  const backendUrl = useSelector((state) => state.storeApp.backendUrl);
+
+  // get user feeds
   useEffect(() => {
     async function GetFeeds(userId) {
+      setFeeds([]);
       try {
-        setLoading(true);
         const response = await axios.get(
-          `https://beautyverse.herokuapp.com/api/v1/users/${userId}/feeds/native?page=${page}&check=${currentUser?._id}`
+          `${backendUrl}/api/v1/feeds/${userId}/feeds?page=${1}&limit=8&check=${
+            currentUser?._id
+          }`
         );
+
         setFeeds(response.data.data?.feeds);
         setFeedsLength(response.data.result);
         setTimeout(() => {
@@ -61,45 +77,6 @@ export const Feeds = ({ targetUser, navigation, variant }) => {
       GetFeeds(targetUser?._id);
     }
   }, [rerenderUserFeeds]);
-
-  /**
-   *  // add new feeds to feeds, when press to load more button
-   */
-
-  async function AddFeeds(userId, nextPage) {
-    try {
-      const response = await axios.get(
-        `https://beautyverse.herokuapp.com/api/v1/users/${userId}/feeds/native?page=${nextPage}`
-      );
-      setFeeds((prev) => {
-        const newFeeds = response.data.data?.feeds || [];
-        const uniqueNewFeeds = newFeeds.filter(
-          (newFeed) => !prev.some((prevFeed) => prevFeed._id === newFeed._id)
-        );
-        return [...prev, ...uniqueNewFeeds];
-      });
-    } catch (error) {
-      console.log(error.response.data.message);
-    }
-  }
-
-  /**
-   *  // remove last feeds from feeds, when press to show less button
-   */
-
-  const ReduceFeeds = () => {
-    return setFeeds((prev) => {
-      const uniqueNewFeeds = feeds.filter(
-        (newFeed) => !prev.some((prevFeed) => prevFeed._id === newFeed._id)
-      );
-
-      const minFeeds = 8;
-      const removeCount = Math.min(prev.length - minFeeds, 8);
-
-      const updatedPrev = prev.slice(0, prev.length - removeCount);
-      return [...updatedPrev, ...uniqueNewFeeds];
-    });
-  };
 
   const activeFeed = useSelector(
     (state) => state.storeActions.activeFeedFromScrollGallery
@@ -134,7 +111,7 @@ export const Feeds = ({ targetUser, navigation, variant }) => {
   }, [addStarRerenderFromScrollGallery]);
 
   /**
-   *  // remove star to feeds, when action in scroll gallery of user page
+   *  // remove star from feeds, when action in scroll gallery of user page
    */
 
   const removeStarRerenderFromScrollGallery = useSelector(
@@ -236,7 +213,7 @@ export const Feeds = ({ targetUser, navigation, variant }) => {
               flexDirection: "row",
               flexWrap: "wrap",
               gap: 1,
-              marginTop: 5,
+              // marginTop: 5,
             }}
           >
             {feeds?.length > 0 ? (
@@ -246,15 +223,8 @@ export const Feeds = ({ targetUser, navigation, variant }) => {
                     navigation={navigation}
                     key={index}
                     x={index}
-                    {...item}
+                    feed={item}
                     targetUser={targetUser}
-                    AddFeeds={AddFeeds}
-                    ReduceFeeds={ReduceFeeds}
-                    feedsLength={feedsLength}
-                    page={page}
-                    feedsLengthCurrent={feeds?.length}
-                    feeds={feeds}
-                    setFeeds={setFeeds}
                     variant={variant}
                     currentTheme={currentTheme}
                   />
@@ -275,26 +245,6 @@ export const Feeds = ({ targetUser, navigation, variant }) => {
               </View>
             )}
           </View>
-          {feeds?.length > 8 && (
-            <Pressable
-              onPress={
-                feedsLength > feeds?.length
-                  ? () => AddFeeds(targetUser?._id, page + 1)
-                  : ReduceFeeds
-              }
-              style={{
-                padding: 10,
-                borderRadius: 5,
-                backgroundColor: currentTheme.background2,
-                width: "100%",
-                alignItems: "center",
-              }}
-            >
-              <Text style={{ color: currentTheme.pink }}>
-                {feedsLength > feeds?.length ? "Load More" : "Show Less"}
-              </Text>
-            </Pressable>
-          )}
         </>
       )}
     </View>
@@ -306,73 +256,17 @@ const styles = StyleSheet.create({
     width: SCREEN_WIDTH,
     maxWidth: SCREEN_WIDTH,
     flex: 1,
-
-    // height: SCREEN_HEIGHT - SCREEN_HEIGHT / 3,
+    marginLeft: 2.5,
   },
 });
 
+/**
+ * Feed Item of feeds component
+ */
+
 const FeedItem = (props) => {
-  let feeds = props.feeds.slice(props.x, props.feeds?.length);
-  const currentUser = useSelector((state) => state.storeUser.currentUser);
-  const language = Language();
-  /** delete image from db and cloud */
-  const [confirmDelete, setConfirmDelete] = useState(false);
-  const dispatch = useDispatch();
-
-  const [loading, setLoading] = useState(true);
-  const Deleting = async (itemId, itemName, itemFormat) => {
-    setLoading(true);
-    props.setFeeds((prev) => prev.filter((item) => item._id !== itemId));
-
-    const values = [];
-    /** delete from mongodb
-     */
-
-    /** delete from cloude
-     */
-    // Create a reference to the file to delete
-    let fileRef;
-    if (itemFormat === "video") {
-      fileRef = ref(storage, `videos/${currentUser?._id}/feeds/${itemName}/`);
-    } else {
-      fileRef = ref(storage, `images/${currentUser?._id}/feeds/${itemName}`);
-    }
-
-    // remove feed
-    const url = `https://beautyverse.herokuapp.com/api/v1/users/${currentUser?._id}/feeds/${itemId}`;
-    const response = await fetch(url, { method: "DELETE" })
-      .then((response) => response.json())
-      .then(async (data) => {
-        // Delete the file
-        if (itemFormat === "video") {
-          deleteObject(fileRef).then(() => {
-            console.log("object deleted");
-            dispatch(setRerenderUserFeed());
-            setLoading(false);
-          });
-        } else {
-          listAll(fileRef)
-            .then((res) => {
-              res.items.forEach((itemRef) => {
-                deleteObject(itemRef).then(() => {
-                  dispatch(setRerenderUserFeed());
-                  console.log("storage success");
-                  setLoading(false);
-                });
-              });
-            })
-            .catch((error) => {
-              console.log("error : " + error);
-            });
-        }
-      })
-      .catch((error) => {
-        console.log("Error fetching data:", error);
-      });
-  };
-
+  const [loadingFeed, setLoadingFeed] = useState(true);
   // fade in
-
   const fadeAnim = useRef(new Animated.Value(0)).current; // Initial value for opacity: 0
 
   useEffect(() => {
@@ -385,69 +279,48 @@ const FeedItem = (props) => {
 
   return (
     <>
-      <DeleteFeedPopup
-        onClose={() => setConfirmDelete(false)}
-        isVisible={confirmDelete}
-        onDelete={() => Deleting(props._id, props.name, props?.fileFormat)}
-        title={language.language.User.userPage.removeFeed}
-        delet={language.language.User.userPage.remove}
-        cancel={language.language.User.userPage.cancel}
-        // delet,
-        // cancel,
-      />
-
       <TouchableOpacity
         style={{
-          width: SCREEN_WIDTH / 2 - 1,
-          height: SCREEN_WIDTH / 2 - 1,
-
-          // borderRadius: 3,
+          width: SCREEN_WIDTH / 2 - 10,
+          height: SCREEN_WIDTH / 2 - 10,
+          marginLeft: 5,
+          marginBottom: 5,
         }}
-        activeOpacity={0.5}
-        onLongPress={
-          currentUser._id === props.targetUser._id &&
-          props.variant != "visitPage"
-            ? () => {
-                Vibration.vibrate();
-                setConfirmDelete(true);
-              }
-            : undefined
-        }
-        delayLongPress={300}
+        activeOpacity={0.9}
         onPress={() => {
-          props.navigation.navigate("ScrollGallery", {
+          props.navigation.navigate("UserFeed", {
             user: props.targetUser,
-            scrolableFeeds: feeds,
-            feeds: props.feeds,
-            feedsLength: props.feedsLength,
-            feedsLengthCurrent: props.feedsLengthCurrent,
-            page: props.page,
+            feed: props.feed,
           });
         }}
       >
-        <View
-          style={{
-            position: "absolute",
-            width: SCREEN_WIDTH / 2 - 1,
-            height: SCREEN_WIDTH / 2 - 1,
-            backgroundColor: "rgba(1,1,1,0.1)",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
+        {loadingFeed && (
+          <View
+            style={{
+              position: "absolute",
+              width: SCREEN_WIDTH / 2 - 10,
+              aspectRatio: 1,
+              alignItems: "center",
+              justifyContent: "center",
+              overflow: "hidden",
+              borderRadius: 10,
+            }}
+          >
+            <Circle />
+          </View>
+        )}
+        <Animated.View
+          style={{ opacity: fadeAnim, borderRadius: 10, overflow: "hidden" }}
         >
-          <ActivityIndicator color={props.currentTheme.pink} />
-        </View>
-        <Animated.View style={{ opacity: fadeAnim }}>
-          {props?.fileFormat === "video" ? (
-            // <Pressable onPress={(event) => event.stopPropagation()}>
+          {props?.feed.fileFormat === "video" ? (
             <CacheableVideo
               type="userGallery"
               style={{
-                width: SCREEN_WIDTH / 2 - 2,
-                height: SCREEN_WIDTH / 2 - 2,
+                width: SCREEN_WIDTH / 2 - 10,
+                height: SCREEN_WIDTH / 2 - 10,
               }}
               source={{
-                uri: props.video,
+                uri: props.feed.video,
               }}
               useNativeControls={false}
               rate={1.0}
@@ -456,27 +329,35 @@ const FeedItem = (props) => {
               shouldPlay
               isLooping
               resizeMode="cover"
-              onLoad={() => setLoading(false)}
+              onLoad={() =>
+                setTimeout(() => {
+                  setLoadingFeed(false);
+                }, 500)
+              }
             />
           ) : (
-            // </Pressable>
             <CacheableImage
               style={{
-                width: SCREEN_WIDTH / 2 - 2,
-                height: SCREEN_WIDTH / 2 - 2,
+                width: SCREEN_WIDTH / 2 - 10,
+                height: SCREEN_WIDTH / 2 - 10,
               }}
               source={{
-                uri: props?.images[0].url,
+                uri: props?.feed.images[0].url,
               }}
               manipulationOptions={[
                 {
                   resize: {
-                    width: SCREEN_WIDTH / 2 - 2,
-                    height: SCREEN_WIDTH / 2 - 2,
+                    width: SCREEN_WIDTH / 2 - 10,
+                    height: SCREEN_WIDTH / 2 - 10,
                   },
                 },
                 { rotate: 90 },
               ]}
+              onLoad={() =>
+                setTimeout(() => {
+                  setLoadingFeed(false);
+                }, 500)
+              }
             />
           )}
         </Animated.View>

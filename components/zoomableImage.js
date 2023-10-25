@@ -3,7 +3,9 @@ import { Dimensions, Animated, View } from "react-native";
 import { PinchGestureHandler, State } from "react-native-gesture-handler";
 import { CacheableImage } from "../components/cacheableImage";
 
-const { width, height } = Dimensions.get("window");
+/**
+ * Zoomable image component
+ */
 
 const ZoomableImage = ({ source, ...props }) => {
   const scale = useRef(new Animated.Value(1)).current;

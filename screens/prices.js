@@ -1,20 +1,21 @@
-import {
-  StyleSheet,
-  Text,
-  View,
-  ScrollView,
-  TouchableOpacity,
-} from "react-native";
-import React, { useState } from "react";
-import { lightTheme, darkTheme } from "../context/theme";
-import { useSelector, useDispatch } from "react-redux";
 import { MaterialIcons, Octicons } from "@expo/vector-icons";
 import axios from "axios";
+import React, { useState } from "react";
+import {
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { useDispatch, useSelector } from "react-redux";
+import { BackDrop } from "../components/backDropLoader";
+import { darkTheme, lightTheme } from "../context/theme";
 import {
   setRerenderCurrentUser,
   setRerenderUserList,
 } from "../redux/rerenders";
-import { BackDrop } from "../components/backDropLoader";
+import { Language } from "../context/language";
 
 export const Prices = ({ route }) => {
   const dispatch = useDispatch();
@@ -30,6 +31,12 @@ export const Prices = ({ route }) => {
 
   const [loading, setLoading] = useState(false);
 
+  // defines language
+  const language = Language();
+
+  // backend url
+  const backendUrl = useSelector((state) => state.storeApp.backendUrl);
+
   // update subscription
   const UpdateSubscription = async () => {
     setLoading(true);
@@ -37,26 +44,23 @@ export const Prices = ({ route }) => {
     expireDate.setMonth(expireDate.getMonth() + 1);
 
     try {
-      await axios.patch(
-        `https://beautyverse.herokuapp.com/api/v1/users/${currentUser._id}`,
-        {
-          subscription: {
-            status:
-              currentUser.subscription?.status === "active"
-                ? "inactive"
-                : "active",
-            activationDate: new Date(),
-            expireDate: expireDate,
-            // variant: "Monthly",
-            // price: 10,
-          },
-        }
-      );
+      await axios.patch(`${backendUrl}/api/v1/users/${currentUser._id}`, {
+        subscription: {
+          status:
+            currentUser.subscription?.status === "active"
+              ? "inactive"
+              : "active",
+          activationDate: new Date(),
+          expireDate: expireDate,
+          // variant: "Monthly",
+          // price: 10,
+        },
+      });
       dispatch(setRerenderCurrentUser());
       dispatch(setRerenderUserList());
       setTimeout(() => {
         setLoading(false);
-      }, 500);
+      }, 1500);
     } catch (error) {
       console.log(error.response.data.message);
       setTimeout(() => {
@@ -80,7 +84,7 @@ export const Prices = ({ route }) => {
         style={[
           styles.item,
           {
-            backgroundColor: currentTheme.background2,
+            backgroundColor: currentTheme.background,
             shadowColor: "#000",
             shadowOffset: {
               width: 0,
@@ -88,6 +92,8 @@ export const Prices = ({ route }) => {
             },
             shadowOpacity: 0.1,
             shadowRadius: 5,
+            borderWidth: 1,
+            borderColor: currentTheme.line,
           },
         ]}
       >
@@ -97,92 +103,117 @@ export const Prices = ({ route }) => {
             { color: currentTheme.font, letterSpacing: 0.5 },
           ]}
         >
-          Free
+          {language.language.Prices.prices.free}
         </Text>
 
         <View style={{ gap: 5 }}>
           <View style={styles.listItemBox}>
-            <View style={{ width: "10%" }}>
-              <MaterialIcons name="circle" color="orange" size={22} />
-            </View>
             <View style={styles.listItem}>
               <Text style={[styles.title, { color: currentTheme.font }]}>
-                Registered Profile:
+                {language.language.Prices.prices.feeds}
               </Text>
-              <Text style={[styles.text, { color: currentTheme.disabled }]}>
-                Your profile will be listed in the cards section, allowing
-                everyone to discover and connect with you.
+              <View
+                style={{ flexDirection: "row", gap: 8, alignItems: "center" }}
+              >
+                <MaterialIcons
+                  name="done"
+                  color={currentTheme.pink}
+                  size={22}
+                />
+
+                <Text style={[styles.text, { color: currentTheme.disabled }]}>
+                  {language.language.Prices.prices.feedsText1}
+                </Text>
+              </View>
+              <View
+                style={{ flexDirection: "row", gap: 8, alignItems: "center" }}
+              >
+                <MaterialIcons name="close" color="red" size={22} />
+                <Text style={[styles.text, { color: currentTheme.disabled }]}>
+                  {language.language.Prices.prices.feedsText2}
+                </Text>
+              </View>
+            </View>
+          </View>
+          {(currentUser.type === "specialist" ||
+            currentUser.type === "beautycenter") && (
+            <View style={styles.listItemBox}>
+              <View style={styles.listItem}>
+                <Text style={[styles.title, { color: currentTheme.font }]}>
+                  {language.language.Prices.prices.profileCards}
+                </Text>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    gap: 8,
+                    alignItems: "center",
+                    marginLeft: 6,
+                  }}
+                >
+                  <Octicons name="sort-desc" color="red" size={18} />
+
+                  <Text style={[styles.text, { color: currentTheme.disabled }]}>
+                    {language.language.Prices.prices.cardsText}
+                  </Text>
+                </View>
+              </View>
+            </View>
+          )}
+
+          <View style={styles.listItemBox}>
+            <View style={styles.listItem}>
+              <Text style={[styles.title, { color: currentTheme.font }]}>
+                {language.language.Prices.prices.badge}
               </Text>
+              <View
+                style={{
+                  flexDirection: "row",
+                  gap: 8,
+                  alignItems: "center",
+                }}
+              >
+                <View style={{ width: "10%" }}>
+                  <MaterialIcons name="close" color="red" size={22} />
+                </View>
+                <Text style={[styles.text, { color: currentTheme.disabled }]}>
+                  {language.language.Prices.prices.badgeText}
+                </Text>
+              </View>
             </View>
           </View>
           <View style={styles.listItemBox}>
-            <View style={{ width: "10%" }}>
-              <MaterialIcons name="circle" color="orange" size={22} />
-            </View>
             <View style={styles.listItem}>
               <Text style={[styles.title, { color: currentTheme.font }]}>
-                Content Sharing:
+                {language.language.Prices.prices.bookings}
               </Text>
-              <Text style={[styles.text, { color: currentTheme.disabled }]}>
-                Your posts and updates will be visible only to your followers in
-                the feeds section. This helps create a more intimate and
-                personal community for your interactions.
-              </Text>
-            </View>
-          </View>
-          <View style={styles.listItemBox}>
-            <View style={{ width: "10%" }}>
-              <Octicons name="sort-asc" color="red" size={20} />
-            </View>
-            <View style={styles.listItem}>
-              <Text style={[styles.title, { color: currentTheme.font }]}>
-                Positioning:
-              </Text>
-              <Text style={[styles.text, { color: currentTheme.disabled }]}>
-                Your profile will be sorted at the second level in the cards
-                section, providing decent visibility among the community.
-              </Text>
-            </View>
-          </View>
-          <View style={styles.listItemBox}>
-            <View style={{ width: "10%" }}>
-              <MaterialIcons name="close" color="red" size={22} />
-            </View>
-            <View style={styles.listItem}>
-              <Text style={[styles.title, { color: currentTheme.font }]}>
-                Verification Badge:
-              </Text>
-              <Text style={[styles.text, { color: currentTheme.disabled }]}>
-                The verification badge is not available for free users, ensuring
-                that premium users stand out.
-              </Text>
-            </View>
-          </View>
-          <View style={styles.listItemBox}>
-            <View style={{ width: "10%" }}>
-              <MaterialIcons name="close" color="red" size={22} />
-            </View>
-            <View style={styles.listItem}>
-              <Text style={[styles.title, { color: currentTheme.font }]}>
-                Order Management System:
-              </Text>
-              <Text style={[styles.text, { color: currentTheme.disabled }]}>
-                Free users do not have access to the order management system.
-              </Text>
+              <View
+                style={{
+                  flexDirection: "row",
+                  gap: 8,
+                  alignItems: "center",
+                }}
+              >
+                <View style={{ width: "10%" }}>
+                  <MaterialIcons name="close" color="red" size={22} />
+                </View>
+                <Text style={[styles.text, { color: currentTheme.disabled }]}>
+                  {language.language.Prices.prices.bookingsText}
+                </Text>
+              </View>
             </View>
           </View>
         </View>
       </View>
-      <View style={{ flexDirection: "row", gap: 10 }}>
+      <View style={{ flexDirection: "row", gap: 10, marginVertical: 15 }}>
         <TouchableOpacity
           activeOpacity={0.7}
           onPress={() => setActive("Monthly")}
           style={{
             flex: 1,
-            borderWidth: 2,
+            borderWidth: 1.5,
             borderRadius: 50,
             borderColor:
-              active === "Monthly" ? currentTheme.pink : currentTheme.disabled,
+              active === "Monthly" ? currentTheme.pink : currentTheme.line,
             alignItems: "center",
             padding: 8,
           }}
@@ -193,7 +224,7 @@ export const Prices = ({ route }) => {
               fontWeight: "bold",
             }}
           >
-            Monthly
+            {language.language.Prices.prices.monthly}
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -201,10 +232,10 @@ export const Prices = ({ route }) => {
           onPress={() => setActive("Early")}
           style={{
             flex: 1,
-            borderWidth: 2,
+            borderWidth: 1.5,
             borderRadius: 50,
             borderColor:
-              active === "Early" ? currentTheme.pink : currentTheme.disabled,
+              active === "Early" ? currentTheme.pink : currentTheme.line,
             alignItems: "center",
             padding: 8,
           }}
@@ -215,7 +246,7 @@ export const Prices = ({ route }) => {
               fontWeight: "bold",
             }}
           >
-            Yearly (-20%)
+            {language.language.Prices.prices.anually} (-20%)
           </Text>
         </TouchableOpacity>
       </View>
@@ -223,7 +254,8 @@ export const Prices = ({ route }) => {
         style={[
           styles.item,
           {
-            backgroundColor: currentTheme.background2,
+            borderWidth: 1,
+            borderColor: currentTheme.line,
             shadowColor: "#000",
             shadowOffset: {
               width: 0,
@@ -253,7 +285,7 @@ export const Prices = ({ route }) => {
               letterSpacing: 0.5,
             }}
           >
-            Subscription
+            {language.language.Prices.prices.subscription}
           </Text>
           <Text
             style={{
@@ -262,7 +294,9 @@ export const Prices = ({ route }) => {
               fontSize: 22,
             }}
           >
-            {active === "Monthly" ? "10$" : "8$ mo. / 96$ y."}
+            {active === "Monthly"
+              ? "20$"
+              : `16$ ${language.language.Prices.prices.mo} / 192$ ${language.language.Prices.prices.y}`}
           </Text>
         </View>
         <Text
@@ -273,81 +307,104 @@ export const Prices = ({ route }) => {
             bottom: 5,
           }}
         >
-          {active === "Monthly" ? "Per month" : "Save 20%"}
+          {active === "Monthly"
+            ? language.language.Prices.prices.perMonth
+            : `${language.language.Prices.prices.save} 20%`}
         </Text>
 
         <View style={{ gap: 5, margin: 20, marginTop: 10 }}>
           <View style={styles.listItemBox}>
-            <View style={{ width: "10%" }}>
-              <MaterialIcons name="done" color={currentTheme.pink} size={22} />
-            </View>
             <View style={styles.listItem}>
               <Text style={[styles.title, { color: currentTheme.font }]}>
-                Registered Profile:
+                {language.language.Prices.prices.feeds}
               </Text>
-              <Text style={[styles.text, { color: currentTheme.disabled }]}>
-                Your profile will be listed at the top of both the feeds and
-                cards sections, providing the highest visibility to all users.
+              <View
+                style={{ flexDirection: "row", gap: 8, alignItems: "center" }}
+              >
+                <MaterialIcons
+                  name="done"
+                  color={currentTheme.pink}
+                  size={22}
+                />
+
+                <Text style={[styles.text, { color: currentTheme.disabled }]}>
+                  {language.language.Prices.prices.feedsText2}
+                </Text>
+              </View>
+            </View>
+          </View>
+          {(currentUser.type === "specialist" ||
+            currentUser.type === "beautycenter") && (
+            <View style={styles.listItemBox}>
+              <View style={styles.listItem}>
+                <Text style={[styles.title, { color: currentTheme.font }]}>
+                  {language.language.Prices.prices.profileCards}
+                </Text>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    gap: 8,
+                    alignItems: "center",
+                    marginLeft: 6,
+                  }}
+                >
+                  <Octicons name="sort-asc" color="green" size={18} />
+
+                  <Text style={[styles.text, { color: currentTheme.disabled }]}>
+                    {language.language.Prices.prices.cardsText2}
+                  </Text>
+                </View>
+              </View>
+            </View>
+          )}
+          <View style={styles.listItemBox}>
+            <View style={styles.listItem}>
+              <Text style={[styles.title, { color: currentTheme.font }]}>
+                {language.language.Prices.prices.badge}
               </Text>
+              <View
+                style={{
+                  flexDirection: "row",
+                  gap: 8,
+                  alignItems: "center",
+                }}
+              >
+                <View style={{ width: "10%" }}>
+                  <MaterialIcons
+                    name="done"
+                    color={currentTheme.pink}
+                    size={22}
+                  />
+                </View>
+                <Text style={[styles.text, { color: currentTheme.disabled }]}>
+                  {language.language.Prices.prices.badgeText2}
+                </Text>
+              </View>
             </View>
           </View>
           <View style={styles.listItemBox}>
-            <View style={{ width: "10%" }}>
-              <MaterialIcons name="done" color={currentTheme.pink} size={22} />
-            </View>
             <View style={styles.listItem}>
               <Text style={[styles.title, { color: currentTheme.font }]}>
-                Content Sharing:
+                {language.language.Prices.prices.bookings}
               </Text>
-              <Text style={[styles.text, { color: currentTheme.disabled }]}>
-                Your posts and updates will be visible to everyone in both the
-                feeds and cards sections, ensuring that your content reaches a
-                broader audience.
-              </Text>
-            </View>
-          </View>
-          <View style={styles.listItemBox}>
-            <View style={{ width: "10%" }}>
-              <MaterialIcons name="done" color={currentTheme.pink} size={22} />
-            </View>
-            <View style={styles.listItem}>
-              <Text style={[styles.title, { color: currentTheme.font }]}>
-                Top Level Sorting:
-              </Text>
-              <Text style={[styles.text, { color: currentTheme.disabled }]}>
-                Your profile will always be sorted at the top level in both the
-                feeds and cards sections. This prominent positioning maximizes
-                your exposure and influence within the community.
-              </Text>
-            </View>
-          </View>
-          <View style={styles.listItemBox}>
-            <View style={{ width: "10%" }}>
-              <MaterialIcons name="done" color={currentTheme.pink} size={22} />
-            </View>
-            <View style={styles.listItem}>
-              <Text style={[styles.title, { color: currentTheme.font }]}>
-                Verification Badge:
-              </Text>
-              <Text style={[styles.text, { color: currentTheme.disabled }]}>
-                As a Premium subscriber, you get a verification badge on your
-                profile, distinguishing you as a trusted and significant user.
-              </Text>
-            </View>
-          </View>
-          <View style={styles.listItemBox}>
-            <View style={{ width: "10%" }}>
-              <MaterialIcons name="done" color={currentTheme.pink} size={22} />
-            </View>
-            <View style={styles.listItem}>
-              <Text style={[styles.title, { color: currentTheme.font }]}>
-                Order Management System:
-              </Text>
-              <Text style={[styles.text, { color: currentTheme.disabled }]}>
-                As a Premium subscriber, you have full access to the order
-                management system, allowing for a more comprehensive and
-                convenient user experience.
-              </Text>
+              <View
+                style={{
+                  flexDirection: "row",
+                  gap: 8,
+                  alignItems: "center",
+                }}
+              >
+                <View style={{ width: "10%" }}>
+                  <MaterialIcons
+                    name="done"
+                    color={currentTheme.pink}
+                    size={22}
+                  />
+                </View>
+                <Text style={[styles.text, { color: currentTheme.disabled }]}>
+                  {language.language.Prices.prices.bookingsText2}
+                </Text>
+              </View>
             </View>
           </View>
         </View>
@@ -358,19 +415,21 @@ export const Prices = ({ route }) => {
             style={{
               width: "60%",
               borderRadius: 50,
-              backgroundColor:
+              borderWidth: 1.5,
+              borderColor:
                 currentUser.subscription.status === "active"
                   ? currentTheme.disabled
                   : currentTheme.pink,
               padding: 10,
               alignItems: "center",
+              marginTop: 25,
             }}
             onPress={UpdateSubscription}
           >
-            <Text style={{ fontWeight: "bold", color: "#ccc" }}>
+            <Text style={{ fontWeight: "bold", color: currentTheme.pink }}>
               {currentUser.subscription.status === "active"
-                ? "Cancel"
-                : "Activation"}
+                ? language.language.Prices.prices.cancel
+                : language.language.Prices.prices.activation}
             </Text>
           </TouchableOpacity>
         )}
@@ -389,7 +448,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: "center",
     padding: 15,
-    paddingBottom: 30,
+    paddingBottom: 50,
   },
   itemTitle: {
     fontSize: 18,
@@ -404,10 +463,10 @@ const styles = StyleSheet.create({
   },
   listItem: {
     gap: 10,
-    width: "85%",
+    width: "90%",
   },
   title: {
     fontWeight: "bold",
   },
-  text: {},
+  text: { letterSpacing: 0.3, fontSize: 14, lineHeight: 18 },
 });

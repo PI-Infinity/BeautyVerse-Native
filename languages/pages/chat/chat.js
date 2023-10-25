@@ -10,6 +10,14 @@ const Chat = {
     confirmText: "Are you sure you want to delete the text?",
     cancel: "Cancel",
     remove: "Remove",
+    notFound: "Chats not found",
+    aiAssistant: "Beauty Assistant",
+    assistantOffer:
+      "isn't online, you can start conversation with AI Assistant",
+    disableBot: "Disable Bot",
+    assistantTyping: "Assistant is typing",
+    consultantTyping: "Consultant is typing",
+    aiConsultant: "AI Consultant",
   },
   ka: {
     title: "სასაუბრო",
@@ -22,6 +30,14 @@ const Chat = {
     confirmText: "ნამდვილად გსურთ ტექსტის წაშლა?",
     cancel: "გაუქმება",
     remove: "წაშლა",
+    notFound: "სასაუბროები არ მოიძებნა",
+    aiAssistant: "Beauty ასისტენტი",
+    assistantOffer:
+      "არ იმყოფება ონლაინ, მანამდე შეგიძლიათ გაესაუბროთ AI ასისტენტს.",
+    disableBot: "ბოტის გათიშვა",
+    assistantTyping: "ასისტენტი წერს",
+    consultantTyping: "კონსულტანტი წერს",
+    aiConsultant: "AI კონსულტანტი",
   },
   ru: {
     title: "Чат",
@@ -34,6 +50,14 @@ const Chat = {
     confirmText: "Вы уверены, что хотите удалить текст?",
     cancel: "Отмена",
     remove: "Удалить",
+    notFound: "Чаты не найдены",
+    aiAssistant: "Beauty Помощник",
+    assistantOffer:
+      "не в сети, вы можете начать разговор с помощью AI Assistant",
+    disableBot: "Отключить бота",
+    assistantTyping: "Ассистент печатает",
+    consultantTyping: "Консультант печатает",
+    aiConsultant: "AI Консультант",
   },
 };
 

@@ -1,18 +1,19 @@
-import React, { useState, useEffect } from "react";
-import { StyleSheet, View, Text, Dimensions } from "react-native";
-import MapView, { PROVIDER_GOOGLE, Marker } from "react-native-maps";
+import React, { useEffect, useState, useRef } from "react";
+import { StyleSheet, View } from "react-native";
+import MapView, { Marker } from "react-native-maps";
 
-const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
-
-const Map = ({ latitude, longitude, mapViewRef, height }) => {
+const Map = ({ latitude, longitude, height }) => {
   const [selectedCoordinate, setSelectedCoordinate] = useState(null);
+  const mapViewRef = useRef(null);
+
   const handleMapPress = (event) => {
     setSelectedCoordinate(event.nativeEvent.coordinate);
   };
+
   useEffect(() => {
-    const updateCoordinates = (newLatitude, newLongitude) => {
+    const updateCoordinates = () => {
       if (mapViewRef?.current) {
-        mapViewRef?.current.animateToRegion(
+        mapViewRef.current.animateToRegion(
           {
             latitude: latitude,
             longitude: longitude,
@@ -23,19 +24,16 @@ const Map = ({ latitude, longitude, mapViewRef, height }) => {
         );
       }
     };
+
     setTimeout(() => {
       updateCoordinates();
     }, 0);
-  }, [latitude, selectedCoordinate]);
+  }, [latitude, longitude, selectedCoordinate]);
+
   return (
-    <View
-      style={{
-        height: height,
-      }}
-    >
+    <View style={{ height: height }}>
       <MapView
         ref={mapViewRef}
-        provider={PROVIDER_GOOGLE}
         style={[styles.map, { height: height, width: "100%" }]}
         initialRegion={{
           latitude: latitude,
@@ -60,13 +58,12 @@ const Map = ({ latitude, longitude, mapViewRef, height }) => {
 
 const styles = StyleSheet.create({
   container: {
-    // flex: 1,
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#F5FCFF",
   },
   map: {
-    borderRadius: 5,
+    borderRadius: 20,
     ...StyleSheet.absoluteFillObject,
   },
 });

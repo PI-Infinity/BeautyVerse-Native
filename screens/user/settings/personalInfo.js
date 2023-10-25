@@ -1,44 +1,87 @@
+import axios from "axios";
 import React, { useState } from "react";
 import {
-  View,
+  Alert,
+  Dimensions,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Switch,
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
-  Dimensions,
-  Alert,
-  Switch,
-  ScrollView,
-  KeyboardAvoidingView,
-  Platform,
+  View,
 } from "react-native";
-import { useSelector, useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { Language } from "../../../context/language";
+import { darkTheme, lightTheme } from "../../../context/theme";
 import { setRerenderCurrentUser } from "../../../redux/rerenders";
 import { setCurrentUser } from "../../../redux/user";
-import axios from "axios";
-import CountryCodePicker from "../../../components/countryCodes";
-import { Language } from "../../../context/language";
-import { lightTheme, darkTheme } from "../../../context/theme";
+import CountryPicker from "react-native-country-picker-modal";
+import AlertMessage from "../../../components/alertMessage";
 
-const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
+/**
+ * Personal info screen in settings
+ */
 
-export const PersonalInfo = ({ user, onSave }) => {
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
+
+export const PersonalInfo = () => {
+  // define language
   const language = Language();
+
+  // define redux dispatch
   const dispatch = useDispatch();
 
+  // define theme
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
 
+  // define current user
   const currentUser = useSelector((state) => state.storeUser.currentUser);
+
+  // define editing mode
   const [isEditing, setIsEditing] = useState(false);
   const [editableUser, setEditableUser] = useState({ ...currentUser });
+  const [countryCode, setCountryCode] = useState(currentUser.phone.countryCode);
+  const [callingCode, setCallingCode] = useState(currentUser.phone.callingCode);
 
+  // alert message
+  const [alert, setAlert] = useState({ active: false, text: "", type: "" });
+
+  const onSelect = (country) => {
+    if (country && country.callingCode && country.callingCode[0]) {
+      setCountryCode(country.cca2);
+      setCallingCode(country?.callingCode[0]);
+      // setCountryCode(country?.callingCode[0]);
+    } else {
+      // Default to US if no calling code exists
+      setCountryCode("US");
+    }
+  };
+
+  // backend url
+  const backendUrl = useSelector((state) => state.storeApp.backendUrl);
+
+  // define function on save
   const handleSave = async () => {
+    if (editableUser?.phone.phone?.includes("+")) {
+      return setAlert({
+        active: true,
+        text: "Phone number doesn't need country code +" + callingCode,
+        type: "error",
+      });
+    }
     const User = {
       ...currentUser,
       name: editableUser?.name,
       username: editableUser?.username,
-      phone: editableUser?.phone,
+      phone: {
+        phone: editableUser.phone.phone,
+        callingCode: callingCode,
+        countryCode: countryCode,
+      },
       about: editableUser?.about,
       media: {
         web: editableUser?.media?.web,
@@ -50,27 +93,28 @@ export const PersonalInfo = ({ user, onSave }) => {
         telegram: editableUser?.media?.telegram,
       },
     };
-    setIsEditing(false);
     dispatch(setCurrentUser(User));
     try {
-      await axios.patch(
-        "https://beautyverse.herokuapp.com/api/v1/users/" + currentUser._id,
-        {
-          name: editableUser?.name,
-          username: editableUser?.username,
-          phone: editableUser?.phone,
-          about: editableUser?.about,
-          media: {
-            web: editableUser?.media?.web,
-            facebook: editableUser?.media?.facebook,
-            instagram: editableUser?.media?.instagram,
-            youtube: editableUser?.media?.youtube,
-            tiktok: editableUser?.media?.tiktok,
-            whatsapp: editableUser?.media?.whatsapp,
-            telegram: editableUser?.media?.telegram,
-          },
-        }
-      );
+      await axios.patch(backendUrl + "/api/v1/users/" + currentUser._id, {
+        name: editableUser?.name,
+        username: editableUser?.username,
+        phone: {
+          phone: editableUser.phone.phone,
+          callingCode: callingCode,
+          countryCode: countryCode,
+        },
+        about: editableUser?.about,
+        media: {
+          web: editableUser?.media?.web,
+          facebook: editableUser?.media?.facebook,
+          instagram: editableUser?.media?.instagram,
+          youtube: editableUser?.media?.youtube,
+          tiktok: editableUser?.media?.tiktok,
+          whatsapp: editableUser?.media?.whatsapp,
+          telegram: editableUser?.media?.telegram,
+        },
+      });
+      setIsEditing(false);
       dispatch(setRerenderCurrentUser());
     } catch (error) {
       Alert.alert(error.response.data.message);
@@ -78,10 +122,11 @@ export const PersonalInfo = ({ user, onSave }) => {
     }
   };
 
+  // capitalize first letter of texts
   function capitalizeFirstLetter(string) {
     return string?.charAt(0).toUpperCase() + string?.slice(1);
   }
-
+  // capitalize user type
   const type = capitalizeFirstLetter(currentUser?.type);
 
   return (
@@ -187,43 +232,45 @@ export const PersonalInfo = ({ user, onSave }) => {
             </Text>
           )}
         </View>
-        <View
-          style={[
-            styles.itemContainer,
-            { borderBottomColor: currentTheme.line },
-          ]}
-        >
-          <Text
+        {currentUser.type !== "shop" && (
+          <View
             style={[
-              styles.label,
-              { color: currentTheme.font, letterSpacing: 0.2 },
+              styles.itemContainer,
+              { borderBottomColor: currentTheme.line },
             ]}
           >
-            {language?.language?.User.userPage.username}:
-          </Text>
-          {isEditing ? (
-            <TextInput
-              placeholderTextColor={currentTheme.disabled}
-              style={[
-                styles.input,
-                { color: currentTheme.font, borderColor: currentTheme.line },
-              ]}
-              value={editableUser.username}
-              onChangeText={(text) =>
-                setEditableUser({ ...editableUser, username: text })
-              }
-            />
-          ) : (
             <Text
               style={[
-                styles.value,
+                styles.label,
                 { color: currentTheme.font, letterSpacing: 0.2 },
               ]}
             >
-              {currentUser?.username}
+              {language?.language?.User.userPage.username}:
             </Text>
-          )}
-        </View>
+            {isEditing ? (
+              <TextInput
+                placeholderTextColor={currentTheme.disabled}
+                style={[
+                  styles.input,
+                  { color: currentTheme.font, borderColor: currentTheme.line },
+                ]}
+                value={editableUser.username}
+                onChangeText={(text) =>
+                  setEditableUser({ ...editableUser, username: text })
+                }
+              />
+            ) : (
+              <Text
+                style={[
+                  styles.value,
+                  { color: currentTheme.font, letterSpacing: 0.2 },
+                ]}
+              >
+                {currentUser?.username}
+              </Text>
+            )}
+          </View>
+        )}
         <View
           style={[
             [styles.itemContainer, { borderBottomColor: currentTheme.line }],
@@ -271,7 +318,11 @@ export const PersonalInfo = ({ user, onSave }) => {
         <View
           style={[
             styles.itemContainer,
-            { borderBottomColor: currentTheme.line },
+            {
+              borderBottomColor: currentTheme.line,
+              flexDirection: isEditing ? "column" : "row",
+              alignItems: isEditing ? "flex-start" : "center",
+            },
           ]}
         >
           <Text
@@ -283,21 +334,44 @@ export const PersonalInfo = ({ user, onSave }) => {
             {language?.language?.Auth.auth.phone}:
           </Text>
           {isEditing ? (
-            <TextInput
-              placeholderTextColor={currentTheme.disabled}
-              placeholder="ex: +00000000000"
-              style={[
-                styles.input,
-                { color: currentTheme.font, borderColor: currentTheme.line },
-              ]}
-              value={editableUser.phone}
-              onChangeText={(text) =>
-                setEditableUser({
-                  ...editableUser,
-                  phone: text,
-                })
-              }
-            />
+            <View
+              style={{ flexDirection: "row", alignItems: "center", gap: 4 }}
+            >
+              <View>
+                <CountryPicker
+                  {...{
+                    countryCode,
+                    onSelect,
+                    withFilter: true,
+                    withFlag: true,
+                    withCountryNameButton: true,
+                    withAlphaFilter: true,
+                    withCallingCode: true,
+                    textStyle: styles.countryName,
+                    containerButtonStyle: styles.pickerButton,
+                  }}
+                  theme={{
+                    backgroundColor: currentTheme.background,
+                    onBackgroundTextColor: currentTheme.font,
+                  }}
+                />
+              </View>
+              <TextInput
+                placeholderTextColor={currentTheme.disabled}
+                placeholder="ex: 555000000"
+                style={[
+                  styles.input,
+                  { color: currentTheme.font, borderColor: currentTheme.line },
+                ]}
+                value={editableUser.phone.phone}
+                onChangeText={(text) =>
+                  setEditableUser((prevState) => ({
+                    ...prevState,
+                    phone: { ...prevState.phone, phone: text },
+                  }))
+                }
+              />
+            </View>
           ) : (
             <Text
               style={[
@@ -305,7 +379,7 @@ export const PersonalInfo = ({ user, onSave }) => {
                 { color: currentTheme.font, letterSpacing: 0.2 },
               ]}
             >
-              {currentUser.phone}
+              {currentUser.phone.phone}
             </Text>
           )}
         </View>
@@ -621,6 +695,15 @@ export const PersonalInfo = ({ user, onSave }) => {
           )}
         </View>
       </ScrollView>
+      <View style={{ position: "absolute", zIndex: 19000 }}>
+        <AlertMessage
+          isVisible={alert.active}
+          type={alert.type}
+          text={alert.text}
+          onClose={() => setAlert({ active: false, text: "" })}
+          Press={() => setAlert({ active: false, text: "" })}
+        />
+      </View>
     </KeyboardAvoidingView>
   );
 };
@@ -680,5 +763,14 @@ const styles = StyleSheet.create({
   buttonText: {
     color: "white",
     textAlign: "center",
+  },
+  countryName: {
+    color: "#fff",
+    fontSize: 16,
+  },
+  pickerButton: {
+    backgroundColor: "#F866B1",
+    borderRadius: 10,
+    paddingHorizontal: 10,
   },
 });

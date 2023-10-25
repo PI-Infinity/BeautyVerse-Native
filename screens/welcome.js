@@ -1,28 +1,34 @@
+import { MaterialIcons } from "@expo/vector-icons";
+import React from "react";
 import {
+  Dimensions,
+  Image,
+  Platform,
+  ScrollView,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
   Pressable,
-  Dimensions,
-  ScrollView,
-  Image,
-  TouchableOpacity,
-  Platform,
 } from "react-native";
-import React from "react";
-import { useSelector, useDispatch } from "react-redux";
-import { lightTheme, darkTheme } from "../context/theme";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { setLanguage, setTheme } from "../redux/app";
-import { Language } from "../context/language";
-import { MaterialIcons } from "@expo/vector-icons";
-import { CacheableImage } from "../components/cacheableImage";
+import { useDispatch, useSelector } from "react-redux";
 import AnimatedButton from "../components/animatedButton";
+import { Language } from "../context/language";
+import { darkTheme, lightTheme } from "../context/theme";
+import { setLanguage, setTheme } from "../redux/app";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { CacheableImage } from "../components/cacheableImage";
+
+/**
+ * Welcome screen
+ */
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
 const Welcome = ({ navigation }) => {
+  // defines redux dispatch
   const dispatch = useDispatch();
+
   // theme state, from redux
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
@@ -30,14 +36,12 @@ const Welcome = ({ navigation }) => {
   // language state
   const language = Language();
   const activeLanguage = useSelector((state) => state.storeApp.language);
+  const currentUser = useSelector((state) => state.storeUser.currentUser);
 
   return (
     <ScrollView
       bounces={Platform.OS === "ios" ? false : undefined}
       overScrollMode={Platform.OS === "ios" ? "never" : "always"}
-      style={{
-        backgroundColor: currentTheme.background,
-      }}
       contentContainerStyle={{
         alignItems: "center",
         minHeight: SCREEN_HEIGHT,
@@ -70,7 +74,7 @@ const Welcome = ({ navigation }) => {
             letterSpacing: 1,
           }}
         >
-          verse
+          Verse
         </Text>
       </View>
 
@@ -132,7 +136,7 @@ const Welcome = ({ navigation }) => {
             style={styles.themeModeButton1}
           >
             {theme && (
-              <MaterialIcons name="done" color={currentTheme.pink} size={22} />
+              <MaterialIcons name="done" color={currentTheme.pink} size={18} />
             )}
             <Text style={{ color: "#fff" }}>
               {language?.language?.Auth?.auth?.dark}
@@ -148,17 +152,26 @@ const Welcome = ({ navigation }) => {
             }}
             style={[
               styles.themeModeButton2,
-              { backgroundColor: "rgba(230,227,234,1)" },
+              {
+                backgroundColor: "#F3EEF9",
+              },
             ]}
           >
             <Text>{language?.language?.Auth?.auth?.light}</Text>
             {!theme && (
-              <MaterialIcons name="done" color={currentTheme.pink} size={22} />
+              <MaterialIcons name="done" color={currentTheme.pink} size={18} />
             )}
           </Pressable>
         </View>
       </View>
-      <View style={{ width: "100%", alignItems: "center", gap: 8 }}>
+      <View
+        style={{
+          width: "100%",
+          alignItems: "center",
+          gap: 8,
+          marginBottom: 50,
+        }}
+      >
         <Text
           style={[
             styles.sectionTitle,
@@ -174,81 +187,76 @@ const Welcome = ({ navigation }) => {
           style={[
             styles.languageBtn,
             {
-              backgroundColor:
-                activeLanguage === "en"
-                  ? currentTheme.pink
-                  : currentTheme.background2,
+              borderWidth: 1,
+              borderColor: currentTheme.line,
+              flexDirection: "row",
+              justifyContent: "space-between",
+              backgroundColor: currentTheme.background,
             },
           ]}
           onPress={() => dispatch(setLanguage("en"))}
         >
           <Text
             style={{
-              color: activeLanguage === "en" ? "#e5e5e5" : currentTheme.font,
+              color: currentTheme.font,
             }}
           >
             {language?.language?.Auth?.auth?.english}
           </Text>
+          {activeLanguage === "en" && (
+            <MaterialIcons name="done" size={20} color={currentTheme.pink} />
+          )}
         </Pressable>
         <Pressable
           style={[
             styles.languageBtn,
             {
-              backgroundColor:
-                activeLanguage === "ka"
-                  ? currentTheme.pink
-                  : currentTheme.background2,
+              borderWidth: 1,
+              borderColor: currentTheme.line,
+              flexDirection: "row",
+              justifyContent: "space-between",
+              backgroundColor: currentTheme.background,
             },
           ]}
           onPress={() => dispatch(setLanguage("ka"))}
         >
           <Text
             style={{
-              color: activeLanguage === "ka" ? "#e5e5e5" : currentTheme.font,
+              color: currentTheme.font,
             }}
           >
             {language?.language?.Auth?.auth?.georgian}
           </Text>
+          {activeLanguage === "ka" && (
+            <MaterialIcons name="done" size={20} color={currentTheme.pink} />
+          )}
         </Pressable>
         <Pressable
           style={[
             styles.languageBtn,
             {
-              backgroundColor:
-                activeLanguage === "ru"
-                  ? currentTheme.pink
-                  : currentTheme.background2,
+              borderWidth: 1,
+              borderColor: currentTheme.line,
+              flexDirection: "row",
+              justifyContent: "space-between",
+              backgroundColor: currentTheme.background,
             },
           ]}
           onPress={() => dispatch(setLanguage("ru"))}
         >
           <Text
             style={{
-              color: activeLanguage === "ru" ? "#e5e5e5" : currentTheme.font,
+              color: currentTheme.font,
             }}
           >
             {language?.language?.Auth?.auth?.russian}
           </Text>
+          {activeLanguage === "ru" && (
+            <MaterialIcons name="done" size={20} color={currentTheme.pink} />
+          )}
         </Pressable>
       </View>
-      <View style={{ width: "90%" }}>
-        <TouchableOpacity
-          activeOpacity={0.5}
-          onPress={() => navigation.navigate("Prices", { from: "Welcome" })}
-          style={[
-            styles.item,
-            { backgroundColor: currentTheme.background, marginTop: 30 },
-          ]}
-        >
-          <Text style={[styles.BsectionTitle, { color: currentTheme.font }]}>
-            {language?.language?.User?.userPage?.prices}
-          </Text>
-          <MaterialIcons
-            name={"arrow-right"}
-            color={currentTheme.pink}
-            size={18}
-          />
-        </TouchableOpacity>
+      <View style={{ width: "90%", marginTop: 15 }}>
         <TouchableOpacity
           activeOpacity={0.5}
           onPress={() => navigation.navigate("Terms")}
@@ -324,7 +332,7 @@ const styles = StyleSheet.create({
   themeModeButton1: {
     width: "40%",
     padding: 7.5,
-    backgroundColor: "#111",
+    backgroundColor: "#050505",
     borderTopLeftRadius: 50,
     borderBottomLeftRadius: 50,
     alignItems: "center",
@@ -335,7 +343,7 @@ const styles = StyleSheet.create({
   themeModeButton2: {
     width: "40%",
     padding: 7.5,
-    backgroundColor: "#fff",
+    backgroundColor: "#050505",
     borderTopRightRadius: 50,
     borderBottomRightRadius: 50,
     alignItems: "center",
@@ -349,14 +357,6 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     borderRadius: 50,
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 1, // negative value places shadow on top
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 1,
-    elevation: 1,
   },
   item: {
     width: "100%",

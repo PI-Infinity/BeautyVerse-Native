@@ -1,117 +1,191 @@
-import { useState, useEffect, useRef, useMemo, useCallback } from "react";
-import {
-  StyleSheet,
-  Dimensions,
-  FlatList,
-  View,
-  RefreshControl,
-  Text,
-} from "react-native";
-import { useSelector, useDispatch } from "react-redux";
-import { Feed } from "../components/feedCard/feedCard";
-import axios from "axios";
-import { setRerenderCurrentUser } from "../redux/rerenders";
-import { useIsFocused } from "@react-navigation/native";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useHeaderHeight } from "@react-navigation/elements";
-import { lightTheme, darkTheme } from "../context/theme";
-import SkeletonComponent from "../components/skelton";
+import { useIsFocused } from "@react-navigation/native";
+import axios from "axios";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import * as Haptics from "expo-haptics";
+import {
+  Dimensions,
+  FlatList,
+  Pressable,
+  RefreshControl,
+  Text,
+  View,
+  TouchableOpacity,
+  ScrollView,
+  StyleSheet,
+  Animated,
+  Modal,
+} from "react-native";
+import { ActivityIndicator } from "react-native-paper";
+import { useDispatch, useSelector } from "react-redux";
 import AlertMessage from "../components/alertMessage";
+import { Feed } from "../components/feedCard/feedCard";
+import SkeletonComponent from "../components/skelton";
+import { darkTheme, lightTheme } from "../context/theme";
 import { setSendReport } from "../redux/alerts";
+import { setCleanUp, setFeedRefreshControl } from "../redux/rerenders";
+import { setLoading, setZoomToTop } from "../redux/app";
+import * as Location from "expo-location";
+import GetSharedFeed from "../components/getSharedFeed";
+import { ScrollGallery } from "./user/scrollGallery";
+import { Language } from "../context/language";
+import { BlurView } from "expo-blur";
 
-const { height: hght, width: SCREEN_WIDTH } = Dimensions.get("window");
+/**
+ * Feeds screen
+ */
 
-export const Feeds = ({ navigation }) => {
+const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
+
+export const Feeds = ({
+  navigation,
+  scrollY,
+  setScrollY,
+  setScrollYF,
+  firstLoading,
+  setFirstLoading,
+}) => {
+  // defines when screen is focused
   const isFocused = useIsFocused();
 
-  const [loading, setLoading] = useState(true);
+  // defines theme context
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
-  const headerHeight = useHeaderHeight();
-  const tabBarHeight = useBottomTabBarHeight();
-  const SCREEN_HEIGHT = hght - tabBarHeight - headerHeight;
 
+  // defines redux dispatch
   const dispatch = useDispatch();
+
+  // defines current user from redux
   const currentUser = useSelector((state) => state.storeUser.currentUser);
-  const [users, setUsers] = useState([]);
-  const [refresh, setRefresh] = useState(false);
-  const flatListRef = useRef(null);
+
+  /*
+   * feeds list state (For You & Followings)
+   */
+  const [feeds, setFeeds] = useState([]);
+  const [followingsList, setFollowingsList] = useState([]);
+
+  // defines navigator (for you list or followings list)
+  const [activeList, setActiveList] = useState(false);
+
+  /*
+  page defines query for backend
+  this state used to add new users on scrolling. when page changes, in state adds new users with last feeds
+  */
+
   const [page, setPage] = useState(1);
-
-  // A ref to keep track of the feeds
-  const feedsCleanRef = useRef(true);
-
-  // Selectors for various filters
-  const search = useSelector((state) => state.storeFilter.search);
-  const filter = useSelector((state) => state.storeFilter.filter);
-  const specialists = useSelector((state) => state.storeFilter.specialists);
-  const salons = useSelector((state) => state.storeFilter.salons);
-  const city = useSelector((state) => state.storeFilter.city);
-  const district = useSelector((state) => state.storeFilter.district);
 
   // Selector for the cleanup state
   const cleanUp = useSelector((state) => state.storeRerenders.cleanUp);
 
-  // Effect to handle the cleanup of the feed
-  useEffect(() => {
-    // Function to get feed data from server
-    const Getting = async (currentPage) => {
-      try {
-        const response = await axios.get(
-          `https://beautyverse.herokuapp.com/api/v1/feeds?search=${search}&filter=${filter}&type=${
-            specialists ? "specialist" : ""
-          }${
-            salons ? "beautycenter" : ""
-          }&city=${city}&district=${district}&page=${currentPage}`
-        );
-        await setUsers(response.data.data.feedList);
-        setTimeout(() => {
-          setScrollY(0);
-          setRefresh(false);
-          flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
-        }, 300);
-      } catch (error) {
-        console.log(error.response.data.message);
-      }
-    };
-    if (feedsCleanRef.current) {
-      feedsCleanRef.current = false;
-      return;
-    }
-    if (scrollY < 10) {
-      setRefresh(true);
-      Getting(1);
-      setPage(1);
-    } else {
-      flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
-      setScrollY(0);
-    }
-    setTimeout(() => {
-      dispatch(setRerenderCurrentUser());
-    }, 500);
-  }, [cleanUp]);
+  // defines backend url
+  const backendUrl = useSelector((state) => state.storeApp.backendUrl);
 
-  // Selector for user list rerender
-  const rerenderUserList = useSelector(
-    (state) => state.storeRerenders.rerenderUserList
-  );
+  // refresh inidcator animation
+  const opacityValue = useRef(new Animated.Value(0)).current;
+  const transformScroll = useRef(new Animated.Value(0)).current;
 
-  // Function to get users with feeds
-  const GetUsersWithFeeds = async (currentPage) => {
+  const openLoading = () => {
+    Animated.parallel([
+      Animated.timing(opacityValue, {
+        toValue: 1,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+      Animated.timing(transformScroll, {
+        toValue: 60,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+  const closeLoading = () => {
+    Animated.parallel([
+      Animated.timing(opacityValue, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+      Animated.timing(transformScroll, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
+  /**
+   * Get feeds function when screen loads
+   */
+
+  const GettingFeeds = async () => {
+    openLoading();
+
     try {
       const response = await axios.get(
-        `https://beautyverse.herokuapp.com/api/v1/feeds?search=${search}&filter=${filter}&type=${
-          specialists ? "specialist" : ""
-        }${
-          salons ? "beautycenter" : ""
-        }&city=${city}&district=${district}&check=${
-          currentUser !== null ? currentUser._id : ""
-        }}&page=${currentPage}`
+        `${backendUrl}/api/v1/feeds?check=${currentUser._id}&page=1&limit=3`
+      );
+      setFeeds(response.data.data.feedlist);
+      setTimeout(() => {
+        closeLoading();
+        setFirstLoading(false);
+        setPage(1);
+      }, 500);
+    } catch (error) {
+      console.log(error.response.data.message);
+      setPage(1);
+    }
+  };
+  useEffect(() => {
+    GettingFeeds();
+  }, [cleanUp]);
+
+  // Callback to handle scroll
+  const scrollYRefF = useRef(0);
+
+  // followgins page state
+  const [fPage, setFPage] = useState(1);
+
+  // Function to get feed data from server
+  const GetFollowingsFeeds = async () => {
+    // setFirstLoading(true);
+    openLoading();
+    try {
+      const response = await axios.get(
+        `${backendUrl}/api/v1/feeds/followings?check=${currentUser._id}&page=1&limit=3`
+      );
+      setFollowingsList(response.data.data.feedlist);
+
+      setTimeout(() => {
+        dispatch(setFeedRefreshControl(false));
+        closeLoading();
+        setFirstLoading(false);
+        setFPage(1);
+      }, 500);
+    } catch (error) {
+      console.log(error.response.data.message);
+      dispatch(setFeedRefreshControl(false));
+      setFPage(1);
+    }
+  };
+  // getting followings feeds
+  useEffect(() => {
+    GetFollowingsFeeds();
+  }, [cleanUp]);
+
+  /**
+   * Function to get new feeds and adding them in state while user scrolling to bottom
+   * (used for both, For You and for Followings feeds)
+   *  */
+  const AddFeeds = async (currentPage) => {
+    try {
+      const response = await axios.get(
+        `${backendUrl}/api/v1/feeds?page=${currentPage}&check=${currentUser._id}&limit=3`
       );
 
       // Update users' state with new feed data
-      await setUsers((prev) => {
-        const newUsers = response.data.data.feedList;
+      setFeeds((prev) => {
+        const newUsers = response.data.data.feedlist;
         return newUsers.reduce((acc, curr) => {
           const existingUserIndex = acc.findIndex(
             (user) => user._id === curr._id
@@ -130,58 +204,86 @@ export const Feeds = ({ navigation }) => {
           }
         }, prev);
       });
-      setTimeout(() => {
-        setRefresh(false);
-      }, 300);
+    } catch (error) {
+      console.log(error.response.data.message);
+    }
+    dispatch(setFeedRefreshControl(false));
+  };
+  // adding for followings feeds
+  const AddFollowingsFeeds = async (currentPage) => {
+    try {
+      const response = await axios.get(
+        `${backendUrl}/api/v1/feeds/followings?page=${currentPage}&check=${currentUser._id}&limit=3`
+      );
+
+      // Update users' state with new feed data
+      setFollowingsList((prev) => {
+        const newUsers = response.data.data.feedlist;
+        return newUsers.reduce((acc, curr) => {
+          const existingUserIndex = acc.findIndex(
+            (user) => user._id === curr._id
+          );
+          if (existingUserIndex !== -1) {
+            // User already exists, merge the data
+            const mergedUser = { ...acc[existingUserIndex], ...curr };
+            return [
+              ...acc.slice(0, existingUserIndex),
+              mergedUser,
+              ...acc.slice(existingUserIndex + 1),
+            ];
+          } else {
+            // User doesn't exist, add to the end of the array
+            return [...acc, curr];
+          }
+        }, prev);
+      });
+    } catch (error) {
+      console.log(error.response.data.message);
+    }
+    dispatch(setFeedRefreshControl(false));
+  };
+
+  const flatListRef = useRef();
+  const flatListRefF = useRef();
+
+  // Callback to handle scroll
+  const scrollYRef = useRef(0);
+
+  const handleScroll = useCallback((event) => {
+    const offsetY = event.nativeEvent.contentOffset.y;
+    setScrollY(offsetY);
+
+    scrollYRef.current = offsetY; // Store the scroll position in scrollYRef, not flatListRef
+  }, []);
+
+  const handleScrollF = useCallback((event) => {
+    const offsetY = event.nativeEvent.contentOffset.y;
+    setScrollYF(offsetY);
+
+    scrollYRefF.current = offsetY; // Store the scroll position in scrollYRef, not flatListRef
+  }, []);
+
+  // State to keep track of displayed video index
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  const AddView = async (userId, itemid) => {
+    try {
+      if (userId !== currentUser._id) {
+        await axios.patch(backendUrl + "/api/v1/feeds/" + itemid + "/view", {
+          view: currentUser._id,
+        });
+      }
     } catch (error) {
       console.log(error.response.data.message);
     }
   };
 
-  // useEffect to handle feed and user data fetching based on current user and rerenderUserList
-  useEffect(() => {
-    flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
-    if (currentUser) {
-      GetUsersWithFeeds(page);
-    } else {
-      setTimeout(() => {
-        setRefresh(false);
-      }, 300);
-    }
-  }, [currentUser, rerenderUserList]);
-
-  // Define scrolling
-  const [scrollY, setScrollY] = useState(0);
-
-  // Callback to handle scroll
-  const handleScroll = useCallback((event) => {
-    const offsetY = event.nativeEvent.contentOffset.y;
-    setScrollY(offsetY);
-  }, []);
-
-  // Callback to handle refresh
-  const onRefresh = useCallback(async () => {
-    setRefresh(true);
-    setLoading(true);
-    setPage(1);
-    setUsers([]);
-    await GetUsersWithFeeds(1);
-    setTimeout(() => {
-      setRefresh(false);
-    }, 500);
-  }, []);
-
-  // State to handle open feed
-  const [openFeed, setOpenFeed] = useState(false);
-  const [openedFeedObj, setOpenFeedObj] = useState({});
-
-  // State to keep track of displayed video index
-  const [currentIndex, setCurrentIndex] = useState(0);
-
   // useRef to keep track of viewable items
   const onViewableItemsChangedRef = useRef(({ viewableItems, changed }) => {
     if (viewableItems.length > 0) {
       const topVisibleItemIndex = viewableItems[0].index;
+      const topVisibleItem = viewableItems[0];
+      AddView(topVisibleItem.item?.owner._id, topVisibleItem.item?._id);
       setCurrentIndex(topVisibleItemIndex);
     }
   });
@@ -194,23 +296,112 @@ export const Feeds = ({ navigation }) => {
     []
   );
 
+  // view first item
+  const isFirstRender = useRef(true);
+  useEffect(() => {
+    if (isFirstRender.current && feeds.length > 0) {
+      AddView(feeds[0]?.owner._id, feeds[0]?._id);
+      isFirstRender.current = false;
+    }
+  }, [feeds]);
+
   /**
    * alert messages
    */
   // send report
   const sendReport = useSelector((state) => state.storeAlerts.sendReport);
 
+  // zoom to top on change dependency
+  const zoomToTop = useSelector((state) => state.storeApp.zoomToTop);
+  let firstRend = useRef();
+  useEffect(() => {
+    if (firstRend.current) {
+      firstRend.current = false;
+      return;
+    }
+    // if (!activeList) {
+    flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
+    // } else {
+    flatListRefF.current?.scrollToOffset({ offset: 0, animated: true });
+    // }
+    // }
+  }, [zoomToTop]);
+
+  // animation bottom line
+  const position = useRef(new Animated.Value(0)).current;
+  const [activeHelper, setActiveHelper] = useState(true);
+  const slideToLeft = () => {
+    Animated.timing(position, {
+      toValue: 0,
+      duration: 150,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const slideToRight = () => {
+    Animated.timing(position, {
+      toValue: SCREEN_WIDTH / 2,
+      duration: 150,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const scrollRef = useRef();
+
+  const handlePressLeft = () => {
+    scrollRef.current.scrollTo({
+      x: 0, // Scroll to the extreme left
+      animated: true,
+    });
+    setActiveList(false);
+    slideToLeft();
+    setActiveHelper(true);
+  };
+
+  const handlePressRight = () => {
+    scrollRef.current.scrollTo({
+      x: Dimensions.get("window").width, // Scroll to the width of the screen (or another value to determine how far to scroll to the right)
+      animated: true,
+    });
+    setActiveList(true);
+    slideToRight();
+    setActiveHelper(false);
+  };
+
+  /**
+   * user feeds gallery
+   */
+  const [activeGallery, setActiveGallery] = useState(null);
+
   return (
-    <>
-      {loading && (
+    <View style={{ flex: 1 }}>
+      <GetSharedFeed />
+      {activeGallery && (
+        <Modal isVisible={activeGallery} animationType="slide" transparent>
+          <View
+            style={{
+              flex: 1,
+              paddingTop: SCREEN_HEIGHT / 15,
+              backgroundColor: currentTheme.background,
+            }}
+          >
+            {/* <View style={{ flex: 1, backgroundColor: "green" }}></View> */}
+            <ScrollGallery
+              route={{ params: activeGallery }}
+              setActiveGallery={setActiveGallery}
+            />
+          </View>
+        </Modal>
+      )}
+
+      {firstLoading && (
         <View
           style={{
             position: "absolute",
             zIndex: 11111,
             width: SCREEN_WIDTH,
-            top: 0,
-            backgroundColor: currentTheme.background,
-            height: "100%",
+            top: 40,
+            height: SCREEN_HEIGHT,
           }}
         >
           <SkeletonComponent />
@@ -222,88 +413,275 @@ export const Feeds = ({ navigation }) => {
         type="success"
         text="The Report sent succesfully!"
       />
-      {users?.length > 0 ? (
-        <FlatList
-          contentContainerStyle={{}}
-          style={{}}
-          showsVerticalScrollIndicator={false}
-          ref={flatListRef}
-          data={users}
-          onScroll={handleScroll}
-          scrollEventThrottle={1}
-          // // pagingEnabled={true}
-          // bounces={Platform.OS === "ios" ? false : undefined}
-          // overScrollMode={Platform.OS === "ios" ? "never" : "always"}
-          refreshControl={
-            <RefreshControl
-              tintColor="#ccc"
-              refreshing={refresh}
-              onRefresh={onRefresh}
-            />
-          }
-          renderItem={({ item, index }) => {
-            if (item.feed) {
+      <View>
+        <NavigatorComponent
+          activeList={activeList}
+          currentTheme={currentTheme}
+          setActiveList={setActiveList}
+          handlePressRight={handlePressRight}
+          handlePressLeft={handlePressLeft}
+          slideToLeft={slideToLeft}
+          slideToRight={slideToRight}
+          position={position}
+        />
+
+        <Animated.View
+          style={{
+            opacity: opacityValue,
+            transform: [{ scale: 1.2 }],
+            alignItems: "center",
+          }}
+        >
+          <ActivityIndicator
+            color={currentTheme.pink}
+            style={{ position: "absolute", top: 15 }}
+            size={20}
+          />
+        </Animated.View>
+      </View>
+      <Animated.ScrollView
+        ref={scrollRef}
+        onMomentumScrollBegin={
+          activeHelper
+            ? () => {
+                slideToRight();
+                setActiveHelper(false);
+                setActiveList(true);
+              }
+            : () => {
+                slideToLeft();
+                setActiveHelper(true);
+                setActiveList(false);
+              }
+        }
+        horizontal
+        bounces={Platform.OS === "ios" ? false : undefined}
+        overScrollMode={Platform.OS === "ios" ? "never" : "always"}
+        pagingEnabled
+        scrollEventThrottle={16}
+        showsHorizontalScrollIndicator={false}
+        style={{ flex: 1, transform: [{ translateY: transformScroll }] }}
+      >
+        {feeds?.length > 0 ? (
+          <FlatList
+            contentContainerStyle={{ minHeight: SCREEN_HEIGHT }}
+            style={{}}
+            showsVerticalScrollIndicator={false}
+            ref={flatListRef}
+            data={feeds}
+            onScroll={handleScroll}
+            scrollEventThrottle={16}
+            renderItem={({ item, index }) => {
               return (
                 <Feed
                   x={index}
-                  user={item}
+                  feed={item}
                   navigation={navigation}
-                  feeds={users}
+                  feeds={feeds}
                   currentIndex={currentIndex}
                   isFocused={isFocused}
-                  setLoading={setLoading}
+                  feedsLength={feeds?.length}
+                  setActiveGallery={setActiveGallery}
                 />
               );
-            } else {
-              setTimeout(() => {
-                setLoading(false);
-              }, 2000);
-              if (index === 0) {
-                return (
-                  <View
-                    style={{
-                      flex: 1,
-                      alignItems: "center",
-                      justifyContent: "center",
-                      height: SCREEN_HEIGHT,
-                    }}
-                  >
-                    <Text style={{ color: currentTheme.disabled }}>
-                      No Feeds Found!
-                    </Text>
-                  </View>
-                );
-              }
-            }
+            }}
+            onEndReached={() => {
+              AddFeeds(page + 1);
+              setPage(page + 1);
+            }}
+            onEndReachedThreshold={1}
+            keyExtractor={(item) => item?._id}
+            onViewableItemsChanged={onViewableItemsChangedRef.current}
+            viewabilityConfig={viewabilityConfig}
+          />
+        ) : (
+          <View
+            style={{
+              width: SCREEN_WIDTH,
+
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Text style={{ color: currentTheme.disabled }}>No Feeds found</Text>
+          </View>
+        )}
+        {followingsList?.length > 0 ? (
+          <FlatList
+            contentContainerStyle={{ minHeight: SCREEN_HEIGHT }}
+            style={{}}
+            showsVerticalScrollIndicator={false}
+            ref={flatListRefF}
+            data={followingsList}
+            onScroll={handleScrollF}
+            scrollEventThrottle={16}
+            renderItem={({ item, index }) => {
+              return (
+                <Feed
+                  x={index}
+                  feed={item}
+                  navigation={navigation}
+                  feeds={feeds}
+                  currentIndex={currentIndex}
+                  isFocused={isFocused}
+                  feedsLength={feeds?.length}
+                  setActiveGallery={setActiveGallery}
+                />
+              );
+            }}
+            onEndReached={() => {
+              AddFollowingsFeeds(fPage + 1);
+              setFPage(fPage + 1);
+            }}
+            onEndReachedThreshold={0.5}
+            keyExtractor={(item) => item?._id}
+            onViewableItemsChanged={onViewableItemsChangedRef.current}
+            viewabilityConfig={viewabilityConfig}
+          />
+        ) : (
+          <View
+            style={{
+              width: SCREEN_WIDTH,
+
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Text style={{ color: currentTheme.disabled }}>No Feeds found</Text>
+          </View>
+        )}
+      </Animated.ScrollView>
+    </View>
+  );
+};
+
+const NavigatorComponent = ({
+  activeList,
+  currentTheme,
+  setActiveList,
+  handlePressLeft,
+  handlePressRight,
+  slideToRight,
+  slideToLeft,
+  position,
+}) => {
+  const fadeInOpacity = useRef(new Animated.Value(0.5)).current;
+  const fadeInOpacity2 = useRef(new Animated.Value(0.5)).current;
+  const language = Language();
+  useEffect(() => {
+    if (!activeList) {
+      Animated.timing(fadeInOpacity, {
+        toValue: 1,
+        duration: 150,
+        useNativeDriver: true,
+      }).start();
+      Animated.timing(fadeInOpacity2, {
+        toValue: 0.3,
+        duration: 150,
+        useNativeDriver: true,
+      }).start();
+    } else {
+      Animated.timing(fadeInOpacity2, {
+        toValue: 1,
+        duration: 150,
+        useNativeDriver: true,
+      }).start();
+      Animated.timing(fadeInOpacity, {
+        toValue: 0.3,
+        duration: 150,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [activeList]);
+  return (
+    <View
+      style={{
+        width: "100%",
+        height: 40,
+        flexDirection: "row",
+        alignItems: "center",
+      }}
+    >
+      <TouchableOpacity
+        activeOpacity={0.8}
+        onPress={() => {
+          // dispatch(setZoomToTop());
+          // slideToLeft();
+          handlePressLeft();
+        }}
+        style={{
+          flex: 1,
+          alignItems: "center",
+          paddingVertical: 10,
+          borderBottomWidth: 1.5,
+          borderBottomColor: currentTheme.line,
+        }}
+      >
+        <Animated.Text
+          style={{
+            opacity: fadeInOpacity,
+            color: currentTheme.font,
+            letterSpacing: 0.3,
+            fontWeight: "bold",
+            fontSize: 16,
           }}
-          onEndReached={() => {
-            setPage((prevPage) => {
-              const nextPage = prevPage + 1;
-              GetUsersWithFeeds(nextPage);
-              return nextPage;
-            });
-          }}
-          onEndReachedThreshold={0.5}
-          keyExtractor={(item) => item?._id}
-          showsVerticalScrollIndicator={false}
-          onViewableItemsChanged={onViewableItemsChangedRef.current}
-          viewabilityConfig={viewabilityConfig}
-        />
-      ) : (
-        <View
-          style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
         >
-          <Text style={{ color: currentTheme.disabled }}>No Feeds found</Text>
-        </View>
-      )}
-    </>
+          {language.language.Main.feedCard.forYou}
+        </Animated.Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        activeOpacity={0.8}
+        onPress={() => {
+          // dispatch(setZoomToTop());
+          // slideToRight();
+          handlePressRight();
+        }}
+        style={{
+          flex: 1,
+          alignItems: "center",
+          paddingVertical: 10,
+          borderBottomWidth: 1.5,
+          borderBottomColor: currentTheme.line,
+        }}
+      >
+        <Animated.Text
+          style={{
+            opacity: fadeInOpacity2,
+            color: currentTheme.font,
+            letterSpacing: 0.3,
+            fontWeight: "bold",
+            fontSize: 16,
+          }}
+        >
+          {language.language.User.userPage.followings}
+        </Animated.Text>
+      </TouchableOpacity>
+
+      <Animated.View
+        style={[
+          styles.line,
+          {
+            backgroundColor: currentTheme.pink,
+            transform: [{ translateX: position }],
+          },
+        ]}
+      />
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    width: SCREEN_WIDTH,
-    zIndex: 10000,
-    backgroundColor: "rgba(15,15,15,1)",
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  line: {
+    position: "absolute",
+    bottom: 0,
+    width: SCREEN_WIDTH / 2,
+    height: 1.5,
+    backgroundColor: "red",
   },
 });

@@ -1,51 +1,48 @@
 // ProceduresList.js
+import { Entypo, FontAwesome, FontAwesome5 } from "@expo/vector-icons";
 import React, { useState } from "react";
 import {
-  View,
+  ScrollView,
+  StyleSheet,
   Text,
   TouchableOpacity,
-  FlatList,
-  StyleSheet,
-  ScrollView,
+  View,
 } from "react-native";
+import { useSelector } from "react-redux";
 import ConfirmDialog from "../../components/confirmDialog";
-import { ProceduresOptions } from "../../datas/registerDatas";
 import { Language } from "../../context/language";
-import { FontAwesome, FontAwesome5 } from "@expo/vector-icons";
-import { lightTheme, darkTheme } from "../../context/theme";
-import { useSelector, useDispatch } from "react-redux";
+import { darkTheme, lightTheme } from "../../context/theme";
+import { ProceduresOptions } from "../../datas/registerDatas";
 
-export const ProceduresList = ({ targetUser, addOrder }) => {
+/**
+ * User Procedures section in user screen
+ */
+
+export const ProceduresList = ({ targetUser, AddBooking }) => {
+  // define some context
   const language = Language();
-  const [category, setCategory] = useState("");
-  const [confirmDialogVisible, setConfirmDialogVisible] = useState(false);
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
+
+  // define confirm dialog state
+  const [confirmDialogVisible, setConfirmDialogVisible] = useState(false);
+
+  // define all beautyverse's procedures list
   const proceduresOptions = ProceduresOptions();
 
-  const filterProcedures = (category) => {
-    setCategory(category);
-  };
-
-  const filteredProcedures = targetUser.procedures.filter(
-    (item) => !category || item.value.split(" - ")[0] === category
-  );
-
+  // define categories
   const cats = Array.from(
     new Set(targetUser.procedures.map((item) => item.value.split(" - ")[0]))
   );
   const categories = cats.map((item, index) => {
     let lab = proceduresOptions.find((it) => {
-      return it?.value?.toLowerCase().includes(item?.toLowerCase());
+      return it?.value?.toLowerCase() === item?.toLowerCase();
     });
     return lab;
   });
 
+  // define active category
   const [active, setActive] = useState("all");
-
-  const handleLongPress = (item) => {
-    setConfirmDialogVisible(true);
-  };
 
   return (
     <View style={styles.container}>
@@ -70,7 +67,7 @@ export const ProceduresList = ({ targetUser, addOrder }) => {
             <Text
               style={[
                 styles.buttonText,
-                { color: active === "all" ? "#111" : "#ccc" },
+                { color: active === "all" ? "#fff" : currentTheme.disabled },
               ]}
             >
               {language?.language?.User?.userPage?.all}
@@ -92,8 +89,8 @@ export const ProceduresList = ({ targetUser, addOrder }) => {
                   {
                     color:
                       active.toLowerCase() === cat.value.toLowerCase()
-                        ? "#111"
-                        : "#ccc",
+                        ? "#fff"
+                        : currentTheme.disabled,
                   },
                 ]}
               >
@@ -103,7 +100,7 @@ export const ProceduresList = ({ targetUser, addOrder }) => {
           ))}
         </ScrollView>
       )}
-      <View style={{ gap: 10, alignItems: "center" }}>
+      <View style={{ gap: 8, alignItems: "center", paddingHorizontal: 15 }}>
         {targetUser.procedures
           .filter((item) => {
             if (active === "all") {
@@ -118,20 +115,28 @@ export const ProceduresList = ({ targetUser, addOrder }) => {
             const label = proceduresOptions.find((c) => item.value === c.value);
             return (
               <TouchableOpacity
-                activeOpacity={addOrder ? 0.5 : 1}
+                activeOpacity={AddBooking ? 0.5 : 1}
                 key={index}
                 style={{
-                  width: "95%",
-                  backgroundColor: currentTheme.background2,
+                  width: "100%",
+                  borderWidth: 1,
+                  borderColor: currentTheme.line,
                   borderRadius: 10,
                   padding: 15,
                   paddingVertical: 7.5,
                   justifyContent: "space-between",
+                  flexDirection: "row",
                   // alignItems: "center",
-                  gap: 5,
+                  gap: 8,
                   // flexDirection: "row",
                 }}
               >
+                <Entypo
+                  size={18}
+                  color={currentTheme.pink}
+                  name="flow-line"
+                  style={{ transform: [{ rotate: "90deg" }] }}
+                />
                 <View
                   style={{
                     flexDirection: "row",
@@ -148,14 +153,14 @@ export const ProceduresList = ({ targetUser, addOrder }) => {
                       alignItems: "center",
                     }}
                   >
-                    <View
+                    {/* <View
                       style={{
                         width: 10,
                         height: 10,
                         borderRadius: 10,
                         backgroundColor: currentTheme.pink,
                       }}
-                    ></View>
+                    ></View> */}
                     <Text
                       style={{ color: currentTheme.font, letterSpacing: 0.2 }}
                     >
@@ -201,15 +206,15 @@ export const ProceduresList = ({ targetUser, addOrder }) => {
                     )}
                   </View>
                 </View>
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: 8,
-                    justifyContent: "flex-end",
-                  }}
-                >
-                  {item.duration && (
+                {item.duration && (
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 8,
+                      justifyContent: "flex-end",
+                    }}
+                  >
                     <View
                       style={{
                         flexDirection: "row",
@@ -236,8 +241,8 @@ export const ProceduresList = ({ targetUser, addOrder }) => {
                         size={12}
                       />
                     </View>
-                  )}
-                </View>
+                  </View>
+                )}
               </TouchableOpacity>
             );
           })}
@@ -254,7 +259,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     gap: 15,
-    marginTop: 15,
+    marginTop: 20,
     paddingBottom: 15,
   },
   navigator: {
@@ -268,18 +273,22 @@ const styles = StyleSheet.create({
     alignItems: "center",
     height: 25,
     justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "rgba(0,0,0,0)",
   },
   categoryButtonActive: {
     paddingHorizontal: 15,
     alignItems: "center",
     height: 25,
-    backgroundColor: "#F866B1",
+    borderWidth: 1,
+    borderColor: "#F866B1",
     justifyContent: "center",
     borderRadius: 50,
   },
   buttonText: {
     color: "white",
     fontSize: 14,
+    letterSpacing: 0.3,
   },
   item: {
     flexDirection: "row",

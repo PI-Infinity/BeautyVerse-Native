@@ -7,13 +7,18 @@ import {
   FlatList,
   TextInput,
   Dimensions,
+  Pressable,
 } from "react-native";
 import { useSelector, useDispatch } from "react-redux";
 import { setCity, setDistrict } from "../redux/filter"; // Import the setCity action from your actions file
 import { MaterialIcons } from "@expo/vector-icons";
 import { setCleanUp } from "../redux/rerenders";
 
-const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
+/**
+ * Cities component for filter
+ */
+
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 export const Cities = ({ cities, currentTheme }) => {
   const dispatch = useDispatch();
@@ -30,20 +35,19 @@ export const Cities = ({ cities, currentTheme }) => {
   };
 
   const handlePress = (city) => {
+    dispatch(setDistrict(""));
     dispatch(setCity(city));
-    dispatch(setCleanUp());
-    if (city === "") {
-      dispatch(setDistrict(""));
-    }
   };
 
   const RenderedItem = ({ item }) => (
     <TouchableOpacity
-      style={[styles.cityItem, { color: currentTheme.font }]}
-      activeOpacity={0.5}
+      activeOpacity={0.8}
+      style={[styles.cityItem, { backgroundColor: currentTheme.background2 }]}
       onPress={() => handlePress(selectedCity === item ? "" : item)}
     >
-      <Text style={{ color: currentTheme.font }}>{item}</Text>
+      <Text style={{ color: currentTheme.font, letterSpacing: 0.3 }}>
+        {item}
+      </Text>
       {selectedCity === item && (
         <MaterialIcons name="done" color="#F866b1" size={16} />
       )}

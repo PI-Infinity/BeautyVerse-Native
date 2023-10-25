@@ -1,7 +1,7 @@
-import { StyleSheet, Text, View } from "react-native";
-import React, { useState, useEffect } from "react";
-import { Feed } from "../../components/feedCard/feedCard";
 import { useIsFocused } from "@react-navigation/native";
+import React, { useEffect, useState } from "react";
+import { StyleSheet, View } from "react-native";
+import { Feed } from "../../components/feedCard/feedCard";
 
 export const UserFeed = ({ route, navigation }) => {
   let user = route.params.user;

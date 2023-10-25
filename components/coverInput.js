@@ -1,16 +1,18 @@
-import React, { useState } from "react";
-import { View, Text, TouchableOpacity, Image, StyleSheet } from "react-native";
-import * as ImagePicker from "expo-image-picker";
-import * as DocumentPicker from "expo-document-picker";
-import { ResizeAndCompressImage } from "../functions/compressImg";
-import * as ImageManipulator from "expo-image-manipulator";
-import * as FileSystem from "expo-file-system";
-import { BackDrop } from "../components/backDropLoader";
-import { setRerenderCurrentUser, setCleanUp } from "../redux/rerenders";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { storage } from "../firebase";
-import { useSelector, useDispatch } from "react-redux";
 import axios from "axios";
+import * as FileSystem from "expo-file-system";
+import * as ImageManipulator from "expo-image-manipulator";
+import * as ImagePicker from "expo-image-picker";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import React, { useRef, useState } from "react";
+import { StyleSheet, TouchableOpacity, View } from "react-native";
+import { useDispatch, useSelector } from "react-redux";
+import { BackDrop } from "../components/backDropLoader";
+import { storage } from "../firebase";
+import { setCleanUp, setRerenderCurrentUser } from "../redux/rerenders";
+
+/**
+ * input cover image component on ios
+ */
 
 async function readImageData(uri) {
   try {
@@ -25,14 +27,13 @@ async function readImageData(uri) {
   }
 }
 
-const InputFile = ({ targetUser, onCoverUpdate }) => {
-  const [resizedImg, setResizedImg] = useState(null);
+const InputFile = ({ targetUser, setOpenPopup, editPopup, setEditPopup }) => {
   const [file, setFile] = useState(null);
 
   const dispatch = useDispatch();
   //resize image
   const ResizeAndCompressImage = async (uri, originalWidth, originalHeight) => {
-    const wdth = 300;
+    const wdth = 500;
     const newMobHeight = (originalHeight / originalWidth) * wdth;
     try {
       const cover = await ImageManipulator.manipulateAsync(
@@ -46,7 +47,7 @@ const InputFile = ({ targetUser, onCoverUpdate }) => {
           },
         ],
         {
-          compress: 1,
+          compress: 0.8,
           format: ImageManipulator.SaveFormat.JPEG,
         }
       );
@@ -84,6 +85,9 @@ const InputFile = ({ targetUser, onCoverUpdate }) => {
     }
   }
 
+  // defines baclend url
+  const backendUrl = useSelector((state) => state.storeApp.backendUrl);
+
   async function FileUpload() {
     /* aadd cover
      */
@@ -99,7 +103,7 @@ const InputFile = ({ targetUser, onCoverUpdate }) => {
           .then((url) => {
             const UploadCover = async () => {
               const response = await axios.patch(
-                `https://beautyverse.herokuapp.com/api/v1/users/${targetUser?._id}`,
+                `${backendUrl}/api/v1/users/${targetUser?._id}`,
                 {
                   cover: url,
                 }
@@ -119,7 +123,13 @@ const InputFile = ({ targetUser, onCoverUpdate }) => {
     }
   }
 
+  const avoidFirstRender = useRef(true);
   React.useEffect(() => {
+    if (avoidFirstRender.current) {
+      avoidFirstRender.current = false;
+      return;
+    }
+    // setEditPopup(true);
     FileUpload();
   }, [file]);
 
@@ -127,6 +137,10 @@ const InputFile = ({ targetUser, onCoverUpdate }) => {
     <View style={styles.container}>
       <BackDrop loading={loading} setLoading={setLoading} />
       <TouchableOpacity
+        onLongPress={
+          targetUser.cover?.length > 0 ? () => setOpenPopup(true) : undefined
+        }
+        delayLongPress={200}
         onPress={selectImage}
         style={styles.button}
       ></TouchableOpacity>

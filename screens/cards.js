@@ -1,24 +1,30 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import axios from "axios";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  StyleSheet,
+  // ActivityIndicator,
   Dimensions,
   FlatList,
-  View,
   RefreshControl,
+  StyleSheet,
   Text,
-  Platform,
-  ActivityIndicator,
+  View,
+  Animated,
 } from "react-native";
-import { useSelector, useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { Card } from "../components/profileCard";
-import { setLoading } from "../redux/app";
-import axios from "axios";
-import { lightTheme, darkTheme } from "../context/theme";
 import LoadingSkeleton from "../components/skeltonCards";
+import { darkTheme, lightTheme } from "../context/theme";
+import { setCleanUp, setCardRefreshControl } from "../redux/rerenders";
+import { BlurView } from "expo-blur";
+import { ActivityIndicator } from "react-native-paper";
 
-const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
+/**
+ * Cards Screen component
+ */
 
-export const Cards = ({ navigation }) => {
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
+
+export const Cards = ({ navigation, setScrollY }) => {
   // Using Redux dispatch hook
   const dispatch = useDispatch();
 
@@ -33,85 +39,79 @@ export const Cards = ({ navigation }) => {
   const [users, setUsers] = useState([]);
 
   // Setting up state for refresh and loading indicators
-  const [refresh, setRefresh] = useState(false);
+  const refresh = useSelector(
+    (state) => state.storeRerenders.cardRefreshControl
+  );
   const [loadingSkelton, setLoadingSkelton] = useState(true);
-
-  // Reference to the FlatList
-  const flatListRef = useRef(null);
 
   // Page number for paginated data
   const [page, setPage] = useState(1);
-
-  // Reference to track if cards should be cleaned
-  const cardsCleanRef = useRef(true);
 
   // Fetching various filters from Redux store
   const search = useSelector((state) => state.storeFilter.search);
   const filter = useSelector((state) => state.storeFilter.filter);
   const specialists = useSelector((state) => state.storeFilter.specialists);
   const salons = useSelector((state) => state.storeFilter.salons);
+  const shops = useSelector((state) => state.storeFilter.shops);
   const city = useSelector((state) => state.storeFilter.city);
   const district = useSelector((state) => state.storeFilter.district);
 
   // Fetching cleanUp flag from Redux store
   const cleanUp = useSelector((state) => state.storeRerenders.cleanUp);
 
+  // defines location
+  const location = useSelector((state) => state.storeApp.location);
+
+  // defines backend url
+  const backendUrl = useSelector((state) => state.storeApp.backendUrl);
+  // defines backend url
+  const cardRefreshControl = useSelector(
+    (state) => state.storeRerenders.cardRefreshControl
+  );
+
   // useEffect hook to get data from the API
   useEffect(() => {
-    const Getting = async (currentPage) => {
+    const GettingUsersCards = async () => {
+      openLoading();
       try {
         const response = await axios.get(
-          `https://beautyverse.herokuapp.com/api/v1/cards?search=${search}&filter=${filter}&type=${
+          `${backendUrl}/api/v1/cards?search=${search}&filter=${filter}&type=${
             specialists ? "specialist" : ""
-          }${
-            salons ? "beautyCenter" : ""
-          }&city=${city}&district=${district}&check=${
-            currentUser !== null ? currentUser._id : ""
-          }&page=${currentPage}`
+          }${salons ? "beautyCenter" : ""}${
+            shops ? "shop" : ""
+          }&city=${city}&district=${district}&page=${1}&limit=8&country=${
+            location.country ? location.country : currentUser.address[0].country
+          }`
         );
 
-        await setUsers(response.data.data.feedList);
+        setUsers(response.data.data.cards);
         setTimeout(() => {
-          setScrollY(0);
-          setRefresh(false);
-          setTimeout(() => {
-            setLoadingSkelton(false);
-          }, 300);
-          flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
-        }, 300);
+          setLoadingSkelton(false);
+          dispatch(setCardRefreshControl(false));
+          setPage(1);
+          closeLoading();
+        }, 200);
       } catch (error) {
         console.log(error);
         setTimeout(() => {
           setLoadingSkelton(false);
-        }, 300);
+          setPage(1);
+        }, 200);
       }
     };
-    if (cardsCleanRef.current) {
-      cardsCleanRef.current = false;
-      setTimeout(() => {
-        setTimeout(() => {
-          setLoadingSkelton(false);
-        }, 300);
-      }, 500);
-      return;
-    }
-    if (scrollY < 10) {
-      setRefresh(true);
-      Getting(1);
-      setPage(1);
-    } else {
-      flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
-      setScrollY(0);
-    }
-    setTimeout(() => {
-      setTimeout(() => {
-        setLoadingSkelton(false);
-      }, 300);
-    }, 500);
-  }, [cleanUp]);
+    GettingUsersCards();
+  }, [
+    search,
+    filter,
+    specialists,
+    salons,
+    shops,
+    city,
+    district,
+    cardRefreshControl,
+  ]);
 
-  // Setting up state and callback for scrolling
-  const [scrollY, setScrollY] = useState(0);
+  const flatListRef = useRef();
 
   // useCallback is used to memoize the function for a given set of inputs
   const handleScroll = useCallback((event) => {
@@ -119,24 +119,20 @@ export const Cards = ({ navigation }) => {
     setScrollY(offsetY);
   }, []);
 
-  // Fetching rerenderUserList flag from Redux store
-  const rerenderUserList = useSelector(
-    (state) => state.storeRerenders.rerenderUserList
-  );
   // Function to get users with cards from the API
-  const GetUsersWithCards = async (currentPage) => {
+  const AddUsersCards = async (currentPage) => {
     try {
       const response = await axios.get(
-        `https://beautyverse.herokuapp.com/api/v1/cards?search=${search}&filter=${filter}&type=${
+        `${backendUrl}/api/v1/cards?search=${search}&filter=${filter}&type=${
           specialists ? "specialist" : ""
-        }${
-          salons ? "beautyCenter" : ""
-        }&city=${city}&district=${district}&check=${
-          currentUser !== null ? currentUser._id : ""
-        }&page=${currentPage}`
+        }${salons ? "beautyCenter" : ""}${
+          shops ? "shop" : ""
+        }&city=${city}&district=${district}&page=${currentPage}&limit=8&country=${
+          location.country ? location.country : currentUser.address[0].country
+        }`
       );
-      await setUsers((prev) => {
-        const newUsers = response.data.data.feedList;
+      setUsers((prev) => {
+        const newUsers = response.data.data.cards;
         return newUsers.reduce((acc, curr) => {
           const existingUserIndex = acc.findIndex(
             (user) => user._id === curr._id
@@ -155,74 +151,110 @@ export const Cards = ({ navigation }) => {
           }
         }, prev);
       });
-      setTimeout(() => {
-        setRefresh(false);
-        setTimeout(() => {
-          setLoadingSkelton(false);
-        }, 300);
-      }, 300);
     } catch (error) {
       console.log(error.response.data.message);
       setTimeout(() => {
         setLoadingSkelton(false);
-      }, 300);
+      }, 100);
     }
   };
-  // useEffect hook to get users with cards when the currentUser or rerenderUserList changes
+
+  // simple zoom to top on change dependency (special function to zoomToTop)
+  const zoomToTop = useSelector((state) => state.storeApp.zoomToTop);
+  let firstRend = useRef();
   useEffect(() => {
-    flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
-    if (currentUser) {
-      GetUsersWithCards(page);
-    } else {
-      setTimeout(() => {
-        setRefresh(false);
-        dispatch(setLoading(false));
-      }, 300);
-      setTimeout(() => {
-        setTimeout(() => {
-          setLoadingSkelton(false);
-        }, 300);
-      }, 500);
+    if (firstRend.current) {
+      firstRend.current = false;
+      return;
     }
-  }, [currentUser, rerenderUserList]);
+    flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
+  }, [zoomToTop]);
 
-  // Function to handle pull-to-refresh
-  const onRefresh = useCallback(async () => {
-    setRefresh(true);
-    setLoadingSkelton(true);
-    setPage(1);
-    setUsers([]);
-    await GetUsersWithCards(1);
-    setTimeout(() => {
-      setRefresh(false);
-    }, 500);
-  }, []);
+  /**
+   * refresh inidcator animation
+   */
+  const opacityValue = useRef(new Animated.Value(0)).current;
+  const transformScroll = useRef(new Animated.Value(0)).current;
 
-  // States for handling the opening of a card
-  const [openCard, setOpenCard] = useState(false);
-  const [openedCardObj, setOpenCardObj] = useState({});
+  const openLoading = () => {
+    Animated.parallel([
+      Animated.timing(opacityValue, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.timing(transformScroll, {
+        toValue: 60,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+  const closeLoading = () => {
+    Animated.parallel([
+      Animated.timing(opacityValue, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.timing(transformScroll, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
 
   return (
-    <View style={{ flex: 1 }}>
-      {loadingSkelton && <LoadingSkeleton />}
-      {users?.length > 0 ? (
-        <FlatList
+    <View
+      style={{
+        flex: 1,
+        alignItems: users?.length > 0 ? "flex-start" : "center",
+        justifyContent: "center",
+        height: "100%",
+      }}
+    >
+      <Animated.View
+        style={{
+          opacity: opacityValue,
+          transform: [{ scale: 1.2 }],
+          alignItems: "center",
+          width: "100%",
+        }}
+      >
+        <ActivityIndicator
+          color={currentTheme.pink}
+          style={{ position: "absolute", top: 15, zIndex: -1 }}
+          size={20}
+        />
+      </Animated.View>
+
+      {loadingSkelton ? (
+        <View
+          style={{
+            width: SCREEN_WIDTH,
+            height: SCREEN_HEIGHT,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <ActivityIndicator color={currentTheme.pink} size="large" />
+        </View>
+      ) : users?.length > 0 ? (
+        <Animated.FlatList
           ref={flatListRef}
           data={users}
           onScroll={handleScroll}
           scrollEventThrottle={1}
           numColumns={2}
-          contentContainerStyle={styles.contentContainer}
+          contentContainerStyle={{
+            width: SCREEN_WIDTH,
+          }}
           columnWrapperStyle={styles.columnWrapper}
-          // bounces={Platform.OS === "ios" ? false : undefined}
-          // overScrollMode={Platform.OS === "ios" ? "never" : "always"}
-          refreshControl={
-            <RefreshControl
-              tintColor="#ccc"
-              refreshing={refresh}
-              onRefresh={onRefresh}
-            />
-          }
+          style={{
+            flex: 1,
+            transform: [{ translateY: transformScroll }],
+          }}
           renderItem={({ item, index }) => {
             return (
               <Card
@@ -237,13 +269,10 @@ export const Cards = ({ navigation }) => {
             );
           }}
           onEndReached={() => {
-            setPage((prevPage) => {
-              const nextPage = prevPage + 1;
-              GetUsersWithCards(nextPage);
-              return nextPage;
-            });
+            AddUsersCards(page + 1);
+            setPage(page + 1);
           }}
-          onEndReachedThreshold={0.5}
+          onEndReachedThreshold={0.9}
           keyExtractor={(item) => item?._id}
           showsVerticalScrollIndicator={false}
         />

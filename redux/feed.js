@@ -6,6 +6,7 @@ const initialState = {
   // text: "",
   // definedLanguage: null,
   // translateActive: false,
+  feedPosts: [],
 };
 
 export const Feed = createSlice({
@@ -28,12 +29,31 @@ export const Feed = createSlice({
     // setTranslateActive: (state, action) => {
     //   state.translateActive = action.payload;
     // },
+    setFeedPost: (state, action) => {
+      const postIndex = state.feedPosts.findIndex(
+        (post) => post.id === action.payload.id
+      );
+      if (postIndex !== -1) {
+        // Replace the post at the found index with the new post
+        state.feedPosts[postIndex] = action.payload;
+      } else {
+        // If no post with the same id exists, push the new post to the array
+        state.feedPosts.push(action.payload);
+      }
+    },
+    removeFeedPost: (state, action) => {
+      state.feedPosts = state.feedPosts.filter(
+        (post) => post.id !== action.payload
+      );
+    },
   },
 });
 
 export const {
   // setFeedId,
   setVideoVolume,
+  setFeedPost,
+  removeFeedPost,
   // setText,
   // setDefLanguage,
   // setTranslateActive,

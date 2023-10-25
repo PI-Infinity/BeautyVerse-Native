@@ -7,9 +7,11 @@ import ActionsReducer from "./actions";
 import FilterReducer from "./filter";
 import ChatReducer from "./chat";
 import FeedReducer from "./feed";
-import OrdersReducer from "./orders";
-import SentOrdersReducer from "./sentOrders";
+import BookingsReducer from "./bookings";
+import SentBookingsReducer from "./sentBookings";
 import AlertsReducer from "./alerts";
+import MarketplaceReducer from "./Marketplace";
+import FixedComponentsReducer from "./fixedComponents";
 
 export const store = configureStore({
   reducer: {
@@ -21,8 +23,10 @@ export const store = configureStore({
     storeFilter: FilterReducer,
     storeChat: ChatReducer,
     storeFeed: FeedReducer,
-    storeOrders: OrdersReducer,
-    storeSentOrders: SentOrdersReducer,
+    storeBookings: BookingsReducer,
+    storeSentBookings: SentBookingsReducer,
     storeAlerts: AlertsReducer,
+    storeMarketplace: MarketplaceReducer,
+    storeFixedComponents: FixedComponentsReducer,
   },
 });

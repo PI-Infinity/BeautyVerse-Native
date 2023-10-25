@@ -1,46 +1,58 @@
+import { FontAwesome5, MaterialIcons } from "@expo/vector-icons";
+import axios from "axios";
 import React, { useState } from "react";
 import {
-  View,
+  Alert,
+  Dimensions,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
-  Dimensions,
-  Alert,
-  Pressable,
   Vibration,
-  ScrollView,
-  Platform,
-  Picker,
+  View,
 } from "react-native";
-import { useSelector, useDispatch } from "react-redux";
-import axios from "axios";
+import { useDispatch, useSelector } from "react-redux";
+import TimePickerComponent from "../../../components/startEndTimePicker";
+import { Language } from "../../../context/language";
+import { darkTheme, lightTheme } from "../../../context/theme";
+import { workingDaysOptions } from "../../../datas/registerDatas";
 import { setRerenderCurrentUser } from "../../../redux/rerenders";
 import { setCurrentUser } from "../../../redux/user";
-import { ListItem, Icon, Button } from "react-native-elements";
-import { Language } from "../../../context/language";
 import { Currency } from "../../../screens/user/settings/currency";
-import { lightTheme, darkTheme } from "../../../context/theme";
-import { MaterialIcons, FontAwesome5 } from "@expo/vector-icons";
-import { workingDaysOptions } from "../../../datas/registerDatas";
-import TimePickerComponent from "../../../components/startEndTimePicker";
 
-const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
+/**
+ * Working info screen in user settings
+ */
+
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 export const WorkingInfo = () => {
+  // language state
   const language = Language();
+
+  // define redux dispatch
+  const dispatch = useDispatch();
+
+  // define theme
+  const theme = useSelector((state) => state.storeApp.theme);
+  const currentTheme = theme ? darkTheme : lightTheme;
+
+  // define language
+  const lang = useSelector((state) => state.storeApp.language);
+
+  // define current user
+  const currentUser = useSelector((state) => state.storeUser.currentUser);
+
+  // define some states
   const [selectedOptions, setSelectedOptions] = useState([]);
   const [startHour, setStartHour] = useState("10:00");
   const [endHour, setEndHour] = useState("20:00");
   const [add, setAdd] = useState(false);
-  const dispatch = useDispatch();
 
-  const theme = useSelector((state) => state.storeApp.theme);
-  const currentTheme = theme ? darkTheme : lightTheme;
-
-  const lang = useSelector((state) => state.storeApp.language);
-  const currentUser = useSelector((state) => state.storeUser.currentUser);
-
+  // on item press function
   const handleOptionPress = (option) => {
     if (option?.hours) {
       let definedHours = option?.hours?.split(" - ");
@@ -64,7 +76,10 @@ export const WorkingInfo = () => {
     }
   };
 
-  // add service to firebase
+  // backend url
+  const backendUrl = useSelector((state) => state.storeApp.backendUrl);
+
+  // add service to db
   const AddWorkingDay = async (v) => {
     var val = currentUser?.workingDays?.find((item) => item.value === v);
     if (!v) {
@@ -76,14 +91,14 @@ export const WorkingInfo = () => {
         );
       } else {
         try {
-          await dispatch(
+          dispatch(
             setCurrentUser({
               ...currentUser,
               workingDays: [...currentUser.workingDays, { value: v }],
             })
           );
-          const response = await axios.post(
-            `https://beautyverse.herokuapp.com/api/v1/users/${currentUser?._id}/workingdays`,
+          await axios.post(
+            backendUrl + `/api/v1/users/${currentUser?._id}/workingdays`,
             {
               value: v,
             }
@@ -96,12 +111,12 @@ export const WorkingInfo = () => {
     }
   };
 
+  // add working hours function
   const AddWorkingDayHours = async (itemId, itemValue, indx) => {
     let workingHours = startHour + " - " + endHour;
     try {
       if (!workingHours || startHour === "" || endHour === "") {
         setSelectedOptions([]);
-        setWorkingHours("");
       } else {
         const newHours = {
           ...currentUser,
@@ -114,7 +129,8 @@ export const WorkingInfo = () => {
         dispatch(setCurrentUser(newHours));
         setSelectedOptions([]);
         const response = await axios.patch(
-          `https://beautyverse.herokuapp.com/api/v1/users/${currentUser?._id}/workingdays/${itemId}`,
+          backendUrl +
+            `/api/v1/users/${currentUser?._id}/workingdays/${itemId}`,
           {
             value: itemValue,
             hours: workingHours?.toString(),
@@ -129,7 +145,7 @@ export const WorkingInfo = () => {
     }
   };
 
-  // delete service
+  // delete procedure
   const Deleting = async (itemId, val) => {
     try {
       dispatch(
@@ -140,7 +156,8 @@ export const WorkingInfo = () => {
           ),
         })
       );
-      const url = `https://beautyverse.herokuapp.com/api/v1/users/${currentUser?._id}/workingdays/${itemId}`;
+      const url =
+        backendUrl + `/api/v1/users/${currentUser?._id}/workingdays/${itemId}`;
       const response = await fetch(url, { method: "DELETE" })
         .then((response) => response.json())
         .then(() => dispatch(setRerenderCurrentUser()))
@@ -168,7 +185,7 @@ export const WorkingInfo = () => {
       );
       setOpenExperience(false);
       const response = await axios.patch(
-        `https://beautyverse.herokuapp.com/api/v1/users/${currentUser?._id}`,
+        backendUrl + `/api/v1/users/${currentUser?._id}`,
         {
           experience: value,
         }
@@ -186,7 +203,8 @@ export const WorkingInfo = () => {
     >
       <View
         style={{
-          backgroundColor: currentTheme.background2,
+          borderWidth: 1,
+          borderColor: currentTheme.line,
           width: "90%",
           alignItems: "center",
           borderRadius: 10,
@@ -560,132 +578,140 @@ export const WorkingInfo = () => {
           })}
         </View>
       </View>
-      <View
-        style={{
-          backgroundColor: currentTheme.background2,
-          width: "90%",
-          alignItems: "center",
-          borderRadius: 10,
-          padding: 15,
-        }}
-      >
-        <Text
+      {currentUser.type !== "shop" && (
+        <View
           style={{
-            fontWeight: "bold",
-            fontSize: 16,
-            color: currentTheme.font,
-            letterSpacing: 0.3,
+            borderWidth: 1,
+            borderColor: currentTheme.line,
+            width: "90%",
+            alignItems: "center",
+            borderRadius: 10,
+            padding: 15,
           }}
         >
-          Experience:
-        </Text>
+          <Text
+            style={{
+              fontWeight: "bold",
+              fontSize: 16,
+              color: currentTheme.font,
+              letterSpacing: 0.3,
+            }}
+          >
+            Experience:
+          </Text>
 
-        {openExperience ? (
-          <>
-            <Text
-              style={{
-                color: currentTheme.disabled,
-                marginVertical: 12.5,
-                height: 16,
-                letterSpacing: 0.2,
-              }}
-            >
-              {experience.length} (max 500 symbols)
-            </Text>
-            <TextInput
-              placeholder="Add experience"
-              placeholderTextColor={currentTheme.disabled}
-              multiline
-              numOfLines={10}
-              onChangeText={setExperience}
-              value={experience}
-              style={{
-                paddingHorizontal: 10,
-                paddingVertical: 5,
-                borderRadius: 10,
-                width: "100%",
-                color: currentTheme.font,
-                fontSize: 14,
-                minHeight: 150,
-                lineHeight: 22,
-                backgroundColor: currentTheme.background,
-                shadowColor: "#000",
-                shadowOffset: {
-                  width: 0,
-                  height: 3, // negative value places shadow on top
-                },
-                shadowOpacity: 0.05,
-                shadowRadius: 2,
-                elevation: 1,
-              }}
-            />
+          {openExperience ? (
+            <>
+              <Text
+                style={{
+                  color: currentTheme.disabled,
+                  marginVertical: 12.5,
+                  height: 16,
+                  letterSpacing: 0.2,
+                }}
+              >
+                {experience.length} (max 500 symbols)
+              </Text>
+              <TextInput
+                placeholder="Add experience"
+                placeholderTextColor={currentTheme.disabled}
+                multiline
+                numOfLines={10}
+                onChangeText={setExperience}
+                value={experience}
+                style={{
+                  paddingHorizontal: 10,
+                  paddingVertical: 5,
+                  borderRadius: 10,
+                  width: "100%",
+                  color: currentTheme.font,
+                  fontSize: 14,
+                  minHeight: 150,
+                  lineHeight: 22,
+                  backgroundColor: currentTheme.background,
+                  shadowColor: "#000",
+                  shadowOffset: {
+                    width: 0,
+                    height: 3, // negative value places shadow on top
+                  },
+                  shadowOpacity: 0.05,
+                  shadowRadius: 2,
+                  elevation: 1,
+                }}
+              />
+              <TouchableOpacity
+                activeOpacity={0.3}
+                style={{
+                  padding: 10,
+                  borderRadius: 50,
+                  backgroundColor: currentTheme.pink,
+                  width: "45%",
+                  marginTop: 15,
+                  alignItems: "center",
+                }}
+                onPress={
+                  experience.length < 501
+                    ? () => UpdateExperience(experience)
+                    : undefined
+                }
+              >
+                <Text style={{ color: "#fff", letterSpacing: 0.2 }}>Save</Text>
+              </TouchableOpacity>
+            </>
+          ) : (
             <TouchableOpacity
               activeOpacity={0.3}
               style={{
-                padding: 10,
-                borderRadius: 50,
-                backgroundColor: currentTheme.pink,
-                width: "45%",
-                marginTop: 15,
+                width: "100%",
+                borderRadius: 10,
+                // backgroundColor: "rgba(255,255,255,0.1)",
+                marginTop: 20,
+                marginBottom: 5,
+                // padding: 10,
                 alignItems: "center",
               }}
-              onPress={
-                experience.length < 501
-                  ? () => UpdateExperience(experience)
-                  : undefined
-              }
+              onLongPress={() => {
+                UpdateExperience("");
+                Vibration.vibrate();
+              }}
+              delayLongPress={200}
+              onPress={() => {
+                setExperience(currentUser.experience);
+                setOpenExperience(true);
+              }}
             >
-              <Text style={{ color: "#fff", letterSpacing: 0.2 }}>Save</Text>
+              {currentUser.experience?.length > 0 ? (
+                <Text
+                  style={{
+                    color: currentTheme.font,
+                    lineHeight: 22,
+                  }}
+                >
+                  {currentUser?.experience}
+                </Text>
+              ) : (
+                <Pressable
+                  onPress={() => {
+                    setExperience(currentUser.experience);
+                    setOpenExperience(true);
+                  }}
+                  style={{ padding: 10 }}
+                >
+                  <MaterialIcons
+                    name="add"
+                    color={currentTheme.pink}
+                    size={24}
+                  />
+                </Pressable>
+              )}
             </TouchableOpacity>
-          </>
-        ) : (
-          <TouchableOpacity
-            activeOpacity={0.3}
-            style={{
-              width: "100%",
-              borderRadius: 10,
-              // backgroundColor: "rgba(255,255,255,0.1)",
-              marginTop: 20,
-              marginBottom: 5,
-              // padding: 10,
-              alignItems: "center",
-            }}
-            onLongPress={() => {
-              UpdateExperience("");
-              Vibration.vibrate();
-            }}
-            delayLongPress={200}
-            onPress={() => {
-              setExperience(currentUser.experience);
-              setOpenExperience(true);
-            }}
-          >
-            {currentUser.experience?.length > 0 ? (
-              <Text
-                style={{
-                  color: currentTheme.font,
-                  lineHeight: 22,
-                }}
-              >
-                {currentUser?.experience}
-              </Text>
-            ) : (
-              <Pressable
-                onPress={() => {
-                  setExperience(currentUser.experience);
-                  setOpenExperience(true);
-                }}
-                style={{ padding: 10 }}
-              >
-                <MaterialIcons name="add" color={currentTheme.pink} size={24} />
-              </Pressable>
-            )}
-          </TouchableOpacity>
-        )}
-      </View>
+          )}
+        </View>
+      )}
       <View
         style={{
-          backgroundColor: currentTheme.background2,
+          borderWidth: 1,
+          borderColor: currentTheme.line,
           width: "90%",
           alignItems: "center",
           borderRadius: 10,

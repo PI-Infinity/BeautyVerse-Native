@@ -2,6 +2,7 @@ import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
   loading: true,
+  logoutLoading: false,
   language: "ka",
   theme: true,
   users: [],
@@ -9,7 +10,16 @@ const initialState = {
   feedsResult: 0,
   // result shows total of result of cards
   cardsResult: 0,
-  machindeId: null,
+  machineId: null,
+  zoomToTop: false,
+  backendUrl: "https://beautyverse.herokuapp.com",
+  // backendUrl: "http://192.168.0.105:5000",
+  devicePushToken: null,
+
+  // blur background switcher
+  blur: false,
+
+  location: { country: null, city: null, latitude: null, longitude: null },
 };
 
 export const App = createSlice({
@@ -19,6 +29,9 @@ export const App = createSlice({
   reducers: {
     setLoading: (state, action) => {
       state.loading = action.payload;
+    },
+    setLogoutLoading: (state, action) => {
+      state.logoutLoading = action.payload;
     },
     setLanguage: (state, action) => {
       state.language = action.payload;
@@ -38,16 +51,33 @@ export const App = createSlice({
     setMachineId: (state, action) => {
       state.machineId = action.payload;
     },
+    setZoomToTop: (state, action) => {
+      state.zoomToTop = !state.zoomToTop;
+    },
+    setLocation: (state, action) => {
+      state.location = action.payload;
+    },
+    setDevicePushToken: (state, action) => {
+      state.devicePushToken = action.payload;
+    },
+    setBlur: (state, action) => {
+      state.blur = action.payload;
+    },
   },
 });
 
 export const {
   setLoading,
+  setLogoutLoading,
   setLanguage,
   setTheme,
   setUsers,
   setMachineId,
   setFeedsResult,
   setCardsResult,
+  setZoomToTop,
+  setLocation,
+  setDevicePushToken,
+  setBlur,
 } = App.actions;
 export default App.reducer;

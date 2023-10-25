@@ -2,6 +2,9 @@ import React, { useState, useEffect } from "react";
 import { Animated } from "react-native";
 import * as FileSystem from "expo-file-system";
 import * as Crypto from "expo-crypto";
+import { useSelector } from "react-redux";
+
+// cacheing image
 
 export const CacheableImage = (props) => {
   const [source, setSource] = useState(null);
@@ -48,7 +51,7 @@ export const CacheableImage = (props) => {
     if (props.source.uri) {
       cacheImage();
     }
-  }, [props.source.uri]);
+  }, [props.source.url]);
 
   return (
     <Animated.Image

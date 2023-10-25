@@ -1,26 +1,19 @@
-import React, { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  Image,
-  StyleSheet,
-  Alert,
-} from "react-native";
-import * as ImagePicker from "expo-image-picker";
-import * as DocumentPicker from "expo-document-picker";
-import { ResizeAndCompressImage } from "../functions/compressImg";
-import * as ImageManipulator from "expo-image-manipulator";
-import * as FileSystem from "expo-file-system";
-import { BackDrop } from "../components/backDropLoader";
-import { setRerenderCurrentUser, setCleanUp } from "../redux/rerenders";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { storage } from "../firebase";
-import { useSelector, useDispatch } from "react-redux";
 import axios from "axios";
+import * as ImageManipulator from "expo-image-manipulator";
+import * as ImagePicker from "expo-image-picker";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import React, { useEffect, useState } from "react";
+import { Alert, StyleSheet, TouchableOpacity, View } from "react-native";
+import { useDispatch, useSelector } from "react-redux";
+import { BackDrop } from "../components/backDropLoader";
+import { storage } from "../firebase";
+import { setCleanUp, setRerenderCurrentUser } from "../redux/rerenders";
 
-const InputFile = ({ targetUser, onCoverUpdate }) => {
-  const [resizedImg, setResizedImg] = useState(null);
+/**
+ * Input cover image for android
+ */
+
+const InputFile = ({ targetUser }) => {
   const [file, setFile] = useState(null);
 
   const dispatch = useDispatch();
@@ -47,7 +40,7 @@ const InputFile = ({ targetUser, onCoverUpdate }) => {
     });
 
     if (result.assets) {
-      let newWidth = 300;
+      let newWidth = 500;
       let newHeight =
         (newWidth / result.assets[0].width) * result.assets[0].height;
 
@@ -73,6 +66,8 @@ const InputFile = ({ targetUser, onCoverUpdate }) => {
     }
   }
 
+  const backendUrl = useSelector((state) => state.storeApp.backendUrl);
+
   async function FileUpload() {
     /* aadd cover
      */
@@ -88,7 +83,7 @@ const InputFile = ({ targetUser, onCoverUpdate }) => {
           .then((url) => {
             const UploadCover = async () => {
               const response = await axios.patch(
-                `https://beautyverse.herokuapp.com/api/v1/users/${targetUser?._id}`,
+                `${backendUrl}/api/v1/users/${targetUser?._id}`,
                 {
                   cover: url,
                 }
