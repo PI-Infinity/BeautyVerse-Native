@@ -928,7 +928,12 @@ const FeedItem = (props) => {
             )}
           </View>
         )}
-        <View
+        <TouchableOpacity
+          activeOpacity={0.9}
+          onPress={() => {
+            dispatch(setBlur(false));
+            props.setActiveGallery(null);
+          }}
           name="main-section"
           style={{
             width: SCREEN_WIDTH - 20,
@@ -1026,8 +1031,7 @@ const FeedItem = (props) => {
             >
               {props?.feed?.images.map((item, index) => {
                 return (
-                  <TouchableOpacity
-                    activeOpacity={1}
+                  <View
                     key={index}
                     delayLongPress={200}
                     style={{ height: "100%" }}
@@ -1071,7 +1075,7 @@ const FeedItem = (props) => {
                         }
                       />
                     </BlurView>
-                  </TouchableOpacity>
+                  </View>
                 );
               })}
             </ScrollView>
@@ -1162,7 +1166,7 @@ const FeedItem = (props) => {
               </View>
             </TouchableOpacity>
           )}
-        </View>
+        </TouchableOpacity>
         {props?.feed?.fileFormat === "img" && (
           <View
             name="bottom-section"

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Dimensions,
   FlatList,
+  Modal,
   Pressable,
   ScrollView,
   Text,
@@ -18,6 +19,7 @@ import { Circle } from "../../../components/skeltons";
 import { darkTheme, lightTheme } from "../../../context/theme";
 import { ProceduresOptions } from "../../../datas/registerDatas";
 import { setFeedRefreshControl } from "../../../redux/rerenders";
+import { ScrollGallery } from "../scrollGallery";
 
 /**
  * Feeds screen
@@ -300,6 +302,11 @@ export const SavedItems = ({ navigation, setScrollY, setScrollYF }) => {
   // product categories list
   const categoriesList = ProceduresOptions();
 
+  /**
+   * user feeds gallery
+   */
+  const [activeGallery, setActiveGallery] = useState(null);
+
   return (
     <View style={{ flex: 1 }}>
       <View>
@@ -348,6 +355,8 @@ export const SavedItems = ({ navigation, setScrollY, setScrollYF }) => {
                     currentIndex={currentIndex}
                     isFocused={isFocused}
                     feedsLength={feeds?.length}
+                    setActiveGallery={setActiveGallery}
+                    activeGallery={activeGallery}
                   />
                 );
               }}
@@ -422,6 +431,22 @@ export const SavedItems = ({ navigation, setScrollY, setScrollYF }) => {
             </View>
           )}
         </ScrollView>
+      )}
+      {activeGallery && (
+        <Modal isVisible={activeGallery} animationType="slide" transparent>
+          <View
+            style={{
+              flex: 1,
+              paddingTop: SCREEN_HEIGHT / 15,
+              backgroundColor: currentTheme.background,
+            }}
+          >
+            <ScrollGallery
+              route={{ params: activeGallery }}
+              setActiveGallery={setActiveGallery}
+            />
+          </View>
+        </Modal>
       )}
     </View>
   );

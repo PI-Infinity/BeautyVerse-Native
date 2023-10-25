@@ -47,7 +47,7 @@ export const Contact = ({ targetUser }) => {
 
   return (
     <View style={styles.container}>
-      {targetUser?.type !== "user" && (
+      {targetUser?.type !== "user" && targetUser?.phone?.phone?.length > 0 && (
         <TouchableOpacity
           onPress={() => handleLinkPress(`tel:${targetUser.phone.phone}`)}
           style={[

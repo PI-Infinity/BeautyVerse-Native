@@ -333,7 +333,7 @@ export const Feeds = ({
   const slideToLeft = () => {
     Animated.timing(position, {
       toValue: 0,
-      duration: 200,
+      duration: 150,
       useNativeDriver: true,
     }).start();
   };
@@ -341,7 +341,7 @@ export const Feeds = ({
   const slideToRight = () => {
     Animated.timing(position, {
       toValue: SCREEN_WIDTH / 2,
-      duration: 200,
+      duration: 150,
       useNativeDriver: true,
     }).start();
   };
@@ -572,23 +572,23 @@ const NavigatorComponent = ({
     if (!activeList) {
       Animated.timing(fadeInOpacity, {
         toValue: 1,
-        duration: 200,
+        duration: 150,
         useNativeDriver: true,
       }).start();
       Animated.timing(fadeInOpacity2, {
         toValue: 0.3,
-        duration: 200,
+        duration: 150,
         useNativeDriver: true,
       }).start();
     } else {
       Animated.timing(fadeInOpacity2, {
         toValue: 1,
-        duration: 200,
+        duration: 150,
         useNativeDriver: true,
       }).start();
       Animated.timing(fadeInOpacity, {
         toValue: 0.3,
-        duration: 200,
+        duration: 150,
         useNativeDriver: true,
       }).start();
     }
