@@ -19,17 +19,17 @@ import {
 } from "react-native";
 import { ActivityIndicator } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
-import AlertMessage from "../components/alertMessage";
-import { Feed } from "../components/feedCard/feedCard";
-import SkeletonComponent from "../components/skelton";
-import { darkTheme, lightTheme } from "../context/theme";
-import { setSendReport } from "../redux/alerts";
-import { setCleanUp, setFeedRefreshControl } from "../redux/rerenders";
-import { setLoading, setZoomToTop } from "../redux/app";
+import AlertMessage from "../../components/alertMessage";
+import { Feed } from "../../screens/feeds/feedCard/feedCard";
+import SkeletonComponent from "../../components/skelton";
+import { darkTheme, lightTheme } from "../../context/theme";
+import { setSendReport } from "../../redux/alerts";
+import { setCleanUp, setFeedRefreshControl } from "../../redux/rerenders";
+import { setLoading, setZoomToTop } from "../../redux/app";
 import * as Location from "expo-location";
-import GetSharedFeed from "../components/getSharedFeed";
-import { ScrollGallery } from "./user/scrollGallery";
-import { Language } from "../context/language";
+import GetSharedFeed from "../../components/getSharedFeed";
+import { ScrollGallery } from "./scrollGallery";
+import { Language } from "../../context/language";
 import { BlurView } from "expo-blur";
 
 /**
@@ -89,12 +89,12 @@ export const Feeds = ({
     Animated.parallel([
       Animated.timing(opacityValue, {
         toValue: 1,
-        duration: 200,
+        duration: 150,
         useNativeDriver: true,
       }),
       Animated.timing(transformScroll, {
         toValue: 60,
-        duration: 300,
+        duration: 200,
         useNativeDriver: true,
       }),
     ]).start();
@@ -103,12 +103,12 @@ export const Feeds = ({
     Animated.parallel([
       Animated.timing(opacityValue, {
         toValue: 0,
-        duration: 200,
+        duration: 150,
         useNativeDriver: true,
       }),
       Animated.timing(transformScroll, {
         toValue: 0,
-        duration: 300,
+        duration: 200,
         useNativeDriver: true,
       }),
     ]).start();

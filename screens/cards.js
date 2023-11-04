@@ -180,12 +180,12 @@ export const Cards = ({ navigation, setScrollY }) => {
     Animated.parallel([
       Animated.timing(opacityValue, {
         toValue: 1,
-        duration: 300,
+        duration: 150,
         useNativeDriver: true,
       }),
       Animated.timing(transformScroll, {
         toValue: 60,
-        duration: 300,
+        duration: 200,
         useNativeDriver: true,
       }),
     ]).start();
@@ -194,7 +194,7 @@ export const Cards = ({ navigation, setScrollY }) => {
     Animated.parallel([
       Animated.timing(opacityValue, {
         toValue: 0,
-        duration: 300,
+        duration: 150,
         useNativeDriver: true,
       }),
       Animated.timing(transformScroll, {

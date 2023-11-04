@@ -10,13 +10,12 @@ import {
   View,
 } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
-import { CacheableImage } from "../../components/cacheableImage";
-import { Reports } from "../../components/feedCard/reports";
-import GetTimesAgo from "../../functions/getTimesAgo";
-import { setSendReport } from "../../redux/alerts";
-import { Circle } from "../skeltons";
-import { BlurView } from "expo-blur";
-import { setBlur } from "../../redux/app";
+import { CacheableImage } from "../../../components/cacheableImage";
+import { Reports } from "../../../screens/feeds/feedCard/reports";
+import GetTimesAgo from "../../../functions/getTimesAgo";
+import { setSendReport } from "../../../redux/alerts";
+import { setBlur } from "../../../redux/app";
+import { Circle } from "../../../components/skeltons";
 
 /**
  * Top section of feed card

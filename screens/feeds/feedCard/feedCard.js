@@ -1,6 +1,8 @@
 import { Entypo } from "@expo/vector-icons";
 import axios from "axios";
+import { BlurView } from "expo-blur";
 import * as Haptics from "expo-haptics";
+import * as Location from "expo-location";
 import { useEffect, useRef, useState } from "react";
 import {
   Animated,
@@ -12,23 +14,18 @@ import {
   View,
 } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
-import { CacheableVideo } from "../../components/cacheableVideo";
-import { BottomSection } from "../../components/feedCard/bottomSection";
-import { Post } from "../../components/feedCard/post";
-import { TopSection } from "../../components/feedCard/topSection";
-import ZoomableImage from "../../components/zoomableImage";
-import { Language } from "../../context/language";
-import { useSocket } from "../../context/socketContext";
-import { darkTheme, lightTheme } from "../../context/theme";
-import feed, { setFeedPost, setVideoVolume } from "../../redux/feed";
-import { setBlur, setLoading } from "../../redux/app";
-import * as Location from "expo-location";
-import * as Notifications from "expo-notifications";
-import { sendNotification } from "../../components/pushNotifications";
-import { Circle } from "../skeltons";
-import GestureTester from "./GestureTester";
-import { setActiveScrollGallery } from "../../redux/fixedComponents";
-import { BlurView } from "expo-blur";
+import { CacheableVideo } from "../../../components/cacheableVideo";
+import { BottomSection } from "../../../screens/feeds/feedCard/bottomSection";
+import { Post } from "../../../screens/feeds/feedCard/post";
+import { TopSection } from "../../../screens/feeds/feedCard/topSection";
+import { sendNotification } from "../../../components/pushNotifications";
+import ZoomableImage from "../../../components/zoomableImage";
+import { Language } from "../../../context/language";
+import { useSocket } from "../../../context/socketContext";
+import { darkTheme, lightTheme } from "../../../context/theme";
+import { setBlur, setLoading } from "../../../redux/app";
+import { setVideoVolume } from "../../../redux/feed";
+import { Circle } from "../../../components/skeltons";
 
 /**
  * Feed Item in feeds screen
@@ -658,7 +655,7 @@ export const Feed = (props) => {
               position: "absolute",
               top: 0,
               zIndex: 120,
-              paddingHorizontal: 15,
+              paddingHorizontal: 20,
               paddingVertical: 10,
               width: "100%",
             }}

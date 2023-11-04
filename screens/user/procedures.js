@@ -113,6 +113,7 @@ export const ProceduresList = ({ targetUser, AddBooking }) => {
           })
           .map((item, index) => {
             const label = proceduresOptions.find((c) => item.value === c.value);
+            console.log(item.duration);
             return (
               <TouchableOpacity
                 activeOpacity={AddBooking ? 0.5 : 1}
@@ -131,19 +132,10 @@ export const ProceduresList = ({ targetUser, AddBooking }) => {
                   // flexDirection: "row",
                 }}
               >
-                <Entypo
-                  size={18}
-                  color={currentTheme.pink}
-                  name="flow-line"
-                  style={{ transform: [{ rotate: "90deg" }] }}
-                />
                 <View
                   style={{
-                    flexDirection: "row",
                     width: "100%",
-                    justifyContent: "space-between",
                     gap: 10,
-                    alignItems: "center",
                   }}
                 >
                   <View
@@ -153,6 +145,12 @@ export const ProceduresList = ({ targetUser, AddBooking }) => {
                       alignItems: "center",
                     }}
                   >
+                    <Entypo
+                      size={18}
+                      color={currentTheme.pink}
+                      name="flow-line"
+                      style={{ transform: [{ rotate: "90deg" }] }}
+                    />
                     {/* <View
                       style={{
                         width: 10,
@@ -162,7 +160,7 @@ export const ProceduresList = ({ targetUser, AddBooking }) => {
                       }}
                     ></View> */}
                     <Text
-                      style={{ color: currentTheme.font, letterSpacing: 0.2 }}
+                      style={{ color: currentTheme.pink, letterSpacing: 0.5 }}
                     >
                       {label.label}
                     </Text>
@@ -174,7 +172,17 @@ export const ProceduresList = ({ targetUser, AddBooking }) => {
                       alignItems: "center",
                     }}
                   >
-                    <Text style={{ color: currentTheme.font }}>
+                    <Text
+                      style={{ color: currentTheme.font, letterSpacing: 0.05 }}
+                    >
+                      <Text
+                        style={{
+                          color: currentTheme.disabled,
+                          letterSpacing: 0.05,
+                        }}
+                      >
+                        {language?.language?.User?.userPage?.price}:
+                      </Text>{" "}
                       {item?.price}
                     </Text>
                     {item?.price > 0 && (
@@ -204,45 +212,57 @@ export const ProceduresList = ({ targetUser, AddBooking }) => {
                         )}
                       </>
                     )}
+                    {item.duration && (
+                      <View
+                        style={{
+                          flexDirection: "row",
+                          alignItems: "center",
+                          gap: 8,
+                          justifyContent: "flex-end",
+                        }}
+                      >
+                        <View
+                          style={{
+                            flexDirection: "row",
+                            gap: 5,
+                            alignItems: "center",
+                          }}
+                        >
+                          <Text
+                            style={{
+                              color: currentTheme.disabled,
+                              letterSpacing: 0.05,
+                            }}
+                          >
+                            {language?.language?.Bookings?.bookings?.duration}:{" "}
+                          </Text>
+                          <Text
+                            style={{
+                              color: currentTheme.font,
+                              fontSize: 14,
+                              letterSpacing: 0.05,
+                            }}
+                          >
+                            {item.duration < 60
+                              ? item.duration + " min."
+                              : item.duration >= 60
+                              ? Math.floor(item.duration / 60) +
+                                "h" +
+                                (item.duration % 60 > 0
+                                  ? " " + (item.duration % 60) + " min."
+                                  : "")
+                              : "0h"}
+                          </Text>
+                          <FontAwesome5
+                            name="clock"
+                            color={currentTheme.pink}
+                            size={12}
+                          />
+                        </View>
+                      </View>
+                    )}
                   </View>
                 </View>
-                {item.duration && (
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      gap: 8,
-                      justifyContent: "flex-end",
-                    }}
-                  >
-                    <View
-                      style={{
-                        flexDirection: "row",
-                        gap: 5,
-                        alignItems: "center",
-                      }}
-                    >
-                      <Text
-                        style={{ color: currentTheme.disabled, fontSize: 12 }}
-                      >
-                        {item.duration < 60
-                          ? item.duration + " min."
-                          : item.duration >= 60
-                          ? Math.floor(item.duration / 60) +
-                            "h" +
-                            (item.duration % 60 > 0
-                              ? " " + (item.duration % 60) + " min."
-                              : "")
-                          : "0h"}
-                      </Text>
-                      <FontAwesome5
-                        name="clock"
-                        color={currentTheme.pink}
-                        size={12}
-                      />
-                    </View>
-                  </View>
-                )}
               </TouchableOpacity>
             );
           })}

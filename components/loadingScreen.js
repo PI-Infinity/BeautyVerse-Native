@@ -6,7 +6,9 @@ import {
   Dimensions,
   Animated,
   Easing,
+  ImageBackground,
 } from "react-native";
+import { ActivityIndicator } from "react-native-paper";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -43,20 +45,39 @@ const LoadingScreen = ({ currentTheme, theme }) => {
         },
       ]}
     >
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          borderWidth: 1,
-          borderColor: currentTheme.line,
-          padding: 7.5,
-          paddingHorizontal: 15,
-          gap: 8,
-          borderRadius: 50,
-          marginBottom: 50,
-        }}
+      <ImageBackground
+        style={[
+          styles.loading,
+          {
+            flex: 1,
+          },
+        ]}
+        source={theme ? require("../assets/background.jpg") : null}
       >
-        {/* {theme && (
+        <View
+          style={[
+            styles.loading,
+            {
+              backgroundColor: !theme
+                ? currentTheme.background
+                : "rgba(0,0,0,0.5)",
+              flex: 1,
+            },
+          ]}
+        >
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              borderWidth: 1,
+              borderColor: currentTheme.line,
+              padding: 7.5,
+              paddingHorizontal: 15,
+              borderRadius: 50,
+              marginBottom: 30,
+            }}
+          >
+            {/* {theme && (
           <Animated.Image
             style={{
               width: 35,
@@ -66,30 +87,33 @@ const LoadingScreen = ({ currentTheme, theme }) => {
             source={require("../assets/icon.png")}
           />
         )} */}
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-          }}
-        >
-          <Text
-            style={[
-              styles.loadingText,
-              { color: currentTheme.pink, letterSpacing: 1 },
-            ]}
-          >
-            Beauty
-          </Text>
-          <Text
-            style={[
-              styles.loadingText,
-              { color: currentTheme.font, letterSpacing: 1 },
-            ]}
-          >
-            Verse
-          </Text>
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+              }}
+            >
+              <Text
+                style={[
+                  styles.loadingText,
+                  { color: currentTheme.pink, letterSpacing: 1 },
+                ]}
+              >
+                Beauty
+              </Text>
+              <Text
+                style={[
+                  styles.loadingText,
+                  { color: currentTheme.font, letterSpacing: 1 },
+                ]}
+              >
+                Verse
+              </Text>
+            </View>
+          </View>
+          <ActivityIndicator color={currentTheme.pink} size={20} />
         </View>
-      </View>
+      </ImageBackground>
     </View>
   );
 };
@@ -107,8 +131,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   loadingText: {
-    fontSize: 29,
+    fontSize: 30,
     fontWeight: "bold",
-    letterSpacing: 1.2,
+    letterSpacing: 1.5,
   },
 });

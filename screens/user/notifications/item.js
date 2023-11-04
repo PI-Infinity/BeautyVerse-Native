@@ -1,244 +1,67 @@
-import { FontAwesome, Fontisto, MaterialIcons } from "@expo/vector-icons";
-import axios from "axios";
 import React, { useEffect, useState } from "react";
 import {
-  Alert,
-  Dimensions,
+  ActivityIndicator,
   Image,
-  Platform,
   Pressable,
-  ScrollView,
+  StyleSheet,
   Text,
   TouchableOpacity,
   Vibration,
   View,
 } from "react-native";
-import { ActivityIndicator } from "react-native-paper";
-import { useSelector } from "react-redux";
-import { Language } from "../../context/language";
-import { darkTheme, lightTheme } from "../../context/theme";
-import GetTimesAgo from "../../functions/getTimesAgo";
-import { setRerenderCurrentUser } from "../../redux/rerenders";
-
-/**
- * this file includes 2 components (list and item)
- * Define notifications screen
- * Bellow notification item component
- */
-
-const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
-
-export const Notifications = ({
-  notifications,
-  navigation,
+import { useDispatch, useSelector } from "react-redux";
+import { Language } from "../../../context/language";
+import axios from "axios";
+import GetTimesAgo from "../../../functions/getTimesAgo";
+import {
+  Entypo,
+  FontAwesome,
+  Fontisto,
+  MaterialIcons,
+} from "@expo/vector-icons";
+import {
   setNotifications,
   setUnreadNotifications,
-}) => {
-  // current user
-  const currentUser = useSelector((state) => state.storeUser.currentUser);
-
-  // theme state
-  const theme = useSelector((state) => state.storeApp.theme);
-  const currentTheme = theme ? darkTheme : lightTheme;
-
-  // loading state
-  const [loading, setLoading] = useState(true);
-
-  // backend url
-  const backendUrl = useSelector((state) => state.storeApp.backendUrl);
-
-  // read notification
-  const ReadNotification = async (id) => {
-    try {
-      setUnreadNotifications((prev) => prev - 1);
-      setNotifications((prev) => {
-        return prev.map((item) => {
-          // Check if the current item's _id matches the given id
-          if (item?._id === id) {
-            // Update the status of the matched notification to "read"
-            return {
-              ...item,
-              status: "read",
-            };
-          }
-          // If the item's _id doesn't match, return the item unchanged
-          return item;
-        });
-      });
-      await axios.patch(
-        backendUrl + `/api/v1/users/${currentUser?._id}/notifications/${id}`,
-        {
-          status: "read",
-        }
-      );
-    } catch (error) {
-      console.log(error.response.data.message);
-    }
-  };
-
-  useEffect(() => {
-    setTimeout(() => {
-      setLoading(false);
-    }, 500);
-  }, []);
-
-  return (
-    <ScrollView
-      scrollEventThrottle={16}
-      style={{ flex: 1, backgroundColor: currentTheme.background }}
-      bounces={Platform.OS === "ios" ? false : undefined}
-      overScrollMode={Platform.OS === "ios" ? "never" : "always"}
-      contentContainerStyle={{
-        paddingHorizontal: 10,
-        gap: 5,
-        paddingVertical: 15,
-      }}
-    >
-      {loading && notifications?.length > 0 && (
-        <View
-          style={{
-            position: "absolute",
-            flex: 1,
-            width: SCREEN_WIDTH,
-            height: SCREEN_HEIGHT,
-            alignItems: "center",
-            justifyContent: "center",
-            backgroundColor: currentTheme.background,
-            zIndex: 100,
-          }}
-        >
-          <ActivityIndicator size="large" color={currentTheme.pink} />
-        </View>
-      )}
-      {notifications?.length > 0 ? (
-        notifications?.map((item, index) => {
-          if (item) {
-            return (
-              <NotificationItem
-                key={index}
-                item={item}
-                currentTheme={currentTheme}
-                navigation={navigation}
-                ReadNotification={ReadNotification}
-                currentUser={currentUser}
-                setNotifications={setNotifications}
-                notifications={notifications}
-              />
-            );
-          }
-        })
-      ) : (
-        <View
-          style={{
-            flex: 1,
-            alignItems: "center",
-            justifyContent: "center",
-            height: 500,
-          }}
-        >
-          <Text style={{ color: currentTheme.disabled }}>
-            No Notifications found
-          </Text>
-        </View>
-      )}
-    </ScrollView>
-  );
-};
+} from "../../../redux/notifications";
 
 /**
  * Notification item component
  */
 
-const NotificationItem = ({
+export const NotificationItem = ({
   item,
   currentTheme,
   navigation,
   ReadNotification,
   currentUser,
-  setNotifications,
-  notifications,
 }) => {
-  // define screen id by query split
-  let feed = item?.feed;
-
   // backend url
   const backendUrl = useSelector((state) => state.storeApp.backendUrl);
 
   // define some states
   const [loadCover, setLoadCover] = useState(true);
-  const [feedObj, setFeedObj] = useState(null);
-  const [user, setUser] = useState(null);
-  const [product, setProduct] = useState(null);
 
   // define language
   const language = Language();
 
-  // define rerender user feed state
-  const rerenderUserFeed = useSelector(
-    (state) => state.storeRerenders.rerenderUserFeed
-  );
-
-  // get feed from DB
-  async function GetFeedObj() {
-    try {
-      if (item?.type !== "welcome" && item?.type !== "follow" && item.feed) {
-        let response = await axios.get(
-          backendUrl + `/api/v1/feeds/${feed}?check=${currentUser._id}`
-        );
-
-        setFeedObj(response.data.data.feed);
-      }
-    } catch (error) {
-      console.log(error.response.data.message);
-    }
-  }
-
-  // Get user from DB
-  async function GetUser() {
-    try {
-      if (item?.type !== "welcome") {
-        let res = await axios.get(
-          backendUrl + `/api/v1/users/${item?.senderId}`
-        );
-        setUser(res.data.data.user);
-      }
-    } catch (error) {
-      console.log(error.response.data.message);
-    }
-  }
-  // Get product from DB
-  async function GetProduct() {
-    try {
-      if (item?.type === "saveProduct") {
-        let res = await axios.get(
-          backendUrl + `/api/v1/marketplace/${item?.product}`
-        );
-        setProduct(res.data.data.product);
-      }
-    } catch (error) {
-      console.log(error.response.data.message);
-    }
-  }
-
-  if (item.type === "saveProduct") {
-    console.log(product);
-  }
+  // dispatch
+  const dispatch = useDispatch();
 
   // on press navigate to feed screen
   const handlePress = (x) => {
     if (x === "feed") {
-      if (feedObj) {
+      if (item.feed) {
         navigation.navigate("UserFeed", {
           user: currentUser,
-          feed: feedObj,
+          feed: item.feed,
         });
       } else {
         Alert.alert("Feed not defined");
       }
     } else if (x === "product") {
-      if (product) {
+      if (item.product) {
         navigation.navigate("Product", {
-          product: product,
+          product: { ...item.product, owner: currentUser },
         });
       } else {
         Alert.alert("Product not defined");
@@ -246,11 +69,13 @@ const NotificationItem = ({
     }
   };
 
-  useEffect(() => {
-    GetFeedObj();
-    GetUser();
-    GetProduct();
-  }, [rerenderUserFeed, item]);
+  // notifications
+  const notifications = useSelector(
+    (state) => state.storeNotifications.notifications
+  );
+  const unreadNotifications = useSelector(
+    (state) => state.storeNotifications.unreadNotifications
+  );
 
   // delete notification
   const DeleteNotification = async () => {
@@ -259,12 +84,15 @@ const NotificationItem = ({
       const updatedNotifications = notifications?.filter(
         (notification) => notification?._id !== item?._id
       );
-      setNotifications(updatedNotifications);
+      const updatedUnreadNotifications = updatedUnreadNotifications?.filter(
+        (notification) => notification?._id !== item?._id
+      );
+      dispatch(setNotifications(updatedNotifications));
+      dispatch(setUnreadNotifications(updatedUnreadNotifications));
       await axios.delete(
         backendUrl +
           `/api/v1/users/${currentUser?._id}/notifications/${item?._id}`
       );
-      console.log("deleted");
     } catch (error) {
       console.log(error.response.data.message);
     }
@@ -352,6 +180,9 @@ const NotificationItem = ({
     }
   }
 
+  // delete confirm
+  const [confirm, setConfirm] = useState(false);
+
   return (
     <>
       {item?.type !== "welcome" ? (
@@ -371,23 +202,21 @@ const NotificationItem = ({
           onPress={
             item.status === "unread"
               ? () => ReadNotification(item?._id)
-              : undefined
+              : () => setConfirm(true)
           }
-          onLongPress={DeleteNotification}
-          delayLongPress={250}
         >
           <TouchableOpacity
             activeOpacity={0.3}
             onPress={
-              user
+              item?.sender
                 ? () =>
                     navigation.navigate("UserVisit", {
-                      user: user,
+                      user: item?.sender,
                     })
                 : undefined
             }
           >
-            {loadCover && item?.senderCover?.length > 10 && (
+            {loadCover && item?.sender?.cover?.length > 10 && (
               <View
                 style={{
                   position: "absolute",
@@ -401,9 +230,9 @@ const NotificationItem = ({
                 <ActivityIndicator size="small" color={currentTheme.pink} />
               </View>
             )}
-            {item?.senderCover?.length > 10 ? (
+            {item?.sender?.cover?.length > 10 ? (
               <Image
-                source={{ uri: item?.senderCover }}
+                source={{ uri: item?.sender?.cover }}
                 style={{ height: 40, width: 40, borderRadius: 50 }}
                 onLoad={() => setLoadCover(false)}
               />
@@ -441,7 +270,7 @@ const NotificationItem = ({
                   fontSize: 14,
                 }}
               >
-                {item?.senderName}
+                {item?.sender?.name}
               </Text>
               <Text
                 style={{
@@ -466,69 +295,46 @@ const NotificationItem = ({
             </Text>
           </View>
           <View style={{ flexDirection: "row", gap: 20, marginLeft: "auto" }}>
-            {(item?.type === "star" ||
-              item?.type === "review" ||
-              item?.type === "save" ||
-              item?.type === "share") && (
-              <TouchableOpacity
-                activeOpacity={0.3}
-                style={{ alignItems: "flex-end" }}
-                onPress={() => handlePress("feed")}
+            {confirm ? (
+              <View
+                style={{ flexDirection: "row", alignItems: "center", gap: 10 }}
               >
-                <FontAwesome
-                  style={{ marginLeft: "auto" }}
-                  name="image"
-                  size={18}
-                  color={
-                    item?.status === "unread"
-                      ? "#f1f1f1"
-                      : currentTheme.disabled
-                  }
-                />
-              </TouchableOpacity>
-            )}
-            {item.type === "saveProduct" && (
-              <TouchableOpacity
-                activeOpacity={0.3}
-                style={{ alignItems: "flex-end" }}
-                onPress={() => handlePress("product")}
-              >
-                <Fontisto
-                  style={{ marginLeft: "auto" }}
-                  name="shopping-bag-1"
-                  size={18}
-                  color={
-                    item?.status === "unread"
-                      ? "#f1f1f1"
-                      : currentTheme.disabled
-                  }
-                />
-              </TouchableOpacity>
-            )}
-            {item?.type === "save" || item?.type === "saveProduct" ? (
-              <MaterialIcons
-                style={{ marginLeft: "auto" }}
-                name="save-alt"
-                size={17}
-                color={
-                  item?.status === "unread" ? "#f1f1f1" : currentTheme.pink
-                }
-              />
+                <Pressable
+                  style={{ padding: 5 }}
+                  onPress={() => {
+                    DeleteNotification();
+                    setConfirm(false);
+                  }}
+                >
+                  <MaterialIcons
+                    name="done"
+                    size={18}
+                    color={currentTheme.pink}
+                  />
+                </Pressable>
+                <Pressable
+                  style={{ padding: 5 }}
+                  onPress={() => setConfirm(false)}
+                >
+                  <MaterialIcons
+                    name="close"
+                    size={18}
+                    color={currentTheme.disabled}
+                  />
+                </Pressable>
+              </View>
             ) : (
-              <FontAwesome
-                style={{ marginLeft: "auto" }}
-                name={
-                  item?.type === "star"
-                    ? "star-o"
-                    : item?.type === "follow"
-                    ? "check"
-                    : "comment" // Replace 'default-icon' with the desired default icon
-                }
-                size={16}
-                color={
-                  item?.status === "unread" ? "#f1f1f1" : currentTheme.pink
-                }
-              />
+              <Pressable
+                style={{ padding: 5 }}
+                onPress={() => setConfirm(true)}
+              >
+                <Entypo
+                  style={{ marginLeft: "auto" }}
+                  name="dots-three-vertical"
+                  size={18}
+                  color={currentTheme.font}
+                />
+              </Pressable>
             )}
           </View>
         </Pressable>
@@ -548,15 +354,15 @@ const NotificationItem = ({
             borderColor: currentTheme.line,
           }}
           onPress={
-            item?.status === "unread"
+            item.status === "unread"
               ? () => ReadNotification(item?._id)
-              : undefined
+              : () => setConfirm(true)
           }
-          onLongPress={DeleteNotification}
+          onLongPress={() => setConfirm(true)}
           delayLongPress={250}
         >
           <Image
-            source={require("../../assets/icon.png")}
+            source={require("../../../assets/icon.png")}
             style={{ height: 40, width: 40, borderRadius: 50 }}
           />
 
@@ -584,14 +390,53 @@ const NotificationItem = ({
               {item?.text}
             </Text>
           </View>
-          <MaterialIcons
-            style={{ marginLeft: "auto" }}
-            name="notifications"
-            size={20}
-            color={currentTheme.pink}
-          />
+          <View style={{ flexDirection: "row", gap: 20, marginLeft: "auto" }}>
+            {confirm ? (
+              <View
+                style={{ flexDirection: "row", alignItems: "center", gap: 10 }}
+              >
+                <Pressable
+                  style={{ padding: 5 }}
+                  onPress={() => {
+                    DeleteNotification();
+                    setConfirm(false);
+                  }}
+                >
+                  <MaterialIcons
+                    name="done"
+                    size={18}
+                    color={currentTheme.pink}
+                  />
+                </Pressable>
+                <Pressable
+                  style={{ padding: 5 }}
+                  onPress={() => setConfirm(false)}
+                >
+                  <MaterialIcons
+                    name="close"
+                    size={18}
+                    color={currentTheme.disabled}
+                  />
+                </Pressable>
+              </View>
+            ) : (
+              <Pressable
+                style={{ padding: 5 }}
+                onPress={() => setConfirm(true)}
+              >
+                <Entypo
+                  style={{ marginLeft: "auto" }}
+                  name="dots-three-vertical"
+                  size={18}
+                  color={currentTheme.font}
+                />
+              </Pressable>
+            )}
+          </View>
         </Pressable>
       )}
     </>
   );
 };
+
+const styles = StyleSheet.create({});

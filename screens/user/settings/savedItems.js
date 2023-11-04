@@ -14,12 +14,12 @@ import {
 import { ActivityIndicator } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 import { CacheableImage } from "../../../components/cacheableImage";
-import { Feed } from "../../../components/feedCard/feedCard";
 import { Circle } from "../../../components/skeltons";
 import { darkTheme, lightTheme } from "../../../context/theme";
 import { ProceduresOptions } from "../../../datas/registerDatas";
 import { setFeedRefreshControl } from "../../../redux/rerenders";
-import { ScrollGallery } from "../scrollGallery";
+import { Feed } from "../../../screens/feeds/feedCard/feedCard";
+import { ScrollGallery } from "../../../screens/feeds/scrollGallery";
 
 /**
  * Feeds screen

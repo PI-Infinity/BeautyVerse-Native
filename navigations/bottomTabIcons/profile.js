@@ -16,6 +16,11 @@ import {
 } from "../../redux/rerenders";
 import { setZoomToTop } from "../../redux/app";
 import { Circle } from "../../components/skeltons";
+import axios from "axios";
+import {
+  setNotifications,
+  setUnreadNotifications,
+} from "../../redux/notifications";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -30,8 +35,10 @@ export const CustomTabBarProfileIcon = (props) => {
   const route = useRoute();
   const routeName = getFocusedRouteNameFromRoute(route);
 
+  const unreadNotifications = useSelector(
+    (state) => state.storeNotifications.unreadNotifications
+  );
   // // recieved and sent bookings redux states
-  // const newBookings = useSelector((state) => state.storeBookings.new);
   const newSentBookings = useSelector((state) => state.storeSentBookings.new);
 
   // Select theme from global Redux state (dark or light theme)
@@ -62,6 +69,29 @@ export const CustomTabBarProfileIcon = (props) => {
       useNativeDriver: false,
     }).start();
   }, [isFocused]);
+
+  // backend url
+  const backendUrl = useSelector((state) => state.storeApp.backendUrl);
+
+  // add notifications on scroll to end
+  const AddNotifications = async () => {
+    try {
+      const response = await axios.get(
+        backendUrl +
+          "/api/v1/users/" +
+          props?.currentUser?._id +
+          "/notifications?page=1&limit=10"
+      );
+      dispatch(setNotifications(response.data.data.notifications));
+      dispatch(
+        setUnreadNotifications(
+          response.data.data.notifications?.filter((i) => i.status === "unread")
+        )
+      );
+    } catch (error) {
+      console.log(error.response);
+    }
+  };
 
   return (
     <View
@@ -105,23 +135,23 @@ export const CustomTabBarProfileIcon = (props) => {
             alignItems: "center",
           }}
         >
-          {(props.unreadNotifications > 0 ||
+          {(unreadNotifications?.length > 0 ||
             // newBookings > 0 ||
             (props.currentUser.type === "specialist" &&
               newSentBookings > 0)) && (
             <View
               style={{
                 width: "auto",
-                minWidth: 15,
-                height: 15,
+                minWidth: 18,
+                height: 18,
                 backgroundColor: props.currentTheme.pink,
                 borderRadius: 50,
                 alignItems: "center",
                 justifyContent: "center",
                 position: "absolute",
-                zIndex: 2,
-                right: 12,
-                top: -7,
+                zIndex: 1001,
+                right: 10,
+                top: -9,
               }}
             >
               <Text
@@ -132,7 +162,7 @@ export const CustomTabBarProfileIcon = (props) => {
                   letterSpacing: 0.15,
                 }}
               >
-                {props.unreadNotifications +
+                {unreadNotifications?.length +
                   (props.currentUser.type === "specialist"
                     ? newSentBookings
                     : 0)}

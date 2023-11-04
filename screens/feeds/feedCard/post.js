@@ -1,11 +1,9 @@
 import { MaterialIcons } from "@expo/vector-icons";
-import { useRoute } from "@react-navigation/native";
 import * as Haptics from "expo-haptics";
-import React, { useEffect, useRef, useState } from "react";
-import { View, Pressable, Text } from "react-native";
-import { useSelector, useDispatch } from "react-redux";
-import { setFeedPost } from "../../redux/feed";
-import { Language } from "../../context/language";
+import React, { useEffect, useState } from "react";
+import { Pressable, Text, View } from "react-native";
+import { useSelector } from "react-redux";
+import { Language } from "../../../context/language";
 
 /**
  * Post component

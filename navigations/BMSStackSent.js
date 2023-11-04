@@ -1,31 +1,28 @@
+import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
 import {
   CardStyleInterpolators,
   createStackNavigator,
 } from "@react-navigation/stack";
-import { useEffect } from "react";
 import {
+  Dimensions,
+  Pressable,
   Text,
   TouchableOpacity,
   View,
-  Dimensions,
-  Pressable,
-  ImageBackground,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useDispatch, useSelector } from "react-redux";
+import Product from "../Marketplace/screens/product";
+import { CacheableImage } from "../components/cacheableImage";
 import { Language } from "../context/language";
 import { darkTheme, lightTheme } from "../context/theme";
-import { CacheableImage } from "../components/cacheableImage";
-import { Room } from "../screens/chat/room";
-import { FeedItem } from "../screens/feedScreen";
 import { SendBooking } from "../screens/bookings/sendBooking";
+import { Room } from "../screens/chat/room";
+import { FeedItem } from "../screens/feeds/feedScreen";
 import { SentBookings } from "../screens/sentBookings/sentBookings";
-import { ScrollGallery } from "../screens/user/scrollGallery";
+import { ScrollGallery } from "../screens/feeds/scrollGallery";
 import { User } from "../screens/user/user";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
-import { AddBooking } from "../screens/bookings/addBooking";
-import Product from "../Marketplace/screens/product";
-import { useNavigation } from "@react-navigation/native";
 
 /* 
   Create filter stack navigator

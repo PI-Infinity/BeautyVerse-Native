@@ -3,6 +3,7 @@ import AppReducer from "./app";
 import AuthReducer from "./auth";
 import RerendersReducer from "./rerenders";
 import UserReducer from "./user";
+import NotificationsReducer from "./notifications";
 import ActionsReducer from "./actions";
 import FilterReducer from "./filter";
 import ChatReducer from "./chat";
@@ -19,6 +20,7 @@ export const store = configureStore({
     storeAuth: AuthReducer,
     storeRerenders: RerendersReducer,
     storeUser: UserReducer,
+    storeNotifications: NotificationsReducer,
     storeActions: ActionsReducer,
     storeFilter: FilterReducer,
     storeChat: ChatReducer,

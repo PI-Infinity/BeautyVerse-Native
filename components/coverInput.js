@@ -33,7 +33,7 @@ const InputFile = ({ targetUser, setOpenPopup, editPopup, setEditPopup }) => {
   const dispatch = useDispatch();
   //resize image
   const ResizeAndCompressImage = async (uri, originalWidth, originalHeight) => {
-    const wdth = 500;
+    const wdth = 300;
     const newMobHeight = (originalHeight / originalWidth) * wdth;
     try {
       const cover = await ImageManipulator.manipulateAsync(

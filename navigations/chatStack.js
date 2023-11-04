@@ -25,7 +25,7 @@ import { darkTheme, lightTheme } from "../context/theme";
 import { setOpenAddChat } from "../redux/chat";
 import { Chat } from "../screens/chat/chat";
 import { Room } from "../screens/chat/room";
-import { FeedItem } from "../screens/feedScreen";
+import { FeedItem } from "../screens/feeds/feedScreen";
 import { SendBooking } from "../screens/bookings/sendBooking";
 import { SentBookings } from "../screens/sentBookings/sentBookings";
 import { User } from "../screens/user/user";

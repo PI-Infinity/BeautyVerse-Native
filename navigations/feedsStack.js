@@ -1,53 +1,31 @@
-import {
-  FontAwesome,
-  MaterialIcons,
-  MaterialCommunityIcons,
-  Feather,
-  Fontisto,
-} from "@expo/vector-icons";
+import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import {
   CardStyleInterpolators,
   createStackNavigator,
 } from "@react-navigation/stack";
+import { BlurView } from "expo-blur";
+import { useState } from "react";
 import {
   Dimensions,
+  ImageBackground,
   Pressable,
   Text,
   TouchableOpacity,
   View,
-  Platform,
-  Animated,
-  Easing,
-  ImageBackground,
 } from "react-native";
-import { useDispatch, useSelector } from "react-redux";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useSelector } from "react-redux";
+import Product from "../Marketplace/screens/product";
 import { CacheableImage } from "../components/cacheableImage";
 import { Language } from "../context/language";
 import { darkTheme, lightTheme } from "../context/theme";
-import { Room } from "../screens/chat/room";
-import { FeedItem } from "../screens/feedScreen";
-import { Feeds } from "../screens/feeds";
 import { SendBooking } from "../screens/bookings/sendBooking";
+import { Room } from "../screens/chat/room";
+import { FeedItem } from "../screens/feeds/feedScreen";
+import { Feeds } from "../screens/feeds/list";
 import { SentBookings } from "../screens/sentBookings/sentBookings";
-import { ScrollGallery } from "../screens/user/scrollGallery";
+import { ScrollGallery } from "../screens/feeds/scrollGallery";
 import { User } from "../screens/user/user";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useEffect, useRef, useState } from "react";
-import { Filter } from "../screens/filter";
-import { Search } from "../screens/search";
-import {
-  setCity,
-  setDistrict,
-  setFilter,
-  setFilterBadgeSum,
-  setSalons,
-  setSearch,
-  setSearchInput,
-  setSpecialists,
-} from "../redux/filter";
-import { setCleanUp } from "../redux/rerenders";
-import Product from "../Marketplace/screens/product";
-import { BlurView } from "expo-blur";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 

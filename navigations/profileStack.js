@@ -1,59 +1,51 @@
-import {
-  Entypo,
-  FontAwesome,
-  Ionicons,
-  MaterialIcons,
-} from "@expo/vector-icons";
+import { FontAwesome, Ionicons, MaterialIcons } from "@expo/vector-icons";
 import {
   CardStyleInterpolators,
   createStackNavigator,
 } from "@react-navigation/stack";
+import { BlurView } from "expo-blur";
 import {
   Dimensions,
+  ImageBackground,
   Pressable,
   Text,
   TouchableOpacity,
   View,
-  ImageBackground,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useSelector } from "react-redux";
+import AddNewProduct from "../Marketplace/screens/addProduct";
+import EditProduct from "../Marketplace/screens/editProduct";
+import Product from "../Marketplace/screens/product";
+import Products from "../Marketplace/screens/userProductListSettings";
 import { CacheableImage } from "../components/cacheableImage";
 import { Language } from "../context/language";
 import { darkTheme, lightTheme } from "../context/theme";
-import { Room } from "../screens/chat/room";
-import { FeedItem } from "../screens/feedScreen";
-import { AddBooking } from "../screens/bookings/addBooking";
-import { Bookings } from "../screens/bookings/bookings";
 import { SendBooking } from "../screens/bookings/sendBooking";
 import { Statistics } from "../screens/bookings/statistics";
+import { Room } from "../screens/chat/room";
+import { FeedItem } from "../screens/feeds/feedScreen";
+import { ScrollGallery } from "../screens/feeds/scrollGallery";
 import { Prices } from "../screens/prices";
 import { SentBookings } from "../screens/sentBookings/sentBookings";
+import Support from "../screens/support";
 import { QA } from "../screens/user/QA";
 import { AddFeed } from "../screens/user/addFeed";
-import { Notifications } from "../screens/user/notifications";
+import { Notifications } from "../screens/user/notifications/list";
 import { Privacy } from "../screens/user/privacy";
-import { ScrollGallery } from "../screens/user/scrollGallery";
+import { AddNewAddress } from "../screens/user/settings/addNewAddress";
+import { AddNewProcedures } from "../screens/user/settings/addNewProcedures";
 import { Addresses } from "../screens/user/settings/addresses";
+import { EditAddress } from "../screens/user/settings/editAddress";
 import { PersonalInfo } from "../screens/user/settings/personalInfo";
 import { Procedures } from "../screens/user/settings/procedures";
+import { SavedItems } from "../screens/user/settings/savedItems";
 import { Settings } from "../screens/user/settings/settings";
 import { WorkingInfo } from "../screens/user/settings/workingInfo";
 import Charts from "../screens/user/statistics/chart";
 import { Terms } from "../screens/user/terms";
 import { Usage } from "../screens/user/usage";
 import { User } from "../screens/user/user";
-import { AddNewAddress } from "../screens/user/settings/addNewAddress";
-import { AddNewProcedures } from "../screens/user/settings/addNewProcedures";
-import { EditAddress } from "../screens/user/settings/editAddress";
-import Products from "../Marketplace/screens/userProductListSettings";
-import AddNewProduct from "../Marketplace/screens/addProduct";
-import EditProduct from "../Marketplace/screens/editProduct";
-import Product from "../Marketplace/screens/product";
-import Support from "../screens/support";
-import { SavedItems } from "../screens/user/settings/savedItems";
-import { Image } from "@rneui/base";
-import { BlurView } from "expo-blur";
 
 /**
  * Create user profile stack, where include all main configs
@@ -62,14 +54,7 @@ const Stack = createStackNavigator();
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
-export function ProfileStack({
-  navigation,
-  unreadNotifications,
-  setUnreadNotifications,
-  notifications,
-  setNotifications,
-  setScrollY,
-}) {
+export function ProfileStack({ navigation, setScrollY }) {
   // language state
   const language = Language();
   // current user state
@@ -80,6 +65,9 @@ export function ProfileStack({
 
   const newBookings = useSelector((state) => state.storeBookings.new);
   const newSentBookings = useSelector((state) => state.storeSentBookings.new);
+  const unreadNotifications = useSelector(
+    (state) => state.storeNotifications.unreadNotifications
+  );
   /** in profile stack defined,
    * user personal data, settings
    * and control datas and feeds */
@@ -265,24 +253,24 @@ export function ProfileStack({
                   </>
                 )}
                 <View>
-                  {unreadNotifications > 0 && (
+                  {unreadNotifications?.length > 0 && (
                     <View
                       style={{
                         width: "auto",
-                        minWidth: 13,
-                        height: 13,
+                        minWidth: 18,
+                        height: 18,
                         backgroundColor: currentTheme.pink,
                         borderRadius: 50,
                         alignItems: "center",
                         justifyContent: "center",
                         position: "absolute",
                         zIndex: 2,
-                        right: 6,
-                        top: 2,
+                        right: 2,
+                        top: -3,
                       }}
                     >
                       <Text style={{ color: "#fff", fontSize: 10 }}>
-                        {unreadNotifications}
+                        {unreadNotifications?.length}
                       </Text>
                     </View>
                   )}
@@ -434,14 +422,7 @@ export function ProfileStack({
         {/** User notifications page */}
         <Stack.Screen
           name="Notifications"
-          children={() => (
-            <Notifications
-              notifications={notifications}
-              navigation={navigation}
-              setNotifications={setNotifications}
-              setUnreadNotifications={setUnreadNotifications}
-            />
-          )}
+          children={() => <Notifications navigation={navigation} />}
           options={({ route, navigation }) => ({
             headerTitle: language?.language?.Pages?.pages?.notifications,
             headerBackTitleVisible: false,

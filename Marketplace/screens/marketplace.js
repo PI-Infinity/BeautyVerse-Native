@@ -104,12 +104,12 @@ const Main = ({ setScrollY, scrollY }) => {
     Animated.parallel([
       Animated.timing(opacityValue, {
         toValue: 1,
-        duration: 300,
+        duration: 150,
         useNativeDriver: true,
       }),
       Animated.timing(transformScroll, {
         toValue: 60,
-        duration: 300,
+        duration: 200,
         useNativeDriver: true,
       }),
     ]).start();
@@ -118,7 +118,7 @@ const Main = ({ setScrollY, scrollY }) => {
     Animated.parallel([
       Animated.timing(opacityValue, {
         toValue: 0,
-        duration: 300,
+        duration: 150,
         useNativeDriver: true,
       }),
       Animated.timing(transformScroll, {

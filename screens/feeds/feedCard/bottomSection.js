@@ -9,7 +9,7 @@ import {
   View,
   Linking,
 } from "react-native";
-import GetTimesAgo from "../../functions/getTimesAgo";
+import GetTimesAgo from "../../../functions/getTimesAgo";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useDispatch, useSelector } from "react-redux";
 import axios from "axios";
@@ -17,10 +17,10 @@ import {
   setCleanUp,
   setRerenderUserFeed,
   setRerenderUserFeeds,
-} from "../../redux/rerenders";
-import { sendNotification } from "../../components/pushNotifications";
-import { useSocket } from "../../context/socketContext";
-import { Circle } from "../skeltons";
+} from "../../../redux/rerenders";
+import { sendNotification } from "../../../components/pushNotifications";
+import { useSocket } from "../../../context/socketContext";
+import { Circle } from "../../../components/skeltons";
 
 /**
  * Feed card's bottom section

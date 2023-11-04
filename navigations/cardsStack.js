@@ -1,37 +1,28 @@
 import {
-  FontAwesome,
-  MaterialIcons,
-  Fontisto,
   Feather,
+  FontAwesome,
+  Fontisto,
+  MaterialIcons,
 } from "@expo/vector-icons";
 import {
   CardStyleInterpolators,
   createStackNavigator,
 } from "@react-navigation/stack";
+import { useEffect } from "react";
 import {
   Dimensions,
-  Platform,
+  ImageBackground,
   Pressable,
   Text,
   TouchableOpacity,
   View,
-  ImageBackground,
 } from "react-native";
-import { useDispatch, useSelector } from "react-redux";
-import { CacheableImage } from "../components/cacheableImage";
-import { darkTheme, lightTheme } from "../context/theme";
-import { Cards } from "../screens/cards";
-import { Room } from "../screens/chat/room";
-import { FeedItem } from "../screens/feedScreen";
-import { SendBooking } from "../screens/bookings/sendBooking";
-import { SentBookings } from "../screens/sentBookings/sentBookings";
-import { ScrollGallery } from "../screens/user/scrollGallery";
-import { User } from "../screens/user/user";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useDispatch, useSelector } from "react-redux";
+import Product from "../Marketplace/screens/product";
+import { CacheableImage } from "../components/cacheableImage";
 import { Language } from "../context/language";
-import { useEffect } from "react";
-import { Filter } from "../screens/filter";
-import { Search } from "../screens/search";
+import { darkTheme, lightTheme } from "../context/theme";
 import {
   setCity,
   setDistrict,
@@ -42,11 +33,18 @@ import {
   setSearchInput,
   setSpecialists,
 } from "../redux/filter";
-import { setCleanUp } from "../redux/rerenders";
-import Product from "../Marketplace/screens/product";
+import { SendBooking } from "../screens/bookings/sendBooking";
+import { Cards } from "../screens/cards";
+import { Room } from "../screens/chat/room";
+import { FeedItem } from "../screens/feeds/feedScreen";
+import { ScrollGallery } from "../screens/feeds/scrollGallery";
+import { Filter } from "../screens/filter";
+import { Search } from "../screens/search";
+import { SentBookings } from "../screens/sentBookings/sentBookings";
+import { User } from "../screens/user/user";
 // import Mirror from "../Mirror/screens/mirror";
-import { setLocation } from "../redux/app";
 import { BlurView } from "expo-blur";
+import { setLocation } from "../redux/app";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 const Stack = createStackNavigator();

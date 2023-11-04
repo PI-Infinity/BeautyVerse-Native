@@ -20,18 +20,18 @@ import {
 } from "react-native";
 import uuid from "react-native-uuid";
 import { useDispatch, useSelector } from "react-redux";
-import { CacheableImage } from "../components/cacheableImage";
-import { CacheableVideo } from "../components/cacheableVideo";
-import { BottomSection } from "../components/feedCard/bottomSection";
-import { Post } from "../components/feedCard/post";
-import { TopSection } from "../components/feedCard/topSection";
-import ZoomableImage from "../components/zoomableImage";
-import { Language } from "../context/language";
-import { useSocket } from "../context/socketContext";
-import { darkTheme, lightTheme } from "../context/theme";
-import GetTimesAgo from "../functions/getTimesAgo";
-import { setActiveFeedFromScrollGallery } from "../redux/actions";
-import { setVideoVolume } from "../redux/feed";
+import { CacheableImage } from "../../components/cacheableImage";
+import { CacheableVideo } from "../../components/cacheableVideo";
+import { BottomSection } from "./feedCard/bottomSection";
+import { Post } from "./feedCard/post";
+import { TopSection } from "./feedCard/topSection";
+import ZoomableImage from "../../components/zoomableImage";
+import { Language } from "../../context/language";
+import { useSocket } from "../../context/socketContext";
+import { darkTheme, lightTheme } from "../../context/theme";
+import GetTimesAgo from "../../functions/getTimesAgo";
+import { setActiveFeedFromScrollGallery } from "../../redux/actions";
+import { setVideoVolume } from "../../redux/feed";
 import {
   setAddReviewQntRerenderFromScrollGallery,
   setAddStarRerenderFromScrollGallery,
@@ -40,16 +40,16 @@ import {
   setRerenderUserFeed,
   setSaveFromScrollGallery,
   setUnsaveFromScrollGallery,
-} from "../redux/rerenders";
-import SmoothModal from "../screens/user/editPostPopup";
-import { sendNotification } from "../components/pushNotifications";
-import { Circle } from "../components/skeltons";
+} from "../../redux/rerenders";
+import SmoothModal from "../user/editPostPopup";
+import { sendNotification } from "../../components/pushNotifications";
+import { Circle } from "../../components/skeltons";
 import { BlurView } from "expo-blur";
 /**
  * Feed screen uses when navigate to only one feed screen
  */
 
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 export const FeedItem = ({ route }) => {
   // define socket server
@@ -479,6 +479,17 @@ export const FeedItem = ({ route }) => {
     hght = originalHeight / percented;
   }
 
+  // define device type tablet or mobile
+  let aspectRatio = SCREEN_HEIGHT / SCREEN_WIDTH;
+  let isTablet = aspectRatio < 1.6;
+  let definedDevice;
+  if (isTablet) {
+    definedDevice = "tablet";
+    console.log("ipad"); // The device is a tablet
+  } else {
+    definedDevice = "mobile";
+  }
+
   // format video TIME
   const formatTime = (timeInMillis) => {
     const seconds = Math.floor((timeInMillis / 1000) % 60);
@@ -499,6 +510,8 @@ export const FeedItem = ({ route }) => {
 
   const scrollViewRef = useRef();
 
+  console.log(starsLength);
+
   return (
     // <BlurView tint="extra-dark" intensity={90} style={{ flex: 1 }}>
     <KeyboardAvoidingView
@@ -514,6 +527,7 @@ export const FeedItem = ({ route }) => {
             width: SCREEN_WIDTH - 20,
             opacity: fadeAnim,
             marginLeft: 10,
+            alignItems: "center",
           }}
         >
           {feedOption && (
@@ -563,7 +577,7 @@ export const FeedItem = ({ route }) => {
           )}
 
           {props?.feed?.fileFormat === "img" && (
-            <View style={{ paddingLeft: 10 }}>
+            <View style={{ paddingLeft: 10, width: "100%" }}>
               <Post
                 currentTheme={currentTheme}
                 numLines={numLines}
@@ -572,55 +586,25 @@ export const FeedItem = ({ route }) => {
               />
             </View>
           )}
-          {props?.feed?.fileFormat === "video" && (
-            <View
-              style={{
-                paddingHorizontal: 10,
-                paddingVertical: 10,
-                position: "absolute",
-                top: 0,
-                zIndex: 120,
-              }}
-            >
-              <TopSection
-                user={props.user}
-                currentTheme={currentTheme}
-                navigation={navigation}
-                lang={lang}
-                language={language}
-                from="scrollGallery"
-                visible={feedOption}
-                onClose={() => setFeedOption(false)}
-                onSave={() => setFeedOption(false)}
-                post={props?.feed?.post}
-                feedId={props.feed?._id}
-                setPost={setPost}
-                feedOption={feedOption}
-                createdAt={props.feed.createdAt}
-                DotsFunction={() => setFeedOption(!feedOption)}
-                fileFormat={props.feed.fileFormat}
-              />
-              {props?.feed?.post && (
-                <View style={{ marginTop: 10 }}>
-                  <Post
-                    currentTheme={currentTheme}
-                    numLines={numLines}
-                    setNumLines={setNumLines}
-                    postItem={post}
-                  />
-                </View>
-              )}
-            </View>
-          )}
+
           <View
             name="main-section"
             style={{
-              height: hght > 640 ? 640 : hght,
+              height:
+                hght > 640 && definedDevice === "mobile"
+                  ? 640
+                  : hght > 640 && definedDevice !== "mobile"
+                  ? 900
+                  : hght,
+              maxHeight: definedDevice === "mobile" ? 640 : 900,
               maxHeight: 640,
               overflow: "hidden",
               justifyContent: "center",
               alignItems: "center",
+              width: SCREEN_WIDTH - 20,
               borderRadius: 20,
+              overflow: "hidden",
+              paddingTop: 2,
             }}
           >
             {props?.feed?.images?.length > 1 && (
@@ -645,6 +629,46 @@ export const FeedItem = ({ route }) => {
                     textShadowRadius: 0.5,
                   }}
                 />
+              </View>
+            )}
+            {props?.feed?.fileFormat === "video" && (
+              <View
+                style={{
+                  paddingHorizontal: 10,
+                  paddingVertical: 10,
+                  position: "absolute",
+                  top: 0,
+                  zIndex: 120,
+                }}
+              >
+                <TopSection
+                  user={props.user}
+                  currentTheme={currentTheme}
+                  navigation={navigation}
+                  lang={lang}
+                  language={language}
+                  from="scrollGallery"
+                  visible={feedOption}
+                  onClose={() => setFeedOption(false)}
+                  onSave={() => setFeedOption(false)}
+                  post={props?.feed?.post}
+                  feedId={props.feed?._id}
+                  setPost={setPost}
+                  feedOption={feedOption}
+                  createdAt={props.feed.createdAt}
+                  DotsFunction={() => setFeedOption(!feedOption)}
+                  fileFormat={props.feed.fileFormat}
+                />
+                {props?.feed?.post && (
+                  <View style={{ marginTop: 10 }}>
+                    <Post
+                      currentTheme={currentTheme}
+                      numLines={numLines}
+                      setNumLines={setNumLines}
+                      postItem={post}
+                    />
+                  </View>
+                )}
               </View>
             )}
             {props?.feed?.fileFormat === "video" ? (
@@ -674,6 +698,7 @@ export const FeedItem = ({ route }) => {
                         props.feed.fileHeight >= props.feed.fileWidth
                           ? hght
                           : props.feed.fileWidth,
+                      width: SCREEN_WIDTH - 20,
                     }}
                     source={{
                       uri: props.feed.video,
@@ -754,7 +779,7 @@ export const FeedItem = ({ route }) => {
                   paddingHorizontal: 10,
                   paddingTop: 30,
                   paddingVertical: 10,
-                  width: SCREEN_WIDTH,
+                  width: SCREEN_WIDTH - 20,
                   justifyContent: "center",
                   position: "absolute",
                   bottom: 0,
@@ -772,7 +797,7 @@ export const FeedItem = ({ route }) => {
                       flexDirection: "row",
                       alignItems: "center",
                       gap: 2,
-                      minWidth: "20%",
+                      minWidth: "25%",
                     }}
                   >
                     <Text style={[styles.duration, { flex: 1 }]}>
@@ -788,7 +813,6 @@ export const FeedItem = ({ route }) => {
                     style={{
                       flex: 1,
                       height: 5,
-
                       padding: 15,
                     }}
                     minimumValue={0}

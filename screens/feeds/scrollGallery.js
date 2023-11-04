@@ -2,12 +2,15 @@ import { Entypo, FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import Slider from "@react-native-community/slider";
 import { useIsFocused, useNavigation } from "@react-navigation/native";
 import axios from "axios";
+import { BlurView } from "expo-blur";
 import * as Haptics from "expo-haptics";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Alert,
   Animated,
   Dimensions,
+  FlatList,
+  ImageBackground,
   Platform,
   Pressable,
   ScrollView,
@@ -17,8 +20,6 @@ import {
   TouchableOpacity,
   Vibration,
   View,
-  FlatList,
-  ImageBackground,
 } from "react-native";
 import { ActivityIndicator } from "react-native-paper";
 import uuid from "react-native-uuid";
@@ -26,9 +27,8 @@ import { useDispatch, useSelector } from "react-redux";
 import AlertMessage from "../../components/alertMessage";
 import { CacheableImage } from "../../components/cacheableImage";
 import { CacheableVideo } from "../../components/cacheableVideo";
-import { BottomSection } from "../../components/feedCard/bottomSection";
-import { Post } from "../../components/feedCard/post";
-import { TopSection } from "../../components/feedCard/topSection";
+import { sendNotification } from "../../components/pushNotifications";
+import { Circle } from "../../components/skeltons";
 import ZoomableImage from "../../components/zoomableImage";
 import { Language } from "../../context/language";
 import { useSocket } from "../../context/socketContext";
@@ -36,6 +36,7 @@ import { darkTheme, lightTheme } from "../../context/theme";
 import GetTimesAgo from "../../functions/getTimesAgo";
 import { setActiveFeedFromScrollGallery } from "../../redux/actions";
 import { setSendReport } from "../../redux/alerts";
+import { setBlur } from "../../redux/app";
 import { setVideoVolume } from "../../redux/feed";
 import {
   setAddReviewQntRerenderFromScrollGallery,
@@ -45,13 +46,10 @@ import {
   setSaveFromScrollGallery,
   setUnsaveFromScrollGallery,
 } from "../../redux/rerenders";
-import SmoothModal from "../../screens/user/editPostPopup";
-import * as Notifications from "expo-notifications";
-import { sendNotification } from "../../components/pushNotifications";
-import { Circle } from "../../components/skeltons";
-import { setBlur } from "../../redux/app";
-import { BlurView } from "expo-blur";
-import { LinearGradient } from "expo-linear-gradient";
+import { BottomSection } from "../../screens/feeds/feedCard/bottomSection";
+import { Post } from "../../screens/feeds/feedCard/post";
+import { TopSection } from "../../screens/feeds/feedCard/topSection";
+import SmoothModal from "../user/editPostPopup";
 
 /**
  * User feeds scrolling gallery
@@ -890,7 +888,7 @@ const FeedItem = (props) => {
         {props?.feed?.fileFormat === "video" && (
           <View
             style={{
-              paddingHorizontal: 15,
+              paddingHorizontal: 20,
               paddingVertical: 10,
               position: "absolute",
               top: 0,
@@ -928,12 +926,7 @@ const FeedItem = (props) => {
             )}
           </View>
         )}
-        <TouchableOpacity
-          activeOpacity={0.9}
-          onPress={() => {
-            dispatch(setBlur(false));
-            props.setActiveGallery(null);
-          }}
+        <View
           name="main-section"
           style={{
             width: SCREEN_WIDTH - 20,
@@ -1030,14 +1023,20 @@ const FeedItem = (props) => {
               overScrollMode={Platform.OS === "ios" ? "never" : "always"}
             >
               {props?.feed?.images.map((item, index) => {
+                console.log(index);
                 return (
-                  <View
+                  <TouchableOpacity
+                    activeOpacity={0.9}
+                    onPress={() => {
+                      dispatch(setBlur(false));
+                      props.setActiveGallery(null);
+                    }}
                     key={index}
                     delayLongPress={200}
                     style={{ height: "100%" }}
                   >
                     {loadImage && (
-                      <TouchableOpacity
+                      <View
                         activeOpacity={0.9}
                         style={{
                           height: hght > 642 ? 642 : hght,
@@ -1052,7 +1051,7 @@ const FeedItem = (props) => {
                         }}
                       >
                         <Circle borderRadius={20} />
-                      </TouchableOpacity>
+                      </View>
                     )}
                     <BlurView intensity={20} tint="light">
                       <ZoomableImage
@@ -1075,7 +1074,7 @@ const FeedItem = (props) => {
                         }
                       />
                     </BlurView>
-                  </View>
+                  </TouchableOpacity>
                 );
               })}
             </ScrollView>
@@ -1138,7 +1137,6 @@ const FeedItem = (props) => {
               <View
                 style={{
                   width: "100%",
-
                   borderRadius: 50,
                 }}
               >
@@ -1166,7 +1164,7 @@ const FeedItem = (props) => {
               </View>
             </TouchableOpacity>
           )}
-        </TouchableOpacity>
+        </View>
         {props?.feed?.fileFormat === "img" && (
           <View
             name="bottom-section"

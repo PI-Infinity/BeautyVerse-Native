@@ -52,6 +52,11 @@ import {
   setSentBookingsFilterResult,
   setSentBookingsTotalResult,
 } from "../redux/sentBookings";
+import {
+  setNotifications,
+  setPage,
+  setUnreadNotifications,
+} from "../redux/notifications";
 
 /**
  * create tab bar
@@ -79,6 +84,9 @@ export const BottomTabNavigator = () => {
   // Get the current user from the app state
   const currentUser = useSelector((state) => state.storeUser.currentUser);
 
+  // backend url
+  const backendUrl = useSelector((state) => state.storeApp.backendUrl);
+
   // define app theme
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
@@ -90,20 +98,35 @@ export const BottomTabNavigator = () => {
   const rerenderNotifications = useSelector(
     (state) => state.storeRerenders.rerenderNotifications
   );
-  // notifications state
-  const [notifications, setNotifications] = useState([]);
-  // unread notifications state
-  const [unreadNotifications, setUnreadNotifications] = useState(0);
-  // useEffect defines notifications and unread notifications from user's info and defines them in tab bar useStste
+
   useEffect(() => {
-    setNotifications(currentUser.notifications);
-    setUnreadNotifications(
-      currentUser.notifications.filter((n) => n?.status === "unread").length
-    );
+    const GetNotifcations = async () => {
+      try {
+        const response = await axios.get(
+          backendUrl +
+            "/api/v1/users/" +
+            currentUser?._id +
+            "/notifications?page=1&limit=15"
+        );
+        dispatch(setNotifications(response.data.data.notifications));
+        dispatch(
+          setUnreadNotifications(
+            response.data.data.notifications?.filter(
+              (i) => i.status === "unread"
+            )
+          )
+        );
+        dispatch(setPage(1));
+      } catch (error) {
+        console.log(error.response);
+      }
+    };
+    if (currentUser) {
+      GetNotifcations();
+    }
   }, [rerenderNotifications]);
 
   // defines baclend url
-  const backendUrl = useSelector((state) => state.storeApp.backendUrl);
 
   /**
    * get bookings
@@ -195,7 +218,7 @@ export const BottomTabNavigator = () => {
               dateSentBookings.active ? dateSentBookings.date : ""
             }&createdAt=${createdAtSentBookings}&procedure=${procedureSentBookings}`
         );
-        console.log(response.data.data.bookings);
+
         dispatch(setSentBookings(response.data.data.bookings));
         dispatch(setSentBookingsTotalResult(response.data.totalResult));
         dispatch(setSentBookingsFilterResult(response.data.filterResult));
@@ -295,7 +318,7 @@ export const BottomTabNavigator = () => {
         );
         if (response.data.data.products?.random) {
           dispatch(setRandomProductsList(response.data.data.products.random));
-          console.log(response.data.data.products.random[0].checkIfSaved);
+
           // dispatch(setLatestList(response.data.data.products.latestList));
         }
         // ... other dispatches
@@ -525,11 +548,7 @@ export const BottomTabNavigator = () => {
         name="Profile"
         children={() => (
           <ProfileStack
-            notifications={notifications}
-            unreadNotifications={unreadNotifications}
             navigation={navigation}
-            setNotifications={setNotifications}
-            setUnreadNotifications={setUnreadNotifications}
             setScrollY={setProfileScrollY}
           />
         )}
@@ -558,7 +577,6 @@ export const BottomTabNavigator = () => {
               {...props}
               currentUser={currentUser}
               currentTheme={currentTheme}
-              unreadNotifications={unreadNotifications}
               scrollY={profileScrollY}
             />
           ),

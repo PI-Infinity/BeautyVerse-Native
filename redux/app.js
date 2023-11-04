@@ -13,7 +13,7 @@ const initialState = {
   machineId: null,
   zoomToTop: false,
   backendUrl: "https://beautyverse.herokuapp.com",
-  // backendUrl: "http://192.168.0.105:5000",
+  // backendUrl: "http://192.168.0.106:5000",
   devicePushToken: null,
 
   // blur background switcher

@@ -1,20 +1,17 @@
 // DeleteFeedPopup.js
-import React, { useState, useEffect } from "react";
+import axios from "axios";
+import React, { useState } from "react";
 import {
   Animated,
-  Easing,
-  TouchableOpacity,
-  Text,
-  View,
   Modal,
-  StyleSheet,
   ScrollView,
-  Platform,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
-import { lightTheme, darkTheme } from "../../context/theme";
 import { useSelector } from "react-redux";
-import axios from "axios";
-import { BlurView } from "expo-blur";
+import { darkTheme, lightTheme } from "../../../context/theme";
 
 export const Reports = ({
   isVisible,
