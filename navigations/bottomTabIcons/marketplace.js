@@ -7,10 +7,10 @@ import {
 } from "@react-navigation/native";
 import React, { useContext, useEffect, useRef } from "react";
 import { Animated, Pressable, View, Dimensions } from "react-native";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { RouteNameContext } from "../../context/routName";
 import { setRerenderProducts } from "../../redux/Marketplace";
-import { setZoomToTop } from "../../redux/app";
+import { setActiveTabBar, setZoomToTop } from "../../redux/app";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -20,7 +20,6 @@ export const CustomTabBarMarketplaceIcon = ({
   color,
   currentTheme,
   focused,
-  scrollY,
 }) => {
   // define some contexts and routes
 
@@ -38,6 +37,8 @@ export const CustomTabBarMarketplaceIcon = ({
   } else {
     Color = color;
   }
+
+  const scrollY = useSelector((state) => state.storeScrolls.marketplaceScrollY);
 
   // animate border line width
   const animateValueRef = useRef(new Animated.Value(focused ? 60 : 0));
@@ -86,6 +87,7 @@ export const CustomTabBarMarketplaceIcon = ({
           } else {
             navigation.navigate("Marketplace");
           }
+          dispatch(setActiveTabBar("Marketplace"));
         }}
       >
         <Fontisto name="shopping-bag-1" size={25} color={Color} />

@@ -27,12 +27,13 @@ import DateAndTimePicker from "../../screens/bookings/dateAndTimePicker";
 import { ProceduresList } from "../../screens/bookings/procedures";
 import { Language } from "../../context/language";
 import { ActivityIndicator } from "react-native-paper";
+import { Header } from "../../components/header";
 
 /**
  * Add new booking manualy from OMS
  */
 
-export const AddBooking = ({ route, navigation }) => {
+export const AddBooking = ({ route, navigation, hideModal }) => {
   // defines redux dispatch
   const dispatch = useDispatch();
 
@@ -176,6 +177,10 @@ export const AddBooking = ({ route, navigation }) => {
 
   return (
     <>
+      <Header
+        onBack={hideModal}
+        title={language?.language?.Bookings?.bookings?.addBooking}
+      />
       {isLoaded ? (
         <View
           style={{

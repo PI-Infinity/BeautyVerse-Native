@@ -23,9 +23,11 @@ import ZoomableImage from "../../../components/zoomableImage";
 import { Language } from "../../../context/language";
 import { useSocket } from "../../../context/socketContext";
 import { darkTheme, lightTheme } from "../../../context/theme";
-import { setBlur, setLoading } from "../../../redux/app";
+import { setBlur, setLoading, setScreenModal } from "../../../redux/app";
 import { setVideoVolume } from "../../../redux/feed";
 import { Circle } from "../../../components/skeltons";
+import { useRoute } from "@react-navigation/native";
+import { useNavigationState } from "@react-navigation/native";
 
 /**
  * Feed Item in feeds screen
@@ -53,6 +55,9 @@ export const Feed = (props) => {
 
   // define language
   const language = Language();
+
+  // route
+  const activeTabBar = useSelector((state) => state.storeApp.activeTabBar);
 
   // define language state from redux
   const lang = useSelector((state) => state.storeApp.language);
@@ -690,7 +695,7 @@ export const Feed = (props) => {
                 style={{
                   width: SCREEN_WIDTH - 20,
                   height: "100%",
-                  // backgroundColor: currentTheme.disabled,
+
                   position: "absolute",
                   zIndex: 1,
                   alignItems: "center",
@@ -711,16 +716,20 @@ export const Feed = (props) => {
                 videoRef={videoRef}
                 key={props.feed.video}
                 onPress={() => {
-                  dispatch(setBlur(true));
-                  props.setActiveGallery({
-                    user: props.feed.owner,
-                    scrolableFeeds: userFeeds,
-                    feedsLength: feedsLength,
-                    page: props.page,
-                    post: post,
-                  });
+                  dispatch(
+                    setScreenModal({
+                      active: true,
+                      screen: "ScrollGallery",
+                      data: {
+                        user: props.feed.owner,
+                        scrolableFeeds: userFeeds,
+                        feedsLength: feedsLength,
+                        page: props.page,
+                        post: post,
+                      },
+                    })
+                  );
                 }}
-                // delayLongPress={80}
                 style={{
                   borderRadius: 20,
                   width: SCREEN_WIDTH - 20,
@@ -745,9 +754,9 @@ export const Feed = (props) => {
                 onLoad={async (response) => {
                   let { status } =
                     await Location.requestForegroundPermissionsAsync();
-                  // setTimeout(() => {
+
                   setLoadVideo(false);
-                  // }, 200);
+
                   setTimeout(() => {
                     if (
                       props.x === props.feedsLength - 1 &&
@@ -790,39 +799,23 @@ export const Feed = (props) => {
                     maxHeight: definedDevice === "mobile" ? 642 : 900,
                     width: SCREEN_WIDTH - 20,
                     overflow: "hidden",
+                    borderRadius: 20,
                   }}
-                  // onPress={() => {
-                  //   navigation.navigate("ScrollGallery", {
-                  //     user: props.feed.owner,
-                  //     scrolableFeeds: userFeeds,
-                  //     feedsLength: feedsLength,
-                  //     page: props.page,
-                  //     post: post,
-                  //   });
-                  //   dispatch(setVideoVolume(true));
-                  // }}
-                  onPress={() =>
-                    // dispatch(
-                    //   setActiveScrollGallery({
-                    //     user: props.feed.owner,
-                    //     scrolableFeeds: userFeeds,
-                    //     feedsLength: feedsLength,
-                    //     page: props.page,
-                    //     post: post,
-                    //   })
-                    // );
-
-                    {
-                      dispatch(setBlur(true));
-                      props.setActiveGallery({
-                        user: props.feed.owner,
-                        scrolableFeeds: userFeeds,
-                        feedsLength: feedsLength,
-                        page: props.page,
-                        post: post,
-                      });
-                    }
-                  }
+                  onPress={() => {
+                    dispatch(
+                      setScreenModal({
+                        active: true,
+                        screen: "ScrollGallery",
+                        data: {
+                          user: props.feed.owner,
+                          scrolableFeeds: userFeeds,
+                          feedsLength: feedsLength,
+                          page: props.page,
+                          post: post,
+                        },
+                      })
+                    );
+                  }}
                 >
                   {loadImage && (
                     <View
@@ -840,7 +833,7 @@ export const Feed = (props) => {
                         alignItems: "center",
                         justifyContent: "center",
                         overflow: "hidden",
-                        borderRadius: "20px",
+                        borderRadius: 20,
                       }}
                     >
                       <Circle borderRadius={20} />
@@ -871,9 +864,8 @@ export const Feed = (props) => {
                         cache: "reload",
                       }}
                       onLoad={async () => {
-                        // setTimeout(() => {
                         setLoadImage(false);
-                        // }, 200);
+
                         let { status } =
                           await Location.requestForegroundPermissionsAsync();
                         setTimeout(() => {

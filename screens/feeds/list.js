@@ -1,36 +1,28 @@
-import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
-import { useHeaderHeight } from "@react-navigation/elements";
 import { useIsFocused } from "@react-navigation/native";
 import axios from "axios";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import * as Haptics from "expo-haptics";
 import {
+  Animated,
   Dimensions,
   FlatList,
-  Pressable,
-  RefreshControl,
-  Text,
-  View,
-  TouchableOpacity,
-  ScrollView,
-  StyleSheet,
-  Animated,
   Modal,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { ActivityIndicator } from "react-native-paper";
 import { useDispatch, useSelector } from "react-redux";
 import AlertMessage from "../../components/alertMessage";
-import { Feed } from "../../screens/feeds/feedCard/feedCard";
+import GetSharedFeed from "../../components/getSharedFeed";
 import SkeletonComponent from "../../components/skelton";
+import { Language } from "../../context/language";
 import { darkTheme, lightTheme } from "../../context/theme";
 import { setSendReport } from "../../redux/alerts";
-import { setCleanUp, setFeedRefreshControl } from "../../redux/rerenders";
-import { setLoading, setZoomToTop } from "../../redux/app";
-import * as Location from "expo-location";
-import GetSharedFeed from "../../components/getSharedFeed";
+import { setFeedRefreshControl } from "../../redux/rerenders";
+import { setFeedsScrollY, setFeedsScrollYF } from "../../redux/scrolls";
+import { Feed } from "../../screens/feeds/feedCard/feedCard";
 import { ScrollGallery } from "./scrollGallery";
-import { Language } from "../../context/language";
-import { BlurView } from "expo-blur";
 
 /**
  * Feeds screen
@@ -38,14 +30,7 @@ import { BlurView } from "expo-blur";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
-export const Feeds = ({
-  navigation,
-  scrollY,
-  setScrollY,
-  setScrollYF,
-  firstLoading,
-  setFirstLoading,
-}) => {
+export const Feeds = ({ navigation, firstLoading, setFirstLoading }) => {
   // defines when screen is focused
   const isFocused = useIsFocused();
 
@@ -63,6 +48,7 @@ export const Feeds = ({
    * feeds list state (For You & Followings)
    */
   const [feeds, setFeeds] = useState([]);
+
   const [followingsList, setFollowingsList] = useState([]);
 
   // defines navigator (for you list or followings list)
@@ -251,14 +237,14 @@ export const Feeds = ({
 
   const handleScroll = useCallback((event) => {
     const offsetY = event.nativeEvent.contentOffset.y;
-    setScrollY(offsetY);
+    dispatch(setFeedsScrollY(offsetY));
 
     scrollYRef.current = offsetY; // Store the scroll position in scrollYRef, not flatListRef
   }, []);
 
   const handleScrollF = useCallback((event) => {
     const offsetY = event.nativeEvent.contentOffset.y;
-    setScrollYF(offsetY);
+    dispatch(setFeedsScrollYF(offsetY));
 
     scrollYRefF.current = offsetY; // Store the scroll position in scrollYRef, not flatListRef
   }, []);
@@ -329,7 +315,7 @@ export const Feeds = ({
 
   // animation bottom line
   const position = useRef(new Animated.Value(0)).current;
-  const [activeHelper, setActiveHelper] = useState(true);
+  // const [activeHelper, setActiveHelper] = useState(true);
   const slideToLeft = () => {
     Animated.timing(position, {
       toValue: 0,
@@ -346,32 +332,39 @@ export const Feeds = ({
     }).start();
   };
 
-  const scrollRef = useRef();
-
-  const handlePressLeft = () => {
-    scrollRef.current.scrollTo({
-      x: 0, // Scroll to the extreme left
-      animated: true,
-    });
-    setActiveList(false);
-    slideToLeft();
-    setActiveHelper(true);
-  };
-
-  const handlePressRight = () => {
-    scrollRef.current.scrollTo({
-      x: Dimensions.get("window").width, // Scroll to the width of the screen (or another value to determine how far to scroll to the right)
-      animated: true,
-    });
-    setActiveList(true);
-    slideToRight();
-    setActiveHelper(false);
-  };
-
   /**
    * user feeds gallery
    */
   const [activeGallery, setActiveGallery] = useState(null);
+
+  // Initial state for the animated value
+  const translateXValue = useRef(new Animated.Value(0)).current;
+
+  const handlePressLeft = () => {
+    setActiveList(false);
+    slideToLeft();
+
+    // Animate translateX to 0 (extreme left)
+    Animated.timing(translateXValue, {
+      toValue: 0,
+      useNativeDriver: true,
+      duration: 200,
+    }).start();
+    // Other function logic
+  };
+
+  const handlePressRight = () => {
+    setActiveList(true);
+    slideToRight();
+
+    // Animate translateX to negative one screen width (to the left)
+    Animated.timing(translateXValue, {
+      toValue: -Dimensions.get("window").width,
+      useNativeDriver: true,
+      duration: 200,
+    }).start();
+    // Other function logic
+  };
 
   return (
     <View style={{ flex: 1 }}>
@@ -420,8 +413,6 @@ export const Feeds = ({
           setActiveList={setActiveList}
           handlePressRight={handlePressRight}
           handlePressLeft={handlePressLeft}
-          slideToLeft={slideToLeft}
-          slideToRight={slideToRight}
           position={position}
         />
 
@@ -439,118 +430,116 @@ export const Feeds = ({
           />
         </Animated.View>
       </View>
-      <Animated.ScrollView
-        ref={scrollRef}
-        onMomentumScrollBegin={
-          activeHelper
-            ? () => {
-                slideToRight();
-                setActiveHelper(false);
-                setActiveList(true);
-              }
-            : () => {
-                slideToLeft();
-                setActiveHelper(true);
-                setActiveList(false);
-              }
-        }
-        horizontal
-        bounces={Platform.OS === "ios" ? false : undefined}
-        overScrollMode={Platform.OS === "ios" ? "never" : "always"}
-        pagingEnabled
-        scrollEventThrottle={16}
-        showsHorizontalScrollIndicator={false}
-        style={{ flex: 1, transform: [{ translateY: transformScroll }] }}
+      <Animated.View
+        style={{
+          width: SCREEN_WIDTH * 2,
+          flex: 1,
+          flexDirection: "row",
+          transform: [{ translateY: transformScroll }],
+        }}
       >
-        {feeds?.length > 0 ? (
-          <FlatList
-            contentContainerStyle={{ minHeight: SCREEN_HEIGHT }}
-            style={{}}
-            showsVerticalScrollIndicator={false}
-            ref={flatListRef}
-            data={feeds}
-            onScroll={handleScroll}
-            scrollEventThrottle={16}
-            renderItem={({ item, index }) => {
-              return (
-                <Feed
-                  x={index}
-                  feed={item}
-                  navigation={navigation}
-                  feeds={feeds}
-                  currentIndex={currentIndex}
-                  isFocused={isFocused}
-                  feedsLength={feeds?.length}
-                  setActiveGallery={setActiveGallery}
-                />
-              );
-            }}
-            onEndReached={() => {
-              AddFeeds(page + 1);
-              setPage(page + 1);
-            }}
-            onEndReachedThreshold={1}
-            keyExtractor={(item) => item?._id}
-            onViewableItemsChanged={onViewableItemsChangedRef.current}
-            viewabilityConfig={viewabilityConfig}
-          />
-        ) : (
-          <View
-            style={{
-              width: SCREEN_WIDTH,
+        <Animated.View
+          style={{
+            width: SCREEN_WIDTH * 2,
+            flex: 1,
+            flexDirection: "row",
+            transform: [{ translateX: translateXValue }],
+          }}
+        >
+          {feeds?.length > 0 ? (
+            <FlatList
+              contentContainerStyle={{ minHeight: SCREEN_HEIGHT }}
+              style={{}}
+              showsVerticalScrollIndicator={false}
+              ref={flatListRef}
+              data={feeds}
+              onScroll={handleScroll}
+              scrollEventThrottle={16}
+              renderItem={({ item, index }) => {
+                return (
+                  <Feed
+                    x={index}
+                    feed={item}
+                    navigation={navigation}
+                    feeds={feeds}
+                    currentIndex={currentIndex}
+                    isFocused={isFocused}
+                    feedsLength={feeds?.length}
+                    setActiveGallery={setActiveGallery}
+                  />
+                );
+              }}
+              onEndReached={() => {
+                AddFeeds(page + 1);
+                setPage(page + 1);
+              }}
+              onEndReachedThreshold={1}
+              keyExtractor={(item) => item?._id}
+              onViewableItemsChanged={onViewableItemsChangedRef.current}
+              viewabilityConfig={viewabilityConfig}
+            />
+          ) : (
+            <View
+              style={{
+                width: SCREEN_WIDTH,
 
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <Text style={{ color: currentTheme.disabled }}>No Feeds found</Text>
-          </View>
-        )}
-        {followingsList?.length > 0 ? (
-          <FlatList
-            contentContainerStyle={{ minHeight: SCREEN_HEIGHT }}
-            style={{}}
-            showsVerticalScrollIndicator={false}
-            ref={flatListRefF}
-            data={followingsList}
-            onScroll={handleScrollF}
-            scrollEventThrottle={16}
-            renderItem={({ item, index }) => {
-              return (
-                <Feed
-                  x={index}
-                  feed={item}
-                  navigation={navigation}
-                  feeds={feeds}
-                  currentIndex={currentIndex}
-                  isFocused={isFocused}
-                  feedsLength={feeds?.length}
-                  setActiveGallery={setActiveGallery}
-                />
-              );
-            }}
-            onEndReached={() => {
-              AddFollowingsFeeds(fPage + 1);
-              setFPage(fPage + 1);
-            }}
-            onEndReachedThreshold={0.5}
-            keyExtractor={(item) => item?._id}
-            onViewableItemsChanged={onViewableItemsChangedRef.current}
-            viewabilityConfig={viewabilityConfig}
-          />
-        ) : (
-          <View
-            style={{
-              width: SCREEN_WIDTH,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Text style={{ color: currentTheme.disabled }}>
+                No Feeds found
+              </Text>
+            </View>
+          )}
+          {followingsList?.length > 0 ? (
+            <FlatList
+              contentContainerStyle={{ minHeight: SCREEN_HEIGHT }}
+              style={{}}
+              showsVerticalScrollIndicator={false}
+              ref={flatListRefF}
+              data={followingsList}
+              onScroll={handleScrollF}
+              scrollEventThrottle={16}
+              renderItem={({ item, index }) => {
+                return (
+                  <Feed
+                    x={index}
+                    feed={item}
+                    navigation={navigation}
+                    feeds={feeds}
+                    currentIndex={currentIndex}
+                    isFocused={isFocused}
+                    feedsLength={feeds?.length}
+                    setActiveGallery={setActiveGallery}
+                  />
+                );
+              }}
+              onEndReached={() => {
+                AddFollowingsFeeds(fPage + 1);
+                setFPage(fPage + 1);
+              }}
+              onEndReachedThreshold={0.5}
+              keyExtractor={(item) => item?._id}
+              onViewableItemsChanged={onViewableItemsChangedRef.current}
+              viewabilityConfig={viewabilityConfig}
+            />
+          ) : (
+            <View
+              style={{
+                width: SCREEN_WIDTH,
 
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <Text style={{ color: currentTheme.disabled }}>No Feeds found</Text>
-          </View>
-        )}
-      </Animated.ScrollView>
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Text style={{ color: currentTheme.disabled }}>
+                No Feeds found
+              </Text>
+            </View>
+          )}
+        </Animated.View>
+      </Animated.View>
     </View>
   );
 };
@@ -605,8 +594,6 @@ const NavigatorComponent = ({
       <TouchableOpacity
         activeOpacity={0.8}
         onPress={() => {
-          // dispatch(setZoomToTop());
-          // slideToLeft();
           handlePressLeft();
         }}
         style={{

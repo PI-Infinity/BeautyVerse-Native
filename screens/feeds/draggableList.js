@@ -4,9 +4,7 @@ import DraggableFlatList from "react-native-draggable-flatlist";
 
 export const DragableList = ({ file: initialFile }) => {
   const [file, setFile] = useState(initialFile);
-  console.log(initialFile?.length);
   const renderItem = (arg) => {
-    console.log(arg); // Now index should be defined
     const { item, index, onDragEnd, isActive } = arg;
     return (
       <TouchableOpacity

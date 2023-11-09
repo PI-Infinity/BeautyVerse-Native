@@ -11,9 +11,12 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { darkTheme, lightTheme } from "../../../context/theme";
 import axios from "axios";
+import { setScreenModal } from "../../../redux/app";
+import { useRoute } from "@react-navigation/native";
+import { Language } from "../../../context/language";
 
 /**
  * Define statistics component in user screen
@@ -22,9 +25,15 @@ import axios from "axios";
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 export const Statistics = ({ navigation }) => {
+  // dispatch
+  const dispatch = useDispatch();
+  // language
+  const language = Language();
   // define current user
   const currentUser = useSelector((state) => state.storeUser.currentUser);
 
+  // route
+  const route = useRoute();
   // define theme
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
@@ -64,9 +73,13 @@ export const Statistics = ({ navigation }) => {
         <TouchableOpacity
           activeOpacity={0.8}
           onPress={() =>
-            navigation.navigate("Charts", {
-              data: statistics,
-            })
+            dispatch(
+              setScreenModal({
+                active: true,
+                screen: "Charts",
+                data: statistics,
+              })
+            )
           }
           style={{
             borderWidth: 1,
@@ -90,7 +103,7 @@ export const Statistics = ({ navigation }) => {
               },
             ]}
           >
-            Charts
+            {language?.language?.User?.userPage?.statistics}
           </Text>
           <MaterialIcons
             name="arrow-right"

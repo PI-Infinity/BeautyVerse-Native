@@ -41,7 +41,7 @@ export const ProceduresList = ({
   const proceduresOptions = ProceduresOptions();
 
   const cats = Array.from(
-    new Set(targetUser.procedures.map((item) => item.value.split(" - ")[0]))
+    new Set(targetUser?.procedures.map((item) => item.value.split(" - ")[0]))
   );
   const categories = cats.map((item, index) => {
     let lab = proceduresOptions.find((it) => {
@@ -118,7 +118,7 @@ export const ProceduresList = ({
         </ScrollView>
       )}
       <View style={{ gap: 10, alignItems: "center", marginTop: 8 }}>
-        {targetUser.procedures
+        {targetUser?.procedures
           .filter((pr) => {
             if (procedure) {
               return procedure?.value === pr?.value;
@@ -157,12 +157,13 @@ export const ProceduresList = ({
                 activeOpacity={addBooking ? 0.5 : 1}
                 key={index}
                 style={{
-                  width: "95%",
-                  backgroundColor:
+                  width: "100%",
+                  borderWidth: 1.5,
+                  borderColor:
                     procedure?.value === item?.value
                       ? "#F866B1"
                       : currentTheme.background2,
-                  borderRadius: 10,
+                  borderRadius: 15,
                   padding: 15,
                   paddingVertical: 7.5,
                   justifyContent: "space-between",
@@ -194,17 +195,15 @@ export const ProceduresList = ({
                         borderRadius: 10,
                         backgroundColor:
                           procedure?.value === item?.value
-                            ? "#111"
+                            ? currentTheme.pink
                             : currentTheme.pink,
                       }}
                     ></View>
                     <Text
                       style={{
-                        color:
-                          procedure?.value === item?.value
-                            ? "#111"
-                            : currentTheme.font,
-                        letterSpacing: 0.2,
+                        color: currentTheme.font,
+                        letterSpacing: 0.5,
+                        fontWeight: 500,
                       }}
                     >
                       {label.label}
@@ -219,10 +218,7 @@ export const ProceduresList = ({
                   >
                     <Text
                       style={{
-                        color:
-                          procedure?.value === item?.value
-                            ? "#111"
-                            : currentTheme.font,
+                        color: currentTheme.font,
                       }}
                     >
                       {item?.price}
@@ -234,7 +230,7 @@ export const ProceduresList = ({
                             name="dollar"
                             color={
                               procedure?.value === item?.value
-                                ? "#111"
+                                ? currentTheme.pink
                                 : currentTheme.font
                             }
                             size={16}
@@ -244,7 +240,7 @@ export const ProceduresList = ({
                             name="euro"
                             color={
                               procedure?.value === item?.value
-                                ? "#111"
+                                ? currentTheme.pink
                                 : currentTheme.font
                             }
                             size={16}
@@ -255,7 +251,7 @@ export const ProceduresList = ({
                               fontWeight: "bold",
                               color:
                                 procedure?.value === item?.value
-                                  ? "#111"
+                                  ? currentTheme.pink
                                   : currentTheme.font,
                               fontSize: 16,
                             }}
@@ -287,7 +283,7 @@ export const ProceduresList = ({
                         style={{
                           color:
                             procedure?.value === item?.value
-                              ? "#111"
+                              ? currentTheme.font
                               : currentTheme.disabled,
                           fontSize: 12,
                         }}
@@ -304,11 +300,7 @@ export const ProceduresList = ({
                       </Text>
                       <FontAwesome5
                         name="clock"
-                        color={
-                          procedure?.value === item?.value
-                            ? "#111"
-                            : currentTheme.pink
-                        }
+                        color={currentTheme.pink}
                         size={12}
                       />
                     </View>
@@ -361,7 +353,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: "rgba(255,255,255,0.05)",
+    // backgroundColor: "rgba(255,255,255,0.05)",
     borderColor: "rgba(255,255,255,0.1)",
     borderWidth: 1,
     borderRadius: 5,

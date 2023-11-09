@@ -1,39 +1,41 @@
 import { FontAwesome, MaterialCommunityIcons } from "@expo/vector-icons";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import axios from "axios";
 import * as Clipboard from "expo-clipboard";
+import * as Haptics from "expo-haptics";
 import * as Localization from "expo-localization";
 import moment from "moment";
 import "moment-timezone";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import {
+  Dimensions,
   Linking,
+  Pressable,
   Text,
   TouchableOpacity,
   Vibration,
   View,
-  Dimensions,
-  Pressable,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useDispatch, useSelector } from "react-redux";
 import { CacheableImage } from "../../components/cacheableImage";
 import DeleteConfirm from "../../components/confirmDialog";
+import { sendNotification } from "../../components/pushNotifications";
+import { Language } from "../../context/language";
 import { useSocket } from "../../context/socketContext";
 import { ProceduresOptions } from "../../datas/registerDatas";
-import { setRerenderBookings } from "../../redux/rerenders";
-import ItemDateAndTimePicker from "../bookings/itemDateAndTimePicker";
-import { StatusPopup } from "../bookings/statusPopup";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { setScreenModal } from "../../redux/app";
 import {
-  setRooms,
   setCurrentChat,
   setRerederRooms,
   setRerenderScroll,
+  setRooms,
 } from "../../redux/chat";
-import { useNavigation } from "@react-navigation/native";
-import { sendNotification } from "../../components/pushNotifications";
+import { setRerenderBookings } from "../../redux/rerenders";
 import { setSentBookings } from "../../redux/sentBookings";
-import { Language } from "../../context/language";
-import * as Haptics from "expo-haptics";
+import ItemDateAndTimePicker from "../bookings/itemDateAndTimePicker";
+import { StatusPopup } from "../bookings/statusPopup";
+import { RouteNameContext } from "../../context/routName";
 
 /**
  * Card item for sent bookings
@@ -214,6 +216,9 @@ export const Card = ({
 
   let font = currentTheme.font;
 
+  // route name
+  const route = useRoute();
+
   // navigate to chat
   const rooms = useSelector((state) => state.storeChat.rooms);
 
@@ -243,10 +248,18 @@ export const Card = ({
       lastMessageSeen: "",
     };
     try {
-      navigation.navigate("Room", {
-        newChat,
-        user: item.seller,
-      });
+      dispatch(
+        setScreenModal({
+          active: true,
+          screen: "Room",
+          data: {
+            newChat,
+            user: item.seller,
+          },
+          route: route.name,
+        })
+      );
+
       const response = await axios.post(backendUrl + "/api/v1/chats/", {
         room: currentUser?._id + item.seller._id,
         members: {
@@ -288,10 +301,18 @@ export const Card = ({
     const Room = chatDefined;
     try {
       dispatch(setCurrentChat(Room));
-      navigation.navigate("Room", {
-        user: item?.seller,
-        screenHeight: screenHeight,
-      });
+
+      dispatch(
+        setScreenModal({
+          active: true,
+          screen: "Room",
+          data: {
+            screenHeight: screenHeight,
+            user: item.seller,
+          },
+          route: route.name,
+        })
+      );
       if (Room.lastSender !== currentUser._id) {
         await axios.patch(backendUrl + "/api/v1/chats/" + Room.room, {
           status: "read",
@@ -321,6 +342,7 @@ export const Card = ({
    * Give rating function
    */
   const [rating, setRating] = useState(0);
+
   useEffect(() => {
     setRating(item?.rating);
   }, []);
@@ -339,6 +361,14 @@ export const Card = ({
           rating: val,
         }
       );
+      if (item.seller?.pushNotificationToken) {
+        await sendNotification(
+          item.seller?.pushNotificationToken,
+          currentUser.name,
+          `Give rating review "${val}" to your last visit!`,
+          { type: "booking", status: "completed" }
+        );
+      }
     } catch (error) {
       console.log(error.response.data.message);
     }
@@ -640,8 +670,8 @@ export const Card = ({
               onPress={
                 item.seller?._id
                   ? () =>
-                      navigation.navigate("User", {
-                        user: item.seller,
+                      navigation.navigate("UserVisit", {
+                        user: item?.seller,
                       })
                   : undefined
               }

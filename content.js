@@ -3,7 +3,7 @@ import axios from "axios";
 import Constants from "expo-constants";
 import * as Location from "expo-location";
 import { useEffect, useRef, useState } from "react";
-import { ImageBackground, StatusBar, View } from "react-native";
+import { Dimensions, ImageBackground, StatusBar, View } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 import { io } from "socket.io-client";
 import LoadingScreen from "./components/loadingScreen";
@@ -13,6 +13,7 @@ import { darkTheme, lightTheme } from "./context/theme";
 import { AuthStack } from "./navigations/authStack";
 import { BottomTabNavigator } from "./navigations/bottomTab";
 import {
+  setActiveTabBar,
   setLanguage,
   setLoading,
   setLocation,
@@ -26,6 +27,10 @@ import {
 } from "./redux/rerenders";
 import { setCurrentUser } from "./redux/user";
 import { Update } from "./screens/update";
+import { BlurView } from "expo-blur";
+import appConfig from "./app.json";
+
+const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
 /* main content component of app */
 
@@ -54,7 +59,8 @@ const Content = () => {
   /**
    * define app version
    *  */
-  const currentVersion = Constants.manifest.version;
+  const currentVersion = appConfig.expo.version;
+
   const [appVersion, setAppVersion] = useState(null);
 
   function versionToNumber(version) {
@@ -262,17 +268,19 @@ const Content = () => {
     <ImageBackground
       style={{
         flex: 1,
-        width: "100%",
+        width: SCREEN_WIDTH,
         height: "100%",
       }}
       source={theme ? require("./assets/background.jpg") : null}
     >
-      <View
+      <BlurView
+        intensity={30}
+        tint="dark"
         style={{
           flex: 1,
           width: "100%",
           height: "100%",
-          backgroundColor: !theme ? currentTheme.background : "rgba(0,0,0,0.5)",
+          backgroundColor: !theme ? currentTheme.background : "rgba(1,2,0,0.5)",
         }}
       >
         {current > app && (
@@ -294,7 +302,7 @@ const Content = () => {
             <AuthStack />
           )
         }
-      </View>
+      </BlurView>
     </ImageBackground>
   );
 };

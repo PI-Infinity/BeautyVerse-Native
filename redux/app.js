@@ -19,7 +19,14 @@ const initialState = {
   // blur background switcher
   blur: false,
 
+  // active tab bat
+  activeTabBar: "Feeds",
+
+  // lcoation
   location: { country: null, city: null, latitude: null, longitude: null },
+
+  // screens modal state
+  screenModal: [],
 };
 
 export const App = createSlice({
@@ -54,6 +61,9 @@ export const App = createSlice({
     setZoomToTop: (state, action) => {
       state.zoomToTop = !state.zoomToTop;
     },
+    setActiveTabBar: (state, action) => {
+      state.activeTabBar = action.payload;
+    },
     setLocation: (state, action) => {
       state.location = action.payload;
     },
@@ -62,6 +72,38 @@ export const App = createSlice({
     },
     setBlur: (state, action) => {
       state.blur = action.payload;
+    },
+    setScreenModal: (state, action) => {
+      const { active, screen, data, activeTabBar } = action.payload;
+
+      // Check if there's an existing modal with the same route.name
+      const existingIndex = state.screenModal.findIndex(
+        (modal) => modal.activeTabBar === activeTabBar
+      );
+
+      const newModal = {
+        active,
+        screen,
+        data,
+        activeTabBar: state.activeTabBar,
+      };
+
+      if (existingIndex !== -1) {
+        // If an existing modal is found, replace it
+        state.screenModal[existingIndex] = newModal;
+      } else {
+        // If no existing modal is found, add the new modal to the array
+        state.screenModal.push(newModal);
+      }
+    },
+    removeScreenModal: (state, action) => {
+      const tabBarName = action.payload;
+      state.screenModal = state.screenModal.filter(
+        (modal) => modal.activeTabBar !== tabBarName
+      );
+    },
+    cleanScreenModal: (state, action) => {
+      state.screenModal = [];
     },
   },
 });
@@ -76,8 +118,12 @@ export const {
   setFeedsResult,
   setCardsResult,
   setZoomToTop,
+  setActiveTabBar,
   setLocation,
   setDevicePushToken,
   setBlur,
+  setScreenModal,
+  removeScreenModal,
+  cleanScreenModal,
 } = App.actions;
 export default App.reducer;

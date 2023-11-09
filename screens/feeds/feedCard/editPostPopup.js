@@ -13,15 +13,15 @@ import {
 } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { useDispatch, useSelector } from "react-redux";
-import { BackDrop } from "../../components/backDropLoader";
-import { darkTheme, lightTheme } from "../../context/theme";
-import { storage } from "../../firebase";
+import { BackDrop } from "../../../components/backDropLoader";
+import { darkTheme, lightTheme } from "../../../context/theme";
+import { storage } from "../../../firebase";
 import {
   setCleanUp,
   setRerenderUserFeeds,
   setRerenderUserList,
-} from "../../redux/rerenders";
-import { setBlur } from "../../redux/app";
+} from "../../../redux/rerenders";
+import { setBlur } from "../../../redux/app";
 import { BlurView } from "expo-blur";
 
 /**
@@ -38,6 +38,7 @@ const SmoothModal = ({
   itemName,
   setPost,
   navigation,
+  hideModal,
 }) => {
   // define text state
   const [text, setText] = useState("");
@@ -125,7 +126,7 @@ const SmoothModal = ({
               dispatch(setRerenderUserList());
               setLoading(false);
               dispatch(setBlur(false));
-              navigation.navigate("UserProfile");
+              hideModal();
             }, 500);
           });
         } else {
@@ -139,7 +140,7 @@ const SmoothModal = ({
                     dispatch(setRerenderUserList());
                     setLoading(false);
                     dispatch(setBlur(false));
-                    navigation.navigate("UserProfile");
+                    hideModal();
                   }, 500);
                 });
               });
@@ -181,7 +182,7 @@ const SmoothModal = ({
           enableAutomaticScroll={Platform.OS === "ios"}
         >
           <BlurView
-            tint={theme ? "extra-dark" : "light"}
+            tint={theme ? "dark" : "light"}
             intensity={60}
             style={[
               styles.modalContent,

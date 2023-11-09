@@ -36,7 +36,6 @@ const Welcome = ({ navigation }) => {
   // language state
   const language = Language();
   const activeLanguage = useSelector((state) => state.storeApp.language);
-  const currentUser = useSelector((state) => state.storeUser.currentUser);
 
   return (
     <ScrollView
@@ -58,20 +57,20 @@ const Welcome = ({ navigation }) => {
       >
         <Text
           style={{
-            fontSize: 30,
+            fontSize: 36,
             fontWeight: "bold",
             color: currentTheme.pink,
-            letterSpacing: 1,
+            letterSpacing: 1.5,
           }}
         >
           Beauty
         </Text>
         <Text
           style={{
-            fontSize: 30,
+            fontSize: 36,
             fontWeight: "bold",
             color: currentTheme.font,
-            letterSpacing: 1,
+            letterSpacing: 1.5,
           }}
         >
           Verse
@@ -87,6 +86,7 @@ const Welcome = ({ navigation }) => {
             marginTop: 20,
             textAlign: "center",
             lineHeight: 24,
+            fontWeight: 500,
           }}
         >
           {language?.language?.Auth?.auth?.slogan}
@@ -106,7 +106,7 @@ const Welcome = ({ navigation }) => {
         currentTheme={currentTheme}
         title={language?.language?.Auth?.auth?.authentication}
       />
-      <View style={{ width: "100%", position: "relative", bottom: 15 }}>
+      {/* <View style={{ width: "100%", position: "relative", bottom: 15 }}>
         <Text
           style={[
             styles.sectionTitle,
@@ -163,7 +163,7 @@ const Welcome = ({ navigation }) => {
             )}
           </Pressable>
         </View>
-      </View>
+      </View> */}
       <View
         style={{
           width: "100%",
@@ -191,7 +191,7 @@ const Welcome = ({ navigation }) => {
               borderColor: currentTheme.line,
               flexDirection: "row",
               justifyContent: "space-between",
-              backgroundColor: currentTheme.background,
+              // backgroundColor: currentTheme.background,
             },
           ]}
           onPress={() => dispatch(setLanguage("en"))}
@@ -199,6 +199,8 @@ const Welcome = ({ navigation }) => {
           <Text
             style={{
               color: currentTheme.font,
+              fontWeight: 500,
+              letterSpacing: 0.5,
             }}
           >
             {language?.language?.Auth?.auth?.english}
@@ -215,7 +217,7 @@ const Welcome = ({ navigation }) => {
               borderColor: currentTheme.line,
               flexDirection: "row",
               justifyContent: "space-between",
-              backgroundColor: currentTheme.background,
+              // backgroundColor: currentTheme.background,
             },
           ]}
           onPress={() => dispatch(setLanguage("ka"))}
@@ -223,6 +225,8 @@ const Welcome = ({ navigation }) => {
           <Text
             style={{
               color: currentTheme.font,
+              fontWeight: 500,
+              letterSpacing: 0.5,
             }}
           >
             {language?.language?.Auth?.auth?.georgian}
@@ -239,7 +243,7 @@ const Welcome = ({ navigation }) => {
               borderColor: currentTheme.line,
               flexDirection: "row",
               justifyContent: "space-between",
-              backgroundColor: currentTheme.background,
+              // backgroundColor: currentTheme.background,
             },
           ]}
           onPress={() => dispatch(setLanguage("ru"))}
@@ -247,6 +251,8 @@ const Welcome = ({ navigation }) => {
           <Text
             style={{
               color: currentTheme.font,
+              fontWeight: 500,
+              letterSpacing: 0.5,
             }}
           >
             {language?.language?.Auth?.auth?.russian}
@@ -259,8 +265,22 @@ const Welcome = ({ navigation }) => {
       <View style={{ width: "90%", marginTop: 15 }}>
         <TouchableOpacity
           activeOpacity={0.5}
+          onPress={() => navigation.navigate("Support")}
+          style={[styles.item, {}]}
+        >
+          <Text style={[styles.BsectionTitle, { color: currentTheme.font }]}>
+            {language?.language?.User?.userPage?.support}
+          </Text>
+          <MaterialIcons
+            name={"arrow-right"}
+            color={currentTheme.pink}
+            size={18}
+          />
+        </TouchableOpacity>
+        <TouchableOpacity
+          activeOpacity={0.5}
           onPress={() => navigation.navigate("Terms")}
-          style={[styles.item, { backgroundColor: currentTheme.background }]}
+          style={[styles.item, {}]}
         >
           <Text style={[styles.BsectionTitle, { color: currentTheme.font }]}>
             {language?.language?.Pages?.pages?.terms}
@@ -274,7 +294,7 @@ const Welcome = ({ navigation }) => {
         <TouchableOpacity
           activeOpacity={0.5}
           onPress={() => navigation.navigate("QA")}
-          style={[styles.item, { backgroundColor: currentTheme.background }]}
+          style={[styles.item, {}]}
         >
           <Text style={[styles.BsectionTitle, { color: currentTheme.font }]}>
             {language?.language?.Pages?.pages?.qa}
@@ -288,7 +308,7 @@ const Welcome = ({ navigation }) => {
         <TouchableOpacity
           activeOpacity={0.5}
           onPress={() => navigation.navigate("Privacy")}
-          style={[styles.item, { backgroundColor: currentTheme.background }]}
+          style={[styles.item, {}]}
         >
           <Text style={[styles.BsectionTitle, { color: currentTheme.font }]}>
             {language?.language?.Pages?.pages?.privacy}
@@ -302,7 +322,7 @@ const Welcome = ({ navigation }) => {
         <TouchableOpacity
           activeOpacity={0.5}
           onPress={() => navigation.navigate("Usage")}
-          style={[styles.item, { backgroundColor: currentTheme.background }]}
+          style={[styles.item, {}]}
         >
           <Text style={[styles.BsectionTitle, { color: currentTheme.font }]}>
             {language?.language?.Pages?.pages?.usage}
@@ -363,7 +383,7 @@ const styles = StyleSheet.create({
     padding: 15,
     // height: 60,
     // borderRadius: 5,
-
+    fontWeight: 500,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",

@@ -21,6 +21,7 @@ import GetTimesAgo from "../../functions/getTimesAgo";
 import { setRerederRooms } from "../../redux/chat";
 import { darkTheme, lightTheme } from "../../context/theme";
 import { useSocket } from "../../context/socketContext";
+import { setScreenModal, setUserScreenModal } from "../../redux/app";
 
 /**
  * Each message component
@@ -284,7 +285,7 @@ export const Message = (props) => {
             props.data?.senderId !== props.prevMessage?.senderId && (
               <Pressable
                 onPress={() =>
-                  props.navigation.navigate("User", {
+                  navigation.navigate("UserVisit", {
                     user: chatUser,
                   })
                 }
@@ -299,8 +300,8 @@ export const Message = (props) => {
                       resizeMode: "cover",
                     }}
                     onPress={() =>
-                      props.navigation.navigate("User", {
-                        user: props.chatUser,
+                      props?.navigation.navigate("UserVisit", {
+                        user: props?.chatUser,
                       })
                     }
                     manipulationOptions={[

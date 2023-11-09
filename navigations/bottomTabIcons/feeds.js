@@ -13,9 +13,9 @@ import {
   Dimensions,
   TouchableOpacity,
 } from "react-native";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { RouteNameContext } from "../../context/routName";
-import { setZoomToTop } from "../../redux/app";
+import { setActiveTabBar, setZoomToTop } from "../../redux/app";
 import {
   setCleanUp,
   setFeedRefreshControl,
@@ -31,8 +31,6 @@ export const CustomTabBarFeedsIcon = ({
   color,
   render,
   setRender,
-  scrollY,
-  scrollYF,
   focused,
   currentTheme,
 }) => {
@@ -46,6 +44,9 @@ export const CustomTabBarFeedsIcon = ({
   // animate border line width
   const animateValueRef = useRef(new Animated.Value(focused ? 60 : 0));
   const animateValue = animateValueRef.current;
+
+  const scrollY = useSelector((state) => state.storeScrolls.feedsScrollY);
+  const scrollYF = useSelector((state) => state.storeScrolls.feedsScrollYF);
 
   useEffect(() => {
     if (focused) {
@@ -92,6 +93,7 @@ export const CustomTabBarFeedsIcon = ({
             navigation.navigate("Main");
             setRender(!render);
           }
+          dispatch(setActiveTabBar("Feeds"));
         }}
       >
         <MaterialCommunityIcons name="cards-variant" size={30} color={color} />

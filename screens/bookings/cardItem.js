@@ -33,8 +33,9 @@ import {
   setRerenderScroll,
 } from "../../redux/chat";
 import { Language } from "../../context/language";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import { sendNotification } from "../../components/pushNotifications";
+import { setScreenModal, setUserScreenModal } from "../../redux/app";
 
 /**
  * Booking card item
@@ -238,10 +239,18 @@ export const Card = ({ item, currentUser, currentTheme, setLoader }) => {
       lastMessageSeen: "",
     };
     try {
-      navigation.navigate("Room", {
-        newChat,
-        user: item.client,
-      });
+      dispatch(
+        setScreenModal({
+          active: true,
+          screen: "Room",
+          data: {
+            newChat,
+            user: item.client,
+          },
+          route: route.name,
+        })
+      );
+
       const response = await axios.post(backendUrl + "/api/v1/chats/", {
         room: currentUser?._id + item.client._id,
         members: {
@@ -276,6 +285,8 @@ export const Card = ({ item, currentUser, currentTheme, setLoader }) => {
 
   const insets = useSafeAreaInsets();
 
+  const route = useRoute();
+
   const screenHeight = SCREEN_HEIGHT - insets.top - insets.bottom;
 
   // get chat room
@@ -283,10 +294,18 @@ export const Card = ({ item, currentUser, currentTheme, setLoader }) => {
     const Room = chatDefined;
     try {
       dispatch(setCurrentChat(Room));
-      navigation.navigate("Room", {
-        user: item?.client,
-        screenHeight: screenHeight,
-      });
+      dispatch(
+        setScreenModal({
+          active: true,
+          screen: "Room",
+          data: {
+            user: item?.client,
+            screenHeight: screenHeight,
+          },
+          route: route.name,
+        })
+      );
+
       if (Room.lastSender !== currentUser._id) {
         await axios.patch(backendUrl + "/api/v1/chats/" + Room.room, {
           status: "read",
@@ -311,6 +330,8 @@ export const Card = ({ item, currentUser, currentTheme, setLoader }) => {
       Alert.alert(error.response.data.message);
     }
   };
+
+  console.log(item);
 
   return (
     <>
@@ -337,7 +358,7 @@ export const Card = ({ item, currentUser, currentTheme, setLoader }) => {
           padding: 15,
           paddingVertical: 10,
           borderRadius: 10,
-          backgroundColor: currentTheme.background,
+          // backgroundColor: currentTheme.background,
           gap: 5,
           borderWidth: 1.5,
           borderColor: currentTheme.line,
@@ -630,8 +651,8 @@ export const Card = ({ item, currentUser, currentTheme, setLoader }) => {
               onPress={
                 item.client?._id
                   ? () =>
-                      navigation.navigate("User", {
-                        user: item.client,
+                      navigation.navigate("UserVisit", {
+                        user: item?.client,
                       })
                   : undefined
               }
@@ -718,7 +739,7 @@ export const Card = ({ item, currentUser, currentTheme, setLoader }) => {
             </TouchableOpacity>
           )}
         </View>
-        {selectedItem === "completed" && item?.whereFrom === "user" && (
+        {selectedItem === "completed" && item?.whereFrom === "client" && (
           <View
             style={{
               flexDirection: "row",

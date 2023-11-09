@@ -9,36 +9,35 @@ import { darkTheme, lightTheme } from "../context/theme";
 import { BMSStack } from "../navigations/BMSStack";
 import { BMSStackSent } from "../navigations/BMSStackSent";
 import { MarketplaceStack } from "../navigations/MarketplaceStack";
-import { CustomTabBarCardsIcon } from "../navigations/bottomTabIcons/cards";
-import { CustomTabBarProfileIcon } from "../navigations/bottomTabIcons/profile";
-import { CustomTabBarChatIcon } from "../navigations/bottomTabIcons/chat";
 import { CustomTabBarBookingsIcon } from "../navigations/bottomTabIcons/bookings";
+import { CustomTabBarCardsIcon } from "../navigations/bottomTabIcons/cards";
+import { CustomTabBarChatIcon } from "../navigations/bottomTabIcons/chat";
 import { CustomTabBarFeedsIcon } from "../navigations/bottomTabIcons/feeds";
 import { CustomTabBarMarketplaceIcon } from "../navigations/bottomTabIcons/marketplace";
+import { CustomTabBarProfileIcon } from "../navigations/bottomTabIcons/profile";
 import { CardsStack } from "../navigations/cardsStack";
 import { ChatStack } from "../navigations/chatStack";
 import { FeedsStack } from "../navigations/feedsStack";
 import { ProfileStack } from "../navigations/profileStack";
-import {
-  setBestSellersList,
-  setLatestList,
-  setRandomProductsList,
-  setUserProductListingPage,
-  setUserProducts,
-} from "../redux/Marketplace";
-import { setRerederRooms, setRooms } from "../redux/chat";
+import { setRandomProductsList } from "../redux/Marketplace";
 import {
   setActiveBookings,
+  setBookings,
   setCanceledBookings,
   setCompletedBookings,
   setFilterResult,
   setLoader,
   setNewBookings,
-  setBookings,
   setPendingBookings,
   setRejectedBookings,
   setTotalResult,
 } from "../redux/bookings";
+import { setRerederRooms, setRooms } from "../redux/chat";
+import {
+  setNotifications,
+  setPage,
+  setUnreadNotifications,
+} from "../redux/notifications";
 import { setRerenderBookings } from "../redux/rerenders";
 import {
   setActiveSentBookings,
@@ -52,11 +51,6 @@ import {
   setSentBookingsFilterResult,
   setSentBookingsTotalResult,
 } from "../redux/sentBookings";
-import {
-  setNotifications,
-  setPage,
-  setUnreadNotifications,
-} from "../redux/notifications";
 
 /**
  * create tab bar
@@ -108,6 +102,7 @@ export const BottomTabNavigator = () => {
             currentUser?._id +
             "/notifications?page=1&limit=15"
         );
+
         dispatch(setNotifications(response.data.data.notifications));
         dispatch(
           setUnreadNotifications(
@@ -118,7 +113,7 @@ export const BottomTabNavigator = () => {
         );
         dispatch(setPage(1));
       } catch (error) {
-        console.log(error.response);
+        console.log(error.response.data.message);
       }
     };
     if (currentUser) {
@@ -288,18 +283,6 @@ export const BottomTabNavigator = () => {
     });
   }, []);
 
-  // feeds scroll y position
-  const [feedsScrollY, setFeedsScrollY] = useState(0);
-  // feeds scroll y position
-  const [feedsScrollYF, setFeedsScrollYF] = useState(0);
-  // cards scroll y position
-  const [cardsScrollY, setCardsScrollY] = useState(0);
-  // profile scroll y position
-  const [profileScrollY, setProfileScrollY] = useState(0);
-  // marketplace scroll y position
-
-  const [marketplaceScrollY, setMarketplaceScrollY] = useState(0);
-
   /**
    * get marketplace products
    */
@@ -353,15 +336,7 @@ export const BottomTabNavigator = () => {
       {/** Main screen, feed stack screens inside tab */}
       <Tab.Screen
         name="Main"
-        children={() => (
-          <FeedsStack
-            render={render}
-            navigation={navigation}
-            setScrollY={setFeedsScrollY}
-            setScrollYF={setFeedsScrollYF}
-            scrollY={feedsScrollY}
-          />
-        )}
+        children={() => <FeedsStack render={render} navigation={navigation} />}
         options={({}) => ({
           tabBarLabel: "",
           tabBarInactiveTintColor: currentTheme.disabled,
@@ -369,7 +344,7 @@ export const BottomTabNavigator = () => {
           tabBarStyle: {
             height: SCREEN_HEIGHT / 12,
             paddingTop: 1,
-            backgroundColor: currentTheme.background,
+
             borderTopWidth: 1,
             borderTopColor: currentTheme.background2,
             shadowColor: "#000",
@@ -388,8 +363,6 @@ export const BottomTabNavigator = () => {
               setRender={setRender}
               currentTheme={currentTheme}
               sum={sum}
-              scrollY={feedsScrollY}
-              scrollYF={feedsScrollYF}
             />
           ),
         })}
@@ -398,13 +371,7 @@ export const BottomTabNavigator = () => {
       {/** Cards screen, cards stack screens inside tab */}
       <Tab.Screen
         name="Cards"
-        children={() => (
-          <CardsStack
-            render={render}
-            navigation={navigation}
-            setScrollY={setCardsScrollY}
-          />
-        )}
+        children={() => <CardsStack render={render} navigation={navigation} />}
         options={{
           tabBarLabel: "",
           tabBarInactiveTintColor: currentTheme.disabled,
@@ -412,7 +379,7 @@ export const BottomTabNavigator = () => {
           tabBarStyle: {
             height: SCREEN_HEIGHT / 12,
             paddingTop: 1,
-            backgroundColor: currentTheme.background,
+
             borderTopWidth: 1,
             borderTopColor: currentTheme.background2,
             shadowColor: "#000",
@@ -430,7 +397,6 @@ export const BottomTabNavigator = () => {
               {...props}
               sum={sum}
               currentTheme={currentTheme}
-              scrollY={cardsScrollY}
             />
           ),
         }}
@@ -439,12 +405,7 @@ export const BottomTabNavigator = () => {
       <Tab.Screen
         name="Marketplace"
         children={() => (
-          <MarketplaceStack
-            render={render}
-            navigation={navigation}
-            setScrollY={setMarketplaceScrollY}
-            scrollY={marketplaceScrollY}
-          />
+          <MarketplaceStack render={render} navigation={navigation} />
         )}
         options={{
           tabBarLabel: "",
@@ -453,7 +414,7 @@ export const BottomTabNavigator = () => {
           tabBarStyle: {
             height: SCREEN_HEIGHT / 12,
             paddingTop: 1,
-            backgroundColor: currentTheme.background,
+
             borderTopWidth: 1,
             borderTopColor: currentTheme.background2,
             shadowColor: "#000",
@@ -471,7 +432,6 @@ export const BottomTabNavigator = () => {
               {...props}
               // sum={sum}
               currentTheme={currentTheme}
-              scrollY={marketplaceScrollY}
             />
           ),
         }}
@@ -489,7 +449,7 @@ export const BottomTabNavigator = () => {
             tabBarStyle: {
               height: SCREEN_HEIGHT / 12,
               paddingTop: 1,
-              backgroundColor: currentTheme.background,
+
               borderTopWidth: 1,
               borderTopColor: currentTheme.background2,
               shadowColor: "#000",
@@ -525,7 +485,7 @@ export const BottomTabNavigator = () => {
           tabBarStyle: {
             height: SCREEN_HEIGHT / 12,
             paddingTop: 1,
-            backgroundColor: currentTheme.background,
+
             borderTopWidth: 1,
             borderTopColor: currentTheme.background2,
             shadowColor: "#000",
@@ -546,12 +506,7 @@ export const BottomTabNavigator = () => {
       {/** Profile screen, profile stack screens inside tab */}
       <Tab.Screen
         name="Profile"
-        children={() => (
-          <ProfileStack
-            navigation={navigation}
-            setScrollY={setProfileScrollY}
-          />
-        )}
+        children={() => <ProfileStack navigation={navigation} />}
         options={{
           tabBarLabel: "",
           tabBarInactiveTintColor: currentTheme.disabled,
@@ -559,7 +514,7 @@ export const BottomTabNavigator = () => {
           tabBarStyle: {
             height: SCREEN_HEIGHT / 12,
             paddingTop: 1,
-            backgroundColor: currentTheme.background,
+
             borderTopWidth: 1,
             borderTopColor: currentTheme.background2,
             shadowColor: "#000",
@@ -577,7 +532,6 @@ export const BottomTabNavigator = () => {
               {...props}
               currentUser={currentUser}
               currentTheme={currentTheme}
-              scrollY={profileScrollY}
             />
           ),
         }}

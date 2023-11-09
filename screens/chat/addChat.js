@@ -1,6 +1,6 @@
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import axios from "axios";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import {
   Alert,
   Animated,
@@ -25,6 +25,11 @@ import {
 } from "../../redux/chat";
 import { Search } from "../../screens/chat/search";
 import { FontAwesome } from "@expo/vector-icons";
+import { setBlur, setScreenModal } from "../../redux/app";
+import { RouteNameContext } from "../../context/routName";
+import { Language } from "../../context/language";
+import { BackDrop } from "../../components/backDropLoader";
+import { BlurView } from "expo-blur";
 
 /**
  * Add new chat component in chat.
@@ -50,6 +55,7 @@ export const AddChat = ({}) => {
 
   // defines loading state
   const [loading, setLoading] = useState(true);
+  const [backdropLoader, setBackdropLoader] = useState(false);
 
   // defines followings list, where new chat user choise from
   const [followings, setFollowings] = useState([]);
@@ -113,7 +119,7 @@ export const AddChat = ({}) => {
           }
         }, prev);
       });
-      setPage(page + 1);
+      setPage((prev) => prev + 1);
     } catch (error) {
       console.log(error.response.data.message);
     }
@@ -123,7 +129,10 @@ export const AddChat = ({}) => {
     get chat room function 
   */
 
+  const route = useRoute();
+
   const GetChatRoom = async (member2, userObj) => {
+    setBackdropLoader(true);
     // creatue new chat object
     let newChat = {
       room: currentUser?._id + member2.member2Id,
@@ -139,11 +148,6 @@ export const AddChat = ({}) => {
       lastMessageSeen: "",
     };
     try {
-      // navigate to room passed new chat and user in route
-      navigation.navigate("Room", {
-        newChat,
-        user: userObj,
-      });
       // add new chat in mongoDB
       const response = await axios.post(backendUrl + "/api/v1/chats/", {
         room: currentUser?._id + member2.member2Id,
@@ -156,12 +160,25 @@ export const AddChat = ({}) => {
         status: "read",
         lastMessageSeen: "",
       });
+      // navigate to room passed new chat and user in route
+      dispatch(
+        setScreenModal({
+          active: true,
+          screen: "Room",
+          data: {
+            newChat: newChat,
+            user: userObj,
+          },
+        })
+      );
       // define new chat in redux
       dispatch(setCurrentChat(response.data.data.chat));
       // rerender rooms
       dispatch(setRerederRooms());
       // close add chat component
       dispatch(setOpenAddChat(false));
+      dispatch(setBlur(false));
+      setBackdropLoader(false);
     } catch (error) {
       if (error.response) {
         Alert.alert(
@@ -179,6 +196,7 @@ export const AddChat = ({}) => {
         Alert.alert("An error occurred. Please try again.");
       }
       console.log(error.config);
+      setBackdropLoader(false);
     }
   };
 
@@ -190,72 +208,87 @@ export const AddChat = ({}) => {
       transparent
       animationType="slide"
       isVisible={openAddChat}
-      onRequestClose={() => dispatch(setOpenAddChat(false))}
+      onRequestClose={() => {
+        dispatch(setBlur(false));
+        dispatch(setOpenAddChat(false));
+      }}
     >
-      <Pressable
-        onPress={() => dispatch(setOpenAddChat(false))}
+      <BackDrop loading={backdropLoader} setLoading={setBackdropLoader} />
+      <BlurView
+        intensity={60}
+        tint="dark"
         style={{
           flex: 1,
-          width: "100%",
-          zIndex: 100,
-          height: "100%",
-          alignItems: "center",
-          paddingTop: 70,
-          backgroundColor: currentTheme.background2,
         }}
       >
-        <View
-          style={[
-            styles.modalContent,
-            {
-              backgroundColor: currentTheme.background,
-              borderWidth: 1.5,
-              borderBottomWidth: 0,
-              borderColor: currentTheme.pink,
-              borderTopLeftRadius: 20,
-              borderTopRightRadius: 20,
-              flex: 1,
-            },
-          ]}
+        <Pressable
+          onPress={() => {
+            dispatch(setBlur(false));
+            dispatch(setOpenAddChat(false));
+          }}
+          style={{
+            flex: 1,
+            width: "100%",
+            zIndex: 100,
+            height: "100%",
+            alignItems: "center",
+            paddingTop: 70,
+            // backgroundColor: currentTheme.background2,
+          }}
         >
           <View
-            style={{ marginBottom: 8, width: "100%", alignItems: "center" }}
+            style={[
+              styles.modalContent,
+              {
+                // backgroundColor: currentTheme.background,
+                borderWidth: 1.5,
+                borderBottomWidth: 0,
+                borderColor: currentTheme.pink,
+                borderTopLeftRadius: 20,
+                borderTopRightRadius: 20,
+                flex: 1,
+              },
+            ]}
           >
-            <Search search={search} setSearch={setSearch} />
+            <View
+              style={{ marginBottom: 8, width: "100%", alignItems: "center" }}
+            >
+              <Search search={search} setSearch={setSearch} />
+            </View>
+            <>
+              {loading ? (
+                <View
+                  style={{
+                    flex: 1,
+                    height: 500,
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <ActivityIndicator size="small" color={currentTheme.pink} />
+                </View>
+              ) : (
+                <FlatList
+                  data={followings?.filter((i, x) =>
+                    i.name?.toLowerCase()?.includes(search?.toLocaleLowerCase())
+                  )}
+                  renderItem={({ item, index }) => (
+                    <RenderItem
+                      key={index}
+                      item={item}
+                      GetChatRoom={GetChatRoom}
+                      currentTheme={currentTheme}
+                    />
+                  )}
+                  keyExtractor={(item, index) => index.toString()}
+                  onEndReached={AddAudience} // Add this function to handle the bottom reach
+                  onEndReachedThreshold={0.5} // This indicates at what point (as a threshold) should the onEndReached be triggered, 0.5 is halfway.
+                />
+              )}
+            </>
           </View>
-          <>
-            {loading ? (
-              <View
-                style={{
-                  flex: 1,
-                  height: 500,
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <ActivityIndicator size="small" color={currentTheme.pink} />
-              </View>
-            ) : (
-              <FlatList
-                data={followings?.filter((i, x) =>
-                  i.name?.toLowerCase()?.includes(search?.toLocaleLowerCase())
-                )}
-                renderItem={({ item, index }) => (
-                  <RenderItem
-                    key={index}
-                    item={item}
-                    GetChatRoom={GetChatRoom}
-                    currentTheme={currentTheme}
-                  />
-                )}
-                keyExtractor={(item, index) => index.toString()}
-                onEndReached={AddAudience} // Add this function to handle the bottom reach
-                onEndReachedThreshold={0.5} // This indicates at what point (as a threshold) should the onEndReached be triggered, 0.5 is halfway.
-              />
-            )}
-          </>
-        </View>
-      </Pressable>
+        </Pressable>
+      </BlurView>
     </Modal>
   );
 };
@@ -292,6 +325,17 @@ const styles = StyleSheet.create({
  */
 
 const RenderItem = ({ item, GetChatRoom, currentTheme }) => {
+  const language = Language();
+  let type;
+  if (item?.type === "specialist") {
+    type = language?.language?.Main?.feedCard?.specialist;
+  } else if (item?.type === "shop") {
+    type = language?.language?.Marketplace?.marketplace?.shop;
+  } else if (item?.type === "beautycenter") {
+    type = language?.language?.Auth?.auth?.beautySalon;
+  } else {
+    type = language?.language?.Auth?.auth?.user;
+  }
   return (
     <TouchableOpacity
       activeOpacity={0.8}
@@ -394,11 +438,7 @@ const RenderItem = ({ item, GetChatRoom, currentTheme }) => {
           paddingRight: 8,
         }}
       >
-        {item.type === "beautycenter"
-          ? "Beauty Salon"
-          : item.type === "specialist"
-          ? "Specialist"
-          : item?.type}
+        {item?.username?.length > 0 ? item?.username : type}
       </Text>
     </TouchableOpacity>
   );

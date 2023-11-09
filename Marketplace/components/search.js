@@ -11,7 +11,7 @@ import React, { useEffect, useState } from "react";
 import { Language } from "../../context/language";
 import { darkTheme, lightTheme } from "../../context/theme";
 import { useSelector, useDispatch } from "react-redux";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import { FontAwesome, MaterialIcons, Fontisto } from "@expo/vector-icons";
 import axios from "axios";
 import { ProceduresOptions } from "../../datas/registerDatas";
@@ -19,8 +19,10 @@ import { CacheableImage } from "../../components/cacheableImage";
 import FilterPopup from "./marketplaceFilter";
 import { Circle } from "../../components/skeltons";
 import { ActivityIndicator } from "react-native-paper";
+import { setScreenModal, setUserScreenModal } from "../../redux/app";
+import { Header } from "../../components/header";
 
-const Search = () => {
+const Search = ({ hideModal }) => {
   // language state
   const language = Language();
 
@@ -203,133 +205,147 @@ const Search = () => {
   const [focus, setFocus] = useState(false);
 
   return (
-    <View>
-      <FilterPopup
-        openFilter={openFilter}
-        setOpenFilter={setOpenFilter}
-        categories={categories}
-        brands={brandsList}
-        brand={brands}
-        setBrands={setBrands}
-        categoryFilter={categoryFilter}
-        setCategoryFilter={setCategoryFilter}
-        minPrice={minPrice}
-        setMinPrice={setMinPrice}
-        maxPrice={maxPrice}
-        setMaxPrice={setMaxPrice}
-        discounts={discounts}
-        setDiscounts={setDiscounts}
-        sex={sex}
-        setSex={setSex}
-        type={type}
-        setType={setType}
+    <>
+      <Header
+        title={language?.language?.Main?.filter?.search}
+        onBack={hideModal}
       />
-      <View
-        style={{
-          paddingHorizontal: 15,
-          flexDirection: "row",
-          alignItems: "center",
-          gap: 5,
-        }}
-      >
+      <View>
+        <FilterPopup
+          openFilter={openFilter}
+          setOpenFilter={setOpenFilter}
+          categories={categories}
+          brands={brandsList}
+          brand={brands}
+          setBrands={setBrands}
+          categoryFilter={categoryFilter}
+          setCategoryFilter={setCategoryFilter}
+          minPrice={minPrice}
+          setMinPrice={setMinPrice}
+          maxPrice={maxPrice}
+          setMaxPrice={setMaxPrice}
+          discounts={discounts}
+          setDiscounts={setDiscounts}
+          sex={sex}
+          setSex={setSex}
+          type={type}
+          setType={setType}
+        />
         <View
           style={{
-            width: "90%",
-            height: 40,
-            borderRadius: 50,
-            borderWidth: 1,
-            borderColor: focus ? currentTheme.pink : currentTheme.line,
+            paddingHorizontal: 15,
             flexDirection: "row",
             alignItems: "center",
-            // justifyContent: "center",
-            paddingHorizontal: 15,
-            // marginLeft: "3%",
+            gap: 5,
           }}
         >
-          <View>
-            <View
-              style={{ flexDirection: "row", gap: 8, alignItems: "center" }}
-            >
-              <FontAwesome name="search" size={20} color={currentTheme.pink} />
-              <TextInput
-                value={search}
-                placeholder={
-                  language?.language?.Marketplace?.marketplace?.search
-                }
-                placeholderTextColor={currentTheme.disabled}
-                autoFocus
-                style={{
-                  width: "90%",
-                  height: "100%",
-                  color: currentTheme.font,
-                  letterSpacing: 0.3,
-                }}
-                onFocus={() => setFocus(true)}
-                onBlur={() => setFocus(false)}
-                onChangeText={(val) => setSearch(val)}
-              />
+          <View
+            style={{
+              width: "90%",
+              height: 40,
+              borderRadius: 50,
+              borderWidth: 1,
+              borderColor: focus ? currentTheme.pink : currentTheme.line,
+              flexDirection: "row",
+              alignItems: "center",
+              // justifyContent: "center",
+              paddingHorizontal: 15,
+              // marginLeft: "3%",
+            }}
+          >
+            <View>
+              <View
+                style={{ flexDirection: "row", gap: 8, alignItems: "center" }}
+              >
+                <FontAwesome
+                  name="search"
+                  size={20}
+                  color={currentTheme.pink}
+                />
+                <TextInput
+                  value={search}
+                  placeholder={
+                    language?.language?.Marketplace?.marketplace?.search
+                  }
+                  placeholderTextColor={currentTheme.disabled}
+                  autoFocus
+                  style={{
+                    width: "90%",
+                    height: "100%",
+                    color: currentTheme.font,
+                    letterSpacing: 0.3,
+                  }}
+                  onFocus={() => setFocus(true)}
+                  onBlur={() => setFocus(false)}
+                  onChangeText={(val) => setSearch(val)}
+                />
+              </View>
             </View>
-          </View>
 
-          {search?.length > 0 && (
-            <Pressable onPress={() => setSearch("")}>
-              <Text style={{ color: "red" }}>X</Text>
-            </Pressable>
-          )}
+            {search?.length > 0 && (
+              <Pressable onPress={() => setSearch("")}>
+                <Text style={{ color: "red" }}>X</Text>
+              </Pressable>
+            )}
+          </View>
+          <TouchableOpacity
+            activeOpacity={0.9}
+            style={{ padding: 5 }}
+            onPress={() => setOpenFilter(true)}
+          >
+            {total > 0 && (
+              <View
+                style={{
+                  backgroundColor: currentTheme.pink,
+                  width: 15,
+                  height: 15,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  borderRadius: 50,
+                  position: "absolute",
+                  right: 0,
+                  zIndex: 1,
+                }}
+              >
+                <Text style={{ fontSize: 10, color: "#fff" }}>{total}</Text>
+              </View>
+            )}
+            <MaterialIcons
+              color={currentTheme.disabled}
+              name="list"
+              size={26}
+            />
+          </TouchableOpacity>
         </View>
-        <TouchableOpacity
-          activeOpacity={0.9}
-          style={{ padding: 5 }}
-          onPress={() => setOpenFilter(true)}
-        >
-          {total > 0 && (
-            <View
-              style={{
-                backgroundColor: currentTheme.pink,
-                width: 15,
-                height: 15,
-                alignItems: "center",
-                justifyContent: "center",
-                borderRadius: 50,
-                position: "absolute",
-                right: 0,
-                zIndex: 1,
-              }}
-            >
-              <Text style={{ fontSize: 10, color: "#fff" }}>{total}</Text>
-            </View>
-          )}
-          <MaterialIcons color={currentTheme.disabled} name="list" size={26} />
-        </TouchableOpacity>
+        {loading ? (
+          <View style={{ height: 500, justifyContent: "center" }}>
+            <ActivityIndicator size="large" color={currentTheme.pink} />
+          </View>
+        ) : (
+          <ScrollView
+            contentContainerStyle={{
+              gap: 4,
+              paddingHorizontal: 8,
+              paddingBottom: 60,
+              marginTop: 15,
+            }}
+            onScroll={onScroll}
+            scrollEventThrottle={1}
+          >
+            {list?.map((item, index) => {
+              return (
+                <ProductItem
+                  key={index}
+                  item={item}
+                  currentTheme={currentTheme}
+                  navigation={navigation}
+                />
+              );
+            })}
+          </ScrollView>
+        )}
       </View>
-      {loading ? (
-        <View style={{ height: 500, justifyContent: "center" }}>
-          <ActivityIndicator size="large" color={currentTheme.pink} />
-        </View>
-      ) : (
-        <ScrollView
-          contentContainerStyle={{
-            gap: 4,
-            paddingHorizontal: 8,
-            paddingBottom: 60,
-            marginTop: 15,
-          }}
-          onScroll={onScroll}
-          scrollEventThrottle={1}
-        >
-          {list?.map((item, index) => {
-            return (
-              <ProductItem
-                key={index}
-                item={item}
-                currentTheme={currentTheme}
-                navigation={navigation}
-              />
-            );
-          })}
-        </ScrollView>
-      )}
-    </View>
+    </>
   );
 };
 
@@ -341,14 +357,23 @@ const ProductItem = ({ item, navigation, currentTheme }) => {
   // categories
   const categoriesList = ProceduresOptions();
 
+  const route = useRoute();
+
+  const dispatch = useDispatch();
+
   const [loading, setLoading] = useState(true);
   return (
     <TouchableOpacity
       activeOpacity={0.8}
       onPress={() =>
-        navigation.navigate("Product", {
-          product: item,
-        })
+        dispatch(
+          setScreenModal({
+            active: true,
+            screen: "Product",
+            data: item,
+            route: route.name,
+          })
+        )
       }
       style={{
         width: "100%",
@@ -371,8 +396,8 @@ const ProductItem = ({ item, navigation, currentTheme }) => {
         {item.owner.cover?.length > 0 ? (
           <Pressable
             onPress={() =>
-              navigation.navigate("User", {
-                user: item.owner,
+              navigation.navigate("UserVisit", {
+                user: item?.owner,
               })
             }
           >
@@ -385,8 +410,8 @@ const ProductItem = ({ item, navigation, currentTheme }) => {
         ) : (
           <Pressable
             onPress={() =>
-              navigation.navigate("User", {
-                user: item.owner,
+              navigation.navigate("UserVisit", {
+                user: item?.owner,
               })
             }
             style={{
@@ -406,8 +431,8 @@ const ProductItem = ({ item, navigation, currentTheme }) => {
         )}
         <Pressable
           onPress={() =>
-            navigation.navigate("User", {
-              user: item.owner,
+            navigation.navigate("UserVisit", {
+              user: item?.owner,
             })
           }
           style={{

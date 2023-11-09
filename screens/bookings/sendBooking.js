@@ -23,12 +23,13 @@ import { Language } from "../../context/language";
 import { ProceduresOptions } from "../../datas/registerDatas";
 import { BackDrop } from "../../components/backDropLoader";
 import { sendNotification } from "../../components/pushNotifications";
+import { Header } from "../../components/header";
 
 /**
  * Send booking component to specialist or to salon
  */
 
-export const SendBooking = ({ route }) => {
+export const SendBooking = ({ hideModal }) => {
   // loading state
   const [isLoaded, setIsLoaded] = useState(true); // new state variable
 
@@ -36,7 +37,7 @@ export const SendBooking = ({ route }) => {
   const navigation = useNavigation();
 
   // define target specialist or salon
-  const targetUser = route.params.user;
+  const targetUser = useSelector((state) => state.storeApp.screenModal.data);
 
   // defines redux dispatch
   const dispatch = useDispatch();
@@ -70,7 +71,7 @@ export const SendBooking = ({ route }) => {
   const [price, setPrice] = useState("");
 
   // defines procedure currency
-  const [currency, setCurrency] = useState(targetUser.currency);
+  const [currency, setCurrency] = useState(targetUser?.currency);
 
   // defines procedure duration
   const [duration, setDuration] = useState(null);
@@ -308,9 +309,9 @@ export const SendBooking = ({ route }) => {
             name: currentUser.name,
           },
           seller: {
-            id: targetUser._id,
-            phone: targetUser.phone,
-            name: targetUser.name,
+            id: targetUser?._id,
+            phone: targetUser?.phone,
+            name: targetUser?.name,
           },
           bookingProcedure: procedure.value,
           bookingSum: procedure?.price,
@@ -357,6 +358,10 @@ export const SendBooking = ({ route }) => {
 
   return (
     <>
+      <Header
+        onBack={hideModal}
+        title={language?.language?.Bookings?.bookings?.createBooking}
+      />
       {sending && <BackDrop loading={sending} setLoading={setSending} />}
       {isLoaded ? (
         <View
@@ -374,7 +379,7 @@ export const SendBooking = ({ route }) => {
           bounces={Platform.OS === "ios" ? false : undefined}
           overScrollMode={Platform.OS === "ios" ? "never" : "always"}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 30, paddingTop: 20 }}
+          contentContainerStyle={{ paddingBottom: 70, paddingTop: 20 }}
           style={{
             flex: 1,
             borderTopWidth: 1,
@@ -497,10 +502,17 @@ export const SendBooking = ({ route }) => {
                 </View>
               ) : (
                 <>
-                  {!dayOffs.includes(isTodayDay) &&
+                  {!dayOffs?.includes(isTodayDay) &&
                     result?.map((item, index) => {
                       return (
-                        <View
+                        <Pressable
+                          onPress={
+                            item.status === "Available" ||
+                            item.status === "Доступно" ||
+                            item.status === "ხელმისაწვდომი"
+                              ? () => setTime(item)
+                              : () => Alert.alert("This time isn't Available!")
+                          }
                           key={index}
                           style={{
                             flexDirection: "row",
@@ -530,18 +542,13 @@ export const SendBooking = ({ route }) => {
                           >
                             {item?.time}
                           </Text>
-                          <Pressable
-                            onPress={
-                              item.status === "Available"
-                                ? () => setTime(item)
-                                : () =>
-                                    Alert.alert("This time isn't Available!")
-                            }
-                          >
+                          <View>
                             <Text
                               style={{
                                 color:
-                                  item.status === "Available"
+                                  item.status === "Available" ||
+                                  item.status === "Доступно" ||
+                                  item.status === "ხელმისაწვდომი"
                                     ? currentTheme.pink
                                     : currentTheme.font,
                                 letterSpacing: 0.2,
@@ -550,8 +557,8 @@ export const SendBooking = ({ route }) => {
                             >
                               {item.status}
                             </Text>
-                          </Pressable>
-                        </View>
+                          </View>
+                        </Pressable>
                       );
                     })}
                 </>

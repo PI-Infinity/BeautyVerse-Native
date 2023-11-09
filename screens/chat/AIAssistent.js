@@ -18,6 +18,7 @@ import { Language } from "../../context/language";
 import { useSocket } from "../../context/socketContext";
 import { darkTheme, lightTheme } from "../../context/theme";
 import { ProceduresOptions } from "../../datas/registerDatas";
+import { Header } from "../../components/header";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -25,7 +26,7 @@ const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
  * Chat room
  */
 
-export const AIAssistent = ({ route }) => {
+export const AIAssistent = ({ screenHeight, hideModal }) => {
   // defines socket server
   const socket = useSocket();
 
@@ -97,9 +98,6 @@ export const AIAssistent = ({ route }) => {
   // defines language
   const language = Language();
 
-  // getting screen height passed as route from parent screen
-  const { screenHeight } = route.params;
-
   // rerender messages redux state
   const rerenderMessages = useSelector(
     (state) => state.storeChat.rerenderMessages
@@ -134,7 +132,11 @@ export const AIAssistent = ({ route }) => {
   }, [messages]);
 
   return (
-    <>
+    <View style={{ height: SCREEN_HEIGHT - 130 }}>
+      <Header
+        title={language.language.Chat.chat.aiAssistant}
+        onBack={hideModal}
+      />
       <ScrollView
         ref={scrollRef}
         contentContainerStyle={{
@@ -211,7 +213,7 @@ export const AIAssistent = ({ route }) => {
         SendMessage={SendMessage}
         scrollRef={scrollRef}
       />
-    </>
+    </View>
   );
 };
 

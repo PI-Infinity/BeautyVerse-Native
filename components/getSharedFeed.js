@@ -1,10 +1,13 @@
 import { useState, useEffect } from "react";
 import { Linking } from "react-native";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import axios from "axios";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
+import { setScreenModal } from "../redux/app";
 
 const GetSharedFeed = () => {
+  const dispatch = useDispatch();
+  const route = useRoute();
   const navigation = useNavigation();
   const backendUrl = useSelector((state) => state.storeApp.backendUrl);
   const currentUser = useSelector((state) => state.storeUser.currentUser);
@@ -32,10 +35,16 @@ const GetSharedFeed = () => {
             );
 
             if (feedResponse.data.data.feed) {
-              navigation.navigate("UserFeed", {
-                feed: feedResponse.data.data.feed,
-                user: userResponse.data.data.user,
-              });
+              dispatch(
+                setScreenModal({
+                  active: true,
+                  screen: "Feed",
+                  data: {
+                    feed: feedResponse.data.data.feed,
+                    user: userResponse.data.data.user,
+                  },
+                })
+              );
             }
           }
         } catch (error) {

@@ -10,13 +10,11 @@ import { RouteNameContext } from "../context/routName";
  * Search universal component
  */
 
-export const Search = ({ navigation, currentTheme }) => {
+export const Search = ({ onPress, currentTheme, scrollRef }) => {
   const language = Language();
   const dispatch = useDispatch();
 
   const search = useSelector((state) => state.storeFilter.searchInput);
-
-  const routeName = useContext(RouteNameContext);
 
   return (
     <Pressable style={{ width: "100%", alignItems: "center" }}>
@@ -44,11 +42,7 @@ export const Search = ({ navigation, currentTheme }) => {
             borderRadius: 50,
             letterSpacing: 0.3,
           }}
-          onFocus={
-            routeName === "Filter"
-              ? () => navigation.navigate("Search")
-              : () => navigation.navigate("Search1")
-          }
+          onFocus={onPress}
           showSoftInputOnFocus={false}
           // onChangeText={updateSearch}
           value={search}
@@ -64,37 +58,6 @@ export const Search = ({ navigation, currentTheme }) => {
           </Pressable>
         )}
       </View>
-      {/* <SearchBar
-        // round={true}
-        showCancel={true}
-        // showLoading={true}
-        // lightTheme={true}
-        onFocus={() => navigation.navigate("Search")}
-        showSoftInputOnFocus={false}
-        containerStyle={{
-          height: 45,
-          elevation: 0,
-          flexDirection: "row",
-          justifyContent: "center",
-          alignItems: "center",
-          // paddingLeft: 15,
-          // paddingRight: 15,
-          paddingTop: 0,
-          backgroundColor: currentTheme.background,
-          borderWidth: 0, //no effect
-          shadowColor: "white", //no effect
-          borderBottomColor: "transparent",
-          borderTopColor: "transparent",
-        }}
-        inputContainerStyle={{
-          height: 35,
-          width: "100%",
-          backgroundColor: "rgba(255,255,255,0.02)",
-        }}
-        placeholder={language?.language?.Main?.filter?.typeHere}
-        onChangeText={updateSearch}
-        value={search}
-      /> */}
     </Pressable>
   );
 };

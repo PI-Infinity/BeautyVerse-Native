@@ -49,7 +49,7 @@ export const Contact = ({ targetUser }) => {
     <View style={styles.container}>
       {targetUser?.type !== "user" && targetUser?.phone?.phone?.length > 0 && (
         <TouchableOpacity
-          onPress={() => handleLinkPress(`tel:${targetUser.phone.phone}`)}
+          onPress={() => handleLinkPress(`tel:${targetUser?.phone.phone}`)}
           style={[
             styles.item,
             {
@@ -72,7 +72,7 @@ export const Contact = ({ targetUser }) => {
                     { color: currentTheme.font },
                   ]}
                 >
-                  {targetUser.phone.phone}
+                  {targetUser?.phone.phone}
                 </Text>
               </>
             )}
@@ -87,10 +87,10 @@ export const Contact = ({ targetUser }) => {
               height: "100%",
             }}
           >
-            {targetUser.media.whatsapp && (
+            {targetUser?.media.whatsapp && (
               <TouchableOpacity
                 onPress={() => {
-                  handleLinkPress(`https://wa.me/${targetUser.phone.phone}`);
+                  handleLinkPress(`https://wa.me/${targetUser?.phone.phone}`);
                 }}
                 style={[styles.title, {}]}
               >
@@ -101,10 +101,10 @@ export const Contact = ({ targetUser }) => {
                 />
               </TouchableOpacity>
             )}
-            {targetUser.media.telegram && (
+            {targetUser?.media.telegram && (
               <TouchableOpacity
                 onPress={() =>
-                  handleLinkPress(`https://t.me/${targetUser.phone.phone}`)
+                  handleLinkPress(`https://t.me/${targetUser?.phone.phone}`)
                 }
                 style={[styles.title, {}]}
               >
@@ -120,7 +120,7 @@ export const Contact = ({ targetUser }) => {
       )}
 
       <TouchableOpacity
-        onPress={() => handleLinkPress(`mailto:${targetUser.email}`)}
+        onPress={() => handleLinkPress(`mailto:${targetUser?.email}`)}
         style={[
           styles.item,
           { borderWidth: 1, borderColor: currentTheme.line },
@@ -130,12 +130,12 @@ export const Contact = ({ targetUser }) => {
           <Entypo name="email" size={16} color={currentTheme.font} />
         </View>
         <Text style={[styles.value, { color: currentTheme.font }]}>
-          {targetUser.email}
+          {targetUser?.email}
         </Text>
       </TouchableOpacity>
-      {targetUser.media.web && (
+      {targetUser?.media.web && (
         <TouchableOpacity
-          onPress={() => handleLinkPress(`https://${targetUser.media?.web}`)}
+          onPress={() => handleLinkPress(`https://${targetUser?.media?.web}`)}
           style={[
             styles.item,
             { borderWidth: 1, borderColor: currentTheme.line },
@@ -149,14 +149,14 @@ export const Contact = ({ targetUser }) => {
             />
           </View>
           <Text style={[styles.value, { color: currentTheme.font }]}>
-            {targetUser.media.web}
+            {targetUser?.media.web}
           </Text>
         </TouchableOpacity>
       )}
-      {targetUser.media.facebook && (
+      {targetUser?.media.facebook && (
         <TouchableOpacity
           onPress={() =>
-            handleLinkPress(`fb://profile/${targetUser.media?.facebook}`)
+            handleLinkPress(`fb://profile/${targetUser?.media?.facebook}`)
           }
           style={[
             styles.item,
@@ -171,11 +171,11 @@ export const Contact = ({ targetUser }) => {
           </Text>
         </TouchableOpacity>
       )}
-      {targetUser.media.instagram && (
+      {targetUser?.media.instagram && (
         <TouchableOpacity
           onPress={() =>
             handleLinkPress(
-              `https://www.instagram.com/${targetUser.media?.instagram}`
+              `https://www.instagram.com/${targetUser?.media?.instagram}`
             )
           }
           style={[
@@ -187,15 +187,15 @@ export const Contact = ({ targetUser }) => {
             <FontAwesome name="instagram" size={20} color={currentTheme.font} />
           </View>
           <Text style={[styles.value, { color: currentTheme.font }]}>
-            {targetUser.media.instagram}
+            {targetUser?.media.instagram}
           </Text>
         </TouchableOpacity>
       )}
-      {targetUser.media.tiktok && (
+      {targetUser?.media.tiktok && (
         <TouchableOpacity
           onPress={() =>
             handleLinkPress(
-              `https://www.tiktok.com/${targetUser.media?.tiktok}`
+              `https://www.tiktok.com/${targetUser?.media?.tiktok}`
             )
           }
           style={[
@@ -205,15 +205,15 @@ export const Contact = ({ targetUser }) => {
         >
           <Text style={[styles.title, {}]}>Tiktok:</Text>
           <Text style={[styles.value, { color: currentTheme.font }]}>
-            {targetUser.media.tiktok}
+            {targetUser?.media.tiktok}
           </Text>
         </TouchableOpacity>
       )}
-      {targetUser.media.youtube && (
+      {targetUser?.media.youtube && (
         <TouchableOpacity
           onPress={() =>
             handleLinkPress(
-              `https://www.youtube.com/${targetUser.media?.youtube}`
+              `https://www.youtube.com/${targetUser?.media?.youtube}`
             )
           }
           style={[
@@ -225,7 +225,7 @@ export const Contact = ({ targetUser }) => {
             <FontAwesome name="youtube" size={20} color={currentTheme.font} />
           </View>
           <Text style={[styles.value, { color: currentTheme.font }]}>
-            {targetUser.media.youtube}
+            {targetUser?.media.youtube}
           </Text>
         </TouchableOpacity>
       )}
@@ -270,7 +270,7 @@ export const Contact = ({ targetUser }) => {
             {language?.language?.User?.userPage?.country}:
           </Text>
           <Text style={{ color: currentTheme.font, letterSpacing: 0.3 }}>
-            {targetUser.address[activeAddress].country}
+            {targetUser?.address[activeAddress].country}
           </Text>
         </View>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
@@ -284,7 +284,7 @@ export const Contact = ({ targetUser }) => {
             {language?.language?.User?.userPage?.region}:
           </Text>
           <Text style={{ color: currentTheme.font, letterSpacing: 0.3 }}>
-            {targetUser.address[activeAddress].region}
+            {targetUser?.address[activeAddress].region}
           </Text>
         </View>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
@@ -298,10 +298,10 @@ export const Contact = ({ targetUser }) => {
             {language?.language?.User?.userPage?.city}:
           </Text>
           <Text style={{ color: currentTheme.font, letterSpacing: 0.3 }}>
-            {targetUser.address[activeAddress]?.city?.replace("'", "")}
+            {targetUser?.address[activeAddress]?.city?.replace("'", "")}
           </Text>
         </View>
-        {targetUser.address[activeAddress]?.district?.length > 0 && (
+        {targetUser?.address[activeAddress]?.district?.length > 0 && (
           <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
             <Text
               style={{
@@ -313,11 +313,11 @@ export const Contact = ({ targetUser }) => {
               {language?.language?.User?.userPage?.district}:
             </Text>
             <Text style={{ color: currentTheme.font, letterSpacing: 0.3 }}>
-              {targetUser.address[activeAddress]?.district}
+              {targetUser?.address[activeAddress]?.district}
             </Text>
           </View>
         )}
-        {targetUser.address[activeAddress]?.street?.length > 0 && (
+        {targetUser?.address[activeAddress]?.street?.length > 0 && (
           <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
             <Text
               style={{
@@ -329,11 +329,11 @@ export const Contact = ({ targetUser }) => {
               {language?.language?.User?.userPage?.street}:
             </Text>
             <Text style={{ color: currentTheme.font, letterSpacing: 0.3 }}>
-              {targetUser.address[activeAddress]?.street}
+              {targetUser?.address[activeAddress]?.street}
             </Text>
           </View>
         )}
-        {targetUser.address[activeAddress]?.number?.length > 0 && (
+        {targetUser?.address[activeAddress]?.number?.length > 0 && (
           <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
             <Text
               style={{
@@ -345,7 +345,7 @@ export const Contact = ({ targetUser }) => {
               {language?.language?.User?.userPage?.number}:
             </Text>
             <Text style={{ color: currentTheme.font, letterSpacing: 0.3 }}>
-              {targetUser.address[activeAddress]?.number}
+              {targetUser?.address[activeAddress]?.number}
             </Text>
           </View>
         )}
@@ -377,7 +377,7 @@ export const Contact = ({ targetUser }) => {
               />
             </TouchableOpacity>
           )}
-          {activeAddress < targetUser.address?.length - 1 && (
+          {activeAddress < targetUser?.address?.length - 1 && (
             <TouchableOpacity
               style={{
                 width: 30,
@@ -410,8 +410,8 @@ export const Contact = ({ targetUser }) => {
           >
             <Map
               mapViewRef={mapViewRef}
-              latitude={targetUser.address[activeAddress]?.latitude}
-              longitude={targetUser.address[activeAddress].longitude}
+              latitude={targetUser?.address[activeAddress]?.latitude}
+              longitude={targetUser?.address[activeAddress].longitude}
               height={300}
             />
           </View>

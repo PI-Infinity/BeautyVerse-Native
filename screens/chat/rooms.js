@@ -1,6 +1,6 @@
 import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import axios from "axios";
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import {
   Alert,
   Dimensions,
@@ -25,6 +25,9 @@ import {
   setRerenderScroll,
   setRooms,
 } from "../../redux/chat";
+import { setScreenModal } from "../../redux/app";
+import { RouteNameContext } from "../../context/routName";
+import { useRoute } from "@react-navigation/native";
 
 /**
  * Rooms component
@@ -176,7 +179,8 @@ const RoomItem = ({ targetChatMember, item, navigation, socket }) => {
       const response = await axios.get(
         backendUrl + `/api/v1/users/${targetChatMember?.id}`
       );
-      dispatch(setChatUser(response.data.data.user));
+      dispatch(setChatUser());
+
       setUserObj(response.data.data.user);
     } catch (error) {
       console.log(error);
@@ -195,10 +199,20 @@ const RoomItem = ({ targetChatMember, item, navigation, socket }) => {
   /* 
     get chat room on press and navigate
   */
+  const route = useRoute();
+
   const GetChatRoom = async (Room) => {
     try {
       dispatch(setCurrentChat(Room));
-      navigation.navigate("Room", { user: userObj });
+
+      dispatch(
+        setScreenModal({
+          active: true,
+          screen: "Room",
+          data: userObj,
+          route: route.name,
+        })
+      );
       if (Room.lastSender !== currentUser._id) {
         await axios.patch(backendUrl + "/api/v1/chats/" + Room.room, {
           status: "read",

@@ -5,6 +5,7 @@ import {
   Pressable,
   Dimensions,
   Alert,
+  SafeAreaView,
 } from "react-native";
 import React, { useState } from "react";
 import GoogleAutocomplete from "../../../components/mapAutocomplete";
@@ -16,12 +17,13 @@ import { BackDrop } from "../../../components/backDropLoader";
 import Map from "../../../components/map";
 import { Language } from "../../../context/language";
 import AlertMessage from "../../../components/alertMessage";
+import { BlurView } from "expo-blur";
 
 /**
  * Add new address screen
  */
 
-export const EditAddress = ({ navigation, route }) => {
+export const EditAddress = ({ target, setOpenModal, openModal }) => {
   // define theme
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
@@ -50,6 +52,7 @@ export const EditAddress = ({ navigation, route }) => {
   // add address
   const Edit = async () => {
     if (!address.street) {
+      setOpenModal({ active: false, target: {} });
       return setAlert({
         active: true,
         text: language?.language?.Auth?.auth?.wrongAddress,
@@ -59,7 +62,7 @@ export const EditAddress = ({ navigation, route }) => {
     setLoading(true);
     try {
       await axios.patch(
-        `${backendUrl}/api/v1/users/${currentUser?._id}/address/${route.params.address._id}`,
+        `${backendUrl}/api/v1/users/${currentUser?._id}/address/${target.address._id}`,
         {
           country: address.country,
           region: address.region,
@@ -76,7 +79,7 @@ export const EditAddress = ({ navigation, route }) => {
       setAddress("");
       setTimeout(() => {
         setLoading(false);
-        navigation.navigate("Addresses");
+        setOpenModal({ active: false, target: {} });
       }, 500);
     } catch (error) {
       console.log(error.response);
@@ -85,49 +88,53 @@ export const EditAddress = ({ navigation, route }) => {
     }
   };
   return (
-    <View style={{ alignItems: "center" }}>
+    <SafeAreaView style={{ alignItems: "center", flex: 1 }}>
       {loading && <BackDrop loading={loading} setLoading={setLoading} />}
-      <View>
-        <GoogleAutocomplete
-          setAddress={setAddress}
-          currentTheme={currentTheme}
-        />
-        <View style={{ marginBottom: 35 }}>
-          <Map
-            latitude={
-              address !== "" ? address?.latitude : route.params.address.latitude
-            }
-            longitude={
-              address !== ""
-                ? address.longitude
-                : route.params.address.longitude
-            }
-            height={250}
+      <BlurView
+        style={{ flex: 1, width: "100%", alignItems: "center", paddingTop: 30 }}
+        intensity={60}
+        tint="dark"
+      >
+        <View style={{ gap: 10 }}>
+          <GoogleAutocomplete
+            setAddress={setAddress}
+            currentTheme={currentTheme}
+          />
+          <View style={{ marginBottom: 35 }}>
+            <Map
+              latitude={
+                address !== "" ? address?.latitude : target.address.latitude
+              }
+              longitude={
+                address !== "" ? address.longitude : target.address.longitude
+              }
+              height={250}
+            />
+          </View>
+        </View>
+        <Pressable
+          style={{
+            padding: 10,
+            backgroundColor: currentTheme.pink,
+            width: "45%",
+            borderRadius: 50,
+            alignItems: "center",
+          }}
+          onPress={Edit}
+        >
+          <Text style={{ color: "#f1f1f1" }}>Save</Text>
+        </Pressable>
+        <View style={{ position: "absolute", zIndex: 19000 }}>
+          <AlertMessage
+            isVisible={alert.active}
+            type={alert.type}
+            text={alert.text}
+            onClose={() => setAlert({ active: false, text: "" })}
+            Press={() => setAlert({ active: false, text: "" })}
           />
         </View>
-      </View>
-      <Pressable
-        style={{
-          padding: 10,
-          backgroundColor: currentTheme.pink,
-          width: "45%",
-          borderRadius: 50,
-          alignItems: "center",
-        }}
-        onPress={Edit}
-      >
-        <Text style={{ color: "#f1f1f1" }}>Save</Text>
-      </Pressable>
-      <View style={{ position: "absolute", zIndex: 19000 }}>
-        <AlertMessage
-          isVisible={alert.active}
-          type={alert.type}
-          text={alert.text}
-          onClose={() => setAlert({ active: false, text: "" })}
-          Press={() => setAlert({ active: false, text: "" })}
-        />
-      </View>
-    </View>
+      </BlurView>
+    </SafeAreaView>
   );
 };
 

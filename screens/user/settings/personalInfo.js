@@ -20,14 +20,15 @@ import { setRerenderCurrentUser } from "../../../redux/rerenders";
 import { setCurrentUser } from "../../../redux/user";
 import CountryPicker from "react-native-country-picker-modal";
 import AlertMessage from "../../../components/alertMessage";
+import { Header } from "./header";
 
 /**
  * Personal info screen in settings
  */
 
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
-export const PersonalInfo = () => {
+export const PersonalInfo = ({ hideModal }) => {
   // define language
   const language = Language();
 
@@ -131,22 +132,15 @@ export const PersonalInfo = () => {
 
   return (
     <KeyboardAvoidingView
-      style={{
-        flex: 1,
-        width: "100%",
-        justifyContent: "center",
-        alignItems: "center",
-        gap: 10,
-        zIndex: 100,
-        paddingBottom: 50,
-      }}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
+      <Header onBack={hideModal} title="Personal Info" />
       <ScrollView
         style={styles.container}
-        contentContainerStyle={{ gap: 10, paddingBottom: 70 }}
-        bounces={Platform.OS === "ios" ? false : undefined}
-        overScrollMode={Platform.OS === "ios" ? "never" : "always"}
+        contentContainerStyle={{
+          gap: 10,
+          paddingBottom: 100,
+        }}
       >
         <View
           style={[
@@ -710,10 +704,9 @@ export const PersonalInfo = () => {
 
 const styles = StyleSheet.create({
   container: {
-    padding: 30,
-    paddingTop: 20,
-    paddingBottom: 30,
+    padding: 25,
     width: SCREEN_WIDTH,
+    height: SCREEN_HEIGHT - 150,
   },
   itemContainer: {
     flexDirection: "row",

@@ -9,12 +9,13 @@ import {
 import { useRoute } from "@react-navigation/native";
 import axios from "axios";
 import * as Haptics from "expo-haptics";
-import { useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import {
   Alert,
   Animated,
   Dimensions,
   FlatList,
+  ImageBackground,
   Platform,
   Pressable,
   RefreshControl,
@@ -38,12 +39,12 @@ import {
   setRerenderScroll,
   setRooms,
 } from "../../redux/chat";
-import { Audience } from "../../screens/user/audience";
-import { Contact } from "../../screens/user/contact";
-import { Feeds } from "../../screens/user/feeds";
-import { ProceduresList } from "../../screens/user/procedures";
-import { Statistics } from "../../screens/user/statistics/main";
-import { WorkingInfo } from "../../screens/user/workingInfo";
+import { Audience } from "./audience";
+import { Contact } from "./contact";
+import { Feeds } from "./feeds";
+import { ProceduresList } from "./procedures";
+import { Statistics } from "./statistics/main";
+import { WorkingInfo } from "./workingInfo";
 import {
   setRerenderCurrentUser,
   setRerenderNotifcations,
@@ -56,6 +57,11 @@ import Showroom from "../../Marketplace/components/shworoom";
 import { setRerenderProducts } from "../../redux/Marketplace";
 import { useSocket } from "../../context/socketContext";
 import { Circle } from "../../components/skeltons";
+import { Header } from "./settings/header";
+import { setScreenModal } from "../../redux/app";
+import { setProfileScrollY } from "../../redux/scrolls";
+import { RouteNameContext } from "../../context/routName";
+import { BlurView } from "expo-blur";
 
 /**
  * User Profile Screen
@@ -63,13 +69,10 @@ import { Circle } from "../../components/skeltons";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
-export const User = ({ navigation, user, variant, setScrollY }) => {
+export const UserVisit = ({ route, navigation, variant, hideModal }) => {
   // Initialize language for multi-language support
   const language = Language();
   const dispatch = useDispatch();
-  // Get current route for navigation
-  const route = useRoute();
-
   // socket
   const socket = useSocket();
 
@@ -98,6 +101,9 @@ export const User = ({ navigation, user, variant, setScrollY }) => {
 
   // Get currentUser from global Redux state
   const currentUser = useSelector((state) => state.storeUser.currentUser);
+
+  // Determine target user either from route parameters or currentUser
+  const targetUser = route?.route?.params?.user;
 
   // useEffect to check follower
   useEffect(() => {
@@ -135,15 +141,6 @@ export const User = ({ navigation, user, variant, setScrollY }) => {
   // State for loading indication
   const [loading, setLoading] = useState(true);
 
-  // State for refresh control
-  const [refresh, setRefresh] = useState(false);
-
-  // Determine target user either from route parameters or currentUser
-  const targetUser = route.params?.user || currentUser;
-
-  // State for cover image
-  const [cover, setCover] = useState("");
-
   // A reference used to skip the first run of useEffect
   const profileCleanRef = useRef(true);
 
@@ -164,7 +161,7 @@ export const User = ({ navigation, user, variant, setScrollY }) => {
   // useEffect for setting cover image
   useEffect(() => {
     setLoading(true);
-    // setCover(targetUser.cover + `?rand=${Math.random()}`);
+    // setCover(targetUser?.cover + `?rand=${Math.random()}`);
   }, [targetUser?.cover]);
 
   // Function to handle cover updates
@@ -177,10 +174,7 @@ export const User = ({ navigation, user, variant, setScrollY }) => {
     return string?.charAt(0).toUpperCase() + string?.slice(1);
   }
 
-  // Initialize name and userType
-  const name = capitalizeFirstLetter(targetUser.name);
-
-  const tp = capitalizeFirstLetter(targetUser.type);
+  const tp = capitalizeFirstLetter(targetUser?.type);
   let userType;
   if (tp === "Beautycenter") {
     userType = language?.language?.Auth?.auth?.beautySalon;
@@ -192,13 +186,13 @@ export const User = ({ navigation, user, variant, setScrollY }) => {
 
   // State for active navigator
   const [active, setActive] = useState(
-    targetUser.type === "user" ? 2 : targetUser.type === "shop" ? 0 : 1
+    targetUser?.type === "user" ? 2 : targetUser?.type === "shop" ? 0 : 1
   );
   const navigatorRef = useRef(null);
 
   useEffect(() => {
     setActive(
-      targetUser.type === "user" ? 2 : targetUser?.type === "shop" ? 0 : 1
+      targetUser?.type === "user" ? 2 : targetUser?.type === "shop" ? 0 : 1
     );
     navigatorRef.current.scrollToOffset({ offset: 0, animated: true });
   }, [route]);
@@ -354,13 +348,13 @@ export const User = ({ navigation, user, variant, setScrollY }) => {
           );
         }
         socket.emit("updateUser", {
-          targetId: props.user?._id,
+          targetId: targetUser?._id,
         });
       }
 
       // const data = await response.data;
     } catch (error) {
-      console.error(error.response.data.message);
+      console.error(error);
     }
   };
   // function to unfollow user
@@ -393,8 +387,12 @@ export const User = ({ navigation, user, variant, setScrollY }) => {
     }
   };
 
+  /**
+   * Feeds state
+   */
   // user feeds page in backend
   const [page, setPage] = useState(1);
+
   const [feedsLength, setFeedsLength] = useState(0);
   const [feeds, setFeeds] = useState([]);
 
@@ -435,21 +433,21 @@ export const User = ({ navigation, user, variant, setScrollY }) => {
   const rooms = useSelector((state) => state.storeChat.rooms);
 
   let chatDefined =
-    currentUser._id !== targetUser._id &&
+    currentUser._id !== targetUser?._id &&
     rooms.find(
       (r) =>
         (r.members.member1 === currentUser._id ||
-          r.members.member1 === targetUser._id) &&
+          r.members.member1 === targetUser?._id) &&
         (r.members.member2 === currentUser._id ||
-          r.members.member2 === targetUser._id)
+          r.members.member2 === targetUser?._id)
     );
   // get chat room
   const GetNewChatRoom = async () => {
     let newChat = {
-      room: currentUser?._id + targetUser._id,
+      room: currentUser?._id + targetUser?._id,
       members: {
         member1: currentUser._id,
-        member2: targetUser._id,
+        member2: targetUser?._id,
       },
       lastSender: "",
       lastMessage: "",
@@ -457,7 +455,14 @@ export const User = ({ navigation, user, variant, setScrollY }) => {
       status: "read",
     };
     try {
-      navigation.navigate("Room", { user: targetUser });
+      dispatch(
+        setScreenModal({
+          active: true,
+          screen: "Room",
+          data: targetUser,
+          route: route.name,
+        })
+      );
       const response = await axios.post(backendUrl + "/api/v1/chats/", {
         ...newChat,
       });
@@ -490,14 +495,20 @@ export const User = ({ navigation, user, variant, setScrollY }) => {
     }
   };
 
-  const insets = useSafeAreaInsets();
-
   // get chat room
   const GetChatRoom = async () => {
     const Room = chatDefined;
     try {
       dispatch(setCurrentChat(Room));
-      navigation.navigate("Room", { user: targetUser });
+
+      dispatch(
+        setScreenModal({
+          active: true,
+          screen: "Room",
+          data: targetUser,
+          route: route.name,
+        })
+      );
       if (Room.lastSender !== currentUser._id) {
         await axios.patch(backendUrl + "/api/v1/chats/" + Room.room, {
           status: "read",
@@ -529,7 +540,7 @@ export const User = ({ navigation, user, variant, setScrollY }) => {
   async function AddFeeds(p) {
     try {
       const response = await axios.get(
-        `${backendUrl}/api/v1/feeds/${targetUser._id}/feeds?page=${p}&limit=8&check=${currentUser?._id}`
+        `${backendUrl}/api/v1/feeds/${targetUser?._id}/feeds?page=${p}&limit=8&check=${currentUser?._id}`
       );
       setFeeds((prev) => {
         const newFeeds = response.data.data?.feeds;
@@ -605,7 +616,7 @@ export const User = ({ navigation, user, variant, setScrollY }) => {
         const response = await axios.get(
           backendUrl +
             "/api/v1/marketplace/" +
-            targetUser._id +
+            targetUser?._id +
             "/products?page=1&limit=6&search=" +
             search +
             "&categories=" +
@@ -665,7 +676,7 @@ export const User = ({ navigation, user, variant, setScrollY }) => {
       const response = await axios.get(
         backendUrl +
           "/api/v1/marketplace/" +
-          targetUser._id +
+          targetUser?._id +
           "/products?page=" +
           parseInt(pageSh + 1) +
           "&search=" +
@@ -720,8 +731,8 @@ export const User = ({ navigation, user, variant, setScrollY }) => {
     const isBottom = offsetY + layoutHeight >= contentHeight - 200;
     const canLoadMore = feedsLength > feeds.length;
 
-    if (route.name === "UserProfile") {
-      setScrollY(offsetY);
+    if (route?.name === "UserProfile") {
+      dispatch(setProfileScrollY(offsetY));
     }
 
     if (isBottom && active === 0 && targetUser?.type === "shop") {
@@ -781,6 +792,7 @@ export const User = ({ navigation, user, variant, setScrollY }) => {
         navigation={navigation}
         renderCheck={render}
         setRenderCheck={setRender}
+        hideModal={hideModal}
       />
     );
   }
@@ -819,285 +831,260 @@ export const User = ({ navigation, user, variant, setScrollY }) => {
   };
 
   return (
-    <>
-      <ConfirmPopup
-        isVisible={openPopup}
-        onClose={() => setOpenPopup(false)}
-        onDelete={RemoveCover}
-        title="Are you sure to want delete Cover image?"
-        cancel="Cancel"
-        delet="Delete"
-      />
-      <View>
-        <Animated.View
-          style={{
-            opacity: opacityValue,
-            transform: [{ scale: 1.2 }],
-            alignItems: "center",
-          }}
-        >
-          <ActivityIndicator
-            color={currentTheme.pink}
-            style={{ position: "absolute", top: 15 }}
-            size={20}
-          />
-        </Animated.View>
-      </View>
-      <Animated.ScrollView
-        ref={scrollViewRef}
-        onScroll={onScroll}
-        scrollEventThrottle={16}
-        showsVerticalScrollIndicator={false}
-        style={{ flex: 1, transform: [{ translateY: transformScroll }] }}
-        overScrollMode={Platform.OS === "ios" ? "never" : "always"}
+    <ImageBackground
+      style={{
+        flex: 1,
+        width: SCREEN_WIDTH,
+        height: "100%",
+      }}
+      source={theme ? require("../../assets/background.jpg") : null}
+    >
+      <BlurView
+        intensity={40}
+        tint="dark"
+        style={{ flex: 1, backgroundColor: "rgba(1,2,0,0.5)" }}
       >
-        <View style={styles.header}>
-          <View
+        <ConfirmPopup
+          isVisible={openPopup}
+          onClose={() => setOpenPopup(false)}
+          onDelete={RemoveCover}
+          title="Are you sure to want delete Cover image?"
+          cancel="Cancel"
+          delet="Delete"
+        />
+        <View>
+          <Animated.View
             style={{
-              flex: 2,
-              justifyContent: "center",
+              opacity: opacityValue,
+              transform: [{ scale: 1.2 }],
+              alignItems: "center",
             }}
           >
-            <View>
-              {targetUser._id !== currentUser._id && targetUser?.online && (
-                <View
-                  style={{
-                    width: 15,
-                    height: 15,
-                    backgroundColor: "#3bd16f",
-                    borderRadius: 50,
-                    position: "absolute",
-                    zIndex: 10000,
-                    right: 5,
-                    bottom: 5,
-                    borderWidth: 2.5,
-                    borderColor: currentTheme.background,
-                  }}
-                ></View>
-              )}
-              <View style={styles.coverImg}>
-                {route.name === "UserProfile" &&
-                  currentUser._id === targetUser._id && (
-                    <View
-                      style={{
-                        position: "absolute",
-                        zIndex: 10000,
-                        height: 100,
-                        width: 100,
-                      }}
-                    >
-                      {Platform.OS === "ios" ? (
-                        <InputFile
-                          targetUser={targetUser}
-                          setOpenPopup={setOpenPopup}
-                        />
-                      ) : (
-                        <InputCoverAndroid
-                          targetUser={targetUser}
-                          onCoverUpdate={handleCoverUpdate}
-                        />
-                      )}
-                    </View>
-                  )}
-                {targetUser?.cover?.length > 30 ? (
+            <ActivityIndicator
+              color={currentTheme.pink}
+              style={{ position: "absolute", top: 15 }}
+              size={20}
+            />
+          </Animated.View>
+        </View>
+        <Animated.ScrollView
+          ref={scrollViewRef}
+          onScroll={onScroll}
+          scrollEventThrottle={16}
+          showsVerticalScrollIndicator={false}
+          style={{
+            flex: 1,
+            transform: [{ translateY: transformScroll }],
+          }}
+          overScrollMode={Platform.OS === "ios" ? "never" : "always"}
+        >
+          <View style={styles.header}>
+            <View
+              style={{
+                flex: 2,
+                justifyContent: "center",
+              }}
+            >
+              <View>
+                {targetUser?._id !== currentUser._id && targetUser?.online && (
                   <View
                     style={{
-                      width: 110,
-                      aspectRatio: 0.99,
-                      alignItems: "center",
-                      justifyContent: "center",
+                      width: 15,
+                      height: 15,
+                      backgroundColor: "#3bd16f",
+                      borderRadius: 50,
+                      position: "absolute",
+                      zIndex: 10000,
+                      right: 5,
+                      bottom: 5,
+                      borderWidth: 2.5,
+                      borderColor: currentTheme.background,
                     }}
-                  >
-                    {loading && (
+                  ></View>
+                )}
+                <View style={styles.coverImg}>
+                  {route?.name === "UserProfile" &&
+                    currentUser._id === targetUser?._id && (
                       <View
                         style={{
                           position: "absolute",
-                          width: 110,
-                          aspectRatio: 0.99,
-                          borderRadius: 50,
-                          zIndex: 120,
-                          alignItems: "center",
-                          justifyContent: "center",
-                          opacity: 1,
-                          overflow: "hidden",
+                          zIndex: 10000,
+                          height: 100,
+                          width: 100,
                         }}
                       >
-                        <Circle />
+                        {Platform.OS === "ios" ? (
+                          <InputFile
+                            targetUser={targetUser}
+                            setOpenPopup={setOpenPopup}
+                          />
+                        ) : (
+                          <InputCoverAndroid
+                            targetUser={targetUser}
+                            onCoverUpdate={handleCoverUpdate}
+                          />
+                        )}
                       </View>
                     )}
-                    <Animated.View
+                  {targetUser?.cover?.length > 30 ? (
+                    <View
                       style={{
-                        opacity: fadeAnim,
-                        padding: 10,
-                      }}
-                    >
-                      <CacheableImage
-                        key={targetUser?.cover}
-                        style={{
-                          width: "100%",
-                          aspectRatio: 1,
-                          resizeMode: "cover",
-                        }}
-                        source={{
-                          uri: targetUser?.cover,
-                        }}
-                        manipulationOptions={[
-                          {
-                            resize: {
-                              width: "100%",
-                              aspectRatio: 1,
-                              resizeMode: "cover",
-                            },
-                          },
-                          { rotate: 90 },
-                        ]}
-                        onLoad={() =>
-                          setTimeout(() => {
-                            setLoading(false);
-                          }, 200)
-                        }
-                        onError={() => console.log("Error loading image")}
-                      />
-                    </Animated.View>
-                  </View>
-                ) : (
-                  <View
-                    style={{
-                      alignItems: "center",
-                      justifyContent: "center",
-                      width: 110,
-                      aspectRatio: 1,
-                      borderWidth: 2,
-                      backgroundColor: currentTheme.background2,
-                    }}
-                  >
-                    <FontAwesome
-                      name="user"
-                      size={40}
-                      color={currentTheme.disabled}
-                    />
-                  </View>
-                )}
-              </View>
-            </View>
-          </View>
-          <View style={{ flex: 6, justifyContent: "center" }}>
-            <View
-              name="info"
-              style={{
-                gap: 10,
-                marginTop: 10,
-                flexDirection: "row",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}
-            >
-              <Text
-                style={{
-                  fontSize: 14,
-                  fontWeight: "bold",
-                  color: currentTheme.font,
-                  letterSpacing: 0.2,
-                }}
-              >
-                {targetUser.username ? targetUser.username : userType}
-              </Text>
-            </View>
-
-            <Pressable
-              style={{
-                marginTop: 5,
-              }}
-              onPress={changeHeight}
-            >
-              <View>
-                <Text
-                  multiline
-                  numberOfLines={numOfLines}
-                  style={{
-                    fontSize: 14,
-                    color: currentTheme.font,
-                    lineHeight: 20,
-                    letterSpacing: 0.2,
-                  }}
-                  ellipsizeMode="tail"
-                >
-                  {targetUser?.about}
-                </Text>
-              </View>
-            </Pressable>
-          </View>
-        </View>
-
-        <>
-          <View
-            name="navigator"
-            style={[
-              styles.navigator,
-              {
-                borderBottomColor: currentTheme.background2,
-                borderTopColor: currentTheme.background2,
-              },
-            ]}
-          >
-            <FlatList
-              ref={navigatorRef}
-              data={navigatorItems}
-              horizontal={true}
-              showsHorizontalScrollIndicator={false}
-              bounces={Platform.OS === "ios" ? false : undefined}
-              overScrollMode={Platform.OS === "ios" ? "never" : "always"}
-              renderItem={({ item }) => {
-                if (targetUser.type === "shop" && item.id === 3) {
-                  return;
-                }
-                if (targetUser.type !== "shop" && item.id === 0) {
-                  return;
-                }
-                if (
-                  targetUser.type === "user" &&
-                  (item.id === 2 || item.id === 6)
-                ) {
-                  return (
-                    <TouchableOpacity
-                      onPress={() => {
-                        setActive(item?.id);
-                        setPage(1);
-                      }}
-                      style={{
-                        height: 28,
+                        width: 110,
+                        aspectRatio: 0.99,
                         alignItems: "center",
-                        flexDirection: "row",
-                        gap: 5,
-                        margin: 5,
-                        marginVertical: 7.5,
-                        paddingLeft: 15,
-                        paddingRight: 15,
-                        borderRadius: 50,
-                        backgroundColor: currentTheme.background2,
-                        borderWidth: 1.5,
-                        borderColor:
-                          active === item.id ? "#F866B1" : "rgba(0,0,0,0)",
+                        justifyContent: "center",
                       }}
                     >
-                      {item.icon}
-                      <Text
+                      {loading && (
+                        <View
+                          style={{
+                            position: "absolute",
+                            width: 110,
+                            aspectRatio: 0.99,
+                            borderRadius: 50,
+                            zIndex: 120,
+                            alignItems: "center",
+                            justifyContent: "center",
+                            opacity: 1,
+                            overflow: "hidden",
+                          }}
+                        >
+                          <Circle />
+                        </View>
+                      )}
+                      <Animated.View
                         style={{
-                          letterSpacing: 0.2,
-                          color:
-                            active === item.id
-                              ? currentTheme.pink
-                              : currentTheme.disabled,
+                          opacity: fadeAnim,
+                          padding: 10,
                         }}
                       >
-                        {item?.name}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                } else if (targetUser.type !== "user") {
-                  if (item.id === 5 && targetUser._id !== currentUser._id) {
-                    return null;
-                  } else {
+                        <CacheableImage
+                          key={targetUser?.cover}
+                          style={{
+                            width: "100%",
+                            aspectRatio: 1,
+                            resizeMode: "cover",
+                          }}
+                          source={{
+                            uri: targetUser?.cover,
+                          }}
+                          manipulationOptions={[
+                            {
+                              resize: {
+                                width: "100%",
+                                aspectRatio: 1,
+                                resizeMode: "cover",
+                              },
+                            },
+                            { rotate: 90 },
+                          ]}
+                          onLoad={() =>
+                            setTimeout(() => {
+                              setLoading(false);
+                            }, 200)
+                          }
+                          onError={() => console.log("Error loading image")}
+                        />
+                      </Animated.View>
+                    </View>
+                  ) : (
+                    <View
+                      style={{
+                        alignItems: "center",
+                        justifyContent: "center",
+                        width: 110,
+                        aspectRatio: 1,
+                        borderWidth: 2,
+                        backgroundColor: currentTheme.background2,
+                      }}
+                    >
+                      <FontAwesome
+                        name="user"
+                        size={40}
+                        color={currentTheme.disabled}
+                      />
+                    </View>
+                  )}
+                </View>
+              </View>
+            </View>
+            <View style={{ flex: 6, justifyContent: "center" }}>
+              <View
+                name="info"
+                style={{
+                  gap: 10,
+                  marginTop: 10,
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 14,
+                    fontWeight: "bold",
+                    color: currentTheme.font,
+                    letterSpacing: 0.2,
+                  }}
+                >
+                  {targetUser?.username ? targetUser?.username : userType}
+                </Text>
+              </View>
+
+              <Pressable
+                style={{
+                  marginTop: 5,
+                }}
+                onPress={changeHeight}
+              >
+                <View>
+                  <Text
+                    multiline
+                    numberOfLines={numOfLines}
+                    style={{
+                      fontSize: 14,
+                      color: currentTheme.font,
+                      lineHeight: 20,
+                      letterSpacing: 0.2,
+                    }}
+                    ellipsizeMode="tail"
+                  >
+                    {targetUser?.about}
+                  </Text>
+                </View>
+              </Pressable>
+            </View>
+          </View>
+
+          <>
+            <View
+              name="navigator"
+              style={[
+                styles.navigator,
+                {
+                  borderBottomColor: currentTheme.background2,
+                  borderTopColor: currentTheme.background2,
+                },
+              ]}
+            >
+              <FlatList
+                ref={navigatorRef}
+                data={navigatorItems}
+                horizontal={true}
+                showsHorizontalScrollIndicator={false}
+                bounces={Platform.OS === "ios" ? false : undefined}
+                overScrollMode={Platform.OS === "ios" ? "never" : "always"}
+                renderItem={({ item }) => {
+                  if (targetUser?.type === "shop" && item.id === 3) {
+                    return;
+                  }
+                  if (targetUser?.type !== "shop" && item.id === 0) {
+                    return;
+                  }
+                  if (
+                    targetUser?.type === "user" &&
+                    (item.id === 2 || item.id === 6)
+                  ) {
                     return (
                       <TouchableOpacity
                         onPress={() => {
@@ -1114,6 +1101,7 @@ export const User = ({ navigation, user, variant, setScrollY }) => {
                           paddingLeft: 15,
                           paddingRight: 15,
                           borderRadius: 50,
+                          backgroundColor: currentTheme.background2,
                           borderWidth: 1.5,
                           borderColor:
                             active === item.id ? "#F866B1" : "rgba(0,0,0,0)",
@@ -1122,6 +1110,7 @@ export const User = ({ navigation, user, variant, setScrollY }) => {
                         {item.icon}
                         <Text
                           style={{
+                            letterSpacing: 0.2,
                             color:
                               active === item.id
                                 ? currentTheme.pink
@@ -1132,110 +1121,153 @@ export const User = ({ navigation, user, variant, setScrollY }) => {
                         </Text>
                       </TouchableOpacity>
                     );
+                  } else if (targetUser?.type !== "user") {
+                    if (item.id === 5 && targetUser?._id !== currentUser._id) {
+                      return null;
+                    } else {
+                      return (
+                        <TouchableOpacity
+                          onPress={() => {
+                            setActive(item?.id);
+                            setPage(1);
+                          }}
+                          style={{
+                            height: 28,
+                            alignItems: "center",
+                            flexDirection: "row",
+                            gap: 5,
+                            margin: 5,
+                            marginVertical: 7.5,
+                            paddingLeft: 15,
+                            paddingRight: 15,
+                            borderRadius: 50,
+                            borderWidth: 1.5,
+                            borderColor:
+                              active === item.id ? "#F866B1" : "rgba(0,0,0,0)",
+                          }}
+                        >
+                          {item.icon}
+                          <Text
+                            style={{
+                              color:
+                                active === item.id
+                                  ? currentTheme.pink
+                                  : currentTheme.disabled,
+                            }}
+                          >
+                            {item?.name}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    }
                   }
+                }}
+                keyExtractor={(item) => item?.id}
+              />
+            </View>
+            <View name="content">{activeContent}</View>
+          </>
+
+          {/* )} */}
+        </Animated.ScrollView>
+
+        {!loadingFollowerDefined && route?.name !== "UserProfile" && (
+          <View
+            style={{
+              width: "100%",
+              position: "absolute",
+              right: 10,
+              bottom: 10,
+              gap: 0,
+              zIndex: 100000,
+              alignItems: "flex-end",
+            }}
+          >
+            {targetUser?._id !== currentUser._id && (
+              <Pressable
+                onPress={followerDefined ? () => Unfollow() : () => Follow()}
+                style={{
+                  padding: 5,
+                  paddingVertical: 5,
+                  backgroundColor: currentTheme.background2,
+
+                  width: 50,
+                  height: 50,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 4,
+                  marginVertical: 8,
+                  borderRadius: 8,
+                  borderWidth: 1.5,
+                  borderColor: currentTheme.line,
+                  shadowColor: "#000",
+                  shadowOffset: {
+                    width: 0,
+                    height: 10, // negative value places shadow on top
+                  },
+                  shadowOpacity: 0.2,
+                  shadowRadius: 10,
+                  elevation: 1,
+                }}
+              >
+                {followerDefined ? (
+                  <FontAwesome5
+                    size={18}
+                    name="user-check"
+                    color={currentTheme.pink}
+                    style={{ position: "relative", left: 2 }}
+                  />
+                ) : (
+                  <MaterialIcons
+                    name="person-add-alt-1"
+                    size={24}
+                    color={currentTheme.font}
+                    style={{ position: "relative", left: 2 }}
+                  />
+                )}
+              </Pressable>
+            )}
+            {targetUser?._id !== currentUser._id && (
+              <Pressable
+                onPress={
+                  chatDefined ? () => GetChatRoom() : () => GetNewChatRoom()
                 }
-              }}
-              keyExtractor={(item) => item?.id}
-            />
-          </View>
-          <View name="content">{activeContent}</View>
-        </>
+                style={{
+                  padding: 5,
+                  paddingVertical: 5,
+                  backgroundColor: currentTheme.background2,
+                  width: 50,
+                  height: 50,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "center",
 
-        {/* )} */}
-      </Animated.ScrollView>
-
-      {!loadingFollowerDefined && (
-        <View
-          style={{
-            width: "100%",
-            position: "absolute",
-            right: 15,
-            bottom: 15,
-            gap: 0,
-            zIndex: 100000,
-            alignItems: "flex-end",
-          }}
-        >
-          {targetUser._id !== currentUser._id && (
-            <Pressable
-              onPress={followerDefined ? () => Unfollow() : () => Follow()}
-              style={{
-                padding: 5,
-                paddingVertical: 5,
-                backgroundColor: currentTheme.background2,
-
-                width: 50,
-                height: 50,
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 4,
-                marginVertical: 8,
-                borderRadius: 8,
-                borderWidth: 1.5,
-                borderColor: currentTheme.line,
-                shadowColor: "#000",
-                shadowOffset: {
-                  width: 0,
-                  height: 10, // negative value places shadow on top
-                },
-                shadowOpacity: 0.2,
-                shadowRadius: 10,
-                elevation: 1,
-              }}
-            >
-              {followerDefined ? (
-                <FontAwesome5
-                  size={18}
-                  name="user-check"
-                  color={currentTheme.pink}
-                  style={{ position: "relative", left: 2 }}
-                />
-              ) : (
-                <MaterialIcons
-                  name="person-add-alt-1"
+                  marginVertical: 8,
+                  borderRadius: 8,
+                  borderWidth: 1.5,
+                  borderColor: currentTheme.line,
+                  shadowColor: "#000",
+                  shadowOffset: {
+                    width: 0,
+                    height: 10, // negative value places shadow on top
+                  },
+                  shadowOpacity: 0.2,
+                  shadowRadius: 10,
+                  elevation: 1,
+                }}
+              >
+                <AntDesign
                   size={24}
+                  name="message1"
                   color={currentTheme.font}
-                  style={{ position: "relative", left: 2 }}
                 />
-              )}
-            </Pressable>
-          )}
-          {targetUser._id !== currentUser._id && (
-            <Pressable
-              onPress={
-                chatDefined ? () => GetChatRoom() : () => GetNewChatRoom()
-              }
-              style={{
-                padding: 5,
-                paddingVertical: 5,
-                backgroundColor: currentTheme.background2,
-                width: 50,
-                height: 50,
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "center",
-
-                marginVertical: 8,
-                borderRadius: 8,
-                borderWidth: 1.5,
-                borderColor: currentTheme.line,
-                shadowColor: "#000",
-                shadowOffset: {
-                  width: 0,
-                  height: 10, // negative value places shadow on top
-                },
-                shadowOpacity: 0.2,
-                shadowRadius: 10,
-                elevation: 1,
-              }}
-            >
-              <AntDesign size={24} name="message1" color={currentTheme.font} />
-            </Pressable>
-          )}
-        </View>
-      )}
-    </>
+              </Pressable>
+            )}
+          </View>
+        )}
+      </BlurView>
+    </ImageBackground>
   );
 };
 
@@ -1244,7 +1276,7 @@ const styles = StyleSheet.create({
     paddingLeft: 15,
     paddingRight: 25,
     paddingBottom: 10,
-    paddingTop: 10,
+    paddingTop: 20,
     flexDirection: "row",
     gap: 25,
   },

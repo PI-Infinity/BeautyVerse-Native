@@ -7,11 +7,13 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  Modal,
 } from "react-native";
-import Modal from "react-native-modal";
+
 import { useSelector } from "react-redux";
 import { Language } from "../../context/language";
 import { darkTheme, lightTheme } from "../../context/theme";
+import { BlurView } from "expo-blur";
 
 /**
  * reset password popup to input email and get link
@@ -35,73 +37,77 @@ const EmailPopup = ({ isVisible, onClose, onSend, setEmail, email }) => {
   };
 
   return (
-    <Modal
-      isVisible={isVisible}
-      onBackdropPress={onClose}
-      animationIn="fadeInUp"
-      animationOut="fadeOutDown"
-      style={styles.modal}
-    >
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
+    <View>
+      <Modal
+        isVisible={isVisible}
+        onBackdropPress={onClose}
+        animationType="fadeIn"
+        style={styles.modal}
+        transparent
       >
-        <Pressable
-          onPress={onClose}
-          style={[
-            styles.container,
-            { backgroundColor: currentTheme.background2 },
-          ]}
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
         >
-          <Text style={[styles.title, { color: currentTheme.font }]}>
-            {language?.language?.Auth?.auth?.randomPasswordText}
-          </Text>
-          <TextInput
-            autoFocus
-            style={[
-              styles.input,
-              {
-                color: currentTheme.font,
-                borderColor: currentTheme.disabled,
-                backgroundColor: currentTheme.background,
-              },
-            ]}
-            onChangeText={setEmail}
-            value={email}
-            placeholder={language?.language?.Auth?.auth?.enterEmail}
-            keyboardType="email-address"
-            placeholderTextColor={currentTheme.disabled}
-          />
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity
-              style={[
-                styles.cancelButton,
-                { backgroundColor: currentTheme.disabled },
-              ]}
-              onPress={onClose}
-            >
-              <Text style={styles.buttonText}>
-                {language?.language?.Auth?.auth?.cancel}
+          <BlurView
+            style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
+            intensity={60}
+            tint="dark"
+          >
+            <Pressable onPress={onClose} style={[styles.container, {}]}>
+              <Text style={[styles.title, { color: currentTheme.font }]}>
+                {language?.language?.Auth?.auth?.randomPasswordText}
               </Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.sendButton} onPress={handleSend}>
-              <Text style={styles.buttonText}>
-                {language?.language?.Auth?.auth?.send}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </Pressable>
-      </KeyboardAvoidingView>
-    </Modal>
+              <TextInput
+                autoFocus
+                style={[
+                  styles.input,
+                  {
+                    color: currentTheme.font,
+                    borderColor: currentTheme.disabled,
+                    backgroundColor: currentTheme.background,
+                  },
+                ]}
+                onChangeText={setEmail}
+                value={email}
+                placeholder={language?.language?.Auth?.auth?.enterEmail}
+                keyboardType="email-address"
+                placeholderTextColor={currentTheme.disabled}
+              />
+              <View style={styles.buttonContainer}>
+                <TouchableOpacity
+                  style={[
+                    styles.cancelButton,
+                    { backgroundColor: currentTheme.disabled },
+                  ]}
+                  onPress={onClose}
+                >
+                  <Text style={styles.buttonText}>
+                    {language?.language?.Auth?.auth?.cancel}
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.sendButton}
+                  onPress={handleSend}
+                >
+                  <Text style={styles.buttonText}>
+                    {language?.language?.Auth?.auth?.send}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </Pressable>
+          </BlurView>
+        </KeyboardAvoidingView>
+      </Modal>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  modal: {},
+  modal: { flex: 1 },
   container: {
     borderRadius: 10,
     padding: 20,
-    width: "100%",
   },
   title: {
     fontSize: 16,

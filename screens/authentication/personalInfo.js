@@ -2,6 +2,7 @@ import axios from "axios";
 import { useState } from "react";
 import {
   Dimensions,
+  ImageBackground,
   StyleSheet,
   Text,
   TextInput,
@@ -14,6 +15,7 @@ import AlertMessage from "../../components/alertMessage";
 import GoogleAutocomplete from "../../components/mapAutocomplete";
 import { Language } from "../../context/language";
 import { darkTheme, lightTheme } from "../../context/theme";
+import { BlurView } from "expo-blur";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -142,116 +144,134 @@ export const PersonalInfo = ({ navigation }) => {
     }
   };
   return (
-    <View
-      style={[
-        styles.keyboardAvoidingContainer,
-        { height: SCREEN_HEIGHT - 200 },
-      ]}
+    <ImageBackground
+      style={{
+        flex: 1,
+        width: "100%",
+        height: "100%",
+      }}
+      source={theme ? require("../../assets/background.jpg") : null}
     >
-      <View style={{ position: "absolute", zIndex: 19000 }}>
-        <AlertMessage
-          isVisible={alert.active}
-          type={alert.type}
-          text={alert.text}
-          onClose={() => setAlert({ active: false, text: "" })}
-          Press={() => setAlert({ active: false, text: "" })}
-        />
-      </View>
-      <View style={styles.itemContainer}>
-        <Text style={[styles.itemTitle, { color: currentTheme.font }]}>
-          {language?.language?.Auth?.auth?.name}
-        </Text>
-        <TextInput
-          placeholder={language?.language?.Main?.filter?.typeHere}
-          placeholderTextColor={currentTheme.disabled}
-          value={name}
-          style={[
-            styles.input,
-            {
-              color: currentTheme.font,
-              borderColor: nameFocused ? currentTheme.pink : currentTheme.line,
-            },
-          ]}
-          onChangeText={(text) => setName(text)}
-          onFocus={() => setNameFocused(true)}
-          onBlur={() => setNameFocused(false)}
-        />
-      </View>
-      <View style={[styles.itemContainer, { marginTop: 0 }]}>
-        <Text style={[styles.itemTitle, { color: currentTheme.font }]}>
-          {language?.language?.Auth?.auth?.phone}
-        </Text>
-        <View
-          style={{
-            flexDirection: "row",
-            width: "100%",
-          }}
-        >
-          <View>
-            <CountryPicker
-              {...{
-                countryCode,
-                onSelect,
-                withFilter: true,
-                withFlag: true,
-                withCountryNameButton: true,
-                withAlphaFilter: true,
-                withCallingCode: true,
-                textStyle: styles.countryName,
-                containerButtonStyle: styles.pickerButton,
-              }}
-              theme={{
-                backgroundColor: currentTheme.background,
-                onBackgroundTextColor: currentTheme.font,
-              }}
-            />
-          </View>
+      <BlurView
+        intensity={30}
+        tint="dark"
+        style={[
+          styles.keyboardAvoidingContainer,
+          {
+            height: SCREEN_HEIGHT - 200,
+            backgroundColor: "rgba(1,2,0,0.5)",
+            flex: 1,
+          },
+        ]}
+      >
+        <View style={{ position: "absolute", zIndex: 19000 }}>
+          <AlertMessage
+            isVisible={alert.active}
+            type={alert.type}
+            text={alert.text}
+            onClose={() => setAlert({ active: false, text: "" })}
+            Press={() => setAlert({ active: false, text: "" })}
+          />
+        </View>
+        <View style={styles.itemContainer}>
+          <Text style={[styles.itemTitle, { color: currentTheme.font }]}>
+            {language?.language?.Auth?.auth?.name}
+          </Text>
           <TextInput
-            placeholder={language?.language?.Auth?.auth?.eg + " 555000111222"}
+            placeholder={language?.language?.Main?.filter?.typeHere}
             placeholderTextColor={currentTheme.disabled}
-            value={phone}
+            value={name}
             style={[
               styles.input,
               {
                 color: currentTheme.font,
-                borderColor: phoneFocused
+                borderColor: nameFocused
                   ? currentTheme.pink
                   : currentTheme.line,
-
-                width: "67%",
-                paddingLeft: 15,
               },
             ]}
-            onChangeText={(text) => setPhone(text)}
-            onFocus={() => setPhoneFocused(true)}
-            onBlur={() => setPhoneFocused(false)}
+            onChangeText={(text) => setName(text)}
+            onFocus={() => setNameFocused(true)}
+            onBlur={() => setNameFocused(false)}
           />
         </View>
-      </View>
-      <View style={styles.container}>
-        <Text style={[styles.itemTitle, { color: currentTheme.font }]}>
-          {language?.language?.Auth?.auth?.address}
-        </Text>
-        <View style={styles.itemContainer}>
-          <GoogleAutocomplete
-            address={address}
-            setAddress={setAddress}
-            currentTheme={currentTheme}
-          />
+        <View style={[styles.itemContainer, { marginTop: 0 }]}>
+          <Text style={[styles.itemTitle, { color: currentTheme.font }]}>
+            {language?.language?.Auth?.auth?.phone}
+          </Text>
+          <View
+            style={{
+              flexDirection: "row",
+              width: "100%",
+            }}
+          >
+            <View>
+              <CountryPicker
+                {...{
+                  countryCode,
+                  onSelect,
+                  withFilter: true,
+                  withFlag: true,
+                  withCountryNameButton: true,
+                  withAlphaFilter: true,
+                  withCallingCode: true,
+                  textStyle: styles.countryName,
+                  containerButtonStyle: styles.pickerButton,
+                }}
+                theme={{
+                  backgroundColor: currentTheme.background,
+                  onBackgroundTextColor: currentTheme.font,
+                }}
+              />
+            </View>
+            <TextInput
+              placeholder={language?.language?.Auth?.auth?.eg + " 555000111222"}
+              placeholderTextColor={currentTheme.disabled}
+              value={phone}
+              style={[
+                styles.input,
+                {
+                  color: currentTheme.font,
+                  borderColor: phoneFocused
+                    ? currentTheme.pink
+                    : currentTheme.line,
+
+                  width: "67%",
+                  paddingLeft: 15,
+                },
+              ]}
+              onChangeText={(text) => setPhone(text)}
+              onFocus={() => setPhoneFocused(true)}
+              onBlur={() => setPhoneFocused(false)}
+            />
+          </View>
         </View>
-      </View>
-      <TouchableOpacity style={styles.button} onPress={AddPresonalInfo}>
-        <Text style={styles.buttonText}>
-          {language?.language?.Auth?.auth?.next}
-        </Text>
-      </TouchableOpacity>
-    </View>
+        <View style={styles.container}>
+          <Text style={[styles.itemTitle, { color: currentTheme.font }]}>
+            {language?.language?.Auth?.auth?.address}
+          </Text>
+          <View style={styles.itemContainer}>
+            <GoogleAutocomplete
+              address={address}
+              setAddress={setAddress}
+              currentTheme={currentTheme}
+            />
+          </View>
+        </View>
+        <TouchableOpacity style={styles.button} onPress={AddPresonalInfo}>
+          <Text style={styles.buttonText}>
+            {language?.language?.Auth?.auth?.next}
+          </Text>
+        </TouchableOpacity>
+      </BlurView>
+    </ImageBackground>
   );
 };
 
 const styles = StyleSheet.create({
   keyboardAvoidingContainer: {
     width: "100%",
+    height: "100%",
     alignItems: "center",
     gap: 20,
     zIndex: 100,
@@ -296,7 +316,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#F866B1",
     justifyContent: "center",
     borderRadius: 50,
-    marginTop: "auto",
+    marginTop: 60,
   },
   buttonText: {
     color: "#fff",

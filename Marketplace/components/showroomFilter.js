@@ -97,7 +97,7 @@ const FilterPopup = ({ openFilter, setOpenFilter, categories, brands }) => {
             ? "rgba(0, 1, 8, 0.8)"
             : currentTheme.background,
         }}
-        tint="extra-dark"
+        tint="dark"
         intensity={60}
       >
         <ScrollView

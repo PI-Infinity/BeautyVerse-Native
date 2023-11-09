@@ -1,4 +1,4 @@
-import { MaterialIcons } from "@expo/vector-icons";
+import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import React, { useState } from "react";
@@ -15,7 +15,13 @@ import { useDispatch, useSelector } from "react-redux";
 import DeleteUserPopup from "../../../components/confirmDialog";
 import { Language } from "../../../context/language";
 import { darkTheme, lightTheme } from "../../../context/theme";
-import { setLoading, setLogoutLoading } from "../../../redux/app";
+import {
+  cleanScreenModal,
+  setActiveTabBar,
+  setLoading,
+  setLogoutLoading,
+  setScreenModal,
+} from "../../../redux/app";
 import { setCurrentUser } from "../../../redux/user";
 
 /**
@@ -96,6 +102,8 @@ export const Security = () => {
       await AsyncStorage.removeItem("Beautyverse:currentUser");
       await axios.delete(backendUrl + "/api/v1/users/" + currentUser?._id);
       setTimeout(() => {
+        dispatch(cleanScreenModal());
+        dispatch(setActiveTabBar("Feeds"));
         dispatch(setLoading(false));
       }, 1000);
     } catch (error) {
@@ -143,15 +151,15 @@ export const Security = () => {
               onPress={() => setShowOldPassword(!showOldPassword)}
             >
               {showOldPassword ? (
-                <MaterialIcons
-                  name="remove-red-eye"
-                  color="#e5e5e5"
+                <FontAwesome
+                  name="eye"
+                  color={currentTheme.disabled}
                   size={16}
                 />
               ) : (
-                <MaterialIcons
-                  name="panorama-fisheye"
-                  color="#e5e5e5"
+                <FontAwesome
+                  name="eye-slash"
+                  color={currentTheme.disabled}
                   size={16}
                 />
               )}
@@ -185,15 +193,15 @@ export const Security = () => {
               onPress={() => setShowPassword(!showPassword)}
             >
               {showPassword ? (
-                <MaterialIcons
-                  name="remove-red-eye"
-                  color="#e5e5e5"
+                <FontAwesome
+                  name="eye"
+                  color={currentTheme.disabled}
                   size={16}
                 />
               ) : (
-                <MaterialIcons
-                  name="panorama-fisheye"
-                  color="#e5e5e5"
+                <FontAwesome
+                  name="eye-slash"
+                  color={currentTheme.disabled}
                   size={16}
                 />
               )}
@@ -226,15 +234,15 @@ export const Security = () => {
               onPress={() => setShowConfirmPassword(!showConfirmPassword)}
             >
               {showConfirmPassword ? (
-                <MaterialIcons
-                  name="remove-red-eye"
-                  color="#e5e5e5"
+                <FontAwesome
+                  name="eye"
+                  color={currentTheme.disabled}
                   size={16}
                 />
               ) : (
-                <MaterialIcons
-                  name="panorama-fisheye"
-                  color="#e5e5e5"
+                <FontAwesome
+                  name="eye-slash"
+                  color={currentTheme.disabled}
                   size={16}
                 />
               )}

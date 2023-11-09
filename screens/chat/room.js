@@ -21,6 +21,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Language } from "../../context/language";
 import { BlurView } from "expo-blur";
 import { ActivityIndicator } from "react-native-paper";
+import { Header } from "../../components/header";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -28,7 +29,7 @@ const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
  * Chat room
  */
 
-export const Room = ({ route }) => {
+export const Room = ({ hideModal, screenHeight }) => {
   // defines socket server
   const socket = useSocket();
 
@@ -51,9 +52,6 @@ export const Room = ({ route }) => {
   // defines current chat
   const currentChat = useSelector((state) => state.storeChat.currentChat);
 
-  // getting screen height passed as route from parent screen
-  const { screenHeight } = route.params;
-
   // rerender messages redux state
   const rerenderMessages = useSelector(
     (state) => state.storeChat.rerenderMessages
@@ -67,6 +65,7 @@ export const Room = ({ route }) => {
 
   // defines bot answers or not
   const [bot, setBot] = useState(false);
+  const [botOffer, setBotOffer] = useState(true);
 
   // define target member
   let targetChatMember;
@@ -308,11 +307,11 @@ export const Room = ({ route }) => {
 
       SendMessage(
         `Hello! you are the personal consultant for ${
-          targetUser.name
+          targetUser?.name
         }. your responses are based solely on the information provided about ${
-          targetUser.name
+          targetUser?.name
         }. You will not use any external or intrinsic knowledge beyond the data provided. If any unrelated topics arise, please remember that you specialize only in the data about ${
-          targetUser.name
+          targetUser?.name
         } and will refrain from discussing other subjects. Feel free to anwer relevant to the provided data! Language setting: ${lang}. Please adhere to this topic, or You might not be able to assist. data: ${JSON.stringify(
           filtered
         )}, language: ${lang}, activeBookings: ${JSON.stringify(
@@ -323,7 +322,14 @@ export const Room = ({ route }) => {
   }, [bot]);
 
   return (
-    <BlurView tint="extra-dark" intensity={100} style={{ flex: 1 }}>
+    <BlurView tint="dark" intensity={20} style={{ flex: 1 }}>
+      <Header
+        title={targetUser?.name}
+        onBack={hideModal}
+        data={targetUser}
+        room={true}
+        hideModal={hideModal}
+      />
       {loading ? (
         <View
           style={{
@@ -344,6 +350,7 @@ export const Room = ({ route }) => {
                 justifyContent: "space-between",
                 alignItems: "center",
                 zIndex: 100,
+
                 height:
                   Platform.OS === "ios" ? screenHeight : screenHeight - 410,
               }}
@@ -359,9 +366,10 @@ export const Room = ({ route }) => {
                 setLoading={setLoadingMore}
                 flatListRef={flatListRef}
               />
-              {targetUser &&
-                targetUser.type !== "user" &&
-                !targetUser.online &&
+              {botOffer &&
+                targetUser &&
+                targetUser?.type !== "user" &&
+                !targetUser?.online &&
                 !bot && (
                   <View
                     style={{
@@ -370,6 +378,16 @@ export const Room = ({ route }) => {
                       marginVertical: 15,
                     }}
                   >
+                    <Pressable
+                      onPress={() => setBotOffer(false)}
+                      style={{ marginBottom: 10 }}
+                    >
+                      <MaterialCommunityIcons
+                        name="close"
+                        size={24}
+                        color={currentTheme.pink}
+                      />
+                    </Pressable>
                     <Text
                       style={{
                         color: currentTheme.disabled,

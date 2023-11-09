@@ -1,3 +1,4 @@
+import { BlurView } from "expo-blur";
 import React, { useEffect, useRef } from "react";
 import {
   StyleSheet,
@@ -54,13 +55,15 @@ const LoadingScreen = ({ currentTheme, theme }) => {
         ]}
         source={theme ? require("../assets/background.jpg") : null}
       >
-        <View
+        <BlurView
+          intensity={60}
+          tint="dark"
           style={[
             styles.loading,
             {
               backgroundColor: !theme
                 ? currentTheme.background
-                : "rgba(0,0,0,0.5)",
+                : "rgba(1,2,0,0.5)",
               flex: 1,
             },
           ]}
@@ -111,8 +114,12 @@ const LoadingScreen = ({ currentTheme, theme }) => {
               </Text>
             </View>
           </View>
-          <ActivityIndicator color={currentTheme.pink} size={20} />
-        </View>
+          <ActivityIndicator
+            color={currentTheme.pink}
+            size={20}
+            style={{ marginBottom: SCREEN_HEIGHT / 10 }}
+          />
+        </BlurView>
       </ImageBackground>
     </View>
   );

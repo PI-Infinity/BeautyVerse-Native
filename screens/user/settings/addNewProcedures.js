@@ -19,10 +19,11 @@ import {
   RemoveCurrentUserProcedure,
 } from "../../../redux/user";
 import { ActivityIndicator } from "react-native-paper";
+import { Header } from "./header";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
-export const AddNewProcedures = () => {
+export const AddNewProcedures = ({ onBack }) => {
   // defined procedure list
   const proceduresOptions = ProceduresOptions();
   // procedures state
@@ -103,13 +104,14 @@ export const AddNewProcedures = () => {
     }, 300);
   }, []);
   return (
-    <View style={{ alignItems: "center", width: "100%" }}>
-      <ScrollView
-        contentContainerStyle={{
-          alignItems: "center",
-          height: "100%",
-        }}
-        style={{ width: "100%" }}
+    <View style={{ alignItems: "center", width: SCREEN_WIDTH }}>
+      <Header onBack={onBack} title="Add New Procedure" />
+      <View
+        // contentContainerStyle={{
+        //   alignItems: "center",
+        //   height: "100%",
+        // }}
+        style={{ width: "100%", alignItems: "center" }}
       >
         {loading ? (
           <View
@@ -143,7 +145,7 @@ export const AddNewProcedures = () => {
             />
           </View>
         )}
-      </ScrollView>
+      </View>
     </View>
   );
 };

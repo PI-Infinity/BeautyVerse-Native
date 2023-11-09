@@ -3,6 +3,7 @@ import { Modal, StyleSheet, View } from "react-native";
 import { useSelector } from "react-redux";
 import { darkTheme, lightTheme } from "../context/theme";
 import { ActivityIndicator } from "react-native-paper";
+import { BlurView } from "expo-blur";
 
 // sticky loader with overlay background
 
@@ -17,11 +18,18 @@ export const BackDrop = ({ loading, setLoading }) => {
   return (
     <View style={styles.container}>
       <Modal transparent visible={loading} onRequestClose={toggleLoader}>
-        <View style={styles.backdrop}>
-          <View style={styles.loaderContainer}>
-            <ActivityIndicator size="large" color={currentTheme.pink} />
+        <BlurView intensity={20} tint="dark" style={styles.backdrop}>
+          <View
+            style={{
+              borderRadius: 20,
+              overflow: "hidden",
+            }}
+          >
+            <BlurView intensity={60} tint="dark" style={styles.loaderContainer}>
+              <ActivityIndicator size="large" color={currentTheme.pink} />
+            </BlurView>
           </View>
-        </View>
+        </BlurView>
       </Modal>
     </View>
   );
@@ -51,7 +59,6 @@ const styles = StyleSheet.create({
   },
   loaderContainer: {
     padding: 20,
-    backgroundColor: "rgba(0, 0, 0, 0.8)",
-    borderRadius: 10,
+    borderRadius: 20,
   },
 });

@@ -194,7 +194,7 @@ export const Input = ({
           messageUniqueId: msgId,
           room: currentChat.room,
           senderId: currentUser._id,
-          receiverId: targetUser.id,
+          receiverId: targetUser?.id,
           text: text,
           file: {
             url: url,
@@ -213,7 +213,7 @@ export const Input = ({
         messageUniqueId: msgId,
         room: currentChat.room,
         senderId: currentUser._id,
-        receiverId: targetUser.id,
+        receiverId: targetUser?.id,
         text: text,
         file: {
           url: url,
@@ -232,7 +232,7 @@ export const Input = ({
         senderId: currentUser._id,
         senderName: currentUser.name,
         senderCover: currentUser.cover,
-        receiverId: targetUser.id,
+        receiverId: targetUser?.id,
         text: text,
         file: {
           url: url,
@@ -258,7 +258,7 @@ export const Input = ({
 
       // update chats for target user
       socket.emit("updateChat", {
-        targetId: targetUser.id,
+        targetId: targetUser?.id,
       });
 
       if (targetUser?.pushNotificationToken) {
@@ -296,8 +296,8 @@ export const Input = ({
           // paddingBottom: 8,
           marginBottom: mBottom,
           backgroundColor: currentTheme.background,
-          borderTopWidth: 1,
-          borderColor: currentTheme.line,
+          borderTopWidth: 1.5,
+          borderColor: currentTheme.pink,
           alignItems: "center",
           justifyContent: "space-between",
           flexDirection: "row",
@@ -313,7 +313,7 @@ export const Input = ({
             setMbottom(0);
             flatListRef.current.scrollToEnd({ animated: true });
           }}
-          onBlur={() => setMbottom(100)}
+          onBlur={() => setMbottom(70)}
           multiline
           style={{
             flex: 1.6,

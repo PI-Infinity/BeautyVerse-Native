@@ -1,5 +1,6 @@
 const Marketplace = {
   en: {
+    marketplace: "Marketplace",
     popularProducts: "Popular Products",
     search: "Search...",
     categories: "Categories",
@@ -50,6 +51,7 @@ const Marketplace = {
     editProduct: "Edit Product",
   },
   ka: {
+    marketplace: "ონლაინ ბაზარი",
     popularProducts: "პოპულარული პროდუქცია",
     search: "ძებნა...",
     categories: "კატეგორიები",
@@ -101,6 +103,7 @@ const Marketplace = {
   },
   ru: {
     // Russian translations
+    marketplace: "Торговая площадка",
     popularProducts: "Популярные продукты",
     search: "Поиск...",
     categories: "Категории",

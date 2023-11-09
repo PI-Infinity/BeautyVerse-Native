@@ -11,6 +11,7 @@ import {
 import { useSelector } from "react-redux";
 import { Language } from "../context/language";
 import { darkTheme, lightTheme } from "../context/theme";
+import { BlurView } from "expo-blur";
 
 /**
  * authentication email Verification code input popup
@@ -38,7 +39,7 @@ const InputPopup = (props) => {
           behavior={Platform.OS === "ios" ? "padding" : "height"}
           style={{ flex: 1 }}
         >
-          <View style={styles.centeredView}>
+          <BlurView intensity={60} tint="dark" style={styles.centeredView}>
             <View
               style={[
                 styles.modalView,
@@ -102,7 +103,7 @@ const InputPopup = (props) => {
                 </TouchableOpacity>
               </View>
             </View>
-          </View>
+          </BlurView>
         </KeyboardAvoidingView>
       </Modal>
     </View>
@@ -126,7 +127,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 20,
     alignItems: "center",
-    width: "80%",
+    width: "90%",
     marginTop: 100,
   },
   modalText: {

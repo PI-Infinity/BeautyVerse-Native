@@ -36,7 +36,7 @@ import { darkTheme, lightTheme } from "../../context/theme";
 import GetTimesAgo from "../../functions/getTimesAgo";
 import { setActiveFeedFromScrollGallery } from "../../redux/actions";
 import { setSendReport } from "../../redux/alerts";
-import { setBlur } from "../../redux/app";
+import { setBlur, setScreenModal, setUserScreenModal } from "../../redux/app";
 import { setVideoVolume } from "../../redux/feed";
 import {
   setAddReviewQntRerenderFromScrollGallery,
@@ -49,7 +49,8 @@ import {
 import { BottomSection } from "../../screens/feeds/feedCard/bottomSection";
 import { Post } from "../../screens/feeds/feedCard/post";
 import { TopSection } from "../../screens/feeds/feedCard/topSection";
-import SmoothModal from "../user/editPostPopup";
+import SmoothModal from "./feedCard/editPostPopup";
+import { Header } from "../../components/header";
 
 /**
  * User feeds scrolling gallery
@@ -58,10 +59,12 @@ import SmoothModal from "../user/editPostPopup";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
-export const ScrollGallery = ({ route, setActiveGallery }) => {
-  const props = route.params;
+export const ScrollGallery = ({ hideModal, navigation }) => {
+  const props = useSelector((state) =>
+    state.storeApp.screenModal?.find((i) => i.activeTabBar === "Feeds")
+  ).data;
   // navigation
-  const navigation = useNavigation();
+
   // define screen is focused or not
   const isFocused = useIsFocused();
 
@@ -142,33 +145,9 @@ export const ScrollGallery = ({ route, setActiveGallery }) => {
       scrollViewRef={scrollViewRef}
       scrollY={scrollY}
       setScrollY={setScrollY}
-      setActiveGallery={setActiveGallery}
+      hideModal={hideModal}
     />
   );
-
-  // const FeedItems = useMemo(
-  //   () =>
-  //     scrolableFeeds.map((item, index) => {
-  //       return (
-  //         <FeedItem
-  //           key={index}
-  //           user={props.user}
-  //           x={index}
-  //           feed={item}
-  //           language={language}
-  //           currentUser={currentUser}
-  //           navigation={navigation}
-  //           currentIndex={0}
-  //           isFocused={isFocused}
-  //           scrollViewRef={scrollViewRef}
-  //           scrollY={scrollY}
-  //           setScrollY={setScrollY}
-  //           setActiveGallery={setActiveGallery}
-  //         />
-  //       );
-  //     }),
-  //   [scrolableFeeds, language, currentUser, navigation, isFocused]
-  // );
 
   // send report
   const sendReport = useSelector((state) => state.storeAlerts.sendReport);
@@ -196,20 +175,18 @@ export const ScrollGallery = ({ route, setActiveGallery }) => {
   }, [scrolableFeeds]);
 
   return (
-    <ImageBackground
+    <View
       style={{
         flex: 1,
         width: "100%",
         height: "100%",
       }}
-      source={theme ? require("../../assets/background.jpg") : null}
     >
       <View
         style={{
           flex: 1,
           width: "100%",
           height: "100%",
-          backgroundColor: theme ? "rgba(0,0,0,0.7)" : currentTheme.background,
         }}
       >
         <AlertMessage
@@ -218,73 +195,27 @@ export const ScrollGallery = ({ route, setActiveGallery }) => {
           type="success"
           text="The Report sent succesfully!"
         />
-        <View
-          style={{
-            // width: "100%",
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "center",
-            paddingVertical: 8,
-            paddingHorizontal: 15,
-          }}
-        >
-          <View style={{ flex: 1, alignItems: "center" }}></View>
-          <View style={{ flex: 1, alignItems: "center" }}>
-            <Text
-              style={{
-                color: currentTheme.font,
-                fontWeight: "bold",
-                fontSize: 20,
-                letterSpacing: 0.5,
-              }}
-            >
-              {language.language.User.userPage.feeds}
-            </Text>
-          </View>
-          <Pressable
-            style={{ flex: 1, alignItems: "flex-end" }}
-            onPress={() => {
-              dispatch(setBlur(false));
-              setActiveGallery(null);
-            }}
-          >
-            <MaterialIcons
-              name="arrow-drop-down"
-              size={30}
-              color={currentTheme.pink}
-            />
-          </Pressable>
-        </View>
+        <Header
+          title={language?.language?.Main?.feedCard?.feed}
+          onBack={hideModal}
+        />
         {loadingList ? (
           <ActivityIndicator color="red" size={20} />
         ) : (
           <FlatList
             onScroll={handleScroll}
+            ref={scrollViewRef}
             data={scrolableFeeds}
             renderItem={renderFeedItem}
             keyExtractor={(item, index) => index.toString()}
             contentContainerStyle={{
-              paddingBottom: 50,
+              paddingBottom: 300,
             }}
             showsVerticalScrollIndicator={false}
           />
-          // <ScrollView
-          //   contentContainerStyle={{
-          //     paddingBottom: 50,
-          //     minHeight: props?.feeds?.length > 1 ? "auto" : SCREEN_HEIGHT,
-          //   }}
-          //   showsVerticalScrollIndicator={false}
-          //   onScroll={handleScroll}
-          //   scrollEventThrottle={16}
-          //   ref={scrollViewRef}
-          //   // bounces={Platform.OS === "ios" ? false : undefined}
-          //   // overScrollMode={Platform.OS === "ios" ? "never" : "always"}
-          // >
-          //   {FeedItems}
-          // </ScrollView>
         )}
       </View>
-    </ImageBackground>
+    </View>
   );
 };
 
@@ -539,26 +470,11 @@ const FeedItem = (props) => {
         );
         return [...prev, ...uniqueReviews];
       });
+      setReviewsPage(nextPage);
     } catch (error) {
       console.log(error.response.data.message);
     }
   }
-
-  // reducre reviews on show less
-  const ReduceReviews = () => {
-    return setReviewsList((prev) => {
-      const uniqueReviews = reviewsList.filter(
-        (newReview) =>
-          !prev.some((prevReview) => prevReview.reviewId === newReview.reviewId)
-      );
-
-      const minReviews = 10;
-      const removeCount = Math.min(prev.length - minReviews, 10);
-
-      const updatedPrev = prev.slice(0, prev.length - removeCount);
-      return [...updatedPrev, ...uniqueReviews];
-    });
-  };
 
   /**
    *  // add new reviews
@@ -842,6 +758,7 @@ const FeedItem = (props) => {
             itemName={props?.feed.name}
             setPost={setPost}
             navigation={props.navigation}
+            hideModal={hideModal}
           />
         )}
 
@@ -856,6 +773,7 @@ const FeedItem = (props) => {
           >
             <TopSection
               user={props.user}
+              hideModal={props?.hideModal}
               currentTheme={currentTheme}
               navigation={props.navigation}
               lang={lang}
@@ -871,7 +789,6 @@ const FeedItem = (props) => {
               createdAt={props.feed.createdAt}
               DotsFunction={() => setFeedOption(!feedOption)}
               fileFormat={props.feed.fileFormat}
-              setActiveGallery={props.setActiveGallery}
             />
           </View>
         )}
@@ -897,6 +814,7 @@ const FeedItem = (props) => {
           >
             <TopSection
               user={props.user}
+              hideModal={props?.hideModal}
               currentTheme={currentTheme}
               navigation={props.navigation}
               lang={lang}
@@ -912,7 +830,6 @@ const FeedItem = (props) => {
               createdAt={props.feed.createdAt}
               DotsFunction={() => setFeedOption(!feedOption)}
               fileFormat={props.feed.fileFormat}
-              setActiveGallery={props.setActiveGallery}
             />
             {props?.feed?.post?.length > 0 && (
               <View style={{ marginTop: 10 }}>
@@ -1023,13 +940,11 @@ const FeedItem = (props) => {
               overScrollMode={Platform.OS === "ios" ? "never" : "always"}
             >
               {props?.feed?.images.map((item, index) => {
-                console.log(index);
                 return (
                   <TouchableOpacity
                     activeOpacity={0.9}
                     onPress={() => {
-                      dispatch(setBlur(false));
-                      props.setActiveGallery(null);
+                      props.hideModal();
                     }}
                     key={index}
                     delayLongPress={200}
@@ -1205,20 +1120,38 @@ const FeedItem = (props) => {
             </View>
           </View>
         )}
-        <Text
-          style={{
-            fontSize: 12,
-            color: currentTheme.font,
-            marginLeft: 15,
-            position: "relative",
-            top: 10,
-          }}
-        >
-          {reviewInput.length > 0 && reviewInput.length}{" "}
-          {reviewInput.length > 0 && (
-            <Text style={{ color: currentTheme.disabled }}>(max 500)</Text>
-          )}
-        </Text>
+        {openReviews && (
+          <View
+            style={{
+              width: "100%",
+              paddingHorizontal: 20,
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginTop: 10,
+            }}
+          >
+            <Text
+              style={{
+                fontSize: 12,
+                color: currentTheme.disabled,
+              }}
+            >
+              {props.language.language.Main.feedCard.reviews} ({reviewLength})
+            </Text>
+            <Text
+              style={{
+                fontSize: 12,
+                color: currentTheme.font,
+              }}
+            >
+              {reviewInput.length > 0 && reviewInput.length}{" "}
+              {reviewInput.length > 0 && (
+                <Text style={{ color: currentTheme.disabled }}>(max 500)</Text>
+              )}
+            </Text>
+          </View>
+        )}
         {openReviews && (
           <View
             style={[
@@ -1238,18 +1171,18 @@ const FeedItem = (props) => {
                   height: inputHeight,
                 },
               ]}
-              onFocus={() =>
-                props?.scrollViewRef.current.scrollTo({
-                  y: props?.scrollY + 250,
-                  animated: true,
-                })
-              }
-              onBlur={() =>
-                props?.scrollViewRef.current.scrollTo({
-                  y: props?.scrollY - 250,
-                  animated: true,
-                })
-              }
+              // onFocus={() =>
+              //   props?.scrollViewRef.current.scrollTo({
+              //     y: props?.scrollY + 250,
+              //     animated: true,
+              //   })
+              // }
+              // onBlur={() =>
+              //   props?.scrollViewRef.current.scrollTo({
+              //     y: props?.scrollY - 250,
+              //     animated: true,
+              //   })
+              // }
               placeholder={props?.language?.language.Main.feedCard.writeText}
               placeholderTextColor="#ccc"
               onChangeText={(text) => setReviewInput(text)}
@@ -1262,7 +1195,7 @@ const FeedItem = (props) => {
             />
             <FontAwesome
               name="send"
-              style={[styles.sendReviewIcon, { color: currentTheme.font }]}
+              style={[styles.sendReviewIcon, { color: currentTheme.pink }]}
               onPress={handleOnPress}
             />
           </View>
@@ -1284,6 +1217,7 @@ const FeedItem = (props) => {
                     DeleteReview={DeleteReview}
                     navigation={props.navigation}
                     language={props.language}
+                    hideModal={props?.hideModal}
                   />
                 );
               })
@@ -1294,10 +1228,9 @@ const FeedItem = (props) => {
                 </Text>
               </View>
             )}
-            {reviewLength > 10 && (
+            {reviewLength > 5 && (
               <Pressable
                 style={{
-                  backgroundColor: currentTheme.background2,
                   width: "100%",
                   alignItems: "center",
                 }}
@@ -1305,15 +1238,12 @@ const FeedItem = (props) => {
                   reviewsList?.length < reviewLength
                     ? () => {
                         AddNewReviews(reviewsPage + 1);
-                        setReviewsPage(reviewsPage + 1);
                       }
-                    : () => ReduceReviews()
+                    : undefined
                 }
               >
-                <Text style={{ color: "orange" }}>
-                  {reviewsList?.length < reviewLength
-                    ? "Load more"
-                    : "Show less"}
+                <Text style={{ color: currentTheme.pink }}>
+                  {reviewsList?.length < reviewLength && "Load more"}
                 </Text>
               </Pressable>
             )}
@@ -1334,6 +1264,7 @@ const ReviewItem = ({
   navigation,
   setRemoveReview,
   language,
+  hideModal,
 }) => {
   // get review date
 
@@ -1375,11 +1306,14 @@ const ReviewItem = ({
         >
           <Pressable
             onPress={
-              item?.reviewer
-                ? () =>
-                    navigation.navigate("User", {
+              item?.reviewer.name
+                ? () => {
+                    hideModal();
+
+                    navigation.navigate("UserVisit", {
                       user: item?.reviewer,
-                    })
+                    });
+                  }
                 : undefined
             }
           >
@@ -1409,11 +1343,14 @@ const ReviewItem = ({
           </Pressable>
           <Pressable
             onPress={
-              item?.reviewer
-                ? () =>
-                    navigation.navigate("User", {
+              item?.reviewer.name
+                ? () => {
+                    hideModal();
+
+                    navigation.navigate("UserVisit", {
                       user: item?.reviewer,
-                    })
+                    });
+                  }
                 : undefined
             }
           >
@@ -1434,7 +1371,8 @@ const ReviewItem = ({
       >
         <Pressable
           onLongPress={
-            user._id === currentUser._id || currentUser._id === item.reviewer.id
+            user._id === currentUser._id ||
+            currentUser._id === item.reviewer._id
               ? () => {
                   const pattern = [20, 100];
                   setRemoveReview(item.reviewId);
@@ -1442,7 +1380,7 @@ const ReviewItem = ({
                 }
               : undefined
           }
-          delayLongPress={300}
+          delayLongPress={150}
           onPress={() => setRemoveReview(null)}
           style={{ flex: 1 }}
         >

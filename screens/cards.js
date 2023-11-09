@@ -17,6 +17,7 @@ import { darkTheme, lightTheme } from "../context/theme";
 import { setCleanUp, setCardRefreshControl } from "../redux/rerenders";
 import { BlurView } from "expo-blur";
 import { ActivityIndicator } from "react-native-paper";
+import { setCardsScrollY } from "../redux/scrolls";
 
 /**
  * Cards Screen component
@@ -24,7 +25,7 @@ import { ActivityIndicator } from "react-native-paper";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
-export const Cards = ({ navigation, setScrollY }) => {
+export const Cards = ({ navigation }) => {
   // Using Redux dispatch hook
   const dispatch = useDispatch();
 
@@ -116,7 +117,7 @@ export const Cards = ({ navigation, setScrollY }) => {
   // useCallback is used to memoize the function for a given set of inputs
   const handleScroll = useCallback((event) => {
     const offsetY = event.nativeEvent.contentOffset.y;
-    setScrollY(offsetY);
+    dispatch(setCardsScrollY(offsetY));
   }, []);
 
   // Function to get users with cards from the API

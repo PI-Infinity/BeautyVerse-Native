@@ -7,9 +7,9 @@ import {
 } from "@react-navigation/native";
 import React, { useContext, useEffect, useRef } from "react";
 import { Animated, Pressable, View, Dimensions } from "react-native";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { RouteNameContext } from "../../context/routName";
-import { setZoomToTop } from "../../redux/app";
+import { setActiveTabBar, setZoomToTop } from "../../redux/app";
 import {
   setCardRefreshControl,
   setCleanUp,
@@ -20,12 +20,7 @@ const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
 // define custom cards icon, includes functions etc.
 
-export const CustomTabBarCardsIcon = ({
-  color,
-  scrollY,
-  currentTheme,
-  focused,
-}) => {
+export const CustomTabBarCardsIcon = ({ color, currentTheme, focused }) => {
   // define some contexts and routes
 
   const navigation = useNavigation();
@@ -37,6 +32,8 @@ export const CustomTabBarCardsIcon = ({
   // animate border line width
   const animateValueRef = useRef(new Animated.Value(focused ? 60 : 0));
   const animateValue = animateValueRef.current;
+
+  const scrollY = useSelector((state) => state.storeScrolls.cardsScrollY);
 
   useEffect(() => {
     if (focused) {
@@ -82,6 +79,7 @@ export const CustomTabBarCardsIcon = ({
           } else {
             navigation.navigate("Cards");
           }
+          dispatch(setActiveTabBar("Cards"));
         }}
       >
         <FontAwesome name="address-book-o" size={25} color={color} />

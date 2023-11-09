@@ -1,6 +1,17 @@
-import { useIsFocused } from "@react-navigation/native";
+import {
+  useIsFocused,
+  useNavigation,
+  useRoute,
+} from "@react-navigation/native";
 import axios from "axios";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   Dimensions,
   FlatList,
@@ -20,6 +31,9 @@ import { ProceduresOptions } from "../../../datas/registerDatas";
 import { setFeedRefreshControl } from "../../../redux/rerenders";
 import { Feed } from "../../../screens/feeds/feedCard/feedCard";
 import { ScrollGallery } from "../../../screens/feeds/scrollGallery";
+import { Header } from "./header";
+import { setScreenModal } from "../../../redux/app";
+import { RouteNameContext } from "../../../context/routName";
 
 /**
  * Feeds screen
@@ -27,9 +41,12 @@ import { ScrollGallery } from "../../../screens/feeds/scrollGallery";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
-export const SavedItems = ({ navigation, setScrollY, setScrollYF }) => {
+export const SavedItems = ({ hideModal }) => {
   // defines when screen focused
   const isFocused = useIsFocused();
+
+  // navigation
+  const navigation = useNavigation();
 
   // defines theme context
   const theme = useSelector((state) => state.storeApp.theme);
@@ -309,6 +326,7 @@ export const SavedItems = ({ navigation, setScrollY, setScrollYF }) => {
 
   return (
     <View style={{ flex: 1 }}>
+      <Header onBack={hideModal} title="Saved Items" />
       <View>
         <NavigatorComponent
           activeList={activeList}
@@ -385,7 +403,12 @@ export const SavedItems = ({ navigation, setScrollY, setScrollYF }) => {
           )}
           {products?.length > 0 ? (
             <FlatList
-              contentContainerStyle={{ minHeight: SCREEN_HEIGHT }}
+              contentContainerStyle={{
+                minHeight: SCREEN_HEIGHT,
+                alignItems: "center",
+                gap: 10,
+                paddingTop: 10,
+              }}
               style={{ width: SCREEN_WIDTH }}
               showsVerticalScrollIndicator={false}
               ref={flatListRefF}
@@ -523,18 +546,24 @@ const NavigatorComponent = ({
 
 const ProductItem = ({ item, navigation, currentTheme, categoriesList }) => {
   const [loading, setLoading] = useState(true);
-  // backend url
+  const dispatch = useDispatch();
+  const route = useRoute();
 
   return (
     <TouchableOpacity
       activeOpacity={0.8}
       onPress={() =>
-        navigation.navigate("Product", {
-          product: item,
-        })
+        dispatch(
+          setScreenModal({
+            active: true,
+            screen: "Product",
+            data: item,
+            route: route.name,
+          })
+        )
       }
       style={{
-        width: "100%",
+        width: "95%",
         borderWidth: 1,
         borderColor: currentTheme.line,
         padding: 15,

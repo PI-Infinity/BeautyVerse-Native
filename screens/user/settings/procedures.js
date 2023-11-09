@@ -1,4 +1,4 @@
-import { FontAwesome, FontAwesome5 } from "@expo/vector-icons";
+import { FontAwesome, FontAwesome5, MaterialIcons } from "@expo/vector-icons";
 import axios from "axios";
 import React, { useEffect, useRef, useState } from "react";
 import {
@@ -30,6 +30,8 @@ import DeleteDialog from "../../../components/confirmDialog";
 import { setLoading } from "../../../redux/app";
 import { BackDrop } from "../../../components/backDropLoader";
 import { Language } from "../../../context/language";
+import { Header } from "./header";
+import { AddNewProcedures } from "./addNewProcedures";
 
 /**
  * User procedures in settings
@@ -37,7 +39,7 @@ import { Language } from "../../../context/language";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
-export const Procedures = () => {
+export const Procedures = ({ hideModal }) => {
   // define redux dispatch
   const dispatch = useDispatch();
 
@@ -94,30 +96,6 @@ export const Procedures = () => {
 
   // backend url
   const backendUrl = useSelector((state) => state.storeApp.backendUrl);
-
-  // // add procedure
-  // const AddProcedure = async (val) => {
-  //   let ifInclude = currentUser?.procedures.find(
-  //     (item) => item.value.toLowerCase() === val?.toLowerCase()
-  //   );
-  //   if (ifInclude) {
-  //     Alert.alert("Procedure already defined in your list!");
-  //   } else {
-  //     try {
-  //       dispatch(AddCurrentUserProcedure({ value: val }));
-  //       const response = await axios.post(
-  //         backendUrl + `/api/v1/users/${currentUser?._id}/procedures`,
-  //         {
-  //           value: val,
-  //         }
-  //       );
-  //       setSuccess(true);
-  //       dispatch(setRerenderCurrentUser());
-  //     } catch (error) {
-  //       Alert.alert(error.data.response.message);
-  //     }
-  //   }
-  // };
 
   // edit procedure
   const EditProcedure = async (val) => {
@@ -214,6 +192,16 @@ export const Procedures = () => {
     }, 100);
   }, []);
 
+  // scrolling ref
+  const scrollRef = useRef();
+  const [scrollPosition, setScrollPosition] = useState({ x: 0, y: 0 });
+
+  // edit address modal
+  const [openEditProcedure, setOpenEditProcedure] = useState({
+    active: false,
+    target: {},
+  });
+
   return (
     <>
       <BackDrop loading={loading} setLoading={setLoading} />
@@ -229,203 +217,194 @@ export const Procedures = () => {
           <ActivityIndicator size="large" color={currentTheme.pink} />
         </View>
       ) : (
-        <View
-          style={{
-            width: SCREEN_WIDTH,
-            paddingBottom: 15,
-            alignItems: "center",
-            paddingHorizontal: 20,
+        <ScrollView
+          bounces={Platform.OS === "ios" ? false : undefined}
+          overScrollMode={Platform.OS === "ios" ? "never" : "always"}
+          keyboardShouldPersistTaps="handled"
+          horizontal
+          pagingEnabled
+          ref={scrollRef}
+          onScroll={(event) => {
+            // Get current scroll position
+            const position = event.nativeEvent.contentOffset;
+            setScrollPosition(position);
           }}
         >
-          <DeleteDialog
-            isVisible={success}
-            onClose={() => setSuccess(false)}
-            onDelete={() => Deleting(ItemId)}
-            delet="Remove"
-            cancel="Cancel"
-            title="Are you sure to want to delete this procedure?"
-          />
-          <View style={{ width: "100%", marginTop: 10, alignItems: "center" }}>
-            {categories?.length > 1 && (
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                style={styles.navigator}
-                contentContainerStyle={{
-                  flexDirection: "row",
-                  paddingRight: 30,
-                }}
-              >
-                <TouchableOpacity
-                  onPress={() => setActive("all")}
-                  style={
-                    active === "all"
-                      ? styles.categoryButtonActive
-                      : styles.categoryButton
-                  }
+          <View
+            style={{
+              width: SCREEN_WIDTH,
+              paddingBottom: 15,
+              alignItems: "center",
+              paddingHorizontal: 20,
+            }}
+          >
+            <Header
+              onBack={hideModal}
+              title="Procedures"
+              subScreen={{
+                icon: (
+                  <MaterialIcons
+                    name="add"
+                    size={24}
+                    color={currentTheme.pink}
+                  />
+                ),
+                title: "Add New Procedure",
+                onPress: () =>
+                  scrollRef.current.scrollTo({
+                    x: SCREEN_WIDTH,
+                    animated: true,
+                  }),
+              }}
+            />
+            <DeleteDialog
+              isVisible={success}
+              onClose={() => setSuccess(false)}
+              onDelete={() => Deleting(ItemId)}
+              delet="Remove"
+              cancel="Cancel"
+              title="Are you sure to want to delete this procedure?"
+            />
+            <View
+              style={{
+                width: SCREEN_WIDTH,
+                marginTop: 10,
+                alignItems: "center",
+              }}
+            >
+              {categories?.length > 1 && (
+                <ScrollView
+                  bounces={Platform.OS === "ios" ? false : undefined}
+                  overScrollMode={Platform.OS === "ios" ? "never" : "always"}
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  style={styles.navigator}
+                  contentContainerStyle={{
+                    flexDirection: "row",
+                    paddingRight: 30,
+                    gap: 10,
+                  }}
                 >
-                  <Text
-                    style={[
-                      styles.buttonText,
-                      { color: active === "all" ? "#111" : "#ccc" },
-                    ]}
-                  >
-                    {language?.language?.User?.userPage?.all}
-                  </Text>
-                </TouchableOpacity>
-                {categories?.map((cat, index) => (
                   <TouchableOpacity
-                    key={index}
-                    onPress={() => setActive(cat?.value)}
-                    style={
-                      active.toLowerCase() === cat?.value.toLowerCase()
+                    onPress={() => setActive("all")}
+                    style={[
+                      active === "all"
                         ? styles.categoryButtonActive
-                        : styles.categoryButton
-                    }
+                        : styles.categoryButton,
+
+                      {
+                        borderWidth: 1.5,
+                        borderColor:
+                          active === "all"
+                            ? currentTheme.pink
+                            : currentTheme.line,
+                      },
+                    ]}
                   >
                     <Text
                       style={[
                         styles.buttonText,
                         {
-                          color:
-                            active.toLowerCase() === cat?.value.toLowerCase()
-                              ? "#111"
-                              : "#ccc",
+                          color: active === "all" ? currentTheme.pink : "#ccc",
                         },
                       ]}
                     >
-                      {cat?.label}
+                      {language?.language?.User?.userPage?.all}
                     </Text>
                   </TouchableOpacity>
-                ))}
-              </ScrollView>
-            )}
-            <ScrollView
-              style={{
-                // height: SCREEN_HEIGHT / 2,
-                width: "100%",
-                marginTop: 10,
-              }}
-              bounces={Platform.OS === "ios" ? false : undefined}
-              overScrollMode={Platform.OS === "ios" ? "never" : "always"}
-              // showsVerticalScrollIndicator={false}
-              contentContainerStyle={{ paddingBottom: 30 }}
-            >
-              {currentUser.procedures
-                .filter((item) => {
-                  if (active === "all" || categories?.length < 1) {
-                    return item;
-                  } else if (
-                    item?.value.toLowerCase().includes(active.toLowerCase())
-                  ) {
-                    return item;
-                  }
-                })
-                .map((item, index) => {
-                  const label = splited.find((c) => item?.value === c.value);
-                  return (
-                    <View
+                  {categories?.map((cat, index) => (
+                    <TouchableOpacity
+                      key={index}
+                      onPress={() => setActive(cat?.value)}
                       style={[
-                        styles.item,
+                        active.toLowerCase() === cat?.value.toLowerCase()
+                          ? styles.categoryButtonActive
+                          : styles.categoryButton,
                         {
-                          backgroundColor: currentTheme.background2,
-                          gap: 8,
+                          borderWidth: 1.5,
+                          borderColor:
+                            active.toLowerCase() === cat?.value.toLowerCase()
+                              ? currentTheme.pink
+                              : currentTheme.line,
                         },
                       ]}
-                      key={index}
                     >
-                      <View>
-                        <Text
-                          style={{
-                            color: currentTheme.font,
-                            letterSpacing: 0.2,
-                          }}
-                        >
-                          {label?.label}
-                        </Text>
-                      </View>
-                      <View style={{ flexDirection: "row" }}>
-                        <TouchableOpacity
-                          onPress={() => {
-                            setEditPrice(true);
-                            setProc(item);
-                          }}
-                          style={{
-                            flexDirection: "row",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            borderWidth: 1,
-                            borderColor: currentTheme.line,
-                            borderRadius: 5,
-                            padding: 5,
-                            paddingVertical: 2.5,
-                            width: 70,
-                          }}
-                        >
+                      <Text
+                        style={[
+                          styles.buttonText,
+                          {
+                            color:
+                              active.toLowerCase() === cat?.value.toLowerCase()
+                                ? currentTheme.pink
+                                : "#ccc",
+                          },
+                        ]}
+                      >
+                        {cat?.label}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              )}
+              <ScrollView
+                style={{
+                  height: SCREEN_HEIGHT - 150,
+                  width: "95%",
+                }}
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={{ paddingBottom: 50, paddingTop: 10 }}
+              >
+                {currentUser.procedures
+                  .filter((item) => {
+                    if (active === "all" || categories?.length < 1) {
+                      return item;
+                    } else if (
+                      item?.value.toLowerCase().includes(active.toLowerCase())
+                    ) {
+                      return item;
+                    }
+                  })
+                  .map((item, index) => {
+                    const label = splited.find((c) => item?.value === c.value);
+                    return (
+                      <View
+                        style={[
+                          styles.item,
+                          {
+                            // backgroundColor: currentTheme.background2,
+                            gap: 8,
+                          },
+                        ]}
+                        key={index}
+                      >
+                        <View>
                           <Text
                             style={{
                               color: currentTheme.font,
-                              padding: 5,
                               letterSpacing: 0.2,
                             }}
                           >
-                            {item.price}
+                            {label?.label}
                           </Text>
-
-                          <View
+                        </View>
+                        <View style={{ flexDirection: "row" }}>
+                          <TouchableOpacity
+                            onPress={() => {
+                              setEditPrice(true);
+                              setProc(item);
+                            }}
                             style={{
                               flexDirection: "row",
                               alignItems: "center",
                               justifyContent: "center",
-                              gap: 10,
+                              borderWidth: 1,
+                              borderColor: currentTheme.line,
+                              borderRadius: 5,
+                              padding: 5,
+                              paddingVertical: 2.5,
+                              width: 70,
                             }}
                           >
-                            {currentUser?.currency === "Dollar" ? (
-                              <FontAwesome
-                                name="dollar"
-                                color={currentTheme.pink}
-                                size={14}
-                              />
-                            ) : currentUser?.currency === "Euro" ? (
-                              <FontAwesome
-                                name="euro"
-                                color={currentTheme.pink}
-                                size={14}
-                              />
-                            ) : (
-                              <Text
-                                style={{
-                                  fontWeight: "bold",
-                                  color: currentTheme.pink,
-                                  fontSize: 14,
-                                }}
-                              >
-                                {"\u20BE"}
-                              </Text>
-                            )}
-                          </View>
-                        </TouchableOpacity>
-
-                        <TouchableOpacity
-                          acitveOpacity={2}
-                          onPress={() => {
-                            showDurationModal();
-                            setProc(item);
-                          }}
-                          style={{
-                            flexDirection: "row",
-                            alignItems: "center",
-                            borderWidth: 1,
-                            borderColor: currentTheme.line,
-                            padding: 5,
-                            paddingVertical: 2.5,
-                            width: item.duration ? 120 : 50,
-                            justifyContent: "center",
-                            marginLeft: 8,
-                            borderRadius: 5,
-                          }}
-                        >
-                          {item.duration && (
                             <Text
                               style={{
                                 color: currentTheme.font,
@@ -433,60 +412,136 @@ export const Procedures = () => {
                                 letterSpacing: 0.2,
                               }}
                             >
-                              {item.duration < 60
-                                ? item.duration + " min."
-                                : item.duration >= 60
-                                ? Math.floor(item.duration / 60) +
-                                  "h" +
-                                  (item.duration % 60 > 0
-                                    ? " " + (item.duration % 60) + " min."
-                                    : "")
-                                : "0h"}
+                              {item.price}
                             </Text>
-                          )}
-                          <FontAwesome5
-                            name="clock"
-                            color={currentTheme.pink}
-                            size={16}
-                          />
-                        </TouchableOpacity>
-                      </View>
-                      {currentUser?.procedures?.length > 1 && (
-                        <View
-                          style={{ position: "absolute", top: 8, right: 8 }}
-                        >
+
+                            <View
+                              style={{
+                                flexDirection: "row",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                gap: 10,
+                              }}
+                            >
+                              {currentUser?.currency === "Dollar" ? (
+                                <FontAwesome
+                                  name="dollar"
+                                  color={currentTheme.pink}
+                                  size={14}
+                                />
+                              ) : currentUser?.currency === "Euro" ? (
+                                <FontAwesome
+                                  name="euro"
+                                  color={currentTheme.pink}
+                                  size={14}
+                                />
+                              ) : (
+                                <Text
+                                  style={{
+                                    fontWeight: "bold",
+                                    color: currentTheme.pink,
+                                    fontSize: 14,
+                                  }}
+                                >
+                                  {"\u20BE"}
+                                </Text>
+                              )}
+                            </View>
+                          </TouchableOpacity>
+
                           <TouchableOpacity
+                            acitveOpacity={2}
                             onPress={() => {
-                              setItemId(item._id);
-                              setSuccess(true);
+                              showDurationModal();
+                              setProc(item);
                             }}
-                            style={{ flex: 0.5, alignItems: "flex-end" }}
+                            style={{
+                              flexDirection: "row",
+                              alignItems: "center",
+                              borderWidth: 1,
+                              borderColor: currentTheme.line,
+                              padding: 5,
+                              paddingVertical: 2.5,
+                              width: item.duration ? 120 : 50,
+                              justifyContent: "center",
+                              marginLeft: 8,
+                              borderRadius: 5,
+                            }}
                           >
-                            <FontAwesome5 name="times" color="red" size={20} />
+                            {item.duration && (
+                              <Text
+                                style={{
+                                  color: currentTheme.font,
+                                  padding: 5,
+                                  letterSpacing: 0.2,
+                                }}
+                              >
+                                {item.duration < 60
+                                  ? item.duration + " min."
+                                  : item.duration >= 60
+                                  ? Math.floor(item.duration / 60) +
+                                    "h" +
+                                    (item.duration % 60 > 0
+                                      ? " " + (item.duration % 60) + " min."
+                                      : "")
+                                  : "0h"}
+                              </Text>
+                            )}
+                            <FontAwesome5
+                              name="clock"
+                              color={currentTheme.pink}
+                              size={16}
+                            />
                           </TouchableOpacity>
                         </View>
-                      )}
-                    </View>
-                  );
-                })}
-              <ProcedurePricePicker
-                currentTheme={currentTheme}
-                isVisible={editPrice}
-                setEditPrice={setEditPrice}
-                closeModal={EditProcedure}
-                oldPrice={proc?.price}
-                // fadeAnim={fadeDurationAnim}
-              />
-              <ProcedureDurationPicker
-                currentTheme={currentTheme}
-                visible={visible}
-                setVisible={setVisible}
-                fadeAnim={fadeDurationAnim}
-                EditProcedure={EditProcedure}
-              />
-            </ScrollView>
+                        {currentUser?.procedures?.length > 1 && (
+                          <View
+                            style={{ position: "absolute", top: 8, right: 8 }}
+                          >
+                            <TouchableOpacity
+                              onPress={() => {
+                                setItemId(item._id);
+                                setSuccess(true);
+                              }}
+                              style={{ flex: 0.5, alignItems: "flex-end" }}
+                            >
+                              <FontAwesome5
+                                name="times"
+                                color="red"
+                                size={20}
+                              />
+                            </TouchableOpacity>
+                          </View>
+                        )}
+                      </View>
+                    );
+                  })}
+                <ProcedurePricePicker
+                  currentTheme={currentTheme}
+                  isVisible={editPrice}
+                  setEditPrice={setEditPrice}
+                  closeModal={EditProcedure}
+                  oldPrice={proc?.price}
+                  // fadeAnim={fadeDurationAnim}
+                />
+                <ProcedureDurationPicker
+                  currentTheme={currentTheme}
+                  visible={visible}
+                  setVisible={setVisible}
+                  fadeAnim={fadeDurationAnim}
+                  EditProcedure={EditProcedure}
+                />
+              </ScrollView>
+            </View>
           </View>
-        </View>
+          <View>
+            <AddNewProcedures
+              onBack={() =>
+                scrollRef.current.scrollTo({ x: 0, animated: true })
+              }
+            />
+          </View>
+        </ScrollView>
       )}
     </>
   );
@@ -523,14 +578,13 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     paddingHorizontal: 15,
     alignItems: "center",
-    height: 25,
+    height: 30,
     justifyContent: "center",
   },
   categoryButtonActive: {
     paddingHorizontal: 15,
     alignItems: "center",
-    height: 25,
-    backgroundColor: "#F866B1",
+    height: 30,
     justifyContent: "center",
     borderRadius: 50,
   },

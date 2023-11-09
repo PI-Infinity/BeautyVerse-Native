@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   ScrollView,
   StyleSheet,
@@ -8,20 +8,31 @@ import {
 } from "react-native";
 import { useSelector } from "react-redux";
 import { darkTheme, lightTheme } from "../../../context/theme";
+import { Header } from "../settings/header";
+import { Language } from "../../../context/language";
+import { ActivityIndicator } from "react-native-paper";
 
 /**
  * Define statistic's chart component in user screen
  */
 
-const Charts = ({ route }) => {
+const Charts = ({ hideModal }) => {
+  const [loading, setLoading] = useState(true);
   // define theme
   const theme = useSelector((state) => state.storeApp.theme);
+
+  // language
+  const language = Language();
 
   // define current user
   const currentTheme = theme ? darkTheme : lightTheme;
 
   // define statistics data
-  const data = route.params;
+  const data = useSelector((state) =>
+    state.storeApp.screenModal.find(
+      (i) => i.activeTabBar === state.storeApp.activeTabBar
+    )
+  );
 
   // define active chart
   const [activeChart, setActiveChart] = useState(1);
@@ -35,19 +46,19 @@ const Charts = ({ route }) => {
     chart = (
       <View style={{ gap: 15 }}>
         <Chart
-          data={data.data.dinamically.dailyInLastMonth}
+          data={data?.data?.dinamically.dailyInLastMonth}
           title="Last month's visitors"
           x={1}
           initial="Days:"
         />
         <Chart
-          data={data.data.dinamically.dailyInLastMonth}
+          data={data?.data?.dinamically.dailyInLastMonth}
           title="Last month's stars"
           x={2}
           initial="Days:"
         />
         <Chart
-          data={data.data.dinamically.dailyInLastMonth}
+          data={data?.data?.dinamically.dailyInLastMonth}
           title="Last month's followers"
           x={3}
           initial="Days:"
@@ -58,19 +69,19 @@ const Charts = ({ route }) => {
     chart = (
       <View style={{ gap: 15 }}>
         <Chart
-          data={data.data.dinamically.monthlyStatsInLastYear}
+          data={data?.data?.dinamically.monthlyStatsInLastYear}
           title="Last year's visitors"
           x={1}
           initial="Months:"
         />
         <Chart
-          data={data.data.dinamically.monthlyStatsInLastYear}
+          data={data?.data?.dinamically.monthlyStatsInLastYear}
           title="Last year's stars"
           x={2}
           initial="Months:"
         />
         <Chart
-          data={data.data.dinamically.monthlyStatsInLastYear}
+          data={data?.data?.dinamically.monthlyStatsInLastYear}
           title="Last year's followers"
           x={3}
           initial="Months:"
@@ -81,19 +92,19 @@ const Charts = ({ route }) => {
     chart = (
       <View style={{ gap: 15 }}>
         <Chart
-          data={data.data.dinamically.yearlyStatsInLastYear}
+          data={data?.data?.dinamically.yearlyStatsInLastYear}
           title="Last year's visitors"
           x={1}
           initial="Years:"
         />
         <Chart
-          data={data.data.dinamically.yearlyStatsInLastYear}
+          data={data?.data?.dinamically.yearlyStatsInLastYear}
           title="Last year's stars"
           x={2}
           initial="Years:"
         />
         <Chart
-          data={data.data.dinamically.yearlyStatsInLastYear}
+          data={data?.data?.dinamically.yearlyStatsInLastYear}
           title="Last year's followers"
           x={3}
           initial="Years:"
@@ -101,81 +112,102 @@ const Charts = ({ route }) => {
       </View>
     );
   }
+  useEffect(() => {
+    setTimeout(() => {
+      setLoading(false);
+    }, 10);
+  }, []);
 
   return (
-    <ScrollView
-      style={{ backgroundColor: currentTheme.background }}
-      contentContainerStyle={{ gap: 15, paddingBottom: 50 }}
-    >
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        pagingEnabled={true}
-        style={{
-          marginTop: 20,
-          paddingLeft: 20,
-          maxHeight: 50,
-        }}
-        contentContainerStyle={{ gap: 15 }}
-      >
-        <TouchableOpacity
-          style={{
-            padding: 10,
-            paddingVertical: 5,
-            borderRadius: 50,
-            alignItems: "center",
-            borderWidth: 2,
-            borderColor:
-              activeChart === 1 ? currentTheme.pink : currentTheme.background,
-            height: 30,
-          }}
-          activeOpacity={0.3}
-          onPress={() => setActiveChart(1)}
+    <>
+      <Header
+        title={language?.language?.User?.userPage?.statistics}
+        onBack={hideModal}
+      />
+      {loading ? (
+        <ActivityIndicator size={23} color={currentTheme.pink} />
+      ) : (
+        <ScrollView
+          style={{}}
+          contentContainerStyle={{ gap: 15, paddingBottom: 50 }}
         >
-          <Text style={[styles.itemTitle, { color: currentTheme.font }]}>
-            Last month
-          </Text>
-        </TouchableOpacity>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            pagingEnabled={true}
+            style={{
+              marginTop: 20,
+              paddingLeft: 20,
+              maxHeight: 50,
+            }}
+            contentContainerStyle={{ gap: 15 }}
+          >
+            <TouchableOpacity
+              style={{
+                padding: 10,
+                paddingVertical: 5,
+                borderRadius: 50,
+                alignItems: "center",
+                borderWidth: 2,
+                borderColor:
+                  activeChart === 1
+                    ? currentTheme.pink
+                    : currentTheme.background,
+                height: 30,
+              }}
+              activeOpacity={0.3}
+              onPress={() => setActiveChart(1)}
+            >
+              <Text style={[styles.itemTitle, { color: currentTheme.font }]}>
+                Last month
+              </Text>
+            </TouchableOpacity>
 
-        <TouchableOpacity
-          style={{
-            padding: 10,
-            paddingVertical: 5,
-            borderRadius: 50,
-            alignItems: "center",
-            borderWidth: 2,
-            borderColor:
-              activeChart === 2 ? currentTheme.pink : currentTheme.background,
-            height: 30,
-          }}
-          activeOpacity={0.3}
-          onPress={() => setActiveChart(2)}
-        >
-          <Text style={[styles.itemTitle, { color: currentTheme.font }]}>
-            Last year
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={{
-            padding: 10,
-            paddingVertical: 5,
-            borderRadius: 50,
-            alignItems: "center",
-            borderWidth: 2,
-            borderColor:
-              activeChart === 3 ? currentTheme.pink : currentTheme.background,
-            height: 30,
-          }}
-          activeOpacity={0.3}
-          onPress={() => setActiveChart(3)}
-        >
-          <Text style={[styles.itemTitle, { color: currentTheme.font }]}>
-            Annually
-          </Text>
-        </TouchableOpacity>
-      </ScrollView>
-      <View>{chart}</View>
-    </ScrollView>
+            <TouchableOpacity
+              style={{
+                padding: 10,
+                paddingVertical: 5,
+                borderRadius: 50,
+                alignItems: "center",
+                borderWidth: 2,
+                borderColor:
+                  activeChart === 2
+                    ? currentTheme.pink
+                    : currentTheme.background,
+                height: 30,
+              }}
+              activeOpacity={0.3}
+              onPress={() => setActiveChart(2)}
+            >
+              <Text style={[styles.itemTitle, { color: currentTheme.font }]}>
+                Last year
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={{
+                padding: 10,
+                paddingVertical: 5,
+                borderRadius: 50,
+                alignItems: "center",
+                borderWidth: 2,
+                borderColor:
+                  activeChart === 3
+                    ? currentTheme.pink
+                    : currentTheme.background,
+                height: 30,
+              }}
+              activeOpacity={0.3}
+              onPress={() => setActiveChart(3)}
+            >
+              <Text style={[styles.itemTitle, { color: currentTheme.font }]}>
+                Annually
+              </Text>
+            </TouchableOpacity>
+          </ScrollView>
+          <View>{chart}</View>
+        </ScrollView>
+      )}
+    </>
   );
 };
 

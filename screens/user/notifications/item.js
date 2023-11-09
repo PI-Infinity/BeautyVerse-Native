@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from "react";
+import { Entypo, FontAwesome, MaterialIcons } from "@expo/vector-icons";
+import axios from "axios";
+import React, { useState } from "react";
 import {
-  ActivityIndicator,
   Image,
   Pressable,
   StyleSheet,
@@ -10,15 +11,10 @@ import {
   View,
 } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
+import { ActivityIndicator } from "react-native-paper";
 import { Language } from "../../../context/language";
-import axios from "axios";
 import GetTimesAgo from "../../../functions/getTimesAgo";
-import {
-  Entypo,
-  FontAwesome,
-  Fontisto,
-  MaterialIcons,
-} from "@expo/vector-icons";
+import { setScreenModal } from "../../../redux/app";
 import {
   setNotifications,
   setUnreadNotifications,
@@ -34,6 +30,7 @@ export const NotificationItem = ({
   navigation,
   ReadNotification,
   currentUser,
+  hideModal,
 }) => {
   // backend url
   const backendUrl = useSelector((state) => state.storeApp.backendUrl);
@@ -47,27 +44,27 @@ export const NotificationItem = ({
   // dispatch
   const dispatch = useDispatch();
 
-  // on press navigate to feed screen
-  const handlePress = (x) => {
-    if (x === "feed") {
-      if (item.feed) {
-        navigation.navigate("UserFeed", {
-          user: currentUser,
-          feed: item.feed,
-        });
-      } else {
-        Alert.alert("Feed not defined");
-      }
-    } else if (x === "product") {
-      if (item.product) {
-        navigation.navigate("Product", {
-          product: { ...item.product, owner: currentUser },
-        });
-      } else {
-        Alert.alert("Product not defined");
-      }
-    }
-  };
+  // // on press navigate to feed screen
+  // const handlePress = (x) => {
+  //   if (x === "feed") {
+  //     if (item.feed) {
+  //       navigation.navigate("UserFeed", {
+  //         user: currentUser,
+  //         feed: item.feed,
+  //       });
+  //     } else {
+  //       Alert.alert("Feed not defined");
+  //     }
+  //   } else if (x === "product") {
+  //     if (item.product) {
+  //       navigation.navigate("Product", {
+  //         product: { ...item.product, owner: currentUser },
+  //       });
+  //     } else {
+  //       Alert.alert("Product not defined");
+  //     }
+  //   }
+  // };
 
   // notifications
   const notifications = useSelector(
@@ -94,7 +91,7 @@ export const NotificationItem = ({
           `/api/v1/users/${currentUser?._id}/notifications/${item?._id}`
       );
     } catch (error) {
-      console.log(error.response.data.message);
+      console.log(error.response);
     }
   };
 
@@ -193,11 +190,11 @@ export const NotificationItem = ({
             alignItems: "center",
             gap: 10,
             padding: 10,
-            backgroundColor:
-              item?.status === "unread" ? "green" : currentTheme.background,
+
             borderRadius: 50,
             borderWidth: 1,
-            borderColor: currentTheme.line,
+            borderColor:
+              item?.status === "unread" ? currentTheme.pink : currentTheme.line,
           }}
           onPress={
             item.status === "unread"
@@ -209,10 +206,12 @@ export const NotificationItem = ({
             activeOpacity={0.3}
             onPress={
               item?.sender
-                ? () =>
+                ? () => {
+                    hideModal();
                     navigation.navigate("UserVisit", {
                       user: item?.sender,
-                    })
+                    });
+                  }
                 : undefined
             }
           >
@@ -265,7 +264,9 @@ export const NotificationItem = ({
               <Text
                 style={{
                   color:
-                    item?.status === "unread" ? "#f1f1f1" : currentTheme.font,
+                    item?.status === "unread"
+                      ? currentTheme.pink
+                      : currentTheme.font,
                   fontWeight: "bold",
                   fontSize: 14,
                 }}
@@ -276,7 +277,7 @@ export const NotificationItem = ({
                 style={{
                   color:
                     item?.status === "unread"
-                      ? "#f1f1f1"
+                      ? currentTheme.pink
                       : currentTheme.disabled,
                   fontSize: 12,
                 }}
@@ -287,7 +288,9 @@ export const NotificationItem = ({
             <Text
               style={{
                 color:
-                  item?.status === "unread" ? "#f1f1f1" : currentTheme.font,
+                  item?.status === "unread"
+                    ? currentTheme.pink
+                    : currentTheme.font,
                 fontSize: 12,
               }}
             >
@@ -347,11 +350,11 @@ export const NotificationItem = ({
             alignItems: "center",
             gap: 10,
             padding: 10,
-            backgroundColor:
-              item?.status === "unread" ? "green" : currentTheme.background,
+
             borderRadius: 50,
             borderWidth: 1,
-            borderColor: currentTheme.line,
+            borderColor:
+              item?.status === "unread" ? currentTheme.pink : currentTheme.line,
           }}
           onPress={
             item.status === "unread"
@@ -374,7 +377,10 @@ export const NotificationItem = ({
           >
             <Text
               style={{
-                color: currentTheme.font,
+                color:
+                  item?.status === "unread"
+                    ? currentTheme.pink
+                    : currentTheme.font,
                 fontWeight: "bold",
                 fontSize: 14,
               }}
@@ -383,7 +389,10 @@ export const NotificationItem = ({
             </Text>
             <Text
               style={{
-                color: currentTheme.font,
+                color:
+                  item?.status === "unread"
+                    ? currentTheme.pink
+                    : currentTheme.font,
                 fontSize: 12,
               }}
             >
@@ -428,7 +437,11 @@ export const NotificationItem = ({
                   style={{ marginLeft: "auto" }}
                   name="dots-three-vertical"
                   size={18}
-                  color={currentTheme.font}
+                  color={
+                    item?.status === "unread"
+                      ? currentTheme.pink
+                      : currentTheme.font
+                  }
                 />
               </Pressable>
             )}

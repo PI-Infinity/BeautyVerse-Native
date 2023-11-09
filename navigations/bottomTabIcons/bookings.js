@@ -5,6 +5,7 @@ import { Animated, Pressable, Text, View, Dimensions } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 import { RouteNameContext } from "../../context/routName";
 import { setRerenderBookings } from "../../redux/rerenders";
+import { setActiveTabBar } from "../../redux/app";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -68,8 +69,14 @@ export const CustomTabBarBookingsIcon = ({
           isFocused
             ? () => dispatch(setRerenderBookings())
             : currentUser.type === "user"
-            ? () => navigation.navigate("BMSSent")
-            : () => navigation.navigate("BMS")
+            ? () => {
+                navigation.navigate("BMSSent");
+                dispatch(setActiveTabBar("BMSSent"));
+              }
+            : () => {
+                navigation.navigate("BMS");
+                dispatch(setActiveTabBar("BMS"));
+              }
         }
       >
         <View

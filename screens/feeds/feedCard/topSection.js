@@ -1,5 +1,5 @@
 import { Entypo, FontAwesome, Fontisto } from "@expo/vector-icons";
-import { useNavigation, useRoute } from "@react-navigation/native";
+import { useRoute } from "@react-navigation/native";
 import React, { useState } from "react";
 import {
   Dimensions,
@@ -11,11 +11,11 @@ import {
 } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 import { CacheableImage } from "../../../components/cacheableImage";
-import { Reports } from "../../../screens/feeds/feedCard/reports";
+import { Circle } from "../../../components/skeltons";
 import GetTimesAgo from "../../../functions/getTimesAgo";
 import { setSendReport } from "../../../redux/alerts";
 import { setBlur } from "../../../redux/app";
-import { Circle } from "../../../components/skeltons";
+import { Reports } from "../../../screens/feeds/feedCard/reports";
 
 /**
  * Top section of feed card
@@ -26,8 +26,6 @@ const { width: SCREEN_WIDTH } = Dimensions.get("window");
 export const TopSection = (props) => {
   // define redux dispatch
   const dispatch = useDispatch();
-  // define navigation
-  const navigation = useNavigation();
   // define route
   const route = useRoute();
   // define current user
@@ -107,7 +105,7 @@ export const TopSection = (props) => {
                 backgroundColor: "#3bd16f",
                 borderRadius: 50,
                 position: "absolute",
-                zIndex: 10000,
+                zIndex: 10010,
                 right: 0,
                 bottom: 3,
                 borderWidth: 3,
@@ -124,20 +122,12 @@ export const TopSection = (props) => {
             {props.user?.cover?.length > 0 ? (
               <TouchableOpacity
                 activeOpacity={route.name === "Feeds" ? 0.8 : 1}
-                onPress={
-                  props?.setActiveGallery
-                    ? () => {
-                        props?.setActiveGallery(false);
-                        dispatch(setBlur(false));
-                        navigation.navigate("User", {
-                          user: props.user,
-                        });
-                      }
-                    : () =>
-                        navigation.navigate("User", {
-                          user: props.user,
-                        })
-                }
+                onPress={() => {
+                  props.hideModal && props?.hideModal();
+                  props?.navigation.navigate("UserVisit", {
+                    user: props?.user,
+                  });
+                }}
                 style={{
                   width: 40,
                   height: 40,
@@ -200,14 +190,12 @@ export const TopSection = (props) => {
                   alignItems: "center",
                   justifyContent: "center",
                 }}
-                onPress={
-                  route.name === "Feeds"
-                    ? () =>
-                        navigation.navigate("User", {
-                          user: props.user,
-                        })
-                    : undefined
-                }
+                onPress={() => {
+                  props?.hideModal && props.hideModal();
+                  props?.navigation.navigate("UserVisit", {
+                    user: props?.user,
+                  });
+                }}
               >
                 <FontAwesome
                   name="user"
@@ -238,8 +226,8 @@ export const TopSection = (props) => {
               onPress={
                 route.name === "Feeds"
                   ? () =>
-                      navigation.navigate("User", {
-                        user: props.user,
+                      props?.navigation.navigate("UserVisit", {
+                        user: props?.user,
                       })
                   : undefined
               }
@@ -353,10 +341,13 @@ export const TopSection = (props) => {
                 }}
                 onPress={
                   props.user._id === currentUser._id && route.name !== "Feeds"
-                    ? props?.DotsFunction
-                    : () => {
-                        setOpenReports(!openReports);
+                    ? () => {
+                        props?.DotsFunction();
                         dispatch(setBlur(true));
+                      }
+                    : () => {
+                        dispatch(setBlur(true));
+                        setOpenReports(!openReports);
                       }
                 }
               >
@@ -382,8 +373,8 @@ export const TopSection = (props) => {
                         dispatch(setBlur(true));
                       }
                     : () => {
-                        dispatch(setBlur(true));
                         setOpenReports(!openReports);
+                        dispatch(setBlur(true));
                       }
                 }
               >

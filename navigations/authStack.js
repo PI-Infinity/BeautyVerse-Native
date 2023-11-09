@@ -31,6 +31,7 @@ import { Accept } from "../screens/authentication/accept";
 import { FontAwesome } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { BlurView } from "expo-blur";
+import Support from "../screens/user/settings/support";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -71,7 +72,7 @@ export function AuthStack({ route }) {
           headerTintColor: currentTheme.font,
           headerTitleStyle: {
             fontWeight: "bold",
-            fontSize: 18,
+            fontSize: 28,
             letterSpacing: 0.5,
           },
 
@@ -88,7 +89,7 @@ export function AuthStack({ route }) {
             >
               <Text
                 style={{
-                  fontSize: 18,
+                  fontSize: 24,
                   fontWeight: "bold",
                   color: currentTheme.font,
                   letterSpacing: 0.5,
@@ -122,7 +123,6 @@ export function AuthStack({ route }) {
           ),
           headerStyle: {
             height: SCREEN_HEIGHT / 9,
-            backgroundColor: currentTheme.background,
 
             elevation: 0,
             shadowOpacity: 0,
@@ -134,9 +134,7 @@ export function AuthStack({ route }) {
             fontSize: 18,
             letterSpacing: 0.5,
           },
-          cardStyle: {
-            backgroundColor: currentTheme.background,
-          },
+          cardStyle: {},
         }}
       />
       {/** register screen, where users choices register types */}
@@ -161,7 +159,6 @@ export function AuthStack({ route }) {
           ),
           headerStyle: {
             height: SCREEN_HEIGHT / 9,
-            backgroundColor: currentTheme.background,
 
             elevation: 0,
             shadowOpacity: 0,
@@ -173,9 +170,7 @@ export function AuthStack({ route }) {
             fontSize: 18,
             letterSpacing: 0.5,
           },
-          cardStyle: {
-            backgroundColor: currentTheme.background,
-          },
+          cardStyle: {},
         }}
       />
       <Stack.Screen
@@ -199,7 +194,6 @@ export function AuthStack({ route }) {
           ),
           headerStyle: {
             height: SCREEN_HEIGHT / 9,
-            backgroundColor: currentTheme.background,
 
             elevation: 0,
             shadowOpacity: 0,
@@ -211,9 +205,7 @@ export function AuthStack({ route }) {
             fontSize: 18,
             letterSpacing: 0.5,
           },
-          cardStyle: {
-            backgroundColor: currentTheme.background,
-          },
+          cardStyle: {},
         }}
       />
       <Stack.Screen
@@ -237,7 +229,6 @@ export function AuthStack({ route }) {
           ),
           headerStyle: {
             height: SCREEN_HEIGHT / 9,
-            backgroundColor: currentTheme.background,
 
             elevation: 0,
             shadowOpacity: 0,
@@ -249,9 +240,7 @@ export function AuthStack({ route }) {
             fontSize: 18,
             letterSpacing: 0.5,
           },
-          cardStyle: {
-            backgroundColor: currentTheme.background,
-          },
+          cardStyle: {},
         }}
       />
       {/* */}
@@ -276,7 +265,6 @@ export function AuthStack({ route }) {
           ),
           headerStyle: {
             height: SCREEN_HEIGHT / 9,
-            backgroundColor: currentTheme.background,
 
             elevation: 0,
             shadowOpacity: 0,
@@ -288,9 +276,7 @@ export function AuthStack({ route }) {
             fontSize: 18,
             letterSpacing: 0.5,
           },
-          cardStyle: {
-            backgroundColor: currentTheme.background,
-          },
+          cardStyle: {},
         }}
       />
       {/** identify screen, main register  */}
@@ -315,7 +301,6 @@ export function AuthStack({ route }) {
           ),
           headerStyle: {
             height: SCREEN_HEIGHT / 9,
-            backgroundColor: currentTheme.background,
 
             elevation: 0,
             shadowOpacity: 0,
@@ -327,9 +312,7 @@ export function AuthStack({ route }) {
             fontSize: 18,
             letterSpacing: 0.5,
           },
-          cardStyle: {
-            backgroundColor: currentTheme.background,
-          },
+          cardStyle: {},
         }}
       />
 
@@ -355,7 +338,6 @@ export function AuthStack({ route }) {
           ),
           headerStyle: {
             height: SCREEN_HEIGHT / 9,
-            backgroundColor: currentTheme.background,
 
             elevation: 0,
             shadowOpacity: 0,
@@ -367,9 +349,7 @@ export function AuthStack({ route }) {
             fontSize: 18,
             letterSpacing: 0.5,
           },
-          cardStyle: {
-            backgroundColor: currentTheme.background,
-          },
+          cardStyle: {},
         }}
       />
       {/** prices screen, navigated from welcome screen */}
@@ -380,7 +360,41 @@ export function AuthStack({ route }) {
           headerBackTitleVisible: false,
           title: language?.language?.User?.userPage?.prices,
           headerStyle: {
-            backgroundColor: currentTheme.background,
+            elevation: 0,
+            shadowOpacity: 0,
+            borderBottomWidth: 0,
+          },
+          headerTintColor: currentTheme.font,
+          headerTitleStyle: {
+            fontWeight: "bold",
+            fontSize: 18,
+            letterSpacing: 0.5,
+          },
+          cardStyle: {},
+        })}
+      />
+      {/** terms and rules, navigated from welcome screen */}
+      <Stack.Screen
+        name="Support"
+        component={Support}
+        options={({ route }) => ({
+          headerBackTitleVisible: false,
+          headerLeft: () => (
+            <TouchableOpacity
+              activeOpacity={0.9}
+              onPress={() => navigation.goBack()}
+              style={{ padding: 8, paddingLeft: 15 }}
+            >
+              <FontAwesome
+                name="arrow-left"
+                color={currentTheme.pink}
+                size={22}
+              />
+            </TouchableOpacity>
+          ),
+          title: language?.language?.User?.userPage?.support,
+          headerStyle: {
+            height: SCREEN_HEIGHT / 9,
 
             elevation: 0,
             shadowOpacity: 0,
@@ -392,9 +406,7 @@ export function AuthStack({ route }) {
             fontSize: 18,
             letterSpacing: 0.5,
           },
-          cardStyle: {
-            backgroundColor: currentTheme.background,
-          },
+          cardStyle: {},
         })}
       />
       {/** terms and rules, navigated from welcome screen */}
@@ -419,7 +431,6 @@ export function AuthStack({ route }) {
           title: language?.language?.Pages?.pages?.terms,
           headerStyle: {
             height: SCREEN_HEIGHT / 9,
-            backgroundColor: currentTheme.background,
 
             elevation: 0,
             shadowOpacity: 0,
@@ -431,9 +442,7 @@ export function AuthStack({ route }) {
             fontSize: 18,
             letterSpacing: 0.5,
           },
-          cardStyle: {
-            backgroundColor: currentTheme.background,
-          },
+          cardStyle: {},
         })}
       />
       {/** Privacy policy, navigated from welcome screen */}
@@ -458,7 +467,6 @@ export function AuthStack({ route }) {
           title: language?.language?.Pages?.pages?.privacy,
           headerStyle: {
             height: SCREEN_HEIGHT / 9,
-            backgroundColor: currentTheme.background,
 
             elevation: 0,
             shadowOpacity: 0,
@@ -470,9 +478,7 @@ export function AuthStack({ route }) {
             fontSize: 18,
             letterSpacing: 0.5,
           },
-          cardStyle: {
-            backgroundColor: currentTheme.background,
-          },
+          cardStyle: {},
         })}
       />
       {/** question and answers screen, navigated from welcome screen */}
@@ -497,7 +503,6 @@ export function AuthStack({ route }) {
           title: language?.language?.Pages?.pages?.qa,
           headerStyle: {
             height: SCREEN_HEIGHT / 9,
-            backgroundColor: currentTheme.background,
 
             elevation: 0,
             shadowOpacity: 0,
@@ -509,9 +514,7 @@ export function AuthStack({ route }) {
             fontSize: 18,
             letterSpacing: 0.5,
           },
-          cardStyle: {
-            backgroundColor: currentTheme.background,
-          },
+          cardStyle: {},
         })}
       />
       {/** how beautyverse works screen, navigated from welcome screen */}
@@ -536,7 +539,6 @@ export function AuthStack({ route }) {
           title: language?.language?.Pages?.pages?.usage,
           headerStyle: {
             height: SCREEN_HEIGHT / 9,
-            backgroundColor: currentTheme.background,
 
             elevation: 0,
             shadowOpacity: 0,
@@ -548,9 +550,7 @@ export function AuthStack({ route }) {
             fontSize: 18,
             letterSpacing: 0.5,
           },
-          cardStyle: {
-            backgroundColor: currentTheme.background,
-          },
+          cardStyle: {},
         })}
       />
     </Stack.Navigator>

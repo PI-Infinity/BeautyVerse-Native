@@ -9,6 +9,7 @@ import React, { useEffect, useRef } from "react";
 import { Animated, Pressable, Text, View, Dimensions } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
 import { setRerederRooms } from "../../redux/chat";
+import { setActiveTabBar } from "../../redux/app";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -76,6 +77,7 @@ export const CustomTabBarChatIcon = ({ color, currentTheme, focused }) => {
           } else {
             navigation.navigate("Chat");
           }
+          dispatch(setActiveTabBar("Chat"));
         }}
       >
         <View

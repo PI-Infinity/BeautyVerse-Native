@@ -14,7 +14,7 @@ import {
   setRerenderCurrentUser,
   setRerenderBookings,
 } from "../../redux/rerenders";
-import { setZoomToTop } from "../../redux/app";
+import { setActiveTabBar, setZoomToTop } from "../../redux/app";
 import { Circle } from "../../components/skeltons";
 import axios from "axios";
 import {
@@ -70,28 +70,7 @@ export const CustomTabBarProfileIcon = (props) => {
     }).start();
   }, [isFocused]);
 
-  // backend url
-  const backendUrl = useSelector((state) => state.storeApp.backendUrl);
-
-  // add notifications on scroll to end
-  const AddNotifications = async () => {
-    try {
-      const response = await axios.get(
-        backendUrl +
-          "/api/v1/users/" +
-          props?.currentUser?._id +
-          "/notifications?page=1&limit=10"
-      );
-      dispatch(setNotifications(response.data.data.notifications));
-      dispatch(
-        setUnreadNotifications(
-          response.data.data.notifications?.filter((i) => i.status === "unread")
-        )
-      );
-    } catch (error) {
-      console.log(error.response);
-    }
-  };
+  const scrollY = useSelector((state) => state.storeScrolls.profileScrollY);
 
   return (
     <View
@@ -116,7 +95,7 @@ export const CustomTabBarProfileIcon = (props) => {
             if (routeName !== "UserProfile") {
               navigation.navigate("UserProfile");
             } else {
-              if (props.scrollY > 0) {
+              if (scrollY > 0) {
                 dispatch(setZoomToTop());
               } else {
                 dispatch(setRerenderCurrentUser());
@@ -126,6 +105,7 @@ export const CustomTabBarProfileIcon = (props) => {
           } else {
             navigation.navigate("Profile");
           }
+          dispatch(setActiveTabBar("Profile"));
         }}
       >
         <View

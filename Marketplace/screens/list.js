@@ -12,17 +12,20 @@ import { darkTheme, lightTheme } from "../../context/theme";
 import { useSelector, useDispatch } from "react-redux";
 import { CacheableImage } from "../../components/cacheableImage";
 import { Feather, FontAwesome, Fontisto } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import { ProceduresOptions } from "../../datas/registerDatas";
 import axios from "axios";
 import { setRandomProductsList } from "../../redux/Marketplace";
 import { Circle } from "../../components/skeltons";
+import { setScreenModal, setUserScreenModal } from "../../redux/app";
+import { Header } from "../../screens/user/settings/header";
 
-const List = ({ route }) => {
+const List = ({ hideModal }) => {
+  const route = useSelector((state) => state.storeApp.screenModal.data);
   const [list, setList] = useState([]);
 
   useEffect(() => {
-    setList(route.params.list);
+    setList(route?.list);
   }, []);
 
   // language state
@@ -94,27 +97,33 @@ const List = ({ route }) => {
   };
 
   return (
-    <ScrollView
-      onScroll={onScroll}
-      scrollEventThrottle={1}
-      showsVerticalScrollIndicator={false}
-      contentContainerStyle={{
-        gap: 4,
-        paddingHorizontal: 8,
-        paddingBottom: 15,
-      }}
-    >
-      {list?.map((item, index) => {
-        return (
-          <ProductItem
-            key={index}
-            item={item}
-            navigation={navigation}
-            currentTheme={currentTheme}
-          />
-        );
-      })}
-    </ScrollView>
+    <>
+      <Header
+        title={language?.language?.Marketplace?.marketplace?.popularProducts}
+        onBack={hideModal}
+      />
+      <ScrollView
+        onScroll={onScroll}
+        scrollEventThrottle={1}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{
+          gap: 4,
+          paddingHorizontal: 8,
+          paddingBottom: 15,
+        }}
+      >
+        {list?.map((item, index) => {
+          return (
+            <ProductItem
+              key={index}
+              item={item}
+              navigation={navigation}
+              currentTheme={currentTheme}
+            />
+          );
+        })}
+      </ScrollView>
+    </>
   );
 };
 
@@ -126,6 +135,12 @@ const ProductItem = ({ item, navigation, currentTheme }) => {
   // categories
   const categoriesList = ProceduresOptions();
 
+  // dispatch
+  const dispatch = useDispatch();
+
+  // route
+  const route = useRoute();
+
   //
   const [loading, setLoading] = useState(true);
 
@@ -133,9 +148,14 @@ const ProductItem = ({ item, navigation, currentTheme }) => {
     <TouchableOpacity
       activeOpacity={0.8}
       onPress={() =>
-        navigation.navigate("Product", {
-          product: item,
-        })
+        dispatch(
+          setScreenModal({
+            active: true,
+            screen: "Product",
+            data: item,
+            route: route.name,
+          })
+        )
       }
       style={{
         width: "100%",
@@ -159,8 +179,8 @@ const ProductItem = ({ item, navigation, currentTheme }) => {
         {item.owner.cover?.length > 0 ? (
           <Pressable
             onPress={() =>
-              navigation.navigate("User", {
-                user: item.owner,
+              navigation.navigate("UserVisit", {
+                user: item?.owner,
               })
             }
           >
@@ -173,8 +193,8 @@ const ProductItem = ({ item, navigation, currentTheme }) => {
         ) : (
           <Pressable
             onPress={() =>
-              navigation.navigate("User", {
-                user: item.owner,
+              navigation.navigate("UserVisit", {
+                user: item?.owner,
               })
             }
             style={{
@@ -194,8 +214,8 @@ const ProductItem = ({ item, navigation, currentTheme }) => {
         )}
         <Pressable
           onPress={() =>
-            navigation.navigate("User", {
-              user: item.owner,
+            navigation.navigate("UserVisit", {
+              user: item?.owner,
             })
           }
           style={{

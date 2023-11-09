@@ -12,13 +12,14 @@ import {
   View,
 } from "react-native";
 import { ActivityIndicator } from "react-native-paper";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { CacheableImage } from "../../components/cacheableImage";
 import { Circle } from "../../components/skeltons";
 import { Language } from "../../context/language";
 import { darkTheme, lightTheme } from "../../context/theme";
 import { useNavigation } from "@react-navigation/native";
 import { BlurView } from "expo-blur";
+import { setBlur } from "../../redux/app";
 
 /**
  * audience component in user screen
@@ -29,6 +30,10 @@ const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 export const Audience = ({ targetUser, navigation }) => {
   // defines language
   const language = Language();
+
+  //dispatch
+  const dispatch = useDispatch();
+
   // defines theme
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
@@ -132,11 +137,21 @@ export const Audience = ({ targetUser, navigation }) => {
                 flexDirection: "row",
                 gap: 20,
               }}
-              onPress={() => setOpenFollowers(true)}
+              onPress={
+                followers?.length > 0
+                  ? () => {
+                      dispatch(setBlur(true));
+                      setOpenFollowers(true);
+                    }
+                  : undefined
+              }
             >
               <Text
                 style={{
-                  color: currentTheme.font,
+                  color:
+                    followers?.length > 0
+                      ? currentTheme.font
+                      : currentTheme.disabled,
                   letterSpacing: 0.3,
                   fontWeight: "bold",
                 }}
@@ -226,11 +241,21 @@ export const Audience = ({ targetUser, navigation }) => {
                 flexDirection: "row",
                 gap: 15,
               }}
-              onPress={() => setOpenFollowings(true)}
+              onPress={
+                followings?.length > 0
+                  ? () => {
+                      dispatch(setBlur(true));
+                      setOpenFollowings(true);
+                    }
+                  : undefined
+              }
             >
               <Text
                 style={{
-                  color: currentTheme.font,
+                  color:
+                    followings?.length > 0
+                      ? currentTheme.font
+                      : currentTheme.disabled,
                   letterSpacing: 0.3,
                   fontWeight: "bold",
                 }}
@@ -360,6 +385,7 @@ const ListModal = ({
   const [loading, setLoading] = useState(true);
 
   const language = Language();
+  const dispatch = useDispatch();
 
   // backend url
   const backendUrl = useSelector((state) => state.storeApp.backendUrl);
@@ -407,22 +433,25 @@ const ListModal = ({
   return (
     <Modal
       transparent
-      animationType="slide"
+      animationType="fadeIn"
       isVisible={openModal}
-      onRequestClose={() => setOpenModal(false)}
+      onRequestClose={() => {
+        dispatch(setBlur(false));
+        setOpenModal(false);
+      }}
     >
       <BlurView
         style={{
           flex: 1,
-          backgroundColor: theme
-            ? "rgba(0, 1, 8, 0.8)"
-            : currentTheme.background,
         }}
         tint="dark"
         intensity={60}
       >
         <Pressable
-          onPress={() => setOpenModal(false)}
+          onPress={() => {
+            dispatch(setBlur(false));
+            setOpenModal(false);
+          }}
           style={{
             flex: 1,
             width: "100%",
@@ -532,6 +561,18 @@ const styles = StyleSheet.create({
 
 const RenderItem = ({ item, currentTheme, setOpenModal }) => {
   const navigation = useNavigation();
+  const language = Language();
+  const dispatch = useDispatch();
+  let type;
+  if (item?.type === "specialist") {
+    type = language?.language?.Main?.feedCard?.specialist;
+  } else if (item?.type === "shop") {
+    type = language?.language?.Marketplace?.marketplace?.shop;
+  } else if (item?.type === "beautycenter") {
+    type = language?.language?.Auth?.auth?.beautySalon;
+  } else {
+    type = language?.language?.Auth?.auth?.user;
+  }
   return (
     <TouchableOpacity
       activeOpacity={0.8}
@@ -542,6 +583,7 @@ const RenderItem = ({ item, currentTheme, setOpenModal }) => {
       onPress={() => {
         navigation.navigate("UserVisit", { user: item });
         setOpenModal(false);
+        dispatch(setBlur(false));
       }}
     >
       <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
@@ -628,11 +670,7 @@ const RenderItem = ({ item, currentTheme, setOpenModal }) => {
           paddingRight: 8,
         }}
       >
-        {item.type === "beautycenter"
-          ? "Beauty Salon"
-          : item.type === "specialist"
-          ? "Specialist"
-          : item?.type}
+        {item?.username?.length > 0 ? item?.username : type}
       </Text>
     </TouchableOpacity>
   );

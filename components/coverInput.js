@@ -138,7 +138,7 @@ const InputFile = ({ targetUser, setOpenPopup, editPopup, setEditPopup }) => {
       <BackDrop loading={loading} setLoading={setLoading} />
       <TouchableOpacity
         onLongPress={
-          targetUser.cover?.length > 0 ? () => setOpenPopup(true) : undefined
+          targetUser?.cover?.length > 0 ? () => setOpenPopup(true) : undefined
         }
         delayLongPress={200}
         onPress={selectImage}

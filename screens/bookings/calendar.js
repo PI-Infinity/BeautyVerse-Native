@@ -76,8 +76,8 @@ export const Calendar = ({ date, setDate, targetUser, setTime }) => {
   // define target user working days and time
 
   let workingDays;
-  if (targetUser.workingDays?.length > 0) {
-    workingDays = targetUser.workingDays;
+  if (targetUser?.workingDays?.length > 0) {
+    workingDays = targetUser?.workingDays;
   } else {
     workingDays = [{ value: "everyday" }];
   }

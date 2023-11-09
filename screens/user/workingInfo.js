@@ -34,8 +34,8 @@ export const WorkingInfo = ({ targetUser, navigation }) => {
       >
         {language?.language?.User.userPage.workingDays}
       </Text>
-      {targetUser.workingDays?.length > 0 ? (
-        targetUser.workingDays?.map((option, index) => {
+      {targetUser?.workingDays?.length > 0 ? (
+        targetUser?.workingDays?.map((option, index) => {
           let label = workingDaysOptions.find(
             (item) => item.value.toLowerCase() === option.value.toLowerCase()
           );

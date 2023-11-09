@@ -32,7 +32,7 @@ export const ProceduresList = ({ targetUser, AddBooking }) => {
 
   // define categories
   const cats = Array.from(
-    new Set(targetUser.procedures.map((item) => item.value.split(" - ")[0]))
+    new Set(targetUser?.procedures.map((item) => item.value.split(" - ")[0]))
   );
   const categories = cats.map((item, index) => {
     let lab = proceduresOptions.find((it) => {
@@ -101,7 +101,7 @@ export const ProceduresList = ({ targetUser, AddBooking }) => {
         </ScrollView>
       )}
       <View style={{ gap: 8, alignItems: "center", paddingHorizontal: 15 }}>
-        {targetUser.procedures
+        {targetUser?.procedures
           .filter((item) => {
             if (active === "all") {
               return item;
@@ -113,7 +113,7 @@ export const ProceduresList = ({ targetUser, AddBooking }) => {
           })
           .map((item, index) => {
             const label = proceduresOptions.find((c) => item.value === c.value);
-            console.log(item.duration);
+
             return (
               <TouchableOpacity
                 activeOpacity={AddBooking ? 0.5 : 1}
@@ -172,19 +172,24 @@ export const ProceduresList = ({ targetUser, AddBooking }) => {
                       alignItems: "center",
                     }}
                   >
-                    <Text
-                      style={{ color: currentTheme.font, letterSpacing: 0.05 }}
-                    >
+                    {item?.price > 0 && (
                       <Text
                         style={{
-                          color: currentTheme.disabled,
+                          color: currentTheme.font,
                           letterSpacing: 0.05,
                         }}
                       >
-                        {language?.language?.User?.userPage?.price}:
-                      </Text>{" "}
-                      {item?.price}
-                    </Text>
+                        <Text
+                          style={{
+                            color: currentTheme.disabled,
+                            letterSpacing: 0.05,
+                          }}
+                        >
+                          {language?.language?.User?.userPage?.price}:
+                        </Text>{" "}
+                        {item?.price}
+                      </Text>
+                    )}
                     {item?.price > 0 && (
                       <>
                         {targetUser?.currency === "Dollar" ? (

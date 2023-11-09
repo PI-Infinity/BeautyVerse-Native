@@ -1,5 +1,5 @@
 import axios from "axios";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import {
   Animated,
   Dimensions,
@@ -9,11 +9,14 @@ import {
   View,
 } from "react-native";
 import { ActivityIndicator } from "react-native-paper";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { CacheableImage } from "../../components/cacheableImage";
 import { CacheableVideo } from "../../components/cacheableVideo";
 import { darkTheme, lightTheme } from "../../context/theme";
 import { Circle } from "../../components/skeltons";
+import { setScreenModal } from "../../redux/app";
+import { RouteNameContext } from "../../context/routName";
+import { useRoute } from "@react-navigation/native";
 
 /**
  * File includes 2 components (list, item)
@@ -65,9 +68,8 @@ export const Feeds = ({
 
         setFeeds(response.data.data?.feeds);
         setFeedsLength(response.data.result);
-        setTimeout(() => {
-          setLoading(false);
-        }, 100);
+
+        setLoading(false);
       } catch (error) {
         console.log(error.response.data.message);
       }
@@ -265,6 +267,8 @@ const styles = StyleSheet.create({
  */
 
 const FeedItem = (props) => {
+  // dispatch
+  const dispatch = useDispatch();
   const [loadingFeed, setLoadingFeed] = useState(true);
   // fade in
   const fadeAnim = useRef(new Animated.Value(0)).current; // Initial value for opacity: 0
@@ -277,6 +281,9 @@ const FeedItem = (props) => {
     }).start();
   }, [fadeAnim]);
 
+  // route
+  const activeTabBar = useSelector((state) => state.storeApp.activeTabBar);
+
   return (
     <>
       <TouchableOpacity
@@ -288,10 +295,13 @@ const FeedItem = (props) => {
         }}
         activeOpacity={0.9}
         onPress={() => {
-          props.navigation.navigate("UserFeed", {
-            user: props.targetUser,
-            feed: props.feed,
-          });
+          dispatch(
+            setScreenModal({
+              active: true,
+              screen: "Feed",
+              data: { user: props.targetUser, feed: props.feed },
+            })
+          );
         }}
       >
         {loadingFeed && (

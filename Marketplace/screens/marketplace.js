@@ -21,14 +21,16 @@ import {
   Fontisto,
   MaterialIcons,
 } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import CoverSlider from "../../Marketplace/components/coverSlider";
 import { setRerenderProducts } from "../../redux/Marketplace";
 import { TextInput } from "react-native-gesture-handler";
+import { setMarketplaceScrollY } from "../../redux/scrolls";
+import { setScreenModal, setUserScreenModal } from "../../redux/app";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
-const Main = ({ setScrollY, scrollY }) => {
+const Main = ({}) => {
   // language state
   const language = Language();
 
@@ -38,8 +40,8 @@ const Main = ({ setScrollY, scrollY }) => {
   // navigation
   const navigation = useNavigation();
 
-  // Get currentUser from global Redux state
-  const currentUser = useSelector((state) => state.storeUser.currentUser);
+  // Get scroll from global Redux state
+  const scrollY = useSelector((state) => state.storeScrolls.marketplaceScrollY);
   // theme state
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
@@ -56,9 +58,8 @@ const Main = ({ setScrollY, scrollY }) => {
 
   const onScroll = (event) => {
     const offsetY = event.nativeEvent.contentOffset.y;
-    const contentHeight = event.nativeEvent.contentSize.height;
-    const layoutHeight = event.nativeEvent.layoutMeasurement.height;
-    setScrollY(offsetY);
+
+    dispatch(setMarketplaceScrollY(offsetY));
   };
 
   const zoomToTop = useSelector((state) => state.storeApp.zoomToTop);
@@ -130,18 +131,16 @@ const Main = ({ setScrollY, scrollY }) => {
   };
 
   return (
-    <ImageBackground
+    <View
       style={{
         flex: 1,
         width: "100%",
         height: "100%",
       }}
-      source={theme ? require("../../assets/background.jpg") : null}
     >
       <View
         style={{
           flex: 1,
-          backgroundColor: theme ? "rgba(0,0,0,0.6)" : currentTheme.background,
         }}
       >
         <Animated.View
@@ -169,7 +168,16 @@ const Main = ({ setScrollY, scrollY }) => {
             transform: [{ translateY: transformScroll }],
           }}
         >
-          <Pressable onPress={() => navigation.navigate("Search")}>
+          <Pressable
+            onPress={() =>
+              dispatch(
+                setScreenModal({
+                  active: true,
+                  screen: "Marketplace Search",
+                })
+              )
+            }
+          >
             <View
               style={{
                 paddingHorizontal: 15,
@@ -217,7 +225,14 @@ const Main = ({ setScrollY, scrollY }) => {
                         letterSpacing: 0.3,
                       }}
                       editable={false}
-                      onPressIn={() => navigation.navigate("Search")}
+                      onPressIn={() =>
+                        dispatch(
+                          setScreenModal({
+                            active: true,
+                            screen: "Marketplace Search",
+                          })
+                        )
+                      }
                     />
                   </View>
                 </View>
@@ -255,7 +270,7 @@ const Main = ({ setScrollY, scrollY }) => {
       /> */}
         </Animated.ScrollView>
       </View>
-    </ImageBackground>
+    </View>
   );
 };
 
@@ -296,6 +311,10 @@ const ListComponent = ({ currentTheme, list, navigation, title }) => {
     }
     return chunked_arr;
   };
+
+  const route = useRoute();
+
+  const dispatch = useDispatch();
 
   // Create array of pairs
   const groupedItems = chunkArray(list, 2);
@@ -362,8 +381,8 @@ const ListComponent = ({ currentTheme, list, navigation, title }) => {
                     {item.owner.cover?.length > 0 ? (
                       <Pressable
                         onPress={() =>
-                          navigation.navigate("User", {
-                            user: item.owner,
+                          navigation.navigate("UserVisit", {
+                            user: item?.owner,
                           })
                         }
                       >
@@ -376,8 +395,8 @@ const ListComponent = ({ currentTheme, list, navigation, title }) => {
                     ) : (
                       <Pressable
                         onPress={() =>
-                          navigation.navigate("User", {
-                            user: item.owner,
+                          navigation.navigate("UserVisit", {
+                            user: item?.owner,
                           })
                         }
                         style={{
@@ -397,8 +416,8 @@ const ListComponent = ({ currentTheme, list, navigation, title }) => {
                     )}
                     <Pressable
                       onPress={() =>
-                        navigation.navigate("User", {
-                          user: item.owner,
+                        navigation.navigate("UserVisit", {
+                          user: item?.owner,
                         })
                       }
                       style={{
@@ -422,9 +441,14 @@ const ListComponent = ({ currentTheme, list, navigation, title }) => {
                   <TouchableOpacity
                     activeOpacity={0.8}
                     onPress={() =>
-                      navigation.navigate("Product", {
-                        product: item,
-                      })
+                      dispatch(
+                        setScreenModal({
+                          active: true,
+                          screen: "Product",
+                          data: item,
+                          route: route.name,
+                        })
+                      )
                     }
                   >
                     <CacheableImage
@@ -555,7 +579,13 @@ const ListComponent = ({ currentTheme, list, navigation, title }) => {
           ></View>
           <Pressable
             onPress={() =>
-              navigation.navigate("List", { title: title, list: list })
+              dispatch(
+                setScreenModal({
+                  active: true,
+                  screen: "Marketplace List",
+                  data: { title: title, list: list },
+                })
+              )
             }
             style={{
               paddingHorizontal: 15,

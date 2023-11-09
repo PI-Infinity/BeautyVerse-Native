@@ -28,6 +28,8 @@ import { darkTheme, lightTheme } from "../../context/theme";
 import { storage } from "../../firebase";
 import { setRerenderUserFeeds } from "../../redux/rerenders";
 import DraggableItem, { DragableList } from "./draggableList";
+import { useNavigation } from "@react-navigation/native";
+import { Header } from "../../components/header";
 
 /**
  * Add new feed screen
@@ -35,7 +37,9 @@ import DraggableItem, { DragableList } from "./draggableList";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
-export const AddFeed = ({ navigation }) => {
+export const AddFeed = ({ hideModal }) => {
+  // navigation
+  const navigation = useNavigation();
   // define language
   const language = Language();
 
@@ -157,7 +161,7 @@ export const AddFeed = ({ navigation }) => {
             dispatch(setRerenderUserFeeds());
           }, 1000);
           setTimeout(async () => {
-            navigation.goBack();
+            hideModal();
             setFile([]);
             setPostText("");
             setLoading(false);
@@ -222,7 +226,7 @@ export const AddFeed = ({ navigation }) => {
             }, 1000);
 
             setTimeout(async () => {
-              navigation.goBack();
+              hideModal();
               setFile([]);
               setPostText("");
               setLoading(false);
@@ -278,6 +282,10 @@ export const AddFeed = ({ navigation }) => {
       ) : (
         loading && <BackDrop loading={loading} setLoading={setLoading} />
       )}
+      <Header
+        title={language?.language?.User?.userPage?.addFeed}
+        onBack={hideModal}
+      />
       <ScrollView
         showsVerticalScrollIndicator={false}
         bounces={Platform.OS === "ios" ? false : undefined}
@@ -286,7 +294,7 @@ export const AddFeed = ({ navigation }) => {
           alignItems: "center",
           padding: 15,
           width: SCREEN_WIDTH,
-          paddingBottom: 50,
+          paddingBottom: 120,
         }}
       >
         <View
@@ -346,11 +354,13 @@ export const AddFeed = ({ navigation }) => {
         <View
           style={{
             width: "100%",
-            backgroundColor: currentTheme.background2,
+            // backgroundColor: currentTheme.background2,
             borderRadius: 5,
             height: SCREEN_WIDTH / 2.5,
             marginTop: 20,
             padding: 15,
+            borderWidth: 1.5,
+            borderColor: currentTheme.line,
           }}
         >
           <TextInput

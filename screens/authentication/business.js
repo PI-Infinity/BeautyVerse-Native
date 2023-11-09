@@ -3,6 +3,8 @@ import axios from "axios";
 import React, { useState } from "react";
 import {
   Alert,
+  Dimensions,
+  ImageBackground,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -19,6 +21,9 @@ import { darkTheme, lightTheme } from "../../context/theme";
 import { ProceduresOptions } from "../../datas/registerDatas";
 import { setRerenderCurrentUser } from "../../redux/rerenders";
 import { useNavigation } from "@react-navigation/native";
+import { BlurView } from "expo-blur";
+
+const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
 /*
   Business register screen for specialists and beauty salons, to complete registere process
@@ -78,54 +83,82 @@ const Business = () => {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.keyboardAvoidingContainer}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    <ImageBackground
+      style={{
+        flex: 1,
+        width: "100%",
+        height: "100%",
+      }}
+      source={theme ? require("../../assets/background.jpg") : null}
     >
-      <ScrollView
-        contentContainerStyle={styles.container}
-        bounces={Platform.OS === "ios" ? false : undefined}
-        overScrollMode={Platform.OS === "ios" ? "never" : "always"}
+      <BlurView
+        intensity={30}
+        tint="dark"
+        style={[
+          styles.keyboardAvoidingContainer,
+          {
+            height: SCREEN_HEIGHT - 200,
+            backgroundColor: "rgba(1,2,0,0.5)",
+            flex: 1,
+          },
+        ]}
       >
-        <Text
-          style={{
-            fontSize: 16,
-            fontWeight: "bold",
-            color: currentTheme.font,
-            letterSpacing: 0.3,
-            marginTop: 20,
-          }}
+        <KeyboardAvoidingView
+          style={styles.keyboardAvoidingContainer}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
         >
-          {language?.language?.Auth?.auth?.selectProcedures}
-        </Text>
-        <View style={styles.itemContainer}>
-          <Text style={[styles.itemTitle, { color: currentTheme.font }]}>
-            {" "}
-            {language?.language?.Auth?.auth?.procedures}
-          </Text>
+          <ScrollView
+            contentContainerStyle={styles.container}
+            bounces={Platform.OS === "ios" ? false : undefined}
+            overScrollMode={Platform.OS === "ios" ? "never" : "always"}
+          >
+            <Text
+              style={{
+                fontSize: 16,
+                fontWeight: "bold",
+                color: currentTheme.font,
+                letterSpacing: 0.3,
+                marginTop: 20,
+              }}
+            >
+              {language?.language?.Auth?.auth?.selectProcedures}
+            </Text>
+            <View style={styles.itemContainer}>
+              <Text style={[styles.itemTitle, { color: currentTheme.font }]}>
+                {" "}
+                {language?.language?.Auth?.auth?.procedures}
+              </Text>
 
-          <SelectAutocomplete
-            data={proceduresOptions}
-            state={procedures}
-            setState={setProcedures}
-            currentTheme={currentTheme}
-          />
-        </View>
-        <View style={styles.itemContainer}>
-          <Text style={[styles.itemTitle, { color: currentTheme.font }]}>
-            {" "}
-            {language?.language?.Auth?.auth?.workingDays} (
-            {language?.language?.Auth?.auth?.optional})
-          </Text>
-          <View style={{ marginTop: 20, width: "100%", alignItems: "center" }}>
-            <Select state={wd} setState={setWd} currentTheme={currentTheme} />
-          </View>
-        </View>
-        <TouchableOpacity style={styles.button} onPress={FillUp}>
-          <Text style={styles.buttonText}>Next</Text>
-        </TouchableOpacity>
-      </ScrollView>
-    </KeyboardAvoidingView>
+              <SelectAutocomplete
+                data={proceduresOptions}
+                state={procedures}
+                setState={setProcedures}
+                currentTheme={currentTheme}
+              />
+            </View>
+            <View style={styles.itemContainer}>
+              <Text style={[styles.itemTitle, { color: currentTheme.font }]}>
+                {" "}
+                {language?.language?.Auth?.auth?.workingDays} (
+                {language?.language?.Auth?.auth?.optional})
+              </Text>
+              <View
+                style={{ marginTop: 20, width: "100%", alignItems: "center" }}
+              >
+                <Select
+                  state={wd}
+                  setState={setWd}
+                  currentTheme={currentTheme}
+                />
+              </View>
+            </View>
+            <TouchableOpacity style={styles.button} onPress={FillUp}>
+              <Text style={styles.buttonText}>Next</Text>
+            </TouchableOpacity>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </BlurView>
+    </ImageBackground>
   );
 };
 

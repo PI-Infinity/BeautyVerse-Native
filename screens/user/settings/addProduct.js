@@ -15,25 +15,26 @@ import {
 import React, { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { useSelector, useDispatch } from "react-redux";
-import { Language } from "../../context/language";
-import { darkTheme, lightTheme } from "../../context/theme";
-import CategoryList from "../../Marketplace/components/categoryList";
-import { ProceduresOptions } from "../../datas/registerDatas";
+import { Language } from "../../../context/language";
+import { darkTheme, lightTheme } from "../../../context/theme";
+import CategoryList from "../../../Marketplace/components/categoryList";
+import { ProceduresOptions } from "../../../datas/registerDatas";
 import { Entypo, FontAwesome, MaterialIcons } from "@expo/vector-icons";
-import InputFile from "../../Marketplace/components/fileInput";
-import Variants from "../../Marketplace/components/variants";
+import InputFile from "../../../Marketplace/components/fileInput";
+import Variants from "../../../Marketplace/components/variants";
 import uuid from "react-native-uuid";
 import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
-import { storage } from "../../firebase";
-import { BackDrop } from "../../components/backDropLoader";
+import { storage } from "../../../firebase";
+import { BackDrop } from "../../../components/backDropLoader";
 import { useNavigation } from "@react-navigation/native";
-import { setRerenderProducts } from "../../redux/Marketplace";
+import { setRerenderProducts } from "../../../redux/Marketplace";
 import CountryFlag from "react-native-country-flag";
-import { Circle } from "../../components/skeltons";
+import { Circle } from "../../../components/skeltons";
+import { Header } from "./header";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
-const AddNewProduct = () => {
+const AddNewProduct = ({ onBack }) => {
   // defines backendUrl
   const backendUrl = useSelector((state) => state.storeApp.backendUrl);
 
@@ -219,7 +220,7 @@ const AddNewProduct = () => {
         setTimeout(() => {
           setLoading(false);
           dispatch(setRerenderProducts());
-          navigation.navigate("Products");
+          onBack();
           setTitle("");
           setSex("all");
           setCategories([]);
@@ -256,10 +257,11 @@ const AddNewProduct = () => {
 
   return (
     <KeyboardAvoidingView // <-- Add this wrapper
-      style={{ flex: 1 }}
+      style={{ flex: 1, width: SCREEN_WIDTH }}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 20}
     >
+      <Header onBack={onBack} title="Add New Product" />
       <Pressable>
         <BackDrop loading={loading} setLoading={setLoading} />
       </Pressable>
@@ -282,6 +284,7 @@ const AddNewProduct = () => {
           alignItems: "center",
           padding: 15,
           gap: 15,
+          paddingBottom: 50,
         }}
       >
         {(title?.length > 0 ||
@@ -973,12 +976,16 @@ const AddNewProduct = () => {
               justifyContent: "space-between",
             }}
           >
-            <View style={{ flex: 3 }}>
-              <Text style={[styles.fieldTitle, { color: currentTheme.font }]}>
+            <View style={{ maxWidth: "70%" }}>
+              <Text
+                style={[styles.fieldTitle, { color: currentTheme.font }]}
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
                 {language?.language?.Marketplace?.marketplace?.shortDescription}
               </Text>
             </View>
-            <View style={{ flexDirection: "row", gap: 4, flex: 1 }}>
+            <View style={{ flexDirection: "row", gap: 4 }}>
               <TouchableOpacity
                 onPress={() => setInputLanguage("us")}
                 style={{ padding: 5 }}
@@ -1065,13 +1072,17 @@ const AddNewProduct = () => {
               justifyContent: "space-between",
             }}
           >
-            <View style={{ flex: 3 }}>
-              <Text style={[styles.fieldTitle, { color: currentTheme.font }]}>
+            <View style={{ maxWidth: "70%" }}>
+              <Text
+                numberOfLines={1}
+                ellipsizeMode="tail"
+                style={[styles.fieldTitle, { color: currentTheme.font }]}
+              >
                 {language?.language?.Marketplace?.marketplace?.fullDescription}{" "}
                 ({language?.language?.Marketplace?.marketplace?.optional})
               </Text>
             </View>
-            <View style={{ flexDirection: "row", gap: 4, flex: 1 }}>
+            <View style={{ flexDirection: "row", gap: 4 }}>
               <TouchableOpacity
                 onPress={() => setInputLanguage("us")}
                 style={{ padding: 5 }}
@@ -1159,13 +1170,22 @@ const AddNewProduct = () => {
               justifyContent: "space-between",
             }}
           >
-            <View style={{ flex: 3 }}>
-              <Text style={[styles.fieldTitle, { color: currentTheme.font }]}>
+            <View
+              style={{
+                overflow: "hidden",
+                maxWidth: "70%",
+              }}
+            >
+              <Text
+                style={[styles.fieldTitle, { color: currentTheme.font }]}
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
                 {language?.language?.Marketplace?.marketplace?.howToUse} (
                 {language?.language?.Marketplace?.marketplace?.optional})
               </Text>
             </View>
-            <View style={{ flexDirection: "row", gap: 4, flex: 1 }}>
+            <View style={{ flexDirection: "row", gap: 4 }}>
               <TouchableOpacity
                 onPress={() => setInputLanguage("us")}
                 style={{ padding: 5 }}
@@ -1254,13 +1274,22 @@ const AddNewProduct = () => {
               justifyContent: "space-between",
             }}
           >
-            <View style={{ flex: 3 }}>
-              <Text style={[styles.fieldTitle, { color: currentTheme.font }]}>
+            <View style={{ maxWidth: "70%" }}>
+              <Text
+                style={[
+                  styles.fieldTitle,
+                  {
+                    color: currentTheme.font,
+                  },
+                ]}
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
                 {language?.language?.Marketplace?.marketplace?.compositions} (
                 {language?.language?.Marketplace?.marketplace?.optional})
               </Text>
             </View>
-            <View style={{ flexDirection: "row", gap: 4, flex: 1 }}>
+            <View style={{ flexDirection: "row", gap: 4 }}>
               <TouchableOpacity
                 onPress={() => setInputLanguage("us")}
                 style={{ padding: 5 }}

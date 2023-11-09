@@ -10,27 +10,32 @@ import {
   Dimensions,
   TextInput,
   Pressable,
+  Modal,
 } from "react-native";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { Language } from "../../context/language";
-import { darkTheme, lightTheme } from "../../context/theme";
+import { Language } from "../../../context/language";
+import { darkTheme, lightTheme } from "../../../context/theme";
 import { useNavigation } from "@react-navigation/native";
-import { ProceduresOptions } from "../../datas/registerDatas";
-import { CacheableImage } from "../../components/cacheableImage";
+import { ProceduresOptions } from "../../../datas/registerDatas";
+import { CacheableImage } from "../../../components/cacheableImage";
 import { FontAwesome, MaterialIcons, Octicons } from "@expo/vector-icons";
 import axios from "axios";
 import {
   setRerenderProducts,
   setUserProductListingPage,
   setUserProducts,
-} from "../../redux/Marketplace";
+} from "../../../redux/Marketplace";
 import { ActivityIndicator } from "react-native-paper";
-import { Circle } from "../../components/skeltons";
+import { Circle } from "../../../components/skeltons";
+import { Header } from "./header";
+import { AddNewProcedures } from "./addNewProcedures";
+import AddNewProduct from "./addProduct";
+import EditProduct from "./editProduct";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
-const Products = () => {
+const Products = ({ hideModal }) => {
   // language state
   const language = Language();
 
@@ -145,93 +150,148 @@ const Products = () => {
     });
     return mergedList;
   };
+
+  // scrolling ref
+  const scrollRef = useRef();
+  const [scrollPosition, setScrollPosition] = useState({ x: 0, y: 0 });
+
+  // edit address modal
+  const [openEditProduct, setOpenEditProduct] = useState({
+    active: false,
+    target: {},
+  });
+
   return (
-    <>
-      <View style={{ paddingHorizontal: 15 }}>
-        <View
-          style={{
-            width: "100%",
-            height: 40,
-            borderRadius: 50,
-            borderWidth: 1,
-            borderColor: currentTheme.line,
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "space-between",
-            paddingHorizontal: 15,
-          }}
-        >
-          <TextInput
-            value={search}
-            placeholder={language.language.Marketplace.marketplace.search}
-            placeholderTextColor={currentTheme.disabled}
-            style={{
-              width: "90%",
-              height: "100%",
-              color: currentTheme.font,
-              letterSpacing: 0.3,
-            }}
-            onChangeText={(val) => setSearch(val)}
-          />
-          {search?.length > 0 && (
-            <Pressable onPress={() => setSearch("")}>
-              <Text style={{ color: "red" }}>X</Text>
-            </Pressable>
-          )}
-        </View>
-      </View>
-      {loading ? (
-        <View
-          style={{
-            alignItems: "center",
-            justifyContent: "center",
-            height: SCREEN_HEIGHT - 200,
-          }}
-        >
-          <ActivityIndicator color={currentTheme.pink} size="large" />
-        </View>
-      ) : (
-        <>
-          <FlatList
-            data={userProducts}
-            keyExtractor={(item) => item._id}
-            renderItem={({ item, index }) => {
-              return (
-                <ProductItem
-                  key={index}
-                  item={item}
-                  navigation={navigation}
-                  currentTheme={currentTheme}
-                  categoriesList={categoriesList}
-                />
-              );
-            }}
-            onEndReached={AddUserProducts} // Triggered when reaching the end of the list
-            onEndReachedThreshold={0.1} // Define how close to the end to trigger the callback
-            contentContainerStyle={{
-              alignItems: "center",
-              padding: 15,
-              paddingTop: 8,
-              gap: 8,
+    <View>
+      <Modal
+        animationType="fadeIn"
+        visible={openEditProduct.active}
+        transparent
+      >
+        <EditProduct
+          Product={openEditProduct.target}
+          openModal={openEditProduct.active}
+          setOpenModal={setOpenEditProduct}
+        />
+      </Modal>
+      <ScrollView
+        bounces={Platform.OS === "ios" ? false : undefined}
+        overScrollMode={Platform.OS === "ios" ? "never" : "always"}
+        keyboardShouldPersistTaps="handled"
+        horizontal
+        pagingEnabled
+        ref={scrollRef}
+        onScroll={(event) => {
+          // Get current scroll position
+          const position = event.nativeEvent.contentOffset;
+          setScrollPosition(position);
+        }}
+      >
+        <View style={{ width: SCREEN_WIDTH }}>
+          <Header
+            onBack={hideModal}
+            title="Products"
+            subScreen={{
+              icon: (
+                <MaterialIcons name="add" size={24} color={currentTheme.pink} />
+              ),
+              title: "Add New Product",
+              onPress: () =>
+                scrollRef.current.scrollTo({ x: SCREEN_WIDTH, animated: true }),
             }}
           />
-          {userProducts?.length < 1 && (
+          <View style={{ paddingHorizontal: 15 }}>
             <View
               style={{
                 width: "100%",
-                paddingTop: 200,
-                height: SCREEN_HEIGHT,
+                height: 40,
+                borderRadius: 50,
+                borderWidth: 1,
+                borderColor: currentTheme.line,
+                flexDirection: "row",
                 alignItems: "center",
+                justifyContent: "space-between",
+                paddingHorizontal: 15,
               }}
             >
-              <Text style={{ color: currentTheme.disabled }}>
-                No products found!
-              </Text>
+              <TextInput
+                value={search}
+                placeholder={language.language.Marketplace.marketplace.search}
+                placeholderTextColor={currentTheme.disabled}
+                style={{
+                  width: "90%",
+                  height: "100%",
+                  color: currentTheme.font,
+                  letterSpacing: 0.3,
+                }}
+                onChangeText={(val) => setSearch(val)}
+              />
+              {search?.length > 0 && (
+                <Pressable onPress={() => setSearch("")}>
+                  <Text style={{ color: "red" }}>X</Text>
+                </Pressable>
+              )}
             </View>
+          </View>
+          {loading ? (
+            <View
+              style={{
+                alignItems: "center",
+                justifyContent: "center",
+                height: SCREEN_HEIGHT - 200,
+              }}
+            >
+              <ActivityIndicator color={currentTheme.pink} size="large" />
+            </View>
+          ) : (
+            <>
+              <FlatList
+                data={userProducts}
+                keyExtractor={(item) => item._id}
+                renderItem={({ item, index }) => {
+                  return (
+                    <ProductItem
+                      key={index}
+                      item={item}
+                      navigation={navigation}
+                      currentTheme={currentTheme}
+                      categoriesList={categoriesList}
+                      setOpenEditProduct={setOpenEditProduct}
+                    />
+                  );
+                }}
+                onEndReached={AddUserProducts} // Triggered when reaching the end of the list
+                onEndReachedThreshold={0.1} // Define how close to the end to trigger the callback
+                contentContainerStyle={{
+                  alignItems: "center",
+                  padding: 15,
+                  paddingTop: 8,
+                  paddingBottom: 150,
+                  gap: 8,
+                }}
+              />
+              {userProducts?.length < 1 && (
+                <View
+                  style={{
+                    width: "100%",
+                    paddingTop: 200,
+                    height: SCREEN_HEIGHT,
+                    alignItems: "center",
+                  }}
+                >
+                  <Text style={{ color: currentTheme.disabled }}>
+                    No products found!
+                  </Text>
+                </View>
+              )}
+            </>
           )}
-        </>
-      )}
-    </>
+        </View>
+        <AddNewProduct
+          onBack={() => scrollRef.current.scrollTo({ x: 0, animated: true })}
+        />
+      </ScrollView>
+    </View>
   );
 };
 
@@ -239,18 +299,20 @@ export default Products;
 
 const styles = StyleSheet.create({});
 
-const ProductItem = ({ item, navigation, currentTheme, categoriesList }) => {
+const ProductItem = ({
+  item,
+  navigation,
+  currentTheme,
+  categoriesList,
+  setOpenEditProduct,
+}) => {
   const [loading, setLoading] = useState(true);
   // backend url
 
   return (
     <TouchableOpacity
       activeOpacity={0.8}
-      onPress={() =>
-        navigation.navigate("EditProduct", {
-          product: item,
-        })
-      }
+      onPress={() => setOpenEditProduct({ active: true, target: item })}
       style={{
         width: "100%",
         borderWidth: 1,

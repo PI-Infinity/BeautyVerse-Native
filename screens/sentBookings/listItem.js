@@ -2,7 +2,7 @@ import { FontAwesome, MaterialCommunityIcons } from "@expo/vector-icons";
 import axios from "axios";
 import * as Localization from "expo-localization";
 import moment from "moment";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import {
   Platform,
   ScrollView,
@@ -22,7 +22,7 @@ import { ProceduresOptions } from "../../datas/registerDatas";
 import { setRerenderBookings } from "../../redux/rerenders";
 import { StatusPopup } from "../../screens/bookings/statusPopup";
 import { Language } from "../../context/language";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   setCurrentChat,
@@ -31,6 +31,8 @@ import {
   setRooms,
 } from "../../redux/chat";
 import { sendNotification } from "../../components/pushNotifications";
+import { setScreenModal } from "../../redux/app";
+import { RouteNameContext } from "../../context/routName";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -139,6 +141,9 @@ export const ListItem = ({ item, currentUser, currentTheme, setLoader }) => {
   // navigate to chat
   const rooms = useSelector((state) => state.storeChat.rooms);
 
+  // route name
+  const route = useRoute();
+
   let chatDefined =
     currentUser._id !== item.seller._id &&
     rooms.find(
@@ -165,10 +170,17 @@ export const ListItem = ({ item, currentUser, currentTheme, setLoader }) => {
       lastMessageSeen: "",
     };
     try {
-      navigation.navigate("Room", {
-        newChat,
-        user: item.seller,
-      });
+      dispatch(
+        setScreenModal({
+          active: true,
+          screen: "Room",
+          data: {
+            newChat,
+            user: item.seller,
+          },
+          route: route.name,
+        })
+      );
       const response = await axios.post(backendUrl + "/api/v1/chats/", {
         room: currentUser?._id + item.seller._id,
         members: {
@@ -210,10 +222,19 @@ export const ListItem = ({ item, currentUser, currentTheme, setLoader }) => {
     const Room = chatDefined;
     try {
       dispatch(setCurrentChat(Room));
-      navigation.navigate("Room", {
-        user: item?.seller,
-        screenHeight: screenHeight,
-      });
+      dispatch(
+        setScreenModal({
+          active: true,
+          screen: "Room",
+          data: {
+            screenHeight: screenHeight,
+
+            user: item.seller,
+          },
+          route: route.name,
+        })
+      );
+
       if (Room.lastSender !== currentUser._id) {
         await axios.patch(backendUrl + "/api/v1/chats/" + Room.room, {
           status: "read",
@@ -455,10 +476,7 @@ export const ListItem = ({ item, currentUser, currentTheme, setLoader }) => {
                 acitveOpacity={0.3}
                 onPress={
                   item.seller?._id
-                    ? () =>
-                        navigation.navigate("UserVisit", {
-                          user: item.seller,
-                        })
+                    ? () => navigation.navigate("User", { user: item.seller })
                     : undefined
                 }
                 style={{

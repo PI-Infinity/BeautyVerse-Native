@@ -15,6 +15,7 @@ import {
   StyleSheet,
   Text,
   TextInput,
+  TouchableOpacity,
   Vibration,
   View,
 } from "react-native";
@@ -41,22 +42,30 @@ import {
   setSaveFromScrollGallery,
   setUnsaveFromScrollGallery,
 } from "../../redux/rerenders";
-import SmoothModal from "../user/editPostPopup";
+import SmoothModal from "./feedCard/editPostPopup";
 import { sendNotification } from "../../components/pushNotifications";
 import { Circle } from "../../components/skeltons";
 import { BlurView } from "expo-blur";
+import { Header } from "../../components/header";
+import { setScreenModal, setUserScreenModal } from "../../redux/app";
 /**
  * Feed screen uses when navigate to only one feed screen
  */
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
-export const FeedItem = ({ route }) => {
+export const FeedItem = ({ hideModal }) => {
+  // route
+  const activeTabBar = useSelector((state) => state.storeApp.activeTabBar);
+
+  const route = useSelector((state) =>
+    state.storeApp.screenModal.find((i) => i.activeTabBar === activeTabBar)
+  );
   // define socket server
   const socket = useSocket();
 
   // define props from route
-  const props = route.params;
+  const props = route?.data;
 
   // define some hooks
   const navigation = useNavigation();
@@ -94,38 +103,38 @@ export const FeedItem = ({ route }) => {
       setCheckifStared(true);
       dispatch(setActiveFeedFromScrollGallery(props?.feed?._id));
 
-      await axios.post(`${backendUrl}/api/v1/feeds/${props.feed?._id}/stars`, {
+      await axios.post(`${backendUrl}/api/v1/feeds/${props?.feed?._id}/stars`, {
         star: {
           staredBy: currentUser?._id,
           createdAt: new Date(),
         },
       });
-      if (currentUser?._id !== props.user?._id) {
+      if (currentUser?._id !== props?.user?._id) {
         await axios.post(
-          backendUrl + `/api/v1/users/${props.user?._id}/notifications`,
+          backendUrl + `/api/v1/users/${props?.user?._id}/notifications`,
           {
             senderId: currentUser?._id,
             text: ``,
             date: new Date(),
             type: "star",
             status: "unread",
-            feed: `${props.feed?._id}`,
+            feed: `${props?.feed?._id}`,
           }
         );
-        if (props.user._id !== currentUser._id) {
-          if (props.user?.pushNotificationToken) {
+        if (props?.user._id !== currentUser._id) {
+          if (props?.user?.pushNotificationToken) {
             await sendNotification(
-              props.user?.pushNotificationToken,
+              props?.user?.pushNotificationToken,
               currentUser.name,
               "added star on your feed!",
               {
-                feed: props.feed._id,
+                feed: props?.feed?._id,
               }
             );
           }
         }
         socket.emit("updateUser", {
-          targetId: props.user?._id,
+          targetId: props?.user?._id,
         });
       }
       setTimeout(() => {
@@ -145,11 +154,11 @@ export const FeedItem = ({ route }) => {
     setStarsLength((prev) => prev - 1);
     setCheckifStared(false);
 
-    dispatch(setActiveFeedFromScrollGallery(props.feed?._id));
+    dispatch(setActiveFeedFromScrollGallery(props?.feed?._id));
     try {
       const url =
         backendUrl +
-        `/api/v1/feeds/${props.feed?._id}/stars/${currentUser?._id}`;
+        `/api/v1/feeds/${props?.feed?._id}/stars/${currentUser?._id}`;
       const response = await fetch(url, { method: "DELETE" })
         .then((response) => response.json())
         .then(() => {
@@ -184,7 +193,7 @@ export const FeedItem = ({ route }) => {
     };
 
     GetReviews();
-  }, [props.feed?._id]);
+  }, [props?.feed?._id]);
 
   async function AddNewReviews(nextPage) {
     try {
@@ -202,29 +211,12 @@ export const FeedItem = ({ route }) => {
         );
         return [...prev, ...uniqueReviews];
       });
+      setReviewsPage(nextPage);
       dispatch(setRerenderUserFeed());
     } catch (error) {
       console.log(error.response.data.message);
     }
   }
-
-  // reducre reviews on show less
-  const ReduceReviews = () => {
-    return setReviewsList((prev) => {
-      const uniqueReviews = reviewsList.filter(
-        (newReview) =>
-          !prev.some((prevReview) => prevReview.reviewId === newReview.reviewId)
-      );
-
-      const minReviews = 10;
-      const removeCount = Math.min(prev.length - minReviews, 10);
-
-      const updatedPrev = prev.slice(0, prev.length - removeCount);
-
-      dispatch(setRerenderUserFeed());
-      return [...updatedPrev, ...uniqueReviews];
-    });
-  };
 
   /**
    *  // add new review
@@ -247,12 +239,12 @@ export const FeedItem = ({ route }) => {
     try {
       setReviewsList((prevReviews) => [newReview, ...prevReviews]);
       setReviewLength((prev) => prev + 1);
-      dispatch(setActiveFeedFromScrollGallery(props.feed?._id));
+      dispatch(setActiveFeedFromScrollGallery(props?.feed?._id));
       dispatch(setAddReviewQntRerenderFromScrollGallery());
       setReviewInput("");
       setOpenReviews(true);
       await axios.post(
-        backendUrl + `/api/v1/feeds/${props.feed?._id}/reviews`,
+        backendUrl + `/api/v1/feeds/${props?.feed?._id}/reviews`,
         {
           reviewId: newId,
           reviewer: currentUser?._id,
@@ -260,9 +252,9 @@ export const FeedItem = ({ route }) => {
           text: reviewInput,
         }
       );
-      if (currentUser?._id !== props.user?._id) {
+      if (currentUser?._id !== props?.user?._id) {
         await axios.post(
-          backendUrl + `/api/v1/users/${props.user?._id}/notifications`,
+          backendUrl + `/api/v1/users/${props?.user?._id}/notifications`,
           {
             senderId: currentUser?._id,
             text: ``,
@@ -272,20 +264,20 @@ export const FeedItem = ({ route }) => {
             feed: `${props?.feed?._id}`,
           }
         );
-        if (props.user._id !== currentUser._id) {
-          if (props.user?.pushNotificationToken) {
+        if (props?.user._id !== currentUser._id) {
+          if (props?.user?.pushNotificationToken) {
             await sendNotification(
-              props.user?.pushNotificationToken,
+              props?.user?.pushNotificationToken,
               currentUser.name,
               "added comment on your feed!",
-              { feed: props.feed._id }
+              { feed: props?.feed?._id }
             );
           }
         }
       }
 
       socket.emit("updateUser", {
-        targetId: props.user?._id,
+        targetId: props?.user?._id,
       });
       dispatch(setRerenderUserFeed());
     } catch (error) {
@@ -307,13 +299,13 @@ export const FeedItem = ({ route }) => {
   const [removeReview, setRemoveReview] = useState(null);
 
   const DeleteReview = async (id) => {
-    const url = backendUrl + `/api/v1/feeds/${props.feed?._id}/reviews/${id}`;
+    const url = backendUrl + `/api/v1/feeds/${props?.feed?._id}/reviews/${id}`;
     try {
       setReviewsList((prevReviews) =>
         prevReviews.filter((review) => review.reviewId !== id)
       );
       setReviewLength((prev) => prev - 1);
-      dispatch(setActiveFeedFromScrollGallery(props.feed?._id));
+      dispatch(setActiveFeedFromScrollGallery(props?.feed?._id));
       dispatch(setRemoveReviewQntRerenderFromScrollGallery());
 
       const response = await fetch(url, { method: "DELETE" });
@@ -352,9 +344,9 @@ export const FeedItem = ({ route }) => {
       await axios.patch(backendUrl + "/api/v1/feeds/" + itemId + "/save", {
         saveFor: currentUser._id,
       });
-      if (currentUser?._id !== props.user?._id) {
+      if (currentUser?._id !== props?.user?._id) {
         await axios.post(
-          backendUrl + `/api/v1/users/${props.user?._id}/notifications`,
+          backendUrl + `/api/v1/users/${props?.user?._id}/notifications`,
           {
             senderId: currentUser?._id,
             text: ``,
@@ -364,20 +356,20 @@ export const FeedItem = ({ route }) => {
             feed: `${props?.feed?._id}`,
           }
         );
-        if (props.user._id !== currentUser._id) {
-          if (props.user?.pushNotificationToken) {
+        if (props?.user._id !== currentUser._id) {
+          if (props?.user?.pushNotificationToken) {
             await sendNotification(
-              props.user?.pushNotificationToken,
+              props?.user?.pushNotificationToken,
               currentUser.name,
               "saved your feed!",
-              { feed: props.feed._id }
+              { feed: props?.feed?._id }
             );
           }
         }
       }
 
       socket.emit("updateUser", {
-        targetId: props.user?._id,
+        targetId: props?.user?._id,
       });
     } catch (error) {
       console.log(error.response.data.message);
@@ -458,22 +450,22 @@ export const FeedItem = ({ route }) => {
 
   // define file height
   let hght;
-  if (props.feed.video) {
+  if (props?.feed?.video) {
     let originalHeight =
-      props.feed.fileWidth >= props.feed.fileHeight
-        ? props.feed.fileWidth
-        : props.feed.fileHeight;
+      props?.feed?.fileWidth >= props?.feed?.fileHeight
+        ? props?.feed?.fileWidth
+        : props?.feed?.fileHeight;
     let originalWidth =
-      props.feed.fileWidth >= props.feed.fileHeight
-        ? props.feed.fileHeight
-        : props.feed.fileWidth;
+      props?.feed?.fileWidth >= props?.feed?.fileHeight
+        ? props?.feed?.fileHeight
+        : props?.feed?.fileWidth;
 
     let percented = originalWidth / (SCREEN_WIDTH - 20);
 
     hght = originalHeight / percented;
   } else if (props?.feed?.images) {
-    let originalHeight = props.feed.fileHeight;
-    let originalWidth = props.feed.fileWidth;
+    let originalHeight = props?.feed?.fileHeight;
+    let originalWidth = props?.feed?.fileWidth;
 
     let percented = originalWidth / (SCREEN_WIDTH - 20);
     hght = originalHeight / percented;
@@ -510,13 +502,15 @@ export const FeedItem = ({ route }) => {
 
   const scrollViewRef = useRef();
 
-  console.log(starsLength);
-
   return (
-    // <BlurView tint="extra-dark" intensity={90} style={{ flex: 1 }}>
+    // <BlurView tint="dark" intensity={90} style={{ flex: 1 }}>
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
+      <Header
+        title={language?.language?.Main?.feedCard?.feed}
+        onBack={hideModal}
+      />
       <ScrollView
         contentContainerStyle={{ paddingBottom: 250 }}
         showsVerticalScrollIndicator={false}
@@ -541,6 +535,7 @@ export const FeedItem = ({ route }) => {
               itemName={props?.feed.name}
               setPost={setPost}
               navigation={navigation}
+              hideModal={hideModal}
             />
           )}
           {/* <KeyboardAvoidingView
@@ -556,7 +551,7 @@ export const FeedItem = ({ route }) => {
               }}
             >
               <TopSection
-                user={props.user}
+                user={props?.user}
                 currentTheme={currentTheme}
                 navigation={navigation}
                 lang={lang}
@@ -566,12 +561,12 @@ export const FeedItem = ({ route }) => {
                 onClose={() => setFeedOption(false)}
                 onSave={() => setFeedOption(false)}
                 post={props?.feed?.post}
-                feedId={props.feed?._id}
+                feedId={props?.feed?._id}
                 setPost={setPost}
                 feedOption={feedOption}
-                createdAt={props.feed.createdAt}
+                createdAt={props?.feed?.createdAt}
                 DotsFunction={() => setFeedOption(!feedOption)}
-                fileFormat={props.feed.fileFormat}
+                fileFormat={props?.feed?.fileFormat}
               />
             </View>
           )}
@@ -642,7 +637,7 @@ export const FeedItem = ({ route }) => {
                 }}
               >
                 <TopSection
-                  user={props.user}
+                  user={props?.user}
                   currentTheme={currentTheme}
                   navigation={navigation}
                   lang={lang}
@@ -652,12 +647,12 @@ export const FeedItem = ({ route }) => {
                   onClose={() => setFeedOption(false)}
                   onSave={() => setFeedOption(false)}
                   post={props?.feed?.post}
-                  feedId={props.feed?._id}
+                  feedId={props?.feed?._id}
                   setPost={setPost}
                   feedOption={feedOption}
-                  createdAt={props.feed.createdAt}
+                  createdAt={props?.feed?.createdAt}
                   DotsFunction={() => setFeedOption(!feedOption)}
-                  fileFormat={props.feed.fileFormat}
+                  fileFormat={props?.feed?.fileFormat}
                 />
                 {props?.feed?.post && (
                   <View style={{ marginTop: 10 }}>
@@ -695,13 +690,13 @@ export const FeedItem = ({ route }) => {
                     style={{
                       borderRadius: 20,
                       height:
-                        props.feed.fileHeight >= props.feed.fileWidth
+                        props?.feed?.fileHeight >= props?.feed?.fileWidth
                           ? hght
-                          : props.feed.fileWidth,
+                          : props?.feed?.fileWidth,
                       width: SCREEN_WIDTH - 20,
                     }}
                     source={{
-                      uri: props.feed.video,
+                      uri: props?.feed?.video,
                     }}
                     onPlaybackStatusUpdate={onPlaybackStatusUpdate}
                     rate={1.0}
@@ -729,7 +724,12 @@ export const FeedItem = ({ route }) => {
               >
                 {props?.feed?.images.map((item, index) => {
                   return (
-                    <Pressable key={index} delayLongPress={50}>
+                    <TouchableOpacity
+                      key={index}
+                      delayLongPress={50}
+                      activeOpacity={0.9}
+                      onPress={hideModal}
+                    >
                       {loadImage && (
                         <View
                           style={{
@@ -766,7 +766,7 @@ export const FeedItem = ({ route }) => {
                           }
                         />
                       </BlurView>
-                    </Pressable>
+                    </TouchableOpacity>
                   );
                 })}
               </ScrollView>
@@ -836,8 +836,8 @@ export const FeedItem = ({ route }) => {
                     currentTheme={currentTheme}
                     RemoveStar={RemoveStar}
                     SetStar={SetStar}
-                    user={props.user}
-                    feed={props.feed}
+                    user={props?.user}
+                    feed={props?.feed}
                     from="scrollGallery"
                     setOpenReviews={setOpenReviews}
                     openReviews={openReviews}
@@ -878,8 +878,8 @@ export const FeedItem = ({ route }) => {
                   currentTheme={currentTheme}
                   RemoveStar={RemoveStar}
                   SetStar={SetStar}
-                  user={props.user}
-                  feed={props.feed}
+                  user={props?.user}
+                  feed={props?.feed}
                   from="scrollGallery"
                   setOpenReviews={setOpenReviews}
                   openReviews={openReviews}
@@ -896,20 +896,41 @@ export const FeedItem = ({ route }) => {
               </View>
             </View>
           )}
-          <Text
-            style={{
-              fontSize: 12,
-              color: currentTheme.font,
-              marginLeft: 15,
-              position: "relative",
-              top: 10,
-            }}
-          >
-            {reviewInput.length > 0 && reviewInput.length}{" "}
-            {reviewInput.length > 0 && (
-              <Text style={{ color: currentTheme.disabled }}>(max 500)</Text>
-            )}
-          </Text>
+
+          {openReviews && (
+            <View
+              style={{
+                width: "100%",
+                paddingHorizontal: 10,
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginTop: 10,
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 12,
+                  color: currentTheme.disabled,
+                }}
+              >
+                {language.language.Main.feedCard.reviews} ({reviewLength})
+              </Text>
+              <Text
+                style={{
+                  fontSize: 12,
+                  color: currentTheme.font,
+                }}
+              >
+                {reviewInput.length > 0 && reviewInput.length}{" "}
+                {reviewInput.length > 0 && (
+                  <Text style={{ color: currentTheme.disabled }}>
+                    (max 500)
+                  </Text>
+                )}
+              </Text>
+            </View>
+          )}
           {openReviews && (
             <View style={[styles.addReview, {}]}>
               <TextInput
@@ -918,11 +939,11 @@ export const FeedItem = ({ route }) => {
                   {
                     backgroundColor: currentTheme.background2,
                     color: currentTheme.font,
-                    maxWidth: "100%",
+                    maxWidth: "90%",
                     height: inputHeight,
                   },
                 ]}
-                autoFocus={props.from === "comment" ? true : false}
+                autoFocus={props?.from === "comment" ? true : false}
                 onFocus={() => scrollViewRef.current.scrollTo({ y: 1200 })}
                 onBlur={() => scrollViewRef.current.scrollTo({ y: 0 })}
                 placeholder={language?.language.Main.feedCard.writeText}
@@ -937,7 +958,7 @@ export const FeedItem = ({ route }) => {
               />
               <FontAwesome
                 name="send"
-                style={[styles.sendReviewIcon, { color: currentTheme.font }]}
+                style={[styles.sendReviewIcon, { color: currentTheme.pink }]}
                 onPress={handleOnPress}
               />
             </View>
@@ -951,13 +972,14 @@ export const FeedItem = ({ route }) => {
                       key={index}
                       item={item}
                       currentTheme={currentTheme}
-                      user={props.user}
+                      user={props?.user}
                       currentUser={currentUser}
                       setRemoveReview={setRemoveReview}
                       removeReview={removeReview}
                       DeleteReview={DeleteReview}
                       navigation={navigation}
                       language={language}
+                      hideModal={hideModal}
                     />
                   );
                 })
@@ -968,23 +990,23 @@ export const FeedItem = ({ route }) => {
                   </Text>
                 </View>
               )}
-              {reviewLength > 10 && (
+              {reviewLength > 5 && (
                 <Pressable
                   style={{
-                    backgroundColor: currentTheme.background2,
                     width: "100%",
                     alignItems: "center",
                   }}
                   onPress={
                     reviewsList?.length < reviewLength
                       ? () => AddNewReviews(reviewsPage + 1)
-                      : () => ReduceReviews()
+                      : undefined
                   }
                 >
-                  <Text style={{ color: "orange" }}>
-                    {reviewsList?.length < reviewLength
-                      ? language?.language.Bookings.bookings.loadMore
-                      : language?.language.Bookings.bookings.loadLess}
+                  <Text
+                    style={{ color: currentTheme.pink, letterSpacing: 0.5 }}
+                  >
+                    {reviewsList?.length < reviewLength &&
+                      language?.language.Bookings.bookings.loadMore}
                   </Text>
                 </Pressable>
               )}
@@ -1007,29 +1029,8 @@ const ReviewItem = ({
   navigation,
   setRemoveReview,
   language,
+  hideModal,
 }) => {
-  const [User, setUser] = useState(null);
-  // defines backend url
-  const backendUrl = useSelector((state) => state.storeApp.backendUrl);
-  useEffect(() => {
-    const GetUser = async () => {
-      const response = await axios.get(
-        backendUrl + "/api/v1/users/" + item.reviewer.id
-      );
-
-      if (response.data) {
-        setUser(response.data.data.user);
-      }
-    };
-    try {
-      if (item.reviewer.id) {
-        GetUser();
-      }
-    } catch (error) {
-      console.log(error.response.data.message);
-    }
-  }, [item]);
-
   // get review date
 
   const currentPostTime = GetTimesAgo(new Date(item.createdAt).getTime());
@@ -1070,11 +1071,13 @@ const ReviewItem = ({
         >
           <Pressable
             onPress={
-              User
-                ? () =>
-                    navigation.navigate("User", {
-                      user: User,
-                    })
+              item?.reviewer?.name
+                ? () => {
+                    hideModal();
+                    navigation.navigate("UserVisit", {
+                      user: item?.reviewer,
+                    });
+                  }
                 : undefined
             }
           >
@@ -1104,11 +1107,13 @@ const ReviewItem = ({
           </Pressable>
           <Pressable
             onPress={
-              User
-                ? () =>
-                    navigation.navigate("User", {
-                      user: User,
-                    })
+              item?.reviewer?.name
+                ? () => {
+                    hideModal();
+                    navigation.navigate("UserVisit", {
+                      user: item?.reviewer,
+                    });
+                  }
                 : undefined
             }
           >
@@ -1130,7 +1135,7 @@ const ReviewItem = ({
         <Pressable
           onLongPress={
             user?._id === currentUser?._id ||
-            currentUser?._id === item.reviewer?.id
+            currentUser?._id === item.reviewer?._id
               ? () => {
                   const pattern = [20, 100];
                   setRemoveReview(item.reviewId);
@@ -1138,7 +1143,7 @@ const ReviewItem = ({
                 }
               : undefined
           }
-          delayLongPress={300}
+          delayLongPress={150}
           onPress={() => setRemoveReview(null)}
           style={{ flex: 1 }}
         >
@@ -1180,7 +1185,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     flex: 1,
     minHeight: 45,
-
+    width: "100%",
     padding: 0,
     paddingTop: 5,
     paddingBottom: 15,
@@ -1204,7 +1209,7 @@ const styles = StyleSheet.create({
     color: "#e5e5e5",
     flex: 1,
   },
-  reviewsList: { gap: 10, marginBottom: 20 },
+  reviewsList: { gap: 10, width: "100%" },
   reviewItem: {
     gap: 10,
     marginHorizontal: 20,

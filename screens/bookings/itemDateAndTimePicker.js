@@ -152,7 +152,7 @@ const CustomDatePicker = ({
     let newDate = new Date(selectedYear, selectedMonth - 1, selectedDay);
     try {
       const response = await axios.get(
-        backendUrl + "/api/v1/bookings/" + targetUser._id + `?date=${newDate}`
+        backendUrl + "/api/v1/bookings/" + targetUser?._id + `?date=${newDate}`
       );
       setBookings(response.data.data.bookings);
     } catch (error) {

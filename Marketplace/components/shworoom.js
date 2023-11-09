@@ -15,7 +15,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Language } from "../../context/language";
 import { darkTheme, lightTheme } from "../../context/theme";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import { ProceduresOptions } from "../../datas/registerDatas";
 import { CacheableImage } from "../../components/cacheableImage";
 import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
@@ -28,6 +28,7 @@ import {
 import { ActivityIndicator } from "react-native-paper";
 import FilterPopup from "./showroomFilter";
 import { Circle } from "../../components/skeltons";
+import { setScreenModal } from "../../redux/app";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -228,15 +229,21 @@ const styles = StyleSheet.create({});
 
 const ProductItem = ({ item, navigation, currentTheme, categoriesList }) => {
   const [loading, setLoading] = useState(true);
-  // backend url
+  const dispatch = useDispatch();
+  const route = useRoute();
 
   return (
     <TouchableOpacity
       activeOpacity={0.8}
       onPress={() =>
-        navigation.navigate("Product", {
-          product: item,
-        })
+        dispatch(
+          setScreenModal({
+            active: true,
+            screen: "Product",
+            data: item,
+            route: route.name,
+          })
+        )
       }
       style={{
         width: "100%",

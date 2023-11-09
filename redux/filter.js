@@ -11,6 +11,7 @@ const initialState = {
   city: "",
   district: "",
   filterBadge: 0,
+  filterScreenModal: { active: false, screen: "", data: {} },
 };
 
 export const Filter = createSlice({
@@ -43,7 +44,10 @@ export const Filter = createSlice({
       state.district = action.payload;
     },
     setFilterBadgeSum: (state, action) => {
-      state.filterBadgeSum = action.payload;
+      state.filterBadge = action.payload;
+    },
+    setFilterScreenModal: (state, action) => {
+      state.filterScreenModal = action.payload;
     },
   },
 });
@@ -58,5 +62,6 @@ export const {
   setCity,
   setDistrict,
   setFilterBadgeSum,
+  setFilterScreenModal,
 } = Filter.actions;
 export default Filter.reducer;

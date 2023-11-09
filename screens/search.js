@@ -1,5 +1,6 @@
 import React, { useCallback, useMemo, useState, useContext } from "react";
 import {
+  Dimensions,
   Platform,
   Pressable,
   ScrollView,
@@ -21,10 +22,23 @@ import { darkTheme, lightTheme } from "../context/theme";
 import { useNavigation } from "@react-navigation/native";
 
 import { RouteNameContext } from "../context/routName";
+import { Header } from "./user/settings/header";
+import { setScreenModal } from "../redux/app";
 
-export const Search = ({}) => {
+const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
+
+export const Search = ({ onBack, hideModal, inputRef }) => {
   // Initialize state variables
   const [qnt, setQnt] = useState(20);
+
+  const handleScroll = (event) => {
+    const x = event.nativeEvent.contentOffset.x;
+    if (x > 0) {
+      inputRef.current.focus();
+    } else {
+      inputRef.current.blur();
+    }
+  };
 
   // defines navigation
   const navigation = useNavigation();
@@ -52,9 +66,7 @@ export const Search = ({}) => {
       dispatch(setSearchInput(lab[lab?.length - 1]));
       dispatch(setSearch(value?.value?.toLowerCase()));
 
-      setTimeout(() => {
-        navigation.navigate("cards");
-      }, 1000);
+      hideModal();
     },
     [dispatch, proceduresOptions]
   );
@@ -63,18 +75,20 @@ export const Search = ({}) => {
 
   const handleGo = (value) => {
     dispatch(setSearch(search));
+    hideModal();
 
     setTimeout(() => {
-      navigation.navigate("cards");
-    }, 1000);
+      hideModal();
+    }, 500);
   };
 
   return (
-    <View style={{ width: "100%", alignItems: "center", paddingTop: 0 }}>
+    <View style={{ width: SCREEN_WIDTH, alignItems: "center", paddingTop: 0 }}>
+      <Header onBack={onBack} title="Add New Address" />
       <View
         style={{
           width: "95%",
-          backgroundColor: currentTheme.background2,
+          // backgroundColor: currentTheme.background2,
           borderWidth: 1.5,
           borderColor: currentTheme.pink,
           borderRadius: 50,
@@ -87,6 +101,7 @@ export const Search = ({}) => {
       >
         <FontAwesome name="search" size={20} color={currentTheme.font} />
         <TextInput
+          ref={inputRef}
           placeholderTextColor={currentTheme.disabled}
           style={{
             width: "88%",
@@ -95,7 +110,7 @@ export const Search = ({}) => {
             borderRadius: 50,
             letterSpacing: 0.5,
           }}
-          autoFocus
+          // autoFocus
           placeholder={language?.language?.Main?.filter?.typeHere}
           onChangeText={(value) => dispatch(setSearchInput(value))}
           value={search}
@@ -127,7 +142,7 @@ export const Search = ({}) => {
                 activeOpacity={0.8}
                 key={index}
                 style={{
-                  backgroundColor: currentTheme.background,
+                  // backgroundColor: currentTheme.background,
                   borderRadius: 50,
                   padding: 5,
                   paddingBottom: 10,

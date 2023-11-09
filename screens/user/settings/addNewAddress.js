@@ -16,6 +16,8 @@ import { BackDrop } from "../../../components/backDropLoader";
 import Map from "../../../components/map";
 import { Language } from "../../../context/language";
 import AlertMessage from "../../../components/alertMessage";
+import { Header } from "./header";
+import { useNavigation } from "@react-navigation/native";
 
 /**
  * Add new address screen
@@ -23,7 +25,9 @@ import AlertMessage from "../../../components/alertMessage";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
-export const AddNewAddress = ({ navigation }) => {
+export const AddNewAddress = ({ onBack }) => {
+  // navigation
+  const navigation = useNavigation();
   // define theme
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
@@ -78,7 +82,7 @@ export const AddNewAddress = ({ navigation }) => {
       setAddress("");
       setTimeout(() => {
         setLoading(false);
-        navigation.navigate("Addresses");
+        onBack();
       }, 500);
     } catch (error) {
       console.log(error.response);
@@ -87,51 +91,57 @@ export const AddNewAddress = ({ navigation }) => {
     }
   };
   return (
-    <View style={{ alignItems: "center" }}>
-      {loading && <BackDrop loading={loading} setLoading={setLoading} />}
-      <View>
-        <GoogleAutocomplete
-          setAddress={setAddress}
-          currentTheme={currentTheme}
-        />
-        <View style={{ marginBottom: 35 }}>
-          <Map
-            latitude={
-              address !== ""
-                ? address?.latitude
-                : currentUser.address[0].latitude
-            }
-            longitude={
-              address !== ""
-                ? address.longitude
-                : currentUser.address[0].longitude
-            }
-            height={250}
+    <>
+      <Header onBack={onBack} title="Add New Address" />
+      <View
+        style={{ alignItems: "center", width: SCREEN_WIDTH, marginTop: 20 }}
+      >
+        {loading && <BackDrop loading={loading} setLoading={setLoading} />}
+        <View style={{ gap: 10 }}>
+          <GoogleAutocomplete
+            address={address}
+            setAddress={setAddress}
+            currentTheme={currentTheme}
+          />
+          <View style={{ marginBottom: 35 }}>
+            <Map
+              latitude={
+                address !== ""
+                  ? address?.latitude
+                  : currentUser.address[0].latitude
+              }
+              longitude={
+                address !== ""
+                  ? address.longitude
+                  : currentUser.address[0].longitude
+              }
+              height={250}
+            />
+          </View>
+        </View>
+        <Pressable
+          style={{
+            padding: 10,
+            backgroundColor: currentTheme.pink,
+            width: "45%",
+            borderRadius: 50,
+            alignItems: "center",
+          }}
+          onPress={Add}
+        >
+          <Text style={{ color: "#f1f1f1" }}>Save</Text>
+        </Pressable>
+        <View style={{ position: "absolute", zIndex: 19000 }}>
+          <AlertMessage
+            isVisible={alert.active}
+            type={alert.type}
+            text={alert.text}
+            onClose={() => setAlert({ active: false, text: "" })}
+            Press={() => setAlert({ active: false, text: "" })}
           />
         </View>
       </View>
-      <Pressable
-        style={{
-          padding: 10,
-          backgroundColor: currentTheme.pink,
-          width: "45%",
-          borderRadius: 50,
-          alignItems: "center",
-        }}
-        onPress={Add}
-      >
-        <Text style={{ color: "#f1f1f1" }}>Save</Text>
-      </Pressable>
-      <View style={{ position: "absolute", zIndex: 19000 }}>
-        <AlertMessage
-          isVisible={alert.active}
-          type={alert.type}
-          text={alert.text}
-          onClose={() => setAlert({ active: false, text: "" })}
-          Press={() => setAlert({ active: false, text: "" })}
-        />
-      </View>
-    </View>
+    </>
   );
 };
 

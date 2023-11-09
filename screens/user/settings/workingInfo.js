@@ -22,6 +22,7 @@ import { workingDaysOptions } from "../../../datas/registerDatas";
 import { setRerenderCurrentUser } from "../../../redux/rerenders";
 import { setCurrentUser } from "../../../redux/user";
 import { Currency } from "../../../screens/user/settings/currency";
+import { Header } from "./header";
 
 /**
  * Working info screen in user settings
@@ -29,7 +30,7 @@ import { Currency } from "../../../screens/user/settings/currency";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
-export const WorkingInfo = () => {
+export const WorkingInfo = ({ hideModal }) => {
   // language state
   const language = Language();
 
@@ -196,389 +197,13 @@ export const WorkingInfo = () => {
   };
 
   return (
-    <ScrollView
-      contentContainerStyle={styles.container}
-      bounces={Platform.OS === "ios" ? false : undefined}
-      overScrollMode={Platform.OS === "ios" ? "never" : "always"}
-    >
-      <View
-        style={{
-          borderWidth: 1,
-          borderColor: currentTheme.line,
-          width: "90%",
-          alignItems: "center",
-          borderRadius: 10,
-          padding: 10,
-        }}
+    <>
+      <Header onBack={hideModal} title="Working Info" />
+      <ScrollView
+        contentContainerStyle={styles.container}
+        bounces={Platform.OS === "ios" ? false : undefined}
+        overScrollMode={Platform.OS === "ios" ? "never" : "always"}
       >
-        <Text
-          style={{
-            color: currentTheme.font,
-            marginVertical: 10,
-            fontWeight: "bold",
-            fontSize: 16,
-            letterSpacing: 0.3,
-          }}
-        >
-          {language?.language?.User?.userPage?.workingDays}:
-        </Text>
-        {!add ? (
-          <Pressable onPress={() => setAdd(true)} style={{ padding: 10 }}>
-            <MaterialIcons name="add" color={currentTheme.pink} size={24} />
-          </Pressable>
-        ) : (
-          <Pressable onPress={() => setAdd(false)} style={{ padding: 10 }}>
-            <FontAwesome5 name="times" color="red" size={24} />
-          </Pressable>
-        )}
-        {add && (
-          <View
-            style={{
-              width: SCREEN_WIDTH - 60,
-              gap: 5,
-              marginHorizontal: 20,
-              marginBottom: 20,
-              alignItems: "center",
-            }}
-          >
-            <Pressable
-              style={[
-                styles.dayOption,
-                {
-                  backgroundColor: currentTheme.background,
-                  width: "100%",
-                  alignItems: "center",
-                  borderRadius: 50,
-                },
-              ]}
-              onPress={
-                currentUser.workingDays.length < 1
-                  ? () => AddWorkingDay("workingDays")
-                  : () =>
-                      Alert.alert(
-                        "You can only add the value 'Working Days' and cannot combine it with any other variants."
-                      )
-              }
-            >
-              <Text style={{ color: currentTheme.pink, letterSpacing: 0.2 }}>
-                Working Days
-              </Text>
-            </Pressable>
-            <Pressable
-              style={[
-                styles.dayOption,
-                {
-                  backgroundColor: currentTheme.background,
-                  width: "100%",
-                  alignItems: "center",
-                  borderRadius: 50,
-                },
-              ]}
-              onPress={
-                currentUser.workingDays.length < 1
-                  ? () => AddWorkingDay("everyDay")
-                  : () =>
-                      Alert.alert(
-                        "You can only add the value 'Every Days' and cannot combine it with any other variants."
-                      )
-              }
-            >
-              <Text style={{ color: currentTheme.pink, letterSpacing: 0.2 }}>
-                Everyday
-              </Text>
-            </Pressable>
-            <Pressable
-              style={[
-                styles.dayOption,
-                {
-                  backgroundColor: currentTheme.background,
-                  width: "100%",
-                  alignItems: "center",
-                  borderRadius: 50,
-                },
-              ]}
-              onPress={
-                currentUser.workingDays.some(
-                  (item) =>
-                    item.value === "everyDay" ||
-                    item.value === "workingDays" ||
-                    item.value === "monday"
-                )
-                  ? () =>
-                      Alert.alert(
-                        "You can only add the value 'Every Day', 'Working Day' or 'Monday' separately. You cannot combine them with any other variants."
-                      )
-                  : () => AddWorkingDay("monday")
-              }
-            >
-              <Text style={{ color: currentTheme.pink, letterSpacing: 0.2 }}>
-                Monday
-              </Text>
-            </Pressable>
-            <Pressable
-              style={[
-                styles.dayOption,
-                {
-                  backgroundColor: currentTheme.background,
-                  width: "100%",
-                  alignItems: "center",
-                  borderRadius: 50,
-                },
-              ]}
-              onPress={
-                currentUser.workingDays.some(
-                  (item) =>
-                    item.value === "everyDay" ||
-                    item.value === "workingDays" ||
-                    item.value === "tuesday"
-                )
-                  ? () =>
-                      Alert.alert(
-                        "You can only add the value 'Every Day', 'Working Day' or 'Tuesday' separately. You cannot combine them with any other variants."
-                      )
-                  : () => AddWorkingDay("tuesday")
-              }
-            >
-              <Text style={{ color: currentTheme.pink, letterSpacing: 0.2 }}>
-                Tuesday
-              </Text>
-            </Pressable>
-            <Pressable
-              style={[
-                styles.dayOption,
-                {
-                  backgroundColor: currentTheme.background,
-                  width: "100%",
-                  alignItems: "center",
-                  borderRadius: 50,
-                },
-              ]}
-              onPress={
-                currentUser.workingDays.some(
-                  (item) =>
-                    item.value === "everyDay" ||
-                    item.value === "workingDays" ||
-                    item.value === "wednesday"
-                )
-                  ? () =>
-                      Alert.alert(
-                        "You can only add the value 'Every Day', 'Working Day' or 'Wednesday' separately. You cannot combine them with any other variants."
-                      )
-                  : () => AddWorkingDay("wednesday")
-              }
-            >
-              <Text style={{ color: currentTheme.pink, letterSpacing: 0.2 }}>
-                Wednesday
-              </Text>
-            </Pressable>
-            <Pressable
-              style={[
-                styles.dayOption,
-                {
-                  backgroundColor: currentTheme.background,
-                  width: "100%",
-                  alignItems: "center",
-                  borderRadius: 50,
-                },
-              ]}
-              onPress={
-                currentUser.workingDays.some(
-                  (item) =>
-                    item.value === "everyDay" ||
-                    item.value === "workingDays" ||
-                    item.value === "thursday"
-                )
-                  ? () =>
-                      Alert.alert(
-                        "You can only add the value 'Every Day', 'Working Day' or 'Thursday' separately. You cannot combine them with any other variants."
-                      )
-                  : () => AddWorkingDay("thursday")
-              }
-            >
-              <Text style={{ color: currentTheme.pink, letterSpacing: 0.2 }}>
-                Thursday
-              </Text>
-            </Pressable>
-            <Pressable
-              style={[
-                styles.dayOption,
-                {
-                  backgroundColor: currentTheme.background,
-                  width: "100%",
-                  alignItems: "center",
-                  borderRadius: 50,
-                },
-              ]}
-              onPress={
-                currentUser.workingDays.some(
-                  (item) =>
-                    item.value === "everyDay" ||
-                    item.value === "workingDays" ||
-                    item.value === "friday"
-                )
-                  ? () =>
-                      Alert.alert(
-                        "You can only add the value 'Every Day', 'Working Day' or 'Friday' separately. You cannot combine them with any other variants."
-                      )
-                  : () => AddWorkingDay("friday")
-              }
-            >
-              <Text style={{ color: currentTheme.pink, letterSpacing: 0.2 }}>
-                Friday
-              </Text>
-            </Pressable>
-            <Pressable
-              style={[
-                styles.dayOption,
-                {
-                  backgroundColor: currentTheme.background,
-                  width: "100%",
-                  alignItems: "center",
-                  borderRadius: 50,
-                },
-              ]}
-              onPress={
-                currentUser.workingDays.some(
-                  (item) =>
-                    item.value === "everyDay" ||
-                    item.value === "workingDays" ||
-                    item.value === "saturday"
-                )
-                  ? () =>
-                      Alert.alert(
-                        "You can only add the value 'Every Day', 'Working Day' or 'Saturday' separately. You cannot combine them with any other variants."
-                      )
-                  : () => AddWorkingDay("saturday")
-              }
-            >
-              <Text style={{ color: currentTheme.pink, letterSpacing: 0.2 }}>
-                Saturday
-              </Text>
-            </Pressable>
-            <Pressable
-              style={[
-                styles.dayOption,
-                {
-                  backgroundColor: currentTheme.background,
-                  width: "100%",
-                  alignItems: "center",
-                  borderRadius: 50,
-                },
-              ]}
-              onPress={
-                currentUser.workingDays.some(
-                  (item) =>
-                    item.value === "everyDay" ||
-                    item.value === "workingDays" ||
-                    item.value === "sunday"
-                )
-                  ? () =>
-                      Alert.alert(
-                        "You can only add the value 'Every Day', 'Working Day' or 'Sunday' separately. You cannot combine them with any other variants."
-                      )
-                  : () => AddWorkingDay("sunday")
-              }
-            >
-              <Text style={{ color: currentTheme.pink, letterSpacing: 0.2 }}>
-                Sunday
-              </Text>
-            </Pressable>
-          </View>
-        )}
-
-        <View style={{ width: "100%" }}>
-          {currentUser.workingDays?.map((option, index) => {
-            let lab = workingDaysOptions.find(
-              (item) => item.value === option.value
-            );
-
-            return (
-              <View
-                key={option.value}
-                style={{ width: "100%", alignItems: "center" }}
-              >
-                <TouchableOpacity
-                  activeOpacity={0.8}
-                  key={index}
-                  style={
-                    [
-                      styles.option,
-                      selectedOptions.includes(option.value)
-                        ? styles.selected
-                        : null,
-                      {
-                        backgroundColor: currentTheme.background,
-                        borderRadius: selectedOptions.includes(option.value)
-                          ? 10
-                          : 50,
-                        paddingLeft: 20,
-                      },
-                    ]
-                    // { backgroundColor: currentTheme.background2 })
-                  }
-                  onPress={() => handleOptionPress(option)}
-                  onLongPress={() => {
-                    Vibration.vibrate();
-                    Deleting(option._id, option.value);
-                  }}
-                  delayLongPress={300}
-                >
-                  <View
-                    style={{
-                      alignItems: "center",
-                      flexDirection: "row",
-                      justifyContent: "space-between",
-                      width: "100%",
-                    }}
-                  >
-                    <Text
-                      style={[styles.optionText, { color: currentTheme.font }]}
-                    >
-                      {lang === "en"
-                        ? lab?.en
-                        : lang === "ka"
-                        ? lab?.ka
-                        : lab?.ru}
-                    </Text>
-                    <Text
-                      style={[styles.optionText, { color: currentTheme.font }]}
-                    >
-                      {option?.hours}
-                    </Text>
-                  </View>
-                  {selectedOptions.includes(option.value) && (
-                    <TimePickerComponent
-                      currentTheme={currentTheme}
-                      setStartHour={setStartHour}
-                      setEndHour={setEndHour}
-                      startHour={startHour}
-                      endHour={endHour}
-                    />
-                  )}
-                </TouchableOpacity>
-                {selectedOptions.includes(option.value) && (
-                  <TouchableOpacity
-                    style={{
-                      padding: 10,
-                      borderRadius: 50,
-                      backgroundColor: currentTheme.pink,
-                      width: "45%",
-                      alignItems: "center",
-                      marginTop: 10,
-                    }}
-                    onPress={() =>
-                      AddWorkingDayHours(option._id, option.value, index)
-                    }
-                  >
-                    <Text style={{ color: "#fff" }}>Save</Text>
-                  </TouchableOpacity>
-                )}
-              </View>
-            );
-          })}
-        </View>
-      </View>
-      {currentUser.type !== "shop" && (
         <View
           style={{
             borderWidth: 1,
@@ -586,141 +211,520 @@ export const WorkingInfo = () => {
             width: "90%",
             alignItems: "center",
             borderRadius: 10,
-            padding: 15,
+            padding: 10,
           }}
         >
           <Text
             style={{
+              color: currentTheme.font,
+              marginVertical: 10,
               fontWeight: "bold",
               fontSize: 16,
-              color: currentTheme.font,
               letterSpacing: 0.3,
             }}
           >
-            Experience:
+            {language?.language?.User?.userPage?.workingDays}:
           </Text>
-
-          {openExperience ? (
-            <>
-              <Text
-                style={{
-                  color: currentTheme.disabled,
-                  marginVertical: 12.5,
-                  height: 16,
-                  letterSpacing: 0.2,
-                }}
-              >
-                {experience.length} (max 500 symbols)
-              </Text>
-              <TextInput
-                placeholder="Add experience"
-                placeholderTextColor={currentTheme.disabled}
-                multiline
-                numOfLines={10}
-                onChangeText={setExperience}
-                value={experience}
-                style={{
-                  paddingHorizontal: 10,
-                  paddingVertical: 5,
-                  borderRadius: 10,
-                  width: "100%",
-                  color: currentTheme.font,
-                  fontSize: 14,
-                  minHeight: 150,
-                  lineHeight: 22,
-                  backgroundColor: currentTheme.background,
-                  shadowColor: "#000",
-                  shadowOffset: {
-                    width: 0,
-                    height: 3, // negative value places shadow on top
+          {!add ? (
+            <Pressable onPress={() => setAdd(true)} style={{ padding: 10 }}>
+              <MaterialIcons name="add" color={currentTheme.pink} size={24} />
+            </Pressable>
+          ) : (
+            <Pressable onPress={() => setAdd(false)} style={{ padding: 10 }}>
+              <FontAwesome5 name="times" color="red" size={24} />
+            </Pressable>
+          )}
+          {add && (
+            <View
+              style={{
+                width: SCREEN_WIDTH - 60,
+                gap: 5,
+                marginHorizontal: 20,
+                marginBottom: 20,
+                alignItems: "center",
+              }}
+            >
+              <Pressable
+                style={[
+                  styles.dayOption,
+                  {
+                    //
+                    width: "100%",
+                    alignItems: "center",
+                    borderRadius: 50,
                   },
-                  shadowOpacity: 0.05,
-                  shadowRadius: 2,
-                  elevation: 1,
-                }}
-              />
+                ]}
+                onPress={
+                  currentUser.workingDays.length < 1
+                    ? () => AddWorkingDay("workingDays")
+                    : () =>
+                        Alert.alert(
+                          "You can only add the value 'Working Days' and cannot combine it with any other variants."
+                        )
+                }
+              >
+                <Text style={{ color: currentTheme.pink, letterSpacing: 0.2 }}>
+                  Working Days
+                </Text>
+              </Pressable>
+              <Pressable
+                style={[
+                  styles.dayOption,
+                  {
+                    //
+                    width: "100%",
+                    alignItems: "center",
+                    borderRadius: 50,
+                  },
+                ]}
+                onPress={
+                  currentUser.workingDays.length < 1
+                    ? () => AddWorkingDay("everyDay")
+                    : () =>
+                        Alert.alert(
+                          "You can only add the value 'Every Days' and cannot combine it with any other variants."
+                        )
+                }
+              >
+                <Text style={{ color: currentTheme.pink, letterSpacing: 0.2 }}>
+                  Everyday
+                </Text>
+              </Pressable>
+              <Pressable
+                style={[
+                  styles.dayOption,
+                  {
+                    width: "100%",
+                    alignItems: "center",
+                    borderRadius: 50,
+                  },
+                ]}
+                onPress={
+                  currentUser.workingDays.some(
+                    (item) =>
+                      item.value === "everyDay" ||
+                      item.value === "workingDays" ||
+                      item.value === "monday"
+                  )
+                    ? () =>
+                        Alert.alert(
+                          "You can only add the value 'Every Day', 'Working Day' or 'Monday' separately. You cannot combine them with any other variants."
+                        )
+                    : () => AddWorkingDay("monday")
+                }
+              >
+                <Text style={{ color: currentTheme.pink, letterSpacing: 0.2 }}>
+                  Monday
+                </Text>
+              </Pressable>
+              <Pressable
+                style={[
+                  styles.dayOption,
+                  {
+                    width: "100%",
+                    alignItems: "center",
+                    borderRadius: 50,
+                  },
+                ]}
+                onPress={
+                  currentUser.workingDays.some(
+                    (item) =>
+                      item.value === "everyDay" ||
+                      item.value === "workingDays" ||
+                      item.value === "tuesday"
+                  )
+                    ? () =>
+                        Alert.alert(
+                          "You can only add the value 'Every Day', 'Working Day' or 'Tuesday' separately. You cannot combine them with any other variants."
+                        )
+                    : () => AddWorkingDay("tuesday")
+                }
+              >
+                <Text style={{ color: currentTheme.pink, letterSpacing: 0.2 }}>
+                  Tuesday
+                </Text>
+              </Pressable>
+              <Pressable
+                style={[
+                  styles.dayOption,
+                  {
+                    width: "100%",
+                    alignItems: "center",
+                    borderRadius: 50,
+                  },
+                ]}
+                onPress={
+                  currentUser.workingDays.some(
+                    (item) =>
+                      item.value === "everyDay" ||
+                      item.value === "workingDays" ||
+                      item.value === "wednesday"
+                  )
+                    ? () =>
+                        Alert.alert(
+                          "You can only add the value 'Every Day', 'Working Day' or 'Wednesday' separately. You cannot combine them with any other variants."
+                        )
+                    : () => AddWorkingDay("wednesday")
+                }
+              >
+                <Text style={{ color: currentTheme.pink, letterSpacing: 0.2 }}>
+                  Wednesday
+                </Text>
+              </Pressable>
+              <Pressable
+                style={[
+                  styles.dayOption,
+                  {
+                    width: "100%",
+                    alignItems: "center",
+                    borderRadius: 50,
+                  },
+                ]}
+                onPress={
+                  currentUser.workingDays.some(
+                    (item) =>
+                      item.value === "everyDay" ||
+                      item.value === "workingDays" ||
+                      item.value === "thursday"
+                  )
+                    ? () =>
+                        Alert.alert(
+                          "You can only add the value 'Every Day', 'Working Day' or 'Thursday' separately. You cannot combine them with any other variants."
+                        )
+                    : () => AddWorkingDay("thursday")
+                }
+              >
+                <Text style={{ color: currentTheme.pink, letterSpacing: 0.2 }}>
+                  Thursday
+                </Text>
+              </Pressable>
+              <Pressable
+                style={[
+                  styles.dayOption,
+                  {
+                    width: "100%",
+                    alignItems: "center",
+                    borderRadius: 50,
+                  },
+                ]}
+                onPress={
+                  currentUser.workingDays.some(
+                    (item) =>
+                      item.value === "everyDay" ||
+                      item.value === "workingDays" ||
+                      item.value === "friday"
+                  )
+                    ? () =>
+                        Alert.alert(
+                          "You can only add the value 'Every Day', 'Working Day' or 'Friday' separately. You cannot combine them with any other variants."
+                        )
+                    : () => AddWorkingDay("friday")
+                }
+              >
+                <Text style={{ color: currentTheme.pink, letterSpacing: 0.2 }}>
+                  Friday
+                </Text>
+              </Pressable>
+              <Pressable
+                style={[
+                  styles.dayOption,
+                  {
+                    width: "100%",
+                    alignItems: "center",
+                    borderRadius: 50,
+                  },
+                ]}
+                onPress={
+                  currentUser.workingDays.some(
+                    (item) =>
+                      item.value === "everyDay" ||
+                      item.value === "workingDays" ||
+                      item.value === "saturday"
+                  )
+                    ? () =>
+                        Alert.alert(
+                          "You can only add the value 'Every Day', 'Working Day' or 'Saturday' separately. You cannot combine them with any other variants."
+                        )
+                    : () => AddWorkingDay("saturday")
+                }
+              >
+                <Text style={{ color: currentTheme.pink, letterSpacing: 0.2 }}>
+                  Saturday
+                </Text>
+              </Pressable>
+              <Pressable
+                style={[
+                  styles.dayOption,
+                  {
+                    width: "100%",
+                    alignItems: "center",
+                    borderRadius: 50,
+                  },
+                ]}
+                onPress={
+                  currentUser.workingDays.some(
+                    (item) =>
+                      item.value === "everyDay" ||
+                      item.value === "workingDays" ||
+                      item.value === "sunday"
+                  )
+                    ? () =>
+                        Alert.alert(
+                          "You can only add the value 'Every Day', 'Working Day' or 'Sunday' separately. You cannot combine them with any other variants."
+                        )
+                    : () => AddWorkingDay("sunday")
+                }
+              >
+                <Text style={{ color: currentTheme.pink, letterSpacing: 0.2 }}>
+                  Sunday
+                </Text>
+              </Pressable>
+            </View>
+          )}
+
+          <View style={{ width: "100%" }}>
+            {currentUser.workingDays?.map((option, index) => {
+              let lab = workingDaysOptions.find(
+                (item) => item.value === option.value
+              );
+
+              return (
+                <View
+                  key={option.value}
+                  style={{ width: "100%", alignItems: "center" }}
+                >
+                  <TouchableOpacity
+                    activeOpacity={0.8}
+                    key={index}
+                    style={
+                      [
+                        styles.option,
+                        selectedOptions.includes(option.value)
+                          ? styles.selected
+                          : null,
+                        {
+                          borderRadius: selectedOptions.includes(option.value)
+                            ? 10
+                            : 50,
+                          paddingLeft: 20,
+                        },
+                      ]
+                      // { backgroundColor: currentTheme.background2 })
+                    }
+                    onPress={() => handleOptionPress(option)}
+                    onLongPress={() => {
+                      Vibration.vibrate();
+                      Deleting(option._id, option.value);
+                    }}
+                    delayLongPress={300}
+                  >
+                    <View
+                      style={{
+                        alignItems: "center",
+                        flexDirection: "row",
+                        justifyContent: "space-between",
+                        width: "100%",
+                      }}
+                    >
+                      <Text
+                        style={[
+                          styles.optionText,
+                          { color: currentTheme.font },
+                        ]}
+                      >
+                        {lang === "en"
+                          ? lab?.en
+                          : lang === "ka"
+                          ? lab?.ka
+                          : lab?.ru}
+                      </Text>
+                      <Text
+                        style={[
+                          styles.optionText,
+                          { color: currentTheme.font },
+                        ]}
+                      >
+                        {option?.hours}
+                      </Text>
+                    </View>
+                    {selectedOptions.includes(option.value) && (
+                      <TimePickerComponent
+                        currentTheme={currentTheme}
+                        setStartHour={setStartHour}
+                        setEndHour={setEndHour}
+                        startHour={startHour}
+                        endHour={endHour}
+                      />
+                    )}
+                  </TouchableOpacity>
+                  {selectedOptions.includes(option.value) && (
+                    <TouchableOpacity
+                      style={{
+                        padding: 10,
+                        borderRadius: 50,
+                        backgroundColor: currentTheme.pink,
+                        width: "45%",
+                        alignItems: "center",
+                        marginTop: 10,
+                      }}
+                      onPress={() =>
+                        AddWorkingDayHours(option._id, option.value, index)
+                      }
+                    >
+                      <Text style={{ color: "#fff" }}>Save</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              );
+            })}
+          </View>
+        </View>
+        {currentUser.type !== "shop" && (
+          <View
+            style={{
+              borderWidth: 1,
+              borderColor: currentTheme.line,
+              width: "90%",
+              alignItems: "center",
+              borderRadius: 10,
+              padding: 15,
+            }}
+          >
+            <Text
+              style={{
+                fontWeight: "bold",
+                fontSize: 16,
+                color: currentTheme.font,
+                letterSpacing: 0.3,
+              }}
+            >
+              Experience:
+            </Text>
+
+            {openExperience ? (
+              <>
+                <Text
+                  style={{
+                    color: currentTheme.disabled,
+                    marginVertical: 12.5,
+                    height: 16,
+                    letterSpacing: 0.2,
+                  }}
+                >
+                  {experience.length} (max 500 symbols)
+                </Text>
+                <TextInput
+                  placeholder="Add experience"
+                  placeholderTextColor={currentTheme.disabled}
+                  multiline
+                  numOfLines={10}
+                  onChangeText={setExperience}
+                  value={experience}
+                  style={{
+                    paddingHorizontal: 10,
+                    paddingVertical: 5,
+                    borderRadius: 10,
+                    width: "100%",
+                    color: currentTheme.font,
+                    fontSize: 14,
+                    minHeight: 150,
+                    lineHeight: 22,
+
+                    shadowColor: "#000",
+                    shadowOffset: {
+                      width: 0,
+                      height: 3, // negative value places shadow on top
+                    },
+                    shadowOpacity: 0.05,
+                    shadowRadius: 2,
+                    elevation: 1,
+                  }}
+                />
+                <TouchableOpacity
+                  activeOpacity={0.3}
+                  style={{
+                    padding: 10,
+                    borderRadius: 50,
+                    backgroundColor: currentTheme.pink,
+                    width: "45%",
+                    marginTop: 15,
+                    alignItems: "center",
+                  }}
+                  onPress={
+                    experience.length < 501
+                      ? () => UpdateExperience(experience)
+                      : undefined
+                  }
+                >
+                  <Text style={{ color: "#fff", letterSpacing: 0.2 }}>
+                    Save
+                  </Text>
+                </TouchableOpacity>
+              </>
+            ) : (
               <TouchableOpacity
                 activeOpacity={0.3}
                 style={{
-                  padding: 10,
-                  borderRadius: 50,
-                  backgroundColor: currentTheme.pink,
-                  width: "45%",
-                  marginTop: 15,
+                  width: "100%",
+                  borderRadius: 10,
+                  // backgroundColor: "rgba(255,255,255,0.1)",
+                  marginTop: 20,
+                  marginBottom: 5,
+                  // padding: 10,
                   alignItems: "center",
                 }}
-                onPress={
-                  experience.length < 501
-                    ? () => UpdateExperience(experience)
-                    : undefined
-                }
+                onLongPress={() => {
+                  UpdateExperience("");
+                  Vibration.vibrate();
+                }}
+                delayLongPress={200}
+                onPress={() => {
+                  setExperience(currentUser.experience);
+                  setOpenExperience(true);
+                }}
               >
-                <Text style={{ color: "#fff", letterSpacing: 0.2 }}>Save</Text>
+                {currentUser.experience?.length > 0 ? (
+                  <Text
+                    style={{
+                      color: currentTheme.font,
+                      lineHeight: 22,
+                    }}
+                  >
+                    {currentUser?.experience}
+                  </Text>
+                ) : (
+                  <Pressable
+                    onPress={() => {
+                      setExperience(currentUser.experience);
+                      setOpenExperience(true);
+                    }}
+                    style={{ padding: 10 }}
+                  >
+                    <MaterialIcons
+                      name="add"
+                      color={currentTheme.pink}
+                      size={24}
+                    />
+                  </Pressable>
+                )}
               </TouchableOpacity>
-            </>
-          ) : (
-            <TouchableOpacity
-              activeOpacity={0.3}
-              style={{
-                width: "100%",
-                borderRadius: 10,
-                // backgroundColor: "rgba(255,255,255,0.1)",
-                marginTop: 20,
-                marginBottom: 5,
-                // padding: 10,
-                alignItems: "center",
-              }}
-              onLongPress={() => {
-                UpdateExperience("");
-                Vibration.vibrate();
-              }}
-              delayLongPress={200}
-              onPress={() => {
-                setExperience(currentUser.experience);
-                setOpenExperience(true);
-              }}
-            >
-              {currentUser.experience?.length > 0 ? (
-                <Text
-                  style={{
-                    color: currentTheme.font,
-                    lineHeight: 22,
-                  }}
-                >
-                  {currentUser?.experience}
-                </Text>
-              ) : (
-                <Pressable
-                  onPress={() => {
-                    setExperience(currentUser.experience);
-                    setOpenExperience(true);
-                  }}
-                  style={{ padding: 10 }}
-                >
-                  <MaterialIcons
-                    name="add"
-                    color={currentTheme.pink}
-                    size={24}
-                  />
-                </Pressable>
-              )}
-            </TouchableOpacity>
-          )}
+            )}
+          </View>
+        )}
+        <View
+          style={{
+            borderWidth: 1,
+            borderColor: currentTheme.line,
+            width: "90%",
+            alignItems: "center",
+            borderRadius: 10,
+            padding: 10,
+          }}
+        >
+          <Currency currentTheme={currentTheme} />
         </View>
-      )}
-      <View
-        style={{
-          borderWidth: 1,
-          borderColor: currentTheme.line,
-          width: "90%",
-          alignItems: "center",
-          borderRadius: 10,
-          padding: 10,
-        }}
-      >
-        <Currency currentTheme={currentTheme} />
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </>
   );
 };
 

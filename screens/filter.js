@@ -7,7 +7,7 @@ import {
   Entypo,
   Ionicons,
 } from "@expo/vector-icons";
-import React, { useEffect, useState, useContext } from "react";
+import React, { useEffect, useState, useContext, useRef } from "react";
 import {
   Dimensions,
   Platform,
@@ -17,6 +17,7 @@ import {
   Text,
   TouchableOpacity,
   View,
+  Keyboard,
   Modal,
 } from "react-native";
 import { useDispatch, useSelector } from "react-redux";
@@ -36,6 +37,8 @@ import { setCleanUp } from "../redux/rerenders";
 import { MapFilter } from "../components/mapFilter";
 import axios from "axios";
 import { BlurView } from "expo-blur";
+import { Header } from "./user/settings/header";
+import { Search as SearchScreen } from "./search";
 
 /**
  * FILTER SCREEN component
@@ -43,7 +46,7 @@ import { BlurView } from "expo-blur";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
-export const Filter = ({ navigation }) => {
+export const Filter = ({ navigation, hideModal }) => {
   // define some context
   const language = Language();
   const dispatch = useDispatch();
@@ -201,372 +204,453 @@ export const Filter = ({ navigation }) => {
     // dispatch(setFeedRefreshControl(false));
   };
 
+  // scrolling ref
+  const scrollRef = useRef();
+  const inputRef = useRef();
+  const [scrollPosition, setScrollPosition] = useState({ x: 0, y: 0 });
+
+  const handleScroll = (event) => {
+    const x = event.nativeEvent.contentOffset.x;
+    if (x > SCREEN_WIDTH - 1) {
+      inputRef.current.focus();
+    } else {
+      inputRef.current.blur();
+    }
+  };
+
   return (
-    <ScrollView
-      contentContainerStyle={{
-        gap: 5,
-        alignItems: "center",
-        paddingBottom: 40,
-      }}
-      showsVerticalScrollIndicator={false}
-      scrollEnabled={!openCities ? true : false}
-    >
-      <View style={{ marginBottom: 5, width: "100%" }}>
-        <Search navigation={navigation} currentTheme={currentTheme} />
-      </View>
-      <View
-        style={{
-          width: SCREEN_WIDTH - 20,
-          height: SCREEN_HEIGHT / 2,
-          // margin: 10,
-          overflow: "hidden",
+    <Pressable onPress={() => Keyboard.dismiss()}>
+      <ScrollView
+        bounces={Platform.OS === "ios" ? false : undefined}
+        overScrollMode={Platform.OS === "ios" ? "never" : "always"}
+        keyboardShouldPersistTaps="handled"
+        horizontal
+        pagingEnabled
+        ref={scrollRef}
+        onScroll={(event) => {
+          // Get current scroll position
+          const position = event.nativeEvent.contentOffset;
+          setScrollPosition(position);
+          handleScroll(event);
         }}
+        scrollEventThrottle={16}
       >
-        {!openCities && (
-          <View
-            style={{
-              width: "10%",
-              alignItems: "center",
-              position: "absolute",
-              bottom: 10,
-              right: 5,
-              zIndex: 100000,
-              gap: 10,
-            }}
-          >
-            <Pressable
-              onPress={() => {
-                dispatch(setSpecialists(!specialists));
-              }}
-              style={{
-                backgroundColor: currentTheme.background,
-
-                borderRadius: 50,
-                width: 30,
-                height: 30,
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <MaterialCommunityIcons
-                name="face-woman-profile"
-                size={18}
-                color={specialists ? currentTheme.pink : "#ccc"}
-                style={{ position: "relative", left: 1 }}
-              />
-            </Pressable>
-            <Pressable
-              onPress={() => {
-                dispatch(setSalons(!salons));
-              }}
-              style={{
-                backgroundColor: currentTheme.background,
-
-                borderRadius: 50,
-                width: 30,
-                height: 30,
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <MaterialCommunityIcons
-                name="home-variant-outline"
-                size={20}
-                color={salons ? currentTheme.pink : "#ccc"}
-                style={{ position: "relative", left: 0.5 }}
-              />
-            </Pressable>
-            <Pressable
-              onPress={() => {
-                dispatch(setShops(!shops));
-              }}
-              style={{
-                backgroundColor: currentTheme.background,
-
-                borderRadius: 50,
-                width: 30,
-                height: 30,
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Fontisto
-                name="shopping-bag-1"
-                size={15}
-                color={shops ? currentTheme.pink : "#ccc"}
-                style={{ position: "relative", left: 0.5 }}
-              />
-            </Pressable>
-            {!openCities && (
-              <TouchableOpacity
-                activeOpacity={1}
-                onPress={
-                  usersLength > users?.length
-                    ? () => AddUsersWithFeeds(page + 1)
-                    : undefined
-                }
-                style={{
-                  width: 30,
-                  height: 30,
-                  backgroundColor: currentTheme.background,
-                  borderRadius: 50,
-                  alignItems: "center",
-                  justifyContent: "center",
-                  marginTop: 15,
-                }}
-              >
-                <Text
-                  style={{
-                    fontSize: 16,
-                    fontWeight: "bold",
-                    color:
-                      usersLength > users?.length
-                        ? currentTheme.pink
-                        : currentTheme.disabled,
-                  }}
-                >
-                  {usersLength > users?.length ? "+5" : "+0"}
-                </Text>
-              </TouchableOpacity>
-            )}
-          </View>
-        )}
-        <MapFilter users={users} />
-        <Pressable
-          onPress={() => setOpenCities(!openCities)}
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 10,
-            backgroundColor: currentTheme.background,
-            padding: 5,
-            paddingHorizontal: 10,
-            borderRadius: 50,
-
-            position: "absolute",
-            bottom: 8,
-            left: 8,
-          }}
-        >
-          <FontAwesome5 name="city" color={currentTheme.pink} size={12} />
-          <View>
-            {currentUser.address.find(
-              (c) =>
-                c?.city.replace("'", "").toLowerCase() === city?.toLowerCase()
-            ) && district === "" ? null : (
-              <View
-                style={{
-                  width: "auto",
-                  minWidth: 15,
-                  height: 15,
-                  backgroundColor: currentTheme.pink,
-                  borderRadius: 50,
-                  alignItems: "center",
-                  justifyContent: "center",
-                  position: "absolute",
-                  zIndex: 2,
-                  right: -15,
-                  top: -3,
-                }}
-              >
-                <Text
-                  style={{
-                    color: "#fff",
-                    fontSize: 10,
-                    letterSpacing: 0.3,
-                  }}
-                >
-                  {city === "" ||
-                  (currentUser.address.some(
-                    (c) => c?.city.replace("'", "") === city
-                  ) &&
-                    district === "")
-                    ? 0
-                    : currentUser.address.some(
-                        (c) => c?.city.replace("'", "") === city
-                      ) && district !== ""
-                    ? 1
-                    : city !== "" && district === ""
-                    ? 1
-                    : city === "" && district !== ""
-                    ? 1
-                    : 2}
-                </Text>
-              </View>
-            )}
-
-            <Text
-              style={{
-                fontWeight: "bold",
-                fontSize: 14,
-                color: currentTheme.font,
-              }}
-            >
-              {city ? city : "Location"}
-            </Text>
-          </View>
-
-          <MaterialIcons
-            name={openCities ? "arrow-drop-down" : "arrow-drop-up"}
-            color={currentTheme.font}
-            size={20}
+        <View>
+          <Header
+            title={language?.language?.Main?.filter?.filter}
+            onBack={hideModal}
+            clearBtn={true}
           />
-        </Pressable>
-        <Modal
-          animationType="slide"
-          transparent={true}
-          visible={openCities}
-          onRequestClose={() => {
-            setOpenCities(!openCities);
-          }}
-        >
-          <BlurView
-            intensity={60}
-            tint="dark"
-            style={{
-              width: "100%",
-              height: SCREEN_HEIGHT,
-              gap: 10,
-              backgroundColor: theme
-                ? "rgba(0, 1, 8, 0.6)"
-                : currentTheme.background,
-              paddingTop: 80,
+          <ScrollView
+            contentContainerStyle={{
+              gap: 5,
+              alignItems: "center",
+              paddingBottom: 80,
+              width: SCREEN_WIDTH,
             }}
+            showsVerticalScrollIndicator={false}
+            scrollEnabled={!openCities ? true : false}
           >
-            <ScrollView
-              contentContainerStyle={{
-                paddingHorizontal: 15,
-                paddingVertical: 10,
-                alignItems: "center",
-                flexDirection: "row",
+            <View style={{ marginBottom: 5, width: "100%" }}>
+              <Search
+                navigation={navigation}
+                currentTheme={currentTheme}
+                onPress={() =>
+                  scrollRef.current.scrollTo({
+                    x: SCREEN_WIDTH,
+                    animated: true,
+                  })
+                }
+              />
+            </View>
+            <View
+              style={{
+                width: SCREEN_WIDTH - 20,
+                height: SCREEN_HEIGHT / 2,
+                // margin: 10,
+                overflow: "hidden",
               }}
             >
-              <View
-                style={{
-                  alignItems: "center",
-                  width: "100%",
-                }}
-              >
-                <View style={{ marginTop: 20 }}>
-                  {districts?.length > 0 && (
-                    <>
+              {!openCities && (
+                <View
+                  style={{
+                    width: "10%",
+                    alignItems: "center",
+                    position: "absolute",
+                    bottom: 10,
+                    right: 5,
+                    zIndex: 100000,
+                    gap: 10,
+                  }}
+                >
+                  <Pressable
+                    onPress={() => {
+                      dispatch(setSpecialists(!specialists));
+                    }}
+                    style={{
+                      backgroundColor: currentTheme.background,
+
+                      borderRadius: 50,
+                      width: 30,
+                      height: 30,
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <MaterialCommunityIcons
+                      name="face-woman-profile"
+                      size={18}
+                      color={specialists ? currentTheme.pink : "#ccc"}
+                      style={{ position: "relative", left: 1 }}
+                    />
+                  </Pressable>
+                  <Pressable
+                    onPress={() => {
+                      dispatch(setSalons(!salons));
+                    }}
+                    style={{
+                      backgroundColor: currentTheme.background,
+
+                      borderRadius: 50,
+                      width: 30,
+                      height: 30,
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <MaterialCommunityIcons
+                      name="home-variant-outline"
+                      size={20}
+                      color={salons ? currentTheme.pink : "#ccc"}
+                      style={{ position: "relative", left: 0.5 }}
+                    />
+                  </Pressable>
+                  <Pressable
+                    onPress={() => {
+                      dispatch(setShops(!shops));
+                    }}
+                    style={{
+                      backgroundColor: currentTheme.background,
+
+                      borderRadius: 50,
+                      width: 30,
+                      height: 30,
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Fontisto
+                      name="shopping-bag-1"
+                      size={15}
+                      color={shops ? currentTheme.pink : "#ccc"}
+                      style={{ position: "relative", left: 0.5 }}
+                    />
+                  </Pressable>
+                  {!openCities && (
+                    <TouchableOpacity
+                      activeOpacity={1}
+                      onPress={
+                        usersLength > users?.length
+                          ? () => AddUsersWithFeeds(page + 1)
+                          : undefined
+                      }
+                      style={{
+                        width: 30,
+                        height: 30,
+                        backgroundColor: currentTheme.background,
+                        borderRadius: 50,
+                        alignItems: "center",
+                        justifyContent: "center",
+                        marginTop: 15,
+                      }}
+                    >
                       <Text
                         style={{
+                          fontSize: 16,
                           fontWeight: "bold",
-                          fontSize: 18,
-                          color: currentTheme.font,
+                          color:
+                            usersLength > users?.length
+                              ? currentTheme.pink
+                              : currentTheme.disabled,
+                        }}
+                      >
+                        {usersLength > users?.length ? "+5" : "+0"}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              )}
+              <Pressable onPress={() => Keyboard.dismiss()}>
+                <MapFilter users={users} />
+              </Pressable>
+              <Pressable
+                onPress={() => setOpenCities(!openCities)}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 10,
+                  backgroundColor: currentTheme.background,
+                  padding: 5,
+                  paddingHorizontal: 10,
+                  borderRadius: 50,
+
+                  position: "absolute",
+                  bottom: 8,
+                  left: 8,
+                }}
+              >
+                <FontAwesome5 name="city" color={currentTheme.pink} size={12} />
+                <View>
+                  {currentUser.address.find(
+                    (c) =>
+                      c?.city.replace("'", "").toLowerCase() ===
+                      city?.toLowerCase()
+                  ) && district === "" ? null : (
+                    <View
+                      style={{
+                        width: "auto",
+                        minWidth: 15,
+                        height: 15,
+                        backgroundColor: currentTheme.pink,
+                        borderRadius: 50,
+                        alignItems: "center",
+                        justifyContent: "center",
+                        position: "absolute",
+                        zIndex: 2,
+                        right: -15,
+                        top: -3,
+                      }}
+                    >
+                      <Text
+                        style={{
+                          color: "#fff",
+                          fontSize: 10,
                           letterSpacing: 0.3,
                         }}
                       >
-                        {language?.language?.Main?.filter?.district}
+                        {city === "" ||
+                        (currentUser.address.some(
+                          (c) => c?.city.replace("'", "") === city
+                        ) &&
+                          district === "")
+                          ? 0
+                          : currentUser.address.some(
+                              (c) => c?.city.replace("'", "") === city
+                            ) && district !== ""
+                          ? 1
+                          : city !== "" && district === ""
+                          ? 1
+                          : city === "" && district !== ""
+                          ? 1
+                          : 2}
                       </Text>
-                      <Districts
-                        districts={districts}
-                        currentTheme={currentTheme}
-                      />
-                    </>
+                    </View>
                   )}
+
                   <Text
                     style={{
                       fontWeight: "bold",
-                      fontSize: 16,
+                      fontSize: 14,
                       color: currentTheme.font,
-                      letterSpacing: 0.3,
                     }}
                   >
-                    {language?.language?.Main?.filter?.city}
+                    {city ? city : "Location"}
                   </Text>
-                  <Cities cities={cities} currentTheme={currentTheme} />
                 </View>
-              </View>
-            </ScrollView>
-            <View
-              style={{ width: SCREEN_WIDTH, alignItems: "center", height: 100 }}
-            >
-              <TouchableOpacity
-                onPress={() => setOpenCities(false)}
-                style={{
-                  zIndex: 99999,
-                }}
-              >
+
                 <MaterialIcons
-                  name="arrow-drop-down"
-                  color={currentTheme.pink}
-                  size={40}
+                  name={openCities ? "arrow-drop-down" : "arrow-drop-up"}
+                  color={currentTheme.font}
+                  size={20}
                 />
-              </TouchableOpacity>
-            </View>
-          </BlurView>
-        </Modal>
-      </View>
-      <Text
-        style={{
-          color: currentTheme.font,
-          fontWeight: "bold",
-          letterSpacing: 0.3,
-          marginVertical: 10,
-        }}
-      >
-        Categories
-      </Text>
-      {VerseCategories?.map((item, index) => {
-        return (
-          <TouchableOpacity
-            key={index}
-            activeOpacity={0.8}
-            style={{
-              paddingHorizontal: 20,
-              paddingVertical: 7.5,
-              paddingLeft: 20,
-              marginHorizontal: 10,
-
-              borderWidth: 1,
-              borderLeftWidth: 1,
-              borderColor: currentTheme.line,
-              width: "95%",
-              borderRadius: 50,
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "space-between",
-
-              // borderColor: "rgba(255,255,255,0.05)",
-            }}
-            onPress={() => {
-              dispatch(setFilter(item.value));
-            }}
-          >
-            <View
-              style={{ flexDirection: "row", gap: 8, alignItems: "center" }}
-            >
-              <Entypo
-                size={18}
-                color={
-                  filter === item.value ? currentTheme.pink : currentTheme.font
-                }
-                name="flow-line"
-                style={{ transform: [{ rotate: "90deg" }] }}
-              />
-
-              <Text
-                style={{
-                  letterSpacing: 0.3,
-                  color:
-                    filter === item.value
-                      ? currentTheme.pink
-                      : currentTheme.font,
-                  // fontWeight: "bold",
+              </Pressable>
+              <Modal
+                animationType="slide"
+                transparent={true}
+                visible={openCities}
+                onRequestClose={() => {
+                  setOpenCities(!openCities);
                 }}
               >
-                {lang === "en" ? item.eng : lang === "ka" ? item.geo : item.rus}
-              </Text>
+                <BlurView
+                  intensity={60}
+                  tint="dark"
+                  style={{
+                    width: "100%",
+                    height: SCREEN_HEIGHT,
+                    gap: 10,
+                    backgroundColor: theme
+                      ? "rgba(0, 1, 8, 0.6)"
+                      : currentTheme.background,
+                    paddingTop: 80,
+                  }}
+                >
+                  <ScrollView
+                    contentContainerStyle={{
+                      paddingHorizontal: 15,
+                      paddingVertical: 10,
+                      alignItems: "center",
+                      flexDirection: "row",
+                    }}
+                  >
+                    <View
+                      style={{
+                        alignItems: "center",
+                        width: "100%",
+                      }}
+                    >
+                      <View style={{ marginTop: 20 }}>
+                        {districts?.length > 0 && (
+                          <>
+                            <Text
+                              style={{
+                                fontWeight: "bold",
+                                fontSize: 18,
+                                color: currentTheme.font,
+                                letterSpacing: 0.3,
+                              }}
+                            >
+                              {language?.language?.Main?.filter?.district}
+                            </Text>
+                            <Districts
+                              districts={districts}
+                              currentTheme={currentTheme}
+                            />
+                          </>
+                        )}
+                        <Text
+                          style={{
+                            fontWeight: "bold",
+                            fontSize: 16,
+                            color: currentTheme.font,
+                            letterSpacing: 0.3,
+                          }}
+                        >
+                          {language?.language?.Main?.filter?.city}
+                        </Text>
+                        <Cities cities={cities} currentTheme={currentTheme} />
+                      </View>
+                    </View>
+                  </ScrollView>
+                  <View
+                    style={{
+                      width: SCREEN_WIDTH,
+                      alignItems: "center",
+                      height: 100,
+                    }}
+                  >
+                    <TouchableOpacity
+                      onPress={() => setOpenCities(false)}
+                      style={{
+                        zIndex: 99999,
+                      }}
+                    >
+                      <MaterialIcons
+                        name="arrow-drop-down"
+                        color={currentTheme.pink}
+                        size={40}
+                      />
+                    </TouchableOpacity>
+                  </View>
+                </BlurView>
+              </Modal>
             </View>
-            {filter === item.value && (
-              <MaterialIcons name="done" color={currentTheme.pink} size={16} />
-            )}
-          </TouchableOpacity>
-        );
-      })}
-    </ScrollView>
+            <Text
+              style={{
+                color: currentTheme.font,
+                fontWeight: "bold",
+                letterSpacing: 0.3,
+                marginVertical: 10,
+              }}
+            >
+              Categories
+            </Text>
+            {VerseCategories?.map((item, index) => {
+              return (
+                <TouchableOpacity
+                  key={index}
+                  activeOpacity={0.8}
+                  style={{
+                    paddingHorizontal: 20,
+                    paddingVertical: 7.5,
+                    paddingLeft: 20,
+                    marginHorizontal: 10,
+
+                    borderWidth: 1,
+                    borderLeftWidth: 1,
+                    borderColor: currentTheme.line,
+                    width: "95%",
+                    borderRadius: 50,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+
+                    // borderColor: "rgba(255,255,255,0.05)",
+                  }}
+                  onPress={() => {
+                    dispatch(setFilter(item.value));
+                  }}
+                >
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      gap: 8,
+                      alignItems: "center",
+                    }}
+                  >
+                    <Entypo
+                      size={18}
+                      color={
+                        filter === item.value
+                          ? currentTheme.pink
+                          : currentTheme.font
+                      }
+                      name="flow-line"
+                      style={{ transform: [{ rotate: "90deg" }] }}
+                    />
+
+                    <Text
+                      style={{
+                        letterSpacing: 0.3,
+                        color:
+                          filter === item.value
+                            ? currentTheme.pink
+                            : currentTheme.font,
+                        // fontWeight: "bold",
+                      }}
+                    >
+                      {lang === "en"
+                        ? item.eng
+                        : lang === "ka"
+                        ? item.geo
+                        : item.rus}
+                    </Text>
+                  </View>
+                  {filter === item.value && (
+                    <MaterialIcons
+                      name="done"
+                      color={currentTheme.pink}
+                      size={16}
+                    />
+                  )}
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        </View>
+
+        <SearchScreen
+          inputRef={inputRef}
+          hideModal={hideModal}
+          scrollRef={scrollRef}
+          scrollPosition={scrollPosition}
+          onBack={() => {
+            Keyboard.dismiss();
+            scrollRef.current.scrollTo({ x: 0, animated: true });
+          }}
+        />
+      </ScrollView>
+    </Pressable>
   );
 };
 

@@ -32,7 +32,7 @@ const SearchableSelect = ({ data, onItemSelected, currentTheme, Deleting }) => {
         overScrollMode={Platform.OS === "ios" ? "never" : "always"}
         style={{
           height: "100%",
-          backgroundColor: currentTheme.background2,
+          // backgroundColor: currentTheme.background2,
           borderRadius: 10,
         }}
       >
@@ -68,7 +68,7 @@ const SearchableSelect = ({ data, onItemSelected, currentTheme, Deleting }) => {
           alignItems: "center",
           gap: 8,
           borderRadius: 50,
-          backgroundColor: currentTheme.background2,
+          // backgroundColor: currentTheme.background2,
           paddingHorizontal: 15,
           paddingVertical: 5,
           marginBottom: 5,
@@ -80,7 +80,7 @@ const SearchableSelect = ({ data, onItemSelected, currentTheme, Deleting }) => {
         <TextInput
           style={{
             color: currentTheme.font,
-            backgroundColor: currentTheme.background2,
+            // backgroundColor: currentTheme.background2,
             width: "100%",
           }}
           onChangeText={(text) => setText(text)}

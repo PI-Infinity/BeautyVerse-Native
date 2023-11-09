@@ -1,5 +1,5 @@
 import { FontAwesome, Fontisto } from "@expo/vector-icons";
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import {
   Dimensions,
   Pressable,
@@ -21,6 +21,9 @@ import {
 import { sendNotification } from "../../../components/pushNotifications";
 import { useSocket } from "../../../context/socketContext";
 import { Circle } from "../../../components/skeltons";
+import { setScreenModal } from "../../../redux/app";
+import { RouteNameContext } from "../../../context/routName";
+import { useRoute } from "@react-navigation/native";
 
 /**
  * Feed card's bottom section
@@ -31,6 +34,9 @@ const { width: SCREEN_WIDTH } = Dimensions.get("window");
 export const BottomSection = (props) => {
   // share function
   const [shares, setShares] = useState(null);
+
+  // route name
+  const route = useRoute();
 
   // loading state
   const [loading, setLoading] = useState(true);
@@ -105,7 +111,12 @@ export const BottomSection = (props) => {
     try {
       const result = await Share.share({
         message: `Check out this feed! BeautyVerse\n${
-          url + "?api/v1/users/" + props.user._id + "/feeds/" + itemId
+          url +
+          "?api/v1/users/" +
+          props.user._id +
+          "/feeds/" +
+          itemId +
+          "?openiosapp"
         }`,
       });
 
@@ -170,10 +181,10 @@ export const BottomSection = (props) => {
         <View
           style={{
             width: "100%",
-            height: 25,
+            height: 35,
             overflow: "hidden",
             borderRadius: 50,
-            opacity: 0.2,
+            opacity: 0.1,
           }}
         >
           <Circle />
@@ -190,46 +201,47 @@ export const BottomSection = (props) => {
             },
           ]}
         >
-          <View style={styles.stars}>
-            <Pressable
-              onPress={
-                props?.checkIfStared
-                  ? () => props.RemoveStar()
-                  : () => props.SetStar()
-              }
-              style={{
-                alignItems: "center",
-                justifyContent: "center",
-                flexDirection: "row",
-                flex: 1,
-                height: "100%",
-                borderRightWidth: 1,
-                borderRightColor: props.currentTheme.line,
-                gap: 5,
-              }}
-            >
-              <View>
-                <FontAwesome
-                  name="star-o"
-                  size={22}
-                  color={
-                    props?.checkIfStared
-                      ? props.currentTheme.pink
-                      : props.feed?.fileFormat === "video"
-                      ? "rgba(255,255,255,0.8)"
-                      : props.currentTheme.font
-                  }
-                  style={{
-                    textShadowColor: "rgba(0, 0, 0, 0.2)",
-                    textShadowOffset: !theme
-                      ? { width: 0, height: 0 }
-                      : { width: -0.5, height: 0.5 },
-                    textShadowRadius: 0.5,
-                  }}
-                />
-              </View>
+          {props?.reviewsLength !== null ? (
+            <View style={styles.stars}>
+              <Pressable
+                onPress={
+                  props?.checkIfStared
+                    ? () => props.RemoveStar()
+                    : () => props.SetStar()
+                }
+                style={{
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexDirection: "row",
+                  flex: 1,
+                  height: "100%",
+                  borderRightWidth: 1,
+                  borderRightColor: props.currentTheme.line,
+                  gap: 5,
+                }}
+              >
+                <View>
+                  <FontAwesome
+                    name="star-o"
+                    size={22}
+                    color={
+                      props?.checkIfStared
+                        ? props.currentTheme.pink
+                        : props.feed?.fileFormat === "video"
+                        ? "rgba(255,255,255,0.8)"
+                        : props.currentTheme.font
+                    }
+                    style={{
+                      textShadowColor: "rgba(0, 0, 0, 0.2)",
+                      textShadowOffset: !theme
+                        ? { width: 0, height: 0 }
+                        : { width: -0.5, height: 0.5 },
+                      textShadowRadius: 0.5,
+                    }}
+                  />
+                </View>
 
-              {/* <Text
+                {/* <Text
               style={[
                 styles.starsQnt,
                 {
@@ -245,77 +257,83 @@ export const BottomSection = (props) => {
               Star
             </Text> */}
 
-              <Text
-                style={[
-                  styles.starsQnt,
+                <Text
+                  style={[
+                    styles.starsQnt,
 
-                  {
-                    width: 25,
-                    color: props?.checkIfStared
-                      ? props.currentTheme.pink
-                      : !props?.checkIfStared &&
-                        props.feed?.fileFormat === "video"
-                      ? "rgba(255,255,255,0.8)"
-                      : props.currentTheme.font,
-                  },
-                ]}
-              >
-                (
-                {props?.starsLength < 1000
-                  ? props?.starsLength
-                  : props?.starsLength > 1000 && props?.starsLength < 1000000
-                  ? parseInt(props?.starsLength / 1000) + "K+"
-                  : parseInt(props?.starsLength / 1000000) + "M+"}
-                )
-              </Text>
-            </Pressable>
-
-            <Pressable
-              onPress={
-                props.from === "FeedCard" &&
-                !props.notifications &&
-                props.from !== "scrollGallery"
-                  ? () => {
-                      props.navigation.navigate("UserFeed", {
-                        user: props.user,
-                        feed: props.feed,
-                        from: "comment",
-                      });
-                    }
-                  : props.from === "scrollGallery"
-                  ? () => props.setOpenReviews(!props.openReviews)
-                  : undefined
-              }
-              style={{
-                flex: 1,
-                height: "100%",
-                alignItems: "center",
-                flexDirection: "row",
-                justifyContent: "center",
-                borderRightWidth: 1,
-                borderRightColor: props.currentTheme.line,
-                gap: 5,
-              }}
-            >
-              <FontAwesome
-                name="comment"
-                size={18}
+                    {
+                      width: 25,
+                      color: props?.checkIfStared
+                        ? props.currentTheme.pink
+                        : !props?.checkIfStared &&
+                          props.feed?.fileFormat === "video"
+                        ? "rgba(255,255,255,0.8)"
+                        : props.currentTheme.font,
+                    },
+                  ]}
+                >
+                  (
+                  {props?.starsLength < 1000
+                    ? props?.starsLength
+                    : props?.starsLength > 1000 && props?.starsLength < 1000000
+                    ? parseInt(props?.starsLength / 1000) + "K+"
+                    : parseInt(props?.starsLength / 1000000) + "M+"}
+                  )
+                </Text>
+              </Pressable>
+              <Pressable
+                onPress={
+                  props.from === "FeedCard" &&
+                  !props.notifications &&
+                  props.from !== "scrollGallery"
+                    ? () => {
+                        dispatch(
+                          setScreenModal({
+                            active: true,
+                            screen: "Feed",
+                            data: {
+                              user: props.user,
+                              feed: props.feed,
+                              from: "comment",
+                            },
+                            route: route.name,
+                          })
+                        );
+                      }
+                    : props.from === "scrollGallery"
+                    ? () => props.setOpenReviews(!props.openReviews)
+                    : undefined
+                }
                 style={{
-                  color:
-                    props.feed?.fileFormat === "video"
-                      ? "rgba(255,255,255,0.8)"
-                      : props.currentTheme.font,
-                  textShadowColor:
-                    props.user?.feed?.fileFormat === "video"
-                      ? "rgba(0,0,0,0.2)"
-                      : props.currentTheme.shadow,
-                  textShadowOffset: !theme
-                    ? { width: 0, height: 0 }
-                    : { width: -0.5, height: 0.5 },
-                  textShadowRadius: 0.5,
+                  flex: 1,
+                  height: "100%",
+                  alignItems: "center",
+                  flexDirection: "row",
+                  justifyContent: "center",
+                  borderRightWidth: 1,
+                  borderRightColor: props.currentTheme.line,
+                  gap: 5,
                 }}
-              />
-              {/* <Text
+              >
+                <FontAwesome
+                  name="comment"
+                  size={18}
+                  style={{
+                    color:
+                      props.feed?.fileFormat === "video"
+                        ? "rgba(255,255,255,0.8)"
+                        : props.currentTheme.font,
+                    textShadowColor:
+                      props.user?.feed?.fileFormat === "video"
+                        ? "rgba(0,0,0,0.2)"
+                        : props.currentTheme.shadow,
+                    textShadowOffset: !theme
+                      ? { width: 0, height: 0 }
+                      : { width: -0.5, height: 0.5 },
+                    textShadowRadius: 0.5,
+                  }}
+                />
+                {/* <Text
               style={[
                 styles.bottomText,
                 {
@@ -328,226 +346,226 @@ export const BottomSection = (props) => {
             >
               Comment
             </Text> */}
-              <Text
-                style={[
-                  styles.bottomText,
-                  {
-                    color:
-                      props.feed?.fileFormat === "video"
-                        ? "rgba(255,255,255,0.8)"
-                        : props.currentTheme.font,
-                  },
-                ]}
-              >
-                (
-                {props?.reviewsLength < 1000
-                  ? props?.reviewsLength
-                  : props?.reviewsLength > 1000 &&
-                    props?.reviewsLength < 1000000
-                  ? parseInt(props?.reviewsLength / 1000) + "K+"
-                  : parseInt(props?.reviewsLength / 1000000) + "M+"}
-                )
-              </Text>
-            </Pressable>
-            <Pressable
-              onPress={() =>
-                shareAndOpenURL(
-                  "https://beautyverse.international/redirect",
-                  props.user._id,
-                  props.feed._id,
-                  shares ? shares : 0
-                )
-              }
-              style={{
-                flexDirection: "row",
-                gap: 5,
-                alignItems: "center",
-                justifyContent: "center",
-                height: "100%",
-                flex: 1,
-                borderRightWidth: 1,
-                borderRightColor: props.currentTheme.line,
-              }}
-            >
-              <View
+                <Text
+                  style={[
+                    styles.bottomText,
+                    {
+                      color:
+                        props.feed?.fileFormat === "video"
+                          ? "rgba(255,255,255,0.8)"
+                          : props.currentTheme.font,
+                    },
+                  ]}
+                >
+                  (
+                  {props?.reviewsLength < 1000
+                    ? props?.reviewsLength
+                    : props?.reviewsLength > 1000 &&
+                      props?.reviewsLength < 1000000
+                    ? parseInt(props?.reviewsLength / 1000) + "K+"
+                    : parseInt(props?.reviewsLength / 1000000) + "M+"}
+                  )
+                </Text>
+              </Pressable>
+              <Pressable
+                onPress={() =>
+                  shareAndOpenURL(
+                    "https://beautyverse.ge",
+                    props.user._id,
+                    props.feed._id,
+                    shares ? shares : 0
+                  )
+                }
                 style={{
-                  height: 35,
-
+                  flexDirection: "row",
+                  gap: 5,
+                  alignItems: "center",
                   justifyContent: "center",
-                  position: "relative",
+                  height: "100%",
+                  flex: 1,
+                  borderRightWidth: 1,
+                  borderRightColor: props.currentTheme.line,
                 }}
               >
-                <Fontisto
-                  name="share-a"
-                  size={17}
-                  color={
-                    props.feed?.fileFormat === "video"
-                      ? "rgba(255,255,255,0.8)"
-                      : props.currentTheme.font
-                  }
+                <View
                   style={{
-                    // marginTop: 1,
-                    textShadowColor:
-                      props.user?.feed?.fileFormat === "video"
-                        ? "rgba(0,0,0,0.2)"
-                        : props.currentTheme.shadow,
-                    textShadowOffset: !theme
-                      ? { width: 0, height: 0 }
-                      : { width: -0.5, height: 0.5 },
-                    textShadowRadius: 0.5,
-                  }}
-                />
-              </View>
+                    height: 35,
 
-              <Text
-                style={[
-                  styles.bottomText,
-                  {
-                    color:
+                    justifyContent: "center",
+                    position: "relative",
+                  }}
+                >
+                  <Fontisto
+                    name="share-a"
+                    size={17}
+                    color={
                       props.feed?.fileFormat === "video"
                         ? "rgba(255,255,255,0.8)"
-                        : props.currentTheme.font,
-                    textShadowColor:
-                      props.user?.feed?.fileFormat === "video"
-                        ? "rgba(0,0,0,0.2)"
-                        : props.currentTheme.shadow,
-                    textShadowOffset: !theme
-                      ? { width: 0, height: 0 }
-                      : { width: -0.5, height: 0.5 },
-                    textShadowRadius: 0.5,
-                  },
-                ]}
-              >
-                (
-                {shares < 1000
-                  ? shares
-                  : shares > 1000 && shares < 1000000
-                  ? parseInt(shares / 1000) + "K+"
-                  : parseInt(shares / 1000000) + "M+"}
-                )
-              </Text>
-            </Pressable>
-            <Pressable
-              onPress={
-                props.checkIfSaved
-                  ? () => props.UnSaveFeed(props.user._id, props.feed._id)
-                  : () => props.SaveFeed(props.user._id, props.feed._id)
-              }
-              style={{
-                flexDirection: "row",
-                gap: 5,
-                alignItems: "center",
-                justifyContent: "center",
-                height: "100%",
-                flex: 1,
-                borderRightWidth: 1,
-                borderRightColor: props.currentTheme.line,
-              }}
-            >
-              <View
-                style={{
-                  height: 35,
+                        : props.currentTheme.font
+                    }
+                    style={{
+                      // marginTop: 1,
+                      textShadowColor:
+                        props.user?.feed?.fileFormat === "video"
+                          ? "rgba(0,0,0,0.2)"
+                          : props.currentTheme.shadow,
+                      textShadowOffset: !theme
+                        ? { width: 0, height: 0 }
+                        : { width: -0.5, height: 0.5 },
+                      textShadowRadius: 0.5,
+                    }}
+                  />
+                </View>
 
+                <Text
+                  style={[
+                    styles.bottomText,
+                    {
+                      color:
+                        props.feed?.fileFormat === "video"
+                          ? "rgba(255,255,255,0.8)"
+                          : props.currentTheme.font,
+                      textShadowColor:
+                        props.user?.feed?.fileFormat === "video"
+                          ? "rgba(0,0,0,0.2)"
+                          : props.currentTheme.shadow,
+                      textShadowOffset: !theme
+                        ? { width: 0, height: 0 }
+                        : { width: -0.5, height: 0.5 },
+                      textShadowRadius: 0.5,
+                    },
+                  ]}
+                >
+                  (
+                  {shares < 1000
+                    ? shares
+                    : shares > 1000 && shares < 1000000
+                    ? parseInt(shares / 1000) + "K+"
+                    : parseInt(shares / 1000000) + "M+"}
+                  )
+                </Text>
+              </Pressable>
+              <Pressable
+                onPress={
+                  props.checkIfSaved
+                    ? () => props.UnSaveFeed(props.user._id, props.feed._id)
+                    : () => props.SaveFeed(props.user._id, props.feed._id)
+                }
+                style={{
+                  flexDirection: "row",
+                  gap: 5,
+                  alignItems: "center",
                   justifyContent: "center",
-                  position: "relative",
+                  height: "100%",
+                  flex: 1,
+                  borderRightWidth: 1,
+                  borderRightColor: props.currentTheme.line,
                 }}
               >
-                <MaterialIcons
-                  name="save-alt"
-                  size={20}
-                  color={
-                    props.checkIfSaved
-                      ? props.currentTheme.pink
-                      : !props.checkIfSaved &&
-                        props.feed?.fileFormat === "video"
-                      ? "rgba(255,255,255,0.8)"
-                      : props.currentTheme.font
-                  }
+                <View
                   style={{
-                    textShadowColor:
-                      props.user?.feed?.fileFormat === "video"
-                        ? "rgba(0,0,0,0.2)"
-                        : props.currentTheme.shadow,
-                    textShadowOffset: !theme
-                      ? { width: 0, height: 0 }
-                      : { width: -0.5, height: 0.5 },
-                    textShadowRadius: 0.5,
-                  }}
-                />
-              </View>
+                    height: 35,
 
-              <Text
-                style={[
-                  styles.bottomText,
-                  {
-                    color: props.checkIfSaved
-                      ? props.currentTheme.pink
-                      : !props.checkIfSaved &&
-                        props.feed?.fileFormat === "video"
-                      ? "rgba(255,255,255,0.8)"
-                      : props.currentTheme.font,
-                    textShadowColor:
-                      props.user?.feed?.fileFormat === "video"
-                        ? "rgba(0,0,0,0.2)"
-                        : props.currentTheme.shadow,
-                    textShadowOffset: !theme
-                      ? { width: 0, height: 0 }
-                      : { width: -0.5, height: 0.5 },
-                    textShadowRadius: 0.5,
-                  },
-                ]}
-              >
-                ({props?.savesLength}
-                {/* {props.savesLength < 1000
+                    justifyContent: "center",
+                    position: "relative",
+                  }}
+                >
+                  <MaterialIcons
+                    name="save-alt"
+                    size={20}
+                    color={
+                      props.checkIfSaved
+                        ? props.currentTheme.pink
+                        : !props.checkIfSaved &&
+                          props.feed?.fileFormat === "video"
+                        ? "rgba(255,255,255,0.8)"
+                        : props.currentTheme.font
+                    }
+                    style={{
+                      textShadowColor:
+                        props.user?.feed?.fileFormat === "video"
+                          ? "rgba(0,0,0,0.2)"
+                          : props.currentTheme.shadow,
+                      textShadowOffset: !theme
+                        ? { width: 0, height: 0 }
+                        : { width: -0.5, height: 0.5 },
+                      textShadowRadius: 0.5,
+                    }}
+                  />
+                </View>
+
+                <Text
+                  style={[
+                    styles.bottomText,
+                    {
+                      color: props.checkIfSaved
+                        ? props.currentTheme.pink
+                        : !props.checkIfSaved &&
+                          props.feed?.fileFormat === "video"
+                        ? "rgba(255,255,255,0.8)"
+                        : props.currentTheme.font,
+                      textShadowColor:
+                        props.user?.feed?.fileFormat === "video"
+                          ? "rgba(0,0,0,0.2)"
+                          : props.currentTheme.shadow,
+                      textShadowOffset: !theme
+                        ? { width: 0, height: 0 }
+                        : { width: -0.5, height: 0.5 },
+                      textShadowRadius: 0.5,
+                    },
+                  ]}
+                >
+                  ({props?.savesLength}
+                  {/* {props.savesLength < 1000
                   ? parseInt(props.savesLength)
                   : parseInt(props.savesLength) > 1000 &&
                     parseInt(props.savesLength) < 1000000
                   ? parseInt(props.savesLength / 1000) + "K+"
                   : parseInt(props.savesLength / 1000000) + "M+"} */}
-                )
-              </Text>
-            </Pressable>
-            <Pressable
-              style={{
-                flexDirection: "row",
-                gap: 5,
-                alignItems: "center",
-                justifyContent: "center",
-                marginBottom: 2,
-                flex: 1,
-                gap: 5,
-              }}
-            >
-              <View
+                  )
+                </Text>
+              </Pressable>
+              <Pressable
                 style={{
-                  height: 35,
-
+                  flexDirection: "row",
+                  gap: 5,
+                  alignItems: "center",
                   justifyContent: "center",
-                  position: "relative",
+                  marginBottom: 2,
+                  flex: 1,
+                  gap: 5,
                 }}
               >
-                <FontAwesome
-                  name="eye"
-                  size={18}
-                  color={
-                    props.feed?.fileFormat === "video"
-                      ? "rgba(255,255,255,0.8)"
-                      : props.currentTheme.font
-                  }
+                <View
                   style={{
-                    marginTop: 1,
-                    textShadowColor:
-                      props.user?.feed?.fileFormat === "video"
-                        ? "rgba(0,0,0,0.2)"
-                        : props.currentTheme.shadow,
-                    textShadowOffset: !theme
-                      ? { width: 0, height: 0 }
-                      : { width: -0.5, height: 0.5 },
-                    textShadowRadius: 0.5,
+                    height: 35,
+
+                    justifyContent: "center",
+                    position: "relative",
                   }}
-                />
-              </View>
-              {/* <Text
+                >
+                  <FontAwesome
+                    name="eye"
+                    size={18}
+                    color={
+                      props.feed?.fileFormat === "video"
+                        ? "rgba(255,255,255,0.8)"
+                        : props.currentTheme.font
+                    }
+                    style={{
+                      marginTop: 1,
+                      textShadowColor:
+                        props.user?.feed?.fileFormat === "video"
+                          ? "rgba(0,0,0,0.2)"
+                          : props.currentTheme.shadow,
+                      textShadowOffset: !theme
+                        ? { width: 0, height: 0 }
+                        : { width: -0.5, height: 0.5 },
+                      textShadowRadius: 0.5,
+                    }}
+                  />
+                </View>
+                {/* <Text
               style={[
                 styles.bottomText,
                 {
@@ -566,35 +584,50 @@ export const BottomSection = (props) => {
             >
               Share
             </Text> */}
-              <Text
-                style={[
-                  styles.bottomText,
-                  {
-                    color:
-                      props.feed?.fileFormat === "video"
-                        ? "rgba(255,255,255,0.8)"
-                        : props.currentTheme.font,
-                    textShadowColor:
-                      props.user?.feed?.fileFormat === "video"
-                        ? "rgba(0,0,0,0.2)"
-                        : props.currentTheme.shadow,
-                    textShadowOffset: !theme
-                      ? { width: 0, height: 0 }
-                      : { width: -0.5, height: 0.5 },
-                    textShadowRadius: 0.5,
-                  },
-                ]}
-              >
-                (
-                {views?.length < 1000
-                  ? views?.length
-                  : views?.length > 1000 && views?.length < 1000000
-                  ? parseInt(views?.length / 1000) + "K+"
-                  : parseInt(views?.length / 1000000) + "M+"}
-                )
-              </Text>
-            </Pressable>
-          </View>
+                <Text
+                  style={[
+                    styles.bottomText,
+                    {
+                      color:
+                        props.feed?.fileFormat === "video"
+                          ? "rgba(255,255,255,0.8)"
+                          : props.currentTheme.font,
+                      textShadowColor:
+                        props.user?.feed?.fileFormat === "video"
+                          ? "rgba(0,0,0,0.2)"
+                          : props.currentTheme.shadow,
+                      textShadowOffset: !theme
+                        ? { width: 0, height: 0 }
+                        : { width: -0.5, height: 0.5 },
+                      textShadowRadius: 0.5,
+                    },
+                  ]}
+                >
+                  (
+                  {views?.length < 1000
+                    ? views?.length
+                    : views?.length > 1000 && views?.length < 1000000
+                    ? parseInt(views?.length / 1000) + "K+"
+                    : parseInt(views?.length / 1000000) + "M+"}
+                  )
+                </Text>
+              </Pressable>
+            </View>
+          ) : (
+            <View
+              style={{
+                height: "80%",
+                width: "100%",
+                borderRadius: 50,
+                overflow: "hidden",
+                backgroundColor: props.currentTheme.pink,
+                opacity: 0.2,
+              }}
+            >
+              {/* <Circle /> */}
+            </View>
+          )}
+
           {props.feed?.fileFormat === "video" && (
             <View
               style={{

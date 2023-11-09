@@ -5,11 +5,11 @@ import * as Notifications from "expo-notifications";
 import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
 import { setCurrentUser } from "../redux/user";
-import { setLoading } from "../redux/app";
+import { setLoading, setScreenModal, setUserScreenModal } from "../redux/app";
 import * as Location from "expo-location";
 import { RouteNameContext } from "../context/routName";
 import Constants from "expo-constants";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import { setCurrentChat } from "../redux/chat";
 import { setDate, setStatusFilter } from "../redux/bookings";
 import {
@@ -92,10 +92,17 @@ export default function App({ currentUser }) {
                       "?check=" +
                       currentUser._id
                   );
-                  navigation.navigate("UserFeed", {
-                    feed: response.data.data.feed,
-                    user: currentUser,
-                  });
+                  dispatch(
+                    setScreenModal({
+                      active: true,
+                      screen: "Feed",
+                      data: {
+                        feed: response.data.data.feed,
+                        user: currentUser,
+                      },
+                      route: "Main",
+                    })
+                  );
                 } catch (error) {
                   console.log(error.response.data.message);
                 }
@@ -109,9 +116,15 @@ export default function App({ currentUser }) {
                   const response = await axios.get(
                     backendUrl + "/api/v1/marketplace/" + id
                   );
-                  navigation.navigate("Product", {
-                    product: response.data.data.product,
-                  });
+
+                  dispatch(
+                    setScreenModal({
+                      active: true,
+                      screen: "Product",
+                      data: response.data.data.product,
+                      route: "Main",
+                    })
+                  );
                 } catch (error) {
                   console.log(error.response.data.message);
                 }
@@ -129,7 +142,7 @@ export default function App({ currentUser }) {
                 response.notification.request.content.data.someData.user
               );
 
-              navigation.navigate("User" || "UserVisit", {
+              navigation.navigate("UserVisit", {
                 user: parsed,
               });
             }
@@ -142,9 +155,14 @@ export default function App({ currentUser }) {
                 response.notification.request.content.data.someData.user
               );
               dispatch(setCurrentChat(parsedChat));
-              navigation.navigate("Room", {
-                user: parsedUser,
-              });
+              dispatch(
+                setScreenModal({
+                  active: true,
+                  screen: "Room",
+                  data: parsedUser,
+                  route: "Main",
+                })
+              );
             }
             // navigate to bookings after getting notification
             if (

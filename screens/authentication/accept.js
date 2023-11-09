@@ -3,7 +3,13 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import * as Notifications from "expo-notifications";
 import React, { useState } from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  ImageBackground,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { CheckBox } from "react-native-elements";
 import { useDispatch, useSelector } from "react-redux";
 import AlertMessage from "../../components/alertMessage";
@@ -11,6 +17,7 @@ import { BackDrop } from "../../components/backDropLoader";
 import { Language } from "../../context/language";
 import { darkTheme, lightTheme } from "../../context/theme";
 import { setRerenderCurrentUser } from "../../redux/rerenders";
+import { BlurView } from "expo-blur";
 
 /*
   Register Screen,
@@ -109,139 +116,154 @@ export const Accept = ({ navigation }) => {
   };
 
   return (
-    <View style={styles.container}>
-      <AlertMessage
-        isVisible={alert.active}
-        type={alert.type}
-        text={alert.text}
-        onClose={() => setAlert({ active: false, text: "" })}
-        Press={() => setAlert({ active: false, text: "" })}
-      />
-      <BackDrop loading={loading} setLoading={setLoading} />
-      <View
-        style={{
-          width: "80%",
+    <ImageBackground
+      style={{
+        flex: 1,
+        width: "100%",
+        height: "100%",
+      }}
+      source={theme ? require("../../assets/background.jpg") : null}
+    >
+      <BlurView
+        intensity={30}
+        tint="dark"
+        style={{ flex: 1, backgroundColor: "rgba(1,2,0,0.5)" }}
+      >
+        <View style={[styles.container, {}]}>
+          <AlertMessage
+            isVisible={alert.active}
+            type={alert.type}
+            text={alert.text}
+            onClose={() => setAlert({ active: false, text: "" })}
+            Press={() => setAlert({ active: false, text: "" })}
+          />
+          <BackDrop loading={loading} setLoading={setLoading} />
+          <View
+            style={{
+              width: "80%",
 
-          borderRadius: 50,
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
-      >
-        <CheckBox
-          title={language?.language?.Pages?.pages?.terms}
-          checked={accept}
-          onPress={() => {
-            setAccept(!accept);
-          }}
-          containerStyle={[
-            styles.checkboxContainer,
-            {
-              backgroundColor: currentTheme.background2,
-              width: "80%",
               borderRadius: 50,
-            },
-          ]}
-          textStyle={[
-            styles.checkboxText,
-            {
-              color: currentTheme.font,
-              fontWeight: "normal",
-              letterSpacing: 0.3,
-            },
-          ]}
-          checkedColor="#F866b1"
-          checkedIcon={
-            <MaterialIcons
-              name="check-box" // Name of the checked icon
-              color="#F866b1" // Color of the checked icon
-              size={20} // Size of the checked icon
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            <CheckBox
+              title={language?.language?.Pages?.pages?.terms}
+              checked={accept}
+              onPress={() => {
+                setAccept(!accept);
+              }}
+              containerStyle={[
+                styles.checkboxContainer,
+                {
+                  backgroundColor: currentTheme.background,
+                  width: "80%",
+                  borderRadius: 50,
+                },
+              ]}
+              textStyle={[
+                styles.checkboxText,
+                {
+                  color: currentTheme.font,
+                  fontWeight: "normal",
+                  letterSpacing: 0.3,
+                },
+              ]}
+              checkedColor="#F866b1"
+              checkedIcon={
+                <MaterialIcons
+                  name="check-box" // Name of the checked icon
+                  color="#F866b1" // Color of the checked icon
+                  size={20} // Size of the checked icon
+                />
+              }
+              uncheckedIcon={
+                <MaterialIcons
+                  name="check-box-outline-blank" // Name of the unchecked icon
+                  color="#F866b1" // Color of the unchecked icon
+                  size={20} // Size of the unchecked icon
+                />
+              }
             />
-          }
-          uncheckedIcon={
-            <MaterialIcons
-              name="check-box-outline-blank" // Name of the unchecked icon
-              color="#F866b1" // Color of the unchecked icon
-              size={20} // Size of the unchecked icon
-            />
-          }
-        />
-        <TouchableOpacity
-          style={{ marginRight: 25 }}
-          onPress={() => navigation.navigate("Terms")}
-        >
-          <MaterialIcons
-            name="arrow-right"
-            size={30}
-            color={currentTheme.pink}
-          />
-        </TouchableOpacity>
-      </View>
-      <View
-        style={{
-          width: "80%",
-          //   backgroundColor: currentTheme.background2,
-          borderRadius: 50,
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
-      >
-        <CheckBox
-          title={language?.language?.Pages?.pages?.privacy}
-          checked={acceptP}
-          onPress={() => {
-            setAcceptP(!acceptP);
-          }}
-          containerStyle={[
-            styles.checkboxContainer,
-            {
+            <TouchableOpacity
+              style={{ marginRight: 25 }}
+              onPress={() => navigation.navigate("Terms")}
+            >
+              <MaterialIcons
+                name="arrow-right"
+                size={30}
+                color={currentTheme.pink}
+              />
+            </TouchableOpacity>
+          </View>
+          <View
+            style={{
               width: "80%",
+              //   backgroundColor: currentTheme.background,
               borderRadius: 50,
-              backgroundColor: currentTheme.background2,
-            },
-          ]}
-          textStyle={[
-            styles.checkboxText,
-            {
-              color: currentTheme.font,
-              fontWeight: "normal",
-              letterSpacing: 0.3,
-            },
-          ]}
-          checkedColor="#F866b1"
-          checkedIcon={
-            <MaterialIcons
-              name="check-box" // Name of the checked icon
-              color="#F866b1" // Color of the checked icon
-              size={20} // Size of the checked icon
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            <CheckBox
+              title={language?.language?.Pages?.pages?.privacy}
+              checked={acceptP}
+              onPress={() => {
+                setAcceptP(!acceptP);
+              }}
+              containerStyle={[
+                styles.checkboxContainer,
+                {
+                  width: "80%",
+                  borderRadius: 50,
+                  backgroundColor: currentTheme.background,
+                },
+              ]}
+              textStyle={[
+                styles.checkboxText,
+                {
+                  color: currentTheme.font,
+                  fontWeight: "normal",
+                  letterSpacing: 0.3,
+                },
+              ]}
+              checkedColor="#F866b1"
+              checkedIcon={
+                <MaterialIcons
+                  name="check-box" // Name of the checked icon
+                  color="#F866b1" // Color of the checked icon
+                  size={20} // Size of the checked icon
+                />
+              }
+              uncheckedIcon={
+                <MaterialIcons
+                  name="check-box-outline-blank" // Name of the unchecked icon
+                  color="#F866b1" // Color of the unchecked icon
+                  size={20} // Size of the unchecked icon
+                />
+              }
             />
-          }
-          uncheckedIcon={
-            <MaterialIcons
-              name="check-box-outline-blank" // Name of the unchecked icon
-              color="#F866b1" // Color of the unchecked icon
-              size={20} // Size of the unchecked icon
-            />
-          }
-        />
-        <TouchableOpacity
-          style={{ marginRight: 25 }}
-          onPress={() => navigation.navigate("Privacy")}
-        >
-          <MaterialIcons
-            name="arrow-right"
-            size={30}
-            color={currentTheme.pink}
-          />
-        </TouchableOpacity>
-      </View>
-      <TouchableOpacity style={styles.button} onPress={Confirm}>
-        <Text style={styles.buttonText}>
-          {language?.language?.Auth?.auth?.confirm}
-        </Text>
-      </TouchableOpacity>
-    </View>
+            <TouchableOpacity
+              style={{ marginRight: 25 }}
+              onPress={() => navigation.navigate("Privacy")}
+            >
+              <MaterialIcons
+                name="arrow-right"
+                size={30}
+                color={currentTheme.pink}
+              />
+            </TouchableOpacity>
+          </View>
+          <TouchableOpacity style={styles.button} onPress={Confirm}>
+            <Text style={styles.buttonText}>
+              {language?.language?.Auth?.auth?.confirm}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </BlurView>
+    </ImageBackground>
   );
 };
 

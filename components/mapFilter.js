@@ -1,36 +1,29 @@
+import React, { useEffect, useRef, useState } from "react";
 import {
+  Alert,
+  Linking,
+  Modal,
+  Pressable,
   StyleSheet,
   Text,
   View,
-  Alert,
-  Modal,
-  Button,
-  Pressable,
-  Linking,
 } from "react-native";
-import React, { useState, useEffect, useRef } from "react";
 
-import MapView, { Marker } from "react-native-maps";
-import { useSelector, useDispatch } from "react-redux";
-import { CacheableImage } from "../components/cacheableImage";
-import { darkTheme, lightTheme } from "../context/theme";
 import {
+  AntDesign,
   Entypo,
   FontAwesome,
   MaterialCommunityIcons,
-  AntDesign,
 } from "@expo/vector-icons";
-import { TouchableOpacity } from "react-native-gesture-handler";
-import { useNavigation } from "@react-navigation/native";
-import {
-  setCurrentChat,
-  setRerederRooms,
-  setRooms,
-  setRerenderScroll,
-} from "../redux/chat";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import axios from "axios";
+import MapView, { Marker } from "react-native-maps";
+import { useDispatch, useSelector } from "react-redux";
+import { CacheableImage } from "../components/cacheableImage";
 import { Circle } from "../components/skeltons";
-import { setBlur } from "../redux/app";
+import { darkTheme, lightTheme } from "../context/theme";
+import { setBlur, setScreenModal } from "../redux/app";
+import { setCurrentChat, setRooms } from "../redux/chat";
 
 export const MapFilter = ({ users }) => {
   // defines dispatch for redux
@@ -38,6 +31,9 @@ export const MapFilter = ({ users }) => {
 
   // defines navigation
   const navigation = useNavigation();
+
+  // route
+  const route = useRoute();
 
   // defines current user
   const currentUser = useSelector((state) => state.storeUser.currentUser);
@@ -116,7 +112,14 @@ export const MapFilter = ({ users }) => {
   const GetNewChatRoom = async () => {
     setModalVisible(false);
 
-    navigation.navigate("Room", { user: selectedUser });
+    dispatch(
+      setScreenModal({
+        active: true,
+        screen: "Room",
+        data: selectedUser,
+        route: route.name,
+      })
+    );
 
     let newChat = {
       room: currentUser?._id + selectedUser?._id,
@@ -170,7 +173,14 @@ export const MapFilter = ({ users }) => {
     try {
       setModalVisible(false);
 
-      navigation.navigate("Room", { user: selectedUser });
+      dispatch(
+        setScreenModal({
+          active: true,
+          screen: "Room",
+          data: selectedUser,
+          route: route.name,
+        })
+      );
       dispatch(setCurrentChat(Room));
       if (Room.lastSender !== currentUser._id) {
         await axios.patch(backendUrl + "/api/v1/chats/" + Room.room, {
@@ -253,7 +263,9 @@ export const MapFilter = ({ users }) => {
           >
             <Pressable
               onPress={() => {
-                navigation.navigate("User", { user: selectedUser });
+                navigation.navigate("UserVisit", {
+                  user: selectedUser,
+                });
                 setModalVisible(false);
                 dispatch(setBlur(false));
               }}
@@ -489,9 +501,14 @@ export const MapFilter = ({ users }) => {
                 {selectedUser?.subscription?.status === "active" && (
                   <Pressable
                     onPress={() => {
-                      navigation.navigate("Send Booking", {
-                        user: selectedUser,
-                      });
+                      dispatch(
+                        setScreenModal({
+                          active: true,
+                          screen: "Send Booking",
+                          data: selectedUser,
+                          route: route.name,
+                        })
+                      );
                       setModalVisible(false);
                       dispatch(setBlur(false));
                     }}
@@ -575,26 +592,33 @@ const MarkerItem = ({ item, currentTheme }) => {
             alignItems: "center",
             flexDirection: "row",
             justifyContent: "center",
+            backgroundColor: currentTheme.pink,
+            borderRadius: 50,
+            padding: 2,
+            borderWidth: 1.5,
+            borderColor: currentTheme.font,
+            width: 35,
+            height: 35,
           }}
         >
-          <FontAwesome
+          {/* <FontAwesome
             style={[
               styles.stars,
               {
                 color: currentTheme.pink,
-                fontSize: 35,
+                fontSize: 27,
               },
             ]}
             name="heart"
-          />
+          /> */}
           <Text
             style={[
               styles.stars,
               {
-                position: "absolute",
-                top: 10,
+                // position: "absolute",
+                // top: 7,
                 color: currentTheme.font,
-                fontSize: 10,
+                fontSize: 14,
                 fontWeight: "bold",
               },
             ]}
@@ -668,8 +692,8 @@ const MarkerItem = ({ item, currentTheme }) => {
             borderRadius: 50,
             position: "absolute",
             zIndex: 100,
-            left: 0,
-            bottom: 0,
+            right: 2.5,
+            bottom: 2.5,
             borderWidth: 1,
             borderColor: currentTheme.background,
           }}

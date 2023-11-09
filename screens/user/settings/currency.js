@@ -85,10 +85,7 @@ export const Currency = ({ currentTheme }) => {
         >
           <TouchableOpacity
             activeOpacity={0.3}
-            style={[
-              styles.itemOption,
-              { backgroundColor: currentTheme.background },
-            ]}
+            style={[styles.itemOption, {}]}
             onPress={() => AddCurrency("Dollar")}
           >
             <Text style={[styles.optionText, { color: currentTheme.font }]}>
@@ -98,10 +95,7 @@ export const Currency = ({ currentTheme }) => {
           </TouchableOpacity>
           <TouchableOpacity
             activeOpacity={0.3}
-            style={[
-              styles.itemOption,
-              { backgroundColor: currentTheme.background },
-            ]}
+            style={[styles.itemOption, {}]}
             onPress={() => AddCurrency("Euro")}
           >
             <Text style={[styles.optionText, { color: currentTheme.font }]}>
@@ -111,10 +105,7 @@ export const Currency = ({ currentTheme }) => {
           </TouchableOpacity>
           <TouchableOpacity
             activeOpacity={0.3}
-            style={[
-              styles.itemOption,
-              { backgroundColor: currentTheme.background },
-            ]}
+            style={[styles.itemOption, {}]}
             onPress={() => AddCurrency("Lari")}
           >
             <Text style={[styles.optionText, { color: currentTheme.font }]}>
@@ -136,11 +127,11 @@ export const Currency = ({ currentTheme }) => {
         <TouchableOpacity
           onPress={() => setAdd(!add)}
           style={[
-            [styles.itemOption, { backgroundColor: currentTheme.background }],
+            [styles.itemOption, {}],
             {
               width: "30%",
               justifyContent: "center",
-              backgroundColor: currentTheme.background,
+
               borderRadius: 50,
             },
           ]}

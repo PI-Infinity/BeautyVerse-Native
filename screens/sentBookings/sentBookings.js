@@ -31,6 +31,8 @@ import DatePicker from "../bookings/datePicker";
 import { ListItem } from "../sentBookings/listItem";
 import { SortPopup } from "../bookings/sortPopup";
 import { Card } from "./cardItem";
+import { Header } from "../user/settings/header";
+import { useNavigation, useRoute } from "@react-navigation/native";
 
 /**
  * Defines sent bookings list in user settings
@@ -38,7 +40,12 @@ import { Card } from "./cardItem";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
-export const SentBookings = ({ navigation }) => {
+export const SentBookings = ({ hideModal }) => {
+  // navigation
+  const navigation = useNavigation();
+
+  // route
+  const route = useRoute();
   // defines theme
   const theme = useSelector((state) => state.storeApp.theme);
   const currentTheme = theme ? darkTheme : lightTheme;
@@ -173,56 +180,6 @@ export const SentBookings = ({ navigation }) => {
       />
     );
   };
-
-  // // load more/less btn
-  // const renderLoadMoreButton = () => {
-  //   if (bottomLoader) {
-  //     return (
-  //       <ActivityIndicator color={currentTheme.pink} style={{ padding: 8 }} />
-  //     );
-  //   } else {
-  //     return (
-  //       <Pressable
-  //         style={{
-  //           width: "100%",
-  //           alignItems: "center",
-  //           padding: filterResult > 5 ? 7.5 : 0,
-  //           backgroundColor: currentTheme.background2,
-  //           marginTop: filterResult > 5 ? 10 : 0,
-  //           borderRadius: 50,
-  //           borderWidth: 1,
-  //           borderColor: currentTheme.line,
-  //           opacity: filterResult > 5 ? 1 : 0,
-  //         }}
-  //         onPress={
-  //           filterResult > bookings?.length && filterResult > 5
-  //             ? () => loadMoreBookings()
-  //             : filterResult <= bookings?.length && filterResult > 5
-  //             ? () => {
-  //                 setBottomLoader(true);
-  //                 dispatch(reduceSentBookings());
-  //                 setPage(1);
-  //                 setTimeout(() => {
-  //                   setBottomLoader(false);
-  //                 }, 200);
-  //               }
-  //             : () => console.log("less")
-  //         }
-  //       >
-  //         {filterResult > bookings?.length && filterResult > 5 ? (
-  //           <Text style={{ color: currentTheme.pink, fontWeight: "bold" }}>
-  //             Load More
-  //           </Text>
-  //         ) : filterResult <= bookings?.length && filterResult > 5 ? (
-  //           <Text style={{ color: currentTheme.disabled, fontWeight: "bold" }}>
-  //             Load Less
-  //           </Text>
-  //         ) : null}
-  //       </Pressable>
-  //     );
-  //   }
-  // };
-
   useEffect(() => {
     setTimeout(() => {
       setIsLoaded(false);
@@ -230,6 +187,9 @@ export const SentBookings = ({ navigation }) => {
   }, []);
   return (
     <>
+      {route.name !== "sent bookings" && (
+        <Header onBack={hideModal} title="My Sent Bookings" />
+      )}
       {isLoaded ? (
         <View
           style={{

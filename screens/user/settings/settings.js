@@ -1,11 +1,13 @@
-import { MaterialIcons } from "@expo/vector-icons";
+import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import { useState } from "react";
 import {
   Dimensions,
+  ImageBackground,
   Platform,
   Pressable,
+  SafeAreaView,
   ScrollView,
   StyleSheet,
   Switch,
@@ -18,22 +20,31 @@ import { useDispatch, useSelector } from "react-redux";
 import { Language } from "../../../context/language";
 import { darkTheme, lightTheme } from "../../../context/theme";
 import {
+  cleanScreenModal,
+  setActiveTabBar,
   setLanguage,
   setLoading,
   setLogoutLoading,
+  setScreenModal,
   setTheme,
 } from "../../../redux/app";
 import { setRerenderCurrentUser } from "../../../redux/rerenders";
 import { setCurrentUser } from "../../../redux/user";
 import { Security } from "../../../screens/user/settings/security";
+import Screen from "./subScreenModal";
+import { Header } from "./header";
+import { useNavigation } from "@react-navigation/native";
+import { BlurView } from "expo-blur";
 
 /**
  * Settings screen in user
  */
 
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
-export const Settings = ({ navigation }) => {
+export const Settings = ({ hideModal }) => {
+  // navigation
+  const navigation = useNavigation();
   // define language
   const language = Language();
 
@@ -72,6 +83,9 @@ export const Settings = ({ navigation }) => {
       await AsyncStorage.removeItem("Beautyverse:currentUser");
       dispatch(setRerenderCurrentUser());
       setTimeout(() => {
+        dispatch(cleanScreenModal());
+        // first active tab bar make Feeds
+        dispatch(setActiveTabBar("Feeds"));
         dispatch(setLoading(false));
       }, 1000);
     } catch (error) {
@@ -96,401 +110,444 @@ export const Settings = ({ navigation }) => {
   // define new sent bookings
   const newSentBookings = useSelector((state) => state.storeSentBookings.new);
 
+  // sub screen state
+  const [subScreen, setSubScreen] = useState({ active: false, screen: "" });
+
   return (
-    <ScrollView
-      contentContainerStyle={{
-        alignItems: "center",
-        paddingBottom: 30,
-        gap: 6,
-      }}
-      bounces={Platform.OS === "ios" ? false : undefined}
-      overScrollMode={Platform.OS === "ios" ? "never" : "always"}
-      style={{
-        width: "100%",
-        paddingTop: 20,
-        backgroundColor: currentTheme.background,
-      }}
-    >
-      {currentUser?.type.toLowerCase() === "specialist" && (
-        <TouchableOpacity
-          activeOpacity={0.5}
-          onPress={() => navigation.navigate("Sent Bookings")}
-          style={[
-            styles.item,
-            {
-              borderWidth: 1,
-              borderColor: currentTheme.line,
-              borderRadius: 10,
-            },
-          ]}
+    <SafeAreaView>
+      {subScreen?.active && (
+        <Screen
+          visible={subScreen?.active}
+          screen={subScreen?.screen}
+          setVisible={setSubScreen}
+        />
+      )}
+
+      <View
+        style={{
+          width: SCREEN_WIDTH,
+          height: SCREEN_HEIGHT,
+          paddingBottom: 120,
+        }}
+      >
+        <Header
+          title={language?.language?.User?.userPage?.settings}
+          onBack={hideModal}
+        />
+        <ScrollView
+          contentContainerStyle={{
+            alignItems: "center",
+            gap: 6,
+          }}
+          style={{
+            width: SCREEN_WIDTH,
+            height: SCREEN_HEIGHT,
+            paddingTop: 10,
+          }}
         >
-          <View style={{ flexDirection: "row", gap: 6, alignItems: "center" }}>
+          {currentUser?.type.toLowerCase() === "specialist" && (
+            <TouchableOpacity
+              activeOpacity={0.5}
+              // onPress={() => navigation.navigate("Sent Bookings")}
+              onPress={() =>
+                setSubScreen({ active: true, screen: "Sent Bookings" })
+              }
+              style={[
+                styles.item,
+                {
+                  borderWidth: 1,
+                  borderColor: currentTheme.line,
+                  borderRadius: 10,
+                },
+              ]}
+            >
+              <View
+                style={{ flexDirection: "row", gap: 6, alignItems: "center" }}
+              >
+                <Text
+                  style={[
+                    styles.sectionTitle,
+                    { color: currentTheme.font, letterSpacing: 0.2 },
+                  ]}
+                >
+                  {language?.language?.User?.userPage?.sentBookings}
+                </Text>
+                {newSentBookings > 0 && (
+                  <View
+                    style={{
+                      width: "auto",
+                      minWidth: 16,
+                      height: 16,
+                      backgroundColor: "green",
+                      borderRadius: 50,
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Text style={{ color: "#fff", fontSize: 10 }}>
+                      {newSentBookings}
+                    </Text>
+                  </View>
+                )}
+              </View>
+              <MaterialIcons
+                name={"arrow-right"}
+                color={currentTheme.pink}
+                size={18}
+              />
+            </TouchableOpacity>
+          )}
+          <TouchableOpacity
+            activeOpacity={0.5}
+            onPress={() =>
+              setSubScreen({ active: true, screen: "Personal Info" })
+            }
+            // onPress={() => navigation.navigate("Personal info")}
+            style={[
+              styles.item,
+              {
+                borderWidth: 1,
+                borderColor: currentTheme.line,
+                borderRadius: 10,
+              },
+            ]}
+          >
             <Text
               style={[
                 styles.sectionTitle,
                 { color: currentTheme.font, letterSpacing: 0.2 },
               ]}
             >
-              {language?.language?.User?.userPage?.sentBookings}
+              {language?.language?.User?.userPage?.personalInfo}
             </Text>
-            {newSentBookings > 0 && (
-              <View
+            <MaterialIcons
+              name={"arrow-right"}
+              color={currentTheme.pink}
+              size={18}
+            />
+          </TouchableOpacity>
+          <TouchableOpacity
+            activeOpacity={0.5}
+            // onPress={() => navigation.navigate("Addresses")}
+            onPress={() => setSubScreen({ active: true, screen: "Addresses" })}
+            style={[
+              styles.item,
+              {
+                borderWidth: 1,
+                borderColor: currentTheme.line,
+                borderRadius: 10,
+              },
+            ]}
+          >
+            <Text
+              style={[
+                styles.sectionTitle,
+                { color: currentTheme.font, letterSpacing: 0.2 },
+              ]}
+            >
+              {language?.language?.User?.userPage?.addresses}
+            </Text>
+            <MaterialIcons
+              name={"arrow-right"}
+              color={currentTheme.pink}
+              size={18}
+            />
+          </TouchableOpacity>
+          {currentUser.type?.toLowerCase() === "specialist" ||
+          currentUser.type?.toLowerCase() === "beautycenter" ? (
+            <TouchableOpacity
+              activeOpacity={0.5}
+              // onPress={() => navigation.navigate("Procedures")}
+              onPress={() =>
+                setSubScreen({ active: true, screen: "Procedures" })
+              }
+              style={[
+                styles.item,
+                {
+                  borderWidth: 1,
+                  borderColor: currentTheme.line,
+                  borderRadius: 10,
+                },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.sectionTitle,
+                  { color: currentTheme.font, letterSpacing: 0.2 },
+                ]}
+              >
+                {language?.language?.User?.userPage?.procedures}
+              </Text>
+              <MaterialIcons
+                name={"arrow-right"}
+                color={currentTheme.pink}
+                size={18}
+              />
+            </TouchableOpacity>
+          ) : currentUser.type === "shop" ? (
+            <TouchableOpacity
+              activeOpacity={0.5}
+              // onPress={() => navigation.navigate("Products")}
+              onPress={() => setSubScreen({ active: true, screen: "Products" })}
+              style={[
+                styles.item,
+                {
+                  borderWidth: 1,
+                  borderColor: currentTheme.line,
+                  borderRadius: 10,
+                },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.sectionTitle,
+                  { color: currentTheme.font, letterSpacing: 0.2 },
+                ]}
+              >
+                {language?.language?.User?.userPage?.products}
+              </Text>
+              <MaterialIcons
+                name={"arrow-right"}
+                color={currentTheme.pink}
+                size={18}
+              />
+            </TouchableOpacity>
+          ) : null}
+          {currentUser.type !== "user" && (
+            <TouchableOpacity
+              activeOpacity={0.5}
+              // onPress={() => navigation.navigate("Working info")}
+              onPress={() =>
+                setSubScreen({ active: true, screen: "Working Info" })
+              }
+              style={[
+                styles.item,
+                {
+                  borderWidth: 1,
+                  borderColor: currentTheme.line,
+                  borderRadius: 10,
+                },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.sectionTitle,
+                  { color: currentTheme.font, letterSpacing: 0.2 },
+                ]}
+              >
+                {language?.language?.User?.userPage?.workingInfo}
+              </Text>
+              <MaterialIcons
+                name={"arrow-right"}
+                color={currentTheme.pink}
+                size={18}
+              />
+            </TouchableOpacity>
+          )}
+          <TouchableOpacity
+            activeOpacity={0.5}
+            // onPress={() => navigation.navigate("SavedItems")}
+            onPress={() =>
+              setSubScreen({ active: true, screen: "Saved Items" })
+            }
+            style={[
+              styles.item,
+              {
+                borderWidth: 1,
+                borderColor: currentTheme.line,
+                borderRadius: 10,
+              },
+            ]}
+          >
+            <Text
+              style={[
+                styles.sectionTitle,
+                { color: currentTheme.font, letterSpacing: 0.2 },
+              ]}
+            >
+              {language?.language?.User?.userPage?.savedItems}
+            </Text>
+            <MaterialIcons
+              name={"arrow-right"}
+              color={currentTheme.pink}
+              size={18}
+            />
+          </TouchableOpacity>
+          <TouchableOpacity
+            activeOpacity={0.5}
+            // onPress={() => navigation.navigate("Support")}
+            onPress={() => setSubScreen({ active: true, screen: "Support" })}
+            style={[
+              styles.item,
+              {
+                borderWidth: 1,
+                borderColor: currentTheme.line,
+                borderRadius: 10,
+              },
+            ]}
+          >
+            <Text
+              style={[
+                styles.sectionTitle,
+                { color: currentTheme.font, letterSpacing: 0.2 },
+              ]}
+            >
+              {language?.language?.User?.userPage?.support}
+            </Text>
+            <MaterialIcons
+              name={"arrow-right"}
+              color={currentTheme.pink}
+              size={18}
+            />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            activeOpacity={0.5}
+            onPress={() => setOpenSecurity(!openSecurity)}
+            style={[
+              styles.item,
+              {
+                borderWidth: 1,
+                borderColor: currentTheme.line,
+                borderRadius: 10,
+              },
+            ]}
+          >
+            <Text
+              style={[
+                styles.sectionTitle,
+                { color: currentTheme.font, letterSpacing: 0.2 },
+              ]}
+            >
+              {language?.language?.User?.userPage?.security}
+            </Text>
+            <MaterialIcons
+              name={openSecurity ? "arrow-drop-up" : "arrow-drop-down"}
+              color={currentTheme.pink}
+              size={18}
+            />
+          </TouchableOpacity>
+          <Collapsible collapsed={openSecurity}>
+            <Security />
+          </Collapsible>
+          <TouchableOpacity
+            activeOpacity={0.5}
+            style={[
+              styles.item,
+              {
+                // marginBottom: 20,
+                borderWidth: 1,
+                position: "relative",
+                bottom: 6,
+                borderColor: currentTheme.line,
+                borderRadius: 10,
+              },
+            ]}
+            onPress={() => setOpenLanguages(!openLanguages)}
+          >
+            <Text
+              style={[
+                styles.sectionTitle,
+                { color: currentTheme.font, letterSpacing: 0.2 },
+              ]}
+            >
+              {language?.language?.User?.userPage?.languages}
+            </Text>
+            <MaterialIcons
+              name={openLanguages ? "arrow-drop-up" : "arrow-drop-down"}
+              color={currentTheme.pink}
+              size={18}
+            />
+          </TouchableOpacity>
+          <Collapsible collapsed={openLanguages}>
+            <View style={{ width: SCREEN_WIDTH - 60, gap: 10 }}>
+              <Pressable
                 style={{
-                  width: "auto",
-                  minWidth: 16,
-                  height: 16,
-                  backgroundColor: "green",
+                  width: "100%",
+                  paddingHorizontal: 15,
+                  paddingVertical: 5,
                   borderRadius: 50,
-                  alignItems: "center",
-                  justifyContent: "center",
+                  backgroundColor:
+                    activeLanguage === "en"
+                      ? currentTheme.pink
+                      : currentTheme.background2,
+                }}
+                onPress={async () => {
+                  await AsyncStorage.setItem(
+                    "Beautyverse:language",
+                    JSON.stringify({ language: "en" })
+                  );
+                  dispatch(setLanguage("en"));
                 }}
               >
-                <Text style={{ color: "#fff", fontSize: 10 }}>
-                  {newSentBookings}
+                <Text
+                  style={{
+                    color:
+                      activeLanguage === "en" ? "#e5e5e5" : currentTheme.font,
+                  }}
+                >
+                  {language?.language?.Auth?.auth?.english}
                 </Text>
-              </View>
-            )}
-          </View>
-          <MaterialIcons
-            name={"arrow-right"}
-            color={currentTheme.pink}
-            size={18}
-          />
-        </TouchableOpacity>
-      )}
-      <TouchableOpacity
-        activeOpacity={0.5}
-        onPress={() => navigation.navigate("Personal info")}
-        style={[
-          styles.item,
-          {
-            borderWidth: 1,
-            borderColor: currentTheme.line,
-            borderRadius: 10,
-          },
-        ]}
-      >
-        <Text
-          style={[
-            styles.sectionTitle,
-            { color: currentTheme.font, letterSpacing: 0.2 },
-          ]}
-        >
-          {language?.language?.User?.userPage?.personalInfo}
-        </Text>
-        <MaterialIcons
-          name={"arrow-right"}
-          color={currentTheme.pink}
-          size={18}
-        />
-      </TouchableOpacity>
-      <TouchableOpacity
-        activeOpacity={0.5}
-        onPress={() => navigation.navigate("Addresses")}
-        style={[
-          styles.item,
-          {
-            borderWidth: 1,
-            borderColor: currentTheme.line,
-            borderRadius: 10,
-          },
-        ]}
-      >
-        <Text
-          style={[
-            styles.sectionTitle,
-            { color: currentTheme.font, letterSpacing: 0.2 },
-          ]}
-        >
-          {language?.language?.User?.userPage?.addresses}
-        </Text>
-        <MaterialIcons
-          name={"arrow-right"}
-          color={currentTheme.pink}
-          size={18}
-        />
-      </TouchableOpacity>
-      {currentUser.type?.toLowerCase() === "specialist" ||
-      currentUser.type?.toLowerCase() === "beautycenter" ? (
-        <TouchableOpacity
-          activeOpacity={0.5}
-          onPress={() => navigation.navigate("Procedures")}
-          style={[
-            styles.item,
-            {
-              borderWidth: 1,
-              borderColor: currentTheme.line,
-              borderRadius: 10,
-            },
-          ]}
-        >
-          <Text
-            style={[
-              styles.sectionTitle,
-              { color: currentTheme.font, letterSpacing: 0.2 },
-            ]}
-          >
-            {language?.language?.User?.userPage?.procedures}
-          </Text>
-          <MaterialIcons
-            name={"arrow-right"}
-            color={currentTheme.pink}
-            size={18}
-          />
-        </TouchableOpacity>
-      ) : currentUser.type === "shop" ? (
-        <TouchableOpacity
-          activeOpacity={0.5}
-          onPress={() => navigation.navigate("Products")}
-          style={[
-            styles.item,
-            {
-              borderWidth: 1,
-              borderColor: currentTheme.line,
-              borderRadius: 10,
-            },
-          ]}
-        >
-          <Text
-            style={[
-              styles.sectionTitle,
-              { color: currentTheme.font, letterSpacing: 0.2 },
-            ]}
-          >
-            {language?.language?.User?.userPage?.products}
-          </Text>
-          <MaterialIcons
-            name={"arrow-right"}
-            color={currentTheme.pink}
-            size={18}
-          />
-        </TouchableOpacity>
-      ) : null}
-      {currentUser.type !== "user" && (
-        <TouchableOpacity
-          activeOpacity={0.5}
-          onPress={() => navigation.navigate("Working info")}
-          style={[
-            styles.item,
-            {
-              borderWidth: 1,
-              borderColor: currentTheme.line,
-              borderRadius: 10,
-            },
-          ]}
-        >
-          <Text
-            style={[
-              styles.sectionTitle,
-              { color: currentTheme.font, letterSpacing: 0.2 },
-            ]}
-          >
-            {language?.language?.User?.userPage?.workingInfo}
-          </Text>
-          <MaterialIcons
-            name={"arrow-right"}
-            color={currentTheme.pink}
-            size={18}
-          />
-        </TouchableOpacity>
-      )}
-      <TouchableOpacity
-        activeOpacity={0.5}
-        onPress={() => navigation.navigate("SavedItems")}
-        style={[
-          styles.item,
-          {
-            borderWidth: 1,
-            borderColor: currentTheme.line,
-            borderRadius: 10,
-          },
-        ]}
-      >
-        <Text
-          style={[
-            styles.sectionTitle,
-            { color: currentTheme.font, letterSpacing: 0.2 },
-          ]}
-        >
-          {language?.language?.User?.userPage?.savedItems}
-        </Text>
-        <MaterialIcons
-          name={"arrow-right"}
-          color={currentTheme.pink}
-          size={18}
-        />
-      </TouchableOpacity>
-      <TouchableOpacity
-        activeOpacity={0.5}
-        onPress={() => navigation.navigate("Support")}
-        style={[
-          styles.item,
-          {
-            borderWidth: 1,
-            borderColor: currentTheme.line,
-            borderRadius: 10,
-          },
-        ]}
-      >
-        <Text
-          style={[
-            styles.sectionTitle,
-            { color: currentTheme.font, letterSpacing: 0.2 },
-          ]}
-        >
-          {language?.language?.User?.userPage?.support}
-        </Text>
-        <MaterialIcons
-          name={"arrow-right"}
-          color={currentTheme.pink}
-          size={18}
-        />
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        activeOpacity={0.5}
-        onPress={() => setOpenSecurity(!openSecurity)}
-        style={[
-          styles.item,
-          {
-            borderWidth: 1,
-            borderColor: currentTheme.line,
-            borderRadius: 10,
-          },
-        ]}
-      >
-        <Text
-          style={[
-            styles.sectionTitle,
-            { color: currentTheme.font, letterSpacing: 0.2 },
-          ]}
-        >
-          {language?.language?.User?.userPage?.security}
-        </Text>
-        <MaterialIcons
-          name={openSecurity ? "arrow-drop-up" : "arrow-drop-down"}
-          color={currentTheme.pink}
-          size={18}
-        />
-      </TouchableOpacity>
-      <Collapsible collapsed={openSecurity}>
-        <Security />
-      </Collapsible>
-      <TouchableOpacity
-        activeOpacity={0.5}
-        style={[
-          styles.item,
-          {
-            // marginBottom: 20,
-            borderWidth: 1,
-            position: "relative",
-            bottom: 6,
-            borderColor: currentTheme.line,
-            borderRadius: 10,
-          },
-        ]}
-        onPress={() => setOpenLanguages(!openLanguages)}
-      >
-        <Text
-          style={[
-            styles.sectionTitle,
-            { color: currentTheme.font, letterSpacing: 0.2 },
-          ]}
-        >
-          {language?.language?.User?.userPage?.languages}
-        </Text>
-        <MaterialIcons
-          name={openLanguages ? "arrow-drop-up" : "arrow-drop-down"}
-          color={currentTheme.pink}
-          size={18}
-        />
-      </TouchableOpacity>
-      <Collapsible collapsed={openLanguages}>
-        <View style={{ width: SCREEN_WIDTH - 60, gap: 10 }}>
-          <Pressable
-            style={{
-              width: "100%",
-              paddingHorizontal: 15,
-              paddingVertical: 5,
-              borderRadius: 50,
-              backgroundColor:
-                activeLanguage === "en"
-                  ? currentTheme.pink
-                  : currentTheme.background2,
-            }}
-            onPress={async () => {
-              await AsyncStorage.setItem(
-                "Beautyverse:language",
-                JSON.stringify({ language: "en" })
-              );
-              dispatch(setLanguage("en"));
-            }}
-          >
-            <Text
-              style={{
-                color: activeLanguage === "en" ? "#e5e5e5" : currentTheme.font,
-              }}
-            >
-              {language?.language?.Auth?.auth?.english}
-            </Text>
-          </Pressable>
-          <Pressable
-            style={{
-              width: "100%",
-              paddingHorizontal: 15,
-              paddingVertical: 5,
-              borderRadius: 50,
-              backgroundColor:
-                activeLanguage === "ka"
-                  ? currentTheme.pink
-                  : currentTheme.background2,
-            }}
-            onPress={async () => {
-              await AsyncStorage.setItem(
-                "Beautyverse:language",
-                JSON.stringify({ language: "ka" })
-              );
-              dispatch(setLanguage("ka"));
-            }}
-          >
-            <Text
-              style={{
-                color: activeLanguage === "ka" ? "#e5e5e5" : currentTheme.font,
-              }}
-            >
-              {language?.language?.Auth?.auth?.georgian}
-            </Text>
-          </Pressable>
-          <Pressable
-            style={{
-              width: "100%",
-              paddingHorizontal: 15,
-              paddingVertical: 5,
-              borderRadius: 50,
-              backgroundColor:
-                activeLanguage === "ru"
-                  ? currentTheme.pink
-                  : currentTheme.background2,
-            }}
-            onPress={async () => {
-              await AsyncStorage.setItem(
-                "Beautyverse:language",
-                JSON.stringify({ language: "ru" })
-              );
-              dispatch(setLanguage("ru"));
-            }}
-          >
-            <Text
-              style={{
-                color: activeLanguage === "ru" ? "#e5e5e5" : currentTheme.font,
-              }}
-            >
-              {language?.language?.Auth?.auth?.russian}
-            </Text>
-          </Pressable>
-        </View>
-      </Collapsible>
-      {/* {currentUser.type !== "user" && (
+              </Pressable>
+              <Pressable
+                style={{
+                  width: "100%",
+                  paddingHorizontal: 15,
+                  paddingVertical: 5,
+                  borderRadius: 50,
+                  backgroundColor:
+                    activeLanguage === "ka"
+                      ? currentTheme.pink
+                      : currentTheme.background2,
+                }}
+                onPress={async () => {
+                  await AsyncStorage.setItem(
+                    "Beautyverse:language",
+                    JSON.stringify({ language: "ka" })
+                  );
+                  dispatch(setLanguage("ka"));
+                }}
+              >
+                <Text
+                  style={{
+                    color:
+                      activeLanguage === "ka" ? "#e5e5e5" : currentTheme.font,
+                  }}
+                >
+                  {language?.language?.Auth?.auth?.georgian}
+                </Text>
+              </Pressable>
+              <Pressable
+                style={{
+                  width: "100%",
+                  paddingHorizontal: 15,
+                  paddingVertical: 5,
+                  borderRadius: 50,
+                  backgroundColor:
+                    activeLanguage === "ru"
+                      ? currentTheme.pink
+                      : currentTheme.background2,
+                }}
+                onPress={async () => {
+                  await AsyncStorage.setItem(
+                    "Beautyverse:language",
+                    JSON.stringify({ language: "ru" })
+                  );
+                  dispatch(setLanguage("ru"));
+                }}
+              >
+                <Text
+                  style={{
+                    color:
+                      activeLanguage === "ru" ? "#e5e5e5" : currentTheme.font,
+                  }}
+                >
+                  {language?.language?.Auth?.auth?.russian}
+                </Text>
+              </Pressable>
+            </View>
+          </Collapsible>
+          {/* {currentUser.type !== "user" && (
         <View
           style={[
             styles.item,
@@ -548,7 +605,7 @@ export const Settings = ({ navigation }) => {
           </Pressable>
         </View>
       )} */}
-      {/* <View style={[styles.item, { backgroundColor: "rgba(0,0,0,0)" }]}>
+          {/* <View style={[styles.item, { backgroundColor: "rgba(0,0,0,0)" }]}>
         <Text
           style={[
             styles.sectionTitle,
@@ -565,54 +622,54 @@ export const Settings = ({ navigation }) => {
           style={styles.switch}
         />
       </View> */}
-      <View style={[styles.item, { backgroundColor: "rgba(0,0,0,0)" }]}>
-        <Text
-          style={[
-            styles.sectionTitle,
-            { color: currentTheme.font, letterSpacing: 0.2 },
-          ]}
-        >
-          {language?.language?.User?.userPage?.darkMode}
-        </Text>
-        <Switch
-          trackColor={{ false: "#e5e5e5", true: "#F866B1" }}
-          thumbColor={theme ? "#e5e5e5" : "#F866B1"}
-          value={theme}
-          onValueChange={async () => {
-            dispatch(setTheme(!theme));
-            await AsyncStorage.setItem(
-              "Beautyverse:themeMode",
-              JSON.stringify({ theme: !theme })
-            );
-          }}
-          style={styles.switch}
-        />
-      </View>
-      {currentUser?.type !== "user" && (
-        <View
-          style={[
-            styles.item,
-            { backgroundColor: "rgba(0,0,0,0)", marginBottom: 15 },
-          ]}
-        >
-          <Text
-            style={[
-              styles.sectionTitle,
-              { color: currentTheme.font, letterSpacing: 0.2 },
-            ]}
-          >
-            {language?.language?.User?.userPage?.activation}
-          </Text>
-          <Switch
-            trackColor={{ false: "#e5e5e5", true: "#F866B1" }}
-            thumbColor={currentUser.active ? "#e5e5e5" : "#F866B1"}
-            value={currentUser.active}
-            onValueChange={ControlActivity}
-            style={styles.switch}
-          />
-        </View>
-      )}
-      {/* {currentUser?.type !== "user" && (
+          {/* <View style={[styles.item, { backgroundColor: "rgba(0,0,0,0)" }]}>
+            <Text
+              style={[
+                styles.sectionTitle,
+                { color: currentTheme.font, letterSpacing: 0.2 },
+              ]}
+            >
+              {language?.language?.User?.userPage?.darkMode}
+            </Text>
+            <Switch
+              trackColor={{ false: "#e5e5e5", true: "#F866B1" }}
+              thumbColor={theme ? "#e5e5e5" : "#F866B1"}
+              value={theme}
+              onValueChange={async () => {
+                dispatch(setTheme(!theme));
+                await AsyncStorage.setItem(
+                  "Beautyverse:themeMode",
+                  JSON.stringify({ theme: !theme })
+                );
+              }}
+              style={styles.switch}
+            />
+          </View> */}
+          {currentUser?.type !== "user" && (
+            <View
+              style={[
+                styles.item,
+                { backgroundColor: "rgba(0,0,0,0)", marginBottom: 15 },
+              ]}
+            >
+              <Text
+                style={[
+                  styles.sectionTitle,
+                  { color: currentTheme.font, letterSpacing: 0.2 },
+                ]}
+              >
+                {language?.language?.User?.userPage?.activation}
+              </Text>
+              <Switch
+                trackColor={{ false: "#e5e5e5", true: "#F866B1" }}
+                thumbColor={currentUser.active ? "#e5e5e5" : "#F866B1"}
+                value={currentUser.active}
+                onValueChange={ControlActivity}
+                style={styles.switch}
+              />
+            </View>
+          )}
+          {/* {currentUser?.type !== "user" && (
         <TouchableOpacity
           activeOpacity={0.5}
           onPress={() => navigation.navigate("Prices", { from: "Settings" })}
@@ -636,137 +693,143 @@ export const Settings = ({ navigation }) => {
           />
         </TouchableOpacity>
       )} */}
-      <TouchableOpacity
-        activeOpacity={0.5}
-        onPress={() => navigation.navigate("Terms")}
-        style={[
-          styles.item,
-          {
-            borderWidth: 1,
-            borderColor: currentTheme.line,
-            marginTop: currentUser?.type === "user" ? 20 : 0,
-            borderRadius: 10,
-          },
-        ]}
-      >
-        <Text
-          style={[
-            styles.sectionTitle,
-            { color: currentTheme.font, letterSpacing: 0.2 },
-          ]}
-        >
-          {language?.language?.Pages?.pages?.terms}
-        </Text>
-        <MaterialIcons
-          name={"arrow-right"}
-          color={currentTheme.pink}
-          size={18}
-        />
-      </TouchableOpacity>
-      <TouchableOpacity
-        activeOpacity={0.5}
-        onPress={() => navigation.navigate("QA")}
-        style={[
-          styles.item,
-          {
-            borderWidth: 1,
-            borderColor: currentTheme.line,
-            borderRadius: 10,
-          },
-        ]}
-      >
-        <Text
-          style={[
-            styles.sectionTitle,
-            { color: currentTheme.font, letterSpacing: 0.2 },
-          ]}
-        >
-          {language?.language?.Pages?.pages?.qa}
-        </Text>
-        <MaterialIcons
-          name={"arrow-right"}
-          color={currentTheme.pink}
-          size={18}
-        />
-      </TouchableOpacity>
-      <TouchableOpacity
-        activeOpacity={0.5}
-        onPress={() => navigation.navigate("Privacy")}
-        style={[
-          styles.item,
-          {
-            borderWidth: 1,
-            borderColor: currentTheme.line,
-            borderRadius: 10,
-          },
-        ]}
-      >
-        <Text
-          style={[
-            styles.sectionTitle,
-            { color: currentTheme.font, letterSpacing: 0.2 },
-          ]}
-        >
-          {language?.language?.Pages?.pages?.privacy}
-        </Text>
-        <MaterialIcons
-          name={"arrow-right"}
-          color={currentTheme.pink}
-          size={18}
-        />
-      </TouchableOpacity>
-      <TouchableOpacity
-        activeOpacity={0.5}
-        onPress={() => navigation.navigate("Usage")}
-        style={[
-          styles.item,
-          {
-            borderWidth: 1,
-            borderColor: currentTheme.line,
-            borderRadius: 10,
-          },
-        ]}
-      >
-        <Text
-          style={[
-            styles.sectionTitle,
-            { color: currentTheme.font, letterSpacing: 0.2 },
-          ]}
-        >
-          {language?.language?.Pages?.pages?.usage}
-        </Text>
-        <MaterialIcons
-          name={"arrow-right"}
-          color={currentTheme.pink}
-          size={18}
-        />
-      </TouchableOpacity>
+          <TouchableOpacity
+            activeOpacity={0.5}
+            // onPress={() => navigation.navigate("Terms")}
+            onPress={() => setSubScreen({ active: true, screen: "Terms" })}
+            style={[
+              styles.item,
+              {
+                borderWidth: 1,
+                borderColor: currentTheme.line,
+                marginTop: currentUser?.type === "user" ? 20 : 0,
+                borderRadius: 10,
+              },
+            ]}
+          >
+            <Text
+              style={[
+                styles.sectionTitle,
+                { color: currentTheme.font, letterSpacing: 0.2 },
+              ]}
+            >
+              {language?.language?.Pages?.pages?.terms}
+            </Text>
+            <MaterialIcons
+              name={"arrow-right"}
+              color={currentTheme.pink}
+              size={18}
+            />
+          </TouchableOpacity>
+          <TouchableOpacity
+            activeOpacity={0.5}
+            // onPress={() => navigation.navigate("QA")}
+            onPress={() => setSubScreen({ active: true, screen: "QA" })}
+            style={[
+              styles.item,
+              {
+                borderWidth: 1,
+                borderColor: currentTheme.line,
+                borderRadius: 10,
+              },
+            ]}
+          >
+            <Text
+              style={[
+                styles.sectionTitle,
+                { color: currentTheme.font, letterSpacing: 0.2 },
+              ]}
+            >
+              {language?.language?.Pages?.pages?.qa}
+            </Text>
+            <MaterialIcons
+              name={"arrow-right"}
+              color={currentTheme.pink}
+              size={18}
+            />
+          </TouchableOpacity>
+          <TouchableOpacity
+            activeOpacity={0.5}
+            // onPress={() => navigation.navigate("Privacy")}
+            onPress={() => setSubScreen({ active: true, screen: "Privacy" })}
+            style={[
+              styles.item,
+              {
+                borderWidth: 1,
+                borderColor: currentTheme.line,
+                borderRadius: 10,
+              },
+            ]}
+          >
+            <Text
+              style={[
+                styles.sectionTitle,
+                { color: currentTheme.font, letterSpacing: 0.2 },
+              ]}
+            >
+              {language?.language?.Pages?.pages?.privacy}
+            </Text>
+            <MaterialIcons
+              name={"arrow-right"}
+              color={currentTheme.pink}
+              size={18}
+            />
+          </TouchableOpacity>
+          <TouchableOpacity
+            activeOpacity={0.5}
+            // onPress={() => navigation.navigate("Usage")}
+            onPress={() => setSubScreen({ active: true, screen: "Usage" })}
+            style={[
+              styles.item,
+              {
+                borderWidth: 1,
+                borderColor: currentTheme.line,
+                borderRadius: 10,
+              },
+            ]}
+          >
+            <Text
+              style={[
+                styles.sectionTitle,
+                { color: currentTheme.font, letterSpacing: 0.2 },
+              ]}
+            >
+              {language?.language?.Pages?.pages?.usage}
+            </Text>
+            <MaterialIcons
+              name={"arrow-right"}
+              color={currentTheme.pink}
+              size={18}
+            />
+          </TouchableOpacity>
 
-      <TouchableOpacity
-        onPress={Logout}
-        activeOpacity={0.5}
-        style={[
-          styles.item,
-          {
-            marginTop: 50,
-            marginBottom: 40,
-            borderRadius: 50,
-            justifyContent: "center",
-            // borderWidth: 1,
-            // borderColor: currentTheme.line,
-          },
-        ]}
-      >
-        <Text
-          style={[
-            styles.sectionTitle,
-            { color: currentTheme.pink, letterSpacing: 0.2 },
-          ]}
-        >
-          {language?.language?.User?.userPage?.logout}
-        </Text>
-      </TouchableOpacity>
-    </ScrollView>
+          <TouchableOpacity
+            onPress={Logout}
+            activeOpacity={0.5}
+            style={[
+              styles.item,
+              {
+                marginTop: 50,
+                marginBottom: 40,
+                borderRadius: 50,
+                justifyContent: "center",
+                // borderWidth: 1,
+                // borderColor: currentTheme.line,
+              },
+            ]}
+          >
+            <Text
+              style={[
+                styles.sectionTitle,
+                { color: currentTheme.pink, letterSpacing: 0.2 },
+              ]}
+            >
+              {language?.language?.User?.userPage?.logout}
+            </Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </View>
+    </SafeAreaView>
   );
 };
 

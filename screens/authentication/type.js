@@ -5,6 +5,7 @@ import {
   Text,
   TouchableOpacity,
   ScrollView,
+  ImageBackground,
 } from "react-native";
 import { useSelector, useDispatch } from "react-redux";
 import { setType } from "../../redux/auth";
@@ -16,6 +17,7 @@ import {
   Entypo,
   Fontisto,
 } from "@expo/vector-icons";
+import { BlurView } from "expo-blur";
 
 /*
   Register Screen,
@@ -32,156 +34,171 @@ export const Type = ({ navigation }) => {
   const currentTheme = theme ? darkTheme : lightTheme;
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <TouchableOpacity
-        activeOpacity={0.9}
-        style={[
-          styles.box,
-          {
-            backgroundColor: currentTheme.background,
-            borderWidth: 1,
-            borderColor: currentTheme.line,
-            gap: 10,
-          },
-        ]}
-        onPress={() => {
-          dispatch(setType("user"));
-          navigation.navigate("Accept");
-        }}
+    <ImageBackground
+      style={{
+        flex: 1,
+        width: "100%",
+        height: "100%",
+      }}
+      source={theme ? require("../../assets/background.jpg") : null}
+    >
+      <BlurView
+        intensity={30}
+        tint="dark"
+        style={{ flex: 1, backgroundColor: "rgba(1,2,0,0.5)" }}
       >
-        <FontAwesome name="user" size={24} color={currentTheme.pink} />
-        <Text style={[styles.boxText, { color: currentTheme.font }]}>
-          {language?.language?.Auth?.auth?.user}
-        </Text>
-        <Text
-          style={[
-            styles.boxText,
-            {
-              color: currentTheme.font,
-              textAlign: "center",
-              fontWeight: "normal",
-              color: currentTheme.disabled,
-              lineHeight: 20,
-              fontSize: 14,
-            },
-          ]}
-        >
-          {language?.language?.Auth?.auth?.userText}
-        </Text>
-      </TouchableOpacity>
-      <TouchableOpacity
-        activeOpacity={0.9}
-        style={[
-          styles.box,
-          {
-            backgroundColor: currentTheme.background,
-            borderWidth: 1,
-            borderColor: currentTheme.line,
-            gap: 10,
-          },
-        ]}
-        onPress={() => {
-          dispatch(setType("specialist"));
-          navigation.navigate("Business");
-        }}
-      >
-        <Entypo name="brush" size={22} color={currentTheme.pink} />
-        <Text style={[styles.boxText, { color: currentTheme.font }]}>
-          {language?.language?.Auth?.auth?.specialist}
-        </Text>
-        <Text
-          style={[
-            styles.boxText,
-            {
-              color: currentTheme.font,
-              textAlign: "center",
-              fontWeight: "normal",
-              color: currentTheme.disabled,
-              lineHeight: 20,
-              fontSize: 14,
-            },
-          ]}
-        >
-          {language?.language?.Auth?.auth?.specText}
-        </Text>
-      </TouchableOpacity>
-      <TouchableOpacity
-        activeOpacity={0.9}
-        style={[
-          styles.box,
-          {
-            backgroundColor: currentTheme.background,
-            borderWidth: 1,
-            borderColor: currentTheme.line,
-            gap: 10,
-          },
-        ]}
-        onPress={() => {
-          dispatch(setType("beautyCenter"));
-          navigation.navigate("Business");
-        }}
-      >
-        <MaterialIcons
-          name="add-business"
-          size={26}
-          color={currentTheme.pink}
-        />
-        <Text style={[styles.boxText, { color: currentTheme.font }]}>
-          {language?.language?.Auth?.auth?.beautySalon}
-        </Text>
-        <Text
-          style={[
-            styles.boxText,
-            {
-              color: currentTheme.font,
-              textAlign: "center",
-              fontWeight: "normal",
-              color: currentTheme.disabled,
-              lineHeight: 20,
-              fontSize: 14,
-            },
-          ]}
-        >
-          {language?.language?.Auth?.auth?.salonText}
-        </Text>
-      </TouchableOpacity>
-      <TouchableOpacity
-        activeOpacity={0.9}
-        style={[
-          styles.box,
-          {
-            backgroundColor: currentTheme.background,
-            borderWidth: 1,
-            borderColor: currentTheme.line,
-            gap: 10,
-          },
-        ]}
-        onPress={() => {
-          dispatch(setType("shop"));
-          navigation.navigate("Accept");
-        }}
-      >
-        <Fontisto name="shopping-bag-1" size={25} color={currentTheme.pink} />
-        <Text style={[styles.boxText, { color: currentTheme.font }]}>
-          {language?.language?.Auth?.auth?.shop}
-        </Text>
-        <Text
-          style={[
-            styles.boxText,
-            {
-              color: currentTheme.font,
-              textAlign: "center",
-              fontWeight: "normal",
-              color: currentTheme.disabled,
-              lineHeight: 20,
-              fontSize: 14,
-            },
-          ]}
-        >
-          {language?.language?.Auth?.auth?.shopText}
-        </Text>
-      </TouchableOpacity>
-    </ScrollView>
+        <ScrollView contentContainerStyle={styles.container}>
+          <TouchableOpacity
+            activeOpacity={0.9}
+            style={[
+              styles.box,
+              {
+                borderWidth: 1,
+                borderColor: currentTheme.line,
+                gap: 10,
+              },
+            ]}
+            onPress={() => {
+              dispatch(setType("user"));
+              navigation.navigate("Accept");
+            }}
+          >
+            <FontAwesome name="user" size={24} color={currentTheme.pink} />
+            <Text style={[styles.boxText, { color: currentTheme.font }]}>
+              {language?.language?.Auth?.auth?.user}
+            </Text>
+            <Text
+              style={[
+                styles.boxText,
+                {
+                  color: currentTheme.font,
+                  textAlign: "center",
+                  fontWeight: "normal",
+                  color: currentTheme.disabled,
+                  lineHeight: 20,
+                  fontSize: 14,
+                },
+              ]}
+            >
+              {language?.language?.Auth?.auth?.userText}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            activeOpacity={0.9}
+            style={[
+              styles.box,
+              {
+                borderWidth: 1,
+                borderColor: currentTheme.line,
+                gap: 10,
+              },
+            ]}
+            onPress={() => {
+              dispatch(setType("specialist"));
+              navigation.navigate("Business");
+            }}
+          >
+            <Entypo name="brush" size={22} color={currentTheme.pink} />
+            <Text style={[styles.boxText, { color: currentTheme.font }]}>
+              {language?.language?.Auth?.auth?.specialist}
+            </Text>
+            <Text
+              style={[
+                styles.boxText,
+                {
+                  color: currentTheme.font,
+                  textAlign: "center",
+                  fontWeight: "normal",
+                  color: currentTheme.disabled,
+                  lineHeight: 20,
+                  fontSize: 14,
+                },
+              ]}
+            >
+              {language?.language?.Auth?.auth?.specText}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            activeOpacity={0.9}
+            style={[
+              styles.box,
+              {
+                borderWidth: 1,
+                borderColor: currentTheme.line,
+                gap: 10,
+              },
+            ]}
+            onPress={() => {
+              dispatch(setType("beautyCenter"));
+              navigation.navigate("Business");
+            }}
+          >
+            <MaterialIcons
+              name="add-business"
+              size={26}
+              color={currentTheme.pink}
+            />
+            <Text style={[styles.boxText, { color: currentTheme.font }]}>
+              {language?.language?.Auth?.auth?.beautySalon}
+            </Text>
+            <Text
+              style={[
+                styles.boxText,
+                {
+                  color: currentTheme.font,
+                  textAlign: "center",
+                  fontWeight: "normal",
+                  color: currentTheme.disabled,
+                  lineHeight: 20,
+                  fontSize: 14,
+                },
+              ]}
+            >
+              {language?.language?.Auth?.auth?.salonText}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            activeOpacity={0.9}
+            style={[
+              styles.box,
+              {
+                borderWidth: 1,
+                borderColor: currentTheme.line,
+                gap: 10,
+              },
+            ]}
+            onPress={() => {
+              dispatch(setType("shop"));
+              navigation.navigate("Accept");
+            }}
+          >
+            <Fontisto
+              name="shopping-bag-1"
+              size={25}
+              color={currentTheme.pink}
+            />
+            <Text style={[styles.boxText, { color: currentTheme.font }]}>
+              {language?.language?.Auth?.auth?.shop}
+            </Text>
+            <Text
+              style={[
+                styles.boxText,
+                {
+                  color: currentTheme.font,
+                  textAlign: "center",
+                  fontWeight: "normal",
+                  color: currentTheme.disabled,
+                  lineHeight: 20,
+                  fontSize: 14,
+                },
+              ]}
+            >
+              {language?.language?.Auth?.auth?.shopText}
+            </Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </BlurView>
+    </ImageBackground>
   );
 };
 

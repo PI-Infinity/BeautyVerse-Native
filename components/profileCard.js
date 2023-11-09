@@ -10,7 +10,6 @@ import {
   Dimensions,
   StyleSheet,
   Text,
-  Easing,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -18,8 +17,6 @@ import { useDispatch, useSelector } from "react-redux";
 import { CacheableImage } from "../components/cacheableImage";
 import { Language } from "../context/language";
 import { darkTheme, lightTheme } from "../context/theme";
-import { Circle } from "./skeltons";
-import axios from "axios";
 
 /**
  * Profile card component in cards screen
@@ -28,6 +25,8 @@ import axios from "axios";
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 export const Card = (props) => {
+  // dispatch
+  const dispatch = useDispatch();
   // define navigation
   const navigation = props.navigation;
 
@@ -111,7 +110,11 @@ export const Card = (props) => {
 
           <TouchableOpacity
             activeOpacity={0.9}
-            onPress={() => navigation.navigate("User", { user: props.user })}
+            onPress={() =>
+              navigation.navigate("UserVisit", {
+                user: props?.user,
+              })
+            }
           >
             {props.user?.online && (
               <View

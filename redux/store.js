@@ -13,6 +13,7 @@ import SentBookingsReducer from "./sentBookings";
 import AlertsReducer from "./alerts";
 import MarketplaceReducer from "./Marketplace";
 import FixedComponentsReducer from "./fixedComponents";
+import ScrollsReducer from "./scrolls";
 
 export const store = configureStore({
   reducer: {
@@ -29,6 +30,6 @@ export const store = configureStore({
     storeSentBookings: SentBookingsReducer,
     storeAlerts: AlertsReducer,
     storeMarketplace: MarketplaceReducer,
-    storeFixedComponents: FixedComponentsReducer,
+    storeScrolls: ScrollsReducer,
   },
 });
