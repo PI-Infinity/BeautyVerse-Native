@@ -55,21 +55,6 @@ export const CustomTabBarProfileIcon = (props) => {
     }
   }, [props.currentUser?.cover]);
 
-  // animate border line width
-  const animateValueRef = useRef(new Animated.Value(props.focused ? 60 : 0));
-  const animateValue = animateValueRef.current;
-
-  useEffect(() => {
-    if (props.focused) {
-      animateValue.setValue(0);
-    }
-    Animated.timing(animateValue, {
-      toValue: props.focused ? 60 : 0,
-      duration: 350,
-      useNativeDriver: false,
-    }).start();
-  }, [isFocused]);
-
   const scrollY = useSelector((state) => state.storeScrolls.profileScrollY);
 
   return (
@@ -202,7 +187,7 @@ export const CustomTabBarProfileIcon = (props) => {
           top: 0,
           left: 0,
           height: 2,
-          width: animateValue, // this is the width we're animating
+          width: props.focused ? 60 : 0, // this is the width we're animating
           backgroundColor: currentTheme.pink,
         }}
       />

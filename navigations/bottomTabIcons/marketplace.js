@@ -40,21 +40,6 @@ export const CustomTabBarMarketplaceIcon = ({
 
   const scrollY = useSelector((state) => state.storeScrolls.marketplaceScrollY);
 
-  // animate border line width
-  const animateValueRef = useRef(new Animated.Value(focused ? 60 : 0));
-  const animateValue = animateValueRef.current;
-
-  useEffect(() => {
-    if (focused) {
-      animateValue.setValue(0);
-    }
-    Animated.timing(animateValue, {
-      toValue: focused ? 60 : 0,
-      duration: 350,
-      useNativeDriver: false,
-    }).start();
-  }, [isFocused]);
-
   return (
     <View
       style={{
@@ -99,7 +84,7 @@ export const CustomTabBarMarketplaceIcon = ({
           top: 0,
           left: 0,
           height: 2,
-          width: animateValue, // this is the width we're animating
+          width: focused ? 60 : 0, // this is the width we're animating
           backgroundColor: currentTheme.pink,
         }}
       />

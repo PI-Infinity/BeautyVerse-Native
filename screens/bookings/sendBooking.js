@@ -37,7 +37,10 @@ export const SendBooking = ({ hideModal }) => {
   const navigation = useNavigation();
 
   // define target specialist or salon
-  const targetUser = useSelector((state) => state.storeApp.screenModal.data);
+  const targetUser = useSelector(
+    (state) =>
+      state.storeApp.screenModal.find((i) => i.screen === "Send Booking").data
+  );
 
   // defines redux dispatch
   const dispatch = useDispatch();

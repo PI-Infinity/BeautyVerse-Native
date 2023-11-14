@@ -112,6 +112,7 @@ export const Feeds = ({ navigation, firstLoading, setFirstLoading }) => {
         `${backendUrl}/api/v1/feeds?check=${currentUser._id}&page=1&limit=3`
       );
       setFeeds(response.data.data.feedlist);
+
       setTimeout(() => {
         closeLoading();
         setFirstLoading(false);

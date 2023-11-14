@@ -18,6 +18,9 @@ const initialState = {
   discounts: "",
   sex: "all",
   type: "everyone",
+
+  // list screens modal
+  listScreenModal: { active: false, screen: "", data: {} },
 };
 
 export const Marketplace = createSlice({
@@ -66,6 +69,10 @@ export const Marketplace = createSlice({
     setType: (state, action) => {
       state.type = action.payload;
     },
+    // screen modal
+    setListScreenModal: (state, action) => {
+      state.listScreenModal = action.payload;
+    },
   },
 });
 
@@ -84,5 +91,7 @@ export const {
   setMaxPrice,
   setSex,
   setType,
+  // screen modal
+  setListScreenModal,
 } = Marketplace.actions;
 export default Marketplace.reducer;

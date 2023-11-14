@@ -45,7 +45,7 @@ const CategoryList = ({
   // split categoris
   // split procedures value to find label
   const splited = categoriesList.filter(
-    (i) => i.value?.split("-")?.length !== 3
+    (i) => i.value?.split("-")?.length !== 1
   );
 
   useEffect(() => {
@@ -104,7 +104,7 @@ const CategoryList = ({
             {splited
 
               ?.filter((item) =>
-                item.label
+                item.value
                   ?.toLocaleLowerCase()
                   ?.includes(search?.toLocaleLowerCase())
               )

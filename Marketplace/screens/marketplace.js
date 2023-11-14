@@ -23,7 +23,10 @@ import {
 } from "@expo/vector-icons";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import CoverSlider from "../../Marketplace/components/coverSlider";
-import { setRerenderProducts } from "../../redux/Marketplace";
+import {
+  setListScreenModal,
+  setRerenderProducts,
+} from "../../redux/Marketplace";
 import { TextInput } from "react-native-gesture-handler";
 import { setMarketplaceScrollY } from "../../redux/scrolls";
 import { setScreenModal, setUserScreenModal } from "../../redux/app";
@@ -171,7 +174,7 @@ const Main = ({}) => {
           <Pressable
             onPress={() =>
               dispatch(
-                setScreenModal({
+                setListScreenModal({
                   active: true,
                   screen: "Marketplace Search",
                 })
@@ -227,7 +230,7 @@ const Main = ({}) => {
                       editable={false}
                       onPressIn={() =>
                         dispatch(
-                          setScreenModal({
+                          setListScreenModal({
                             active: true,
                             screen: "Marketplace Search",
                           })
@@ -446,7 +449,6 @@ const ListComponent = ({ currentTheme, list, navigation, title }) => {
                           active: true,
                           screen: "Product",
                           data: item,
-                          route: route.name,
                         })
                       )
                     }
@@ -578,15 +580,15 @@ const ListComponent = ({ currentTheme, list, navigation, title }) => {
             style={{ flex: 1, height: 1.5, backgroundColor: currentTheme.line }}
           ></View>
           <Pressable
-            onPress={() =>
-              dispatch(
-                setScreenModal({
+            onPress={() => {
+              return dispatch(
+                setListScreenModal({
                   active: true,
                   screen: "Marketplace List",
-                  data: { title: title, list: list },
+                  data: list,
                 })
-              )
-            }
+              );
+            }}
             style={{
               paddingHorizontal: 15,
               flexDirection: "row",

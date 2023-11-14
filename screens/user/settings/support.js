@@ -50,7 +50,7 @@ const Support = ({ hideModal }) => {
       setLoading(true);
       let em = currentUser ? currentUser.email : email;
       await axios.post(backendUrl + "/support/sendEmail", {
-        message: text + " / User Email: " + em,
+        message: text + " / Name: " + currentUser.name + " / User Email: " + em,
         email: em,
       });
       setEmail("");

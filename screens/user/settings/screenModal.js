@@ -209,20 +209,6 @@ export const ScreenModal = ({ screen, navigation }) => {
                     screenHeight={screenHeight}
                   />
                 )}
-                {screen === "Marketplace Search" && (
-                  <Search
-                    hideModal={hideModal}
-                    navigation={navigation}
-                    screenHeight={screenHeight}
-                  />
-                )}
-                {screen === "Marketplace List" && (
-                  <List
-                    hideModal={hideModal}
-                    navigation={navigation}
-                    screenHeight={screenHeight}
-                  />
-                )}
               </Animated.View>
             )}
           </Animated.View>

@@ -162,6 +162,7 @@ export const ScrollGallery = ({ hideModal, navigation }) => {
     if (props.feedsLength > scrolableFeeds.length) {
       if (offsetY + layoutHeight >= contentHeight - 600) {
         if (!loadNewFeeds) {
+          console.log("run");
           AddFeedObjs(page + 1);
         }
       }
@@ -208,9 +209,11 @@ export const ScrollGallery = ({ hideModal, navigation }) => {
             data={scrolableFeeds}
             renderItem={renderFeedItem}
             keyExtractor={(item, index) => index.toString()}
-            contentContainerStyle={{
-              paddingBottom: 300,
-            }}
+            contentContainerStyle={
+              {
+                // paddingBottom: 300,
+              }
+            }
             showsVerticalScrollIndicator={false}
           />
         )}

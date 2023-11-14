@@ -45,6 +45,7 @@ import DeleteConfirmPopup from "../../../components/confirmDialog";
 import CountryFlag from "react-native-country-flag";
 import { Circle } from "../../../components/skeltons";
 import { BlurView } from "expo-blur";
+import { ProductCategoriesOptions } from "../../../datas/productCategories";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -75,7 +76,7 @@ const EditProduct = ({ Product, openModal, setOpenModal }) => {
   const [loading, setLoading] = useState(false);
 
   // categories
-  const categoriesList = ProceduresOptions();
+  const categoriesList = ProductCategoriesOptions();
 
   // input refs
   const brandRef = useRef();

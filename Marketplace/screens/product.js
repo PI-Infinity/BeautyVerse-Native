@@ -25,7 +25,7 @@ import { setUserScreenModal } from "../../redux/app";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
-const Product = ({ hideModal }) => {
+const Product = ({ hideModal, navigation }) => {
   // defines product
   const product = useSelector((state) =>
     state.storeApp.screenModal.find(
@@ -35,9 +35,6 @@ const Product = ({ hideModal }) => {
   // language state
   const language = Language();
   const lang = useSelector((state) => state.storeApp.language);
-
-  // navigation state
-  const navigation = useNavigation();
 
   // redux dispatch
   const dispatch = useDispatch();
@@ -219,11 +216,12 @@ const Product = ({ hideModal }) => {
             </Text>
             <Pressable
               style={{ flexDirection: "row", alignItems: "center", gap: 8 }}
-              onPress={() =>
+              onPress={() => {
                 navigation.navigate("UserVisit", {
                   user: product?.owner,
-                })
-              }
+                });
+                hideModal();
+              }}
             >
               <View activeOpacity={0.9} style={{ marginLeft: 8 }}>
                 {product?.owner?.cover ? (

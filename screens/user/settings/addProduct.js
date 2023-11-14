@@ -31,6 +31,7 @@ import { setRerenderProducts } from "../../../redux/Marketplace";
 import CountryFlag from "react-native-country-flag";
 import { Circle } from "../../../components/skeltons";
 import { Header } from "./header";
+import { ProductCategoriesOptions } from "../../../datas/productCategories";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -59,7 +60,7 @@ const AddNewProduct = ({ onBack }) => {
   const [loading, setLoading] = useState(false);
 
   // categories
-  const categoriesList = ProceduresOptions();
+  const categoriesList = ProductCategoriesOptions();
 
   // input refs
   const brandRef = useRef();

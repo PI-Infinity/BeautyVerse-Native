@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "beautyverse-87e3a",
+  "private_key_id": "190ecaa01341749ff4a0ce074a592fd3a33bb096",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQCvJmsJvUXTtKzh\nikjQwaZFkOZsy1yAXr6ktTCYkOu1Ek9nusgCXM+v8zyWLl1gWvOwmzx6idL2+b2U\njGeneVVghzjRAvzxZeGRo8FHyDu1ajjcf+rDHT7Vz5bVyrJ67u4gJdC9LM2PqAhP\n/RnO6uMwcPL/h83pH8cV9vFeVNkSAXYjE/NTNKx6aGTQAWyAtbQ/qeC8lP4tEMh3\nvIcF3p0OAEt593NqsFYKOcro0x0ClHxuPBEfh+PulDwr3Ein5b7CP9LsVQeAOncC\nwwODcncH0+HzfAx9fiDgaGTEL23UjMcdGWKhfegfYCmyfg5q10Bc3/NNnzKqM34Q\n1/MZtdQNAgMBAAECggEALl5XW/61q7RbSGJZoJqDsEsKFadI19s9UVF+igVjwU4V\no3p5VNbJTOVyFrgzlDy/4vNV8YLnTOcU32zETDv89E8YJY1K9YVpUCswEhbaZ861\nOvrKZdkqN2R7pCHDWnRCqlQYjNx9lxh/Ct4QpQzeFIbybd/ADYWSKSh1AeoohXFZ\nadOEX5FS3aASwKCCDvuvqEWC7vaS8Jou6/lGZWV2KXuvkK0ups2gTvo28/4qxp1m\nph/ISZP/+5DjYi7XwB6KJgmHCuv1pUZvpbUaoCh+rydQFY3g7mVoO5rogFxvLQpj\nts6QzidcjFWoZd14gkSkpD5OF8iiHZ5WIyCASi/bKQKBgQDbpDpvdla2i7GWhQrh\nvb6UmOxwhlBQh6Ej/ItUhAe270DZJdOpjZ+YmiZmG7rCXHQ4zNE3z5qAJTCxABFP\nVcDz7snaqGI3wd3y5WSzrwpBDw8bGuZN59PXBDRFUbFWNIOII1V/L3Mj30kroPzp\nWQ8zvi1PeCR9BbCzxaZ6w8MOwwKBgQDMJMVqcEY+ME0YWlG31LvyS4HPZ46w5403\n+GaLy3geeG5lfIcwO/c6FFnGvfgtQDmfzCvPK5EPKHysFqkJzYVnhBzsAxmb4Ev6\nEH2tF6xs+9Z264BfO8XAzOaKDGdCIJ4zp9dP004KC9MMp0UlMPxyHxybEW7gopYI\nzdMxpiAE7wKBgEtGrNRYrX1gwRuCO2mEu1V4V8h07/+5jCumOSZdHbu/oe0KPtGk\nfScy5agnJsnIH/j7kVTcbOowVNDE4inbjQbNNxcekJLleajun6XJfu0vOREkFfxr\nULoncba0Od/+nXnCCmJNo9uOgihWw3dCE6i7LBJJbc//bEEgo179ytM7AoGAPPTJ\n4fNudglUK+5kMkEaccnsE/M3H0m02D6a2ClET8zkIfeiIlv1gWksOXTmExT3X+jG\nOBEpOl57g6MsjFnK+NLxE+QFFI9QAHZGIJZODSjRrCa76TPe46gLOrNjbdJxirkW\nSKauyb8oIMIdmnJbHvR9RSxacEb8B9r1sgCJ1Q8CgYAIOkOh6pFI2nhXrMH4SndM\nyAGVAUTAKwewAGu3/GbpqkdziNxxDuUyKwANu97oAjl0arellaZCAdNPhnxU8y4c\njeaAJQAKuAesND0vJ7RJML9a9netIhqckn72Rq9yjv8cY/lH/JKOyQBxEaHAJyln\n+ObFTd5EXK3Y8tSDqNwcww==\n-----END PRIVATE KEY-----\n",
+  "client_email": "beautyverse-87e3a@appspot.gserviceaccount.com",
+  "client_id": "114724826328350242508",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/beautyverse-87e3a%40appspot.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}

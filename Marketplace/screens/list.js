@@ -21,11 +21,12 @@ import { setScreenModal, setUserScreenModal } from "../../redux/app";
 import { Header } from "../../screens/user/settings/header";
 
 const List = ({ hideModal }) => {
-  const route = useSelector((state) => state.storeApp.screenModal.data);
+  const route = useSelector((state) => state.storeMarketplace.listScreenModal);
+
   const [list, setList] = useState([]);
 
   useEffect(() => {
-    setList(route?.list);
+    setList(route?.data);
   }, []);
 
   // language state
@@ -147,16 +148,16 @@ const ProductItem = ({ item, navigation, currentTheme }) => {
   return (
     <TouchableOpacity
       activeOpacity={0.8}
-      onPress={() =>
-        dispatch(
+      onPress={() => {
+        console.log("this");
+        return dispatch(
           setScreenModal({
             active: true,
             screen: "Product",
             data: item,
-            route: route.name,
           })
-        )
-      }
+        );
+      }}
       style={{
         width: "100%",
         // height: 200,

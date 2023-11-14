@@ -22,6 +22,7 @@ import { UserVisit } from "../screens/user/userVisit";
 import { setScreenModal } from "../redux/app";
 import { useRoute } from "@react-navigation/native";
 import { BlurView } from "expo-blur";
+import { ListScreenModal } from "../Marketplace/components/listScreenModal";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 const Stack = createStackNavigator();
@@ -51,6 +52,10 @@ export function MarketplaceStack({ navigation }) {
   // defines backend url
   const backendUrl = useSelector((state) => state.storeApp.backendUrl);
 
+  // list screens modal state
+  const listScreenModal = useSelector(
+    (state) => state.storeMarketplace.listScreenModal
+  );
   // screens modal state
   const screenModal = useSelector((state) =>
     state.storeApp.screenModal?.find((i) => i.activeTabBar === "Marketplace")
@@ -66,6 +71,14 @@ export function MarketplaceStack({ navigation }) {
       }}
       // source={theme ? require("../assets/background.jpg") : null}
     >
+      {/** list screens modal */}
+      {listScreenModal && listScreenModal?.active && (
+        <ListScreenModal
+          visible={listScreenModal?.active}
+          screen={listScreenModal.screen}
+          navigation={navigation}
+        />
+      )}
       {/** screens modal */}
       {screenModal &&
         screenModal?.active &&

@@ -29,22 +29,7 @@ export const CustomTabBarCardsIcon = ({ color, currentTheme, focused }) => {
   const route = useRoute();
   const routeName = getFocusedRouteNameFromRoute(route);
 
-  // animate border line width
-  const animateValueRef = useRef(new Animated.Value(focused ? 60 : 0));
-  const animateValue = animateValueRef.current;
-
   const scrollY = useSelector((state) => state.storeScrolls.cardsScrollY);
-
-  useEffect(() => {
-    if (focused) {
-      animateValue.setValue(0);
-    }
-    Animated.timing(animateValue, {
-      toValue: focused ? 60 : 0,
-      duration: 350,
-      useNativeDriver: false,
-    }).start();
-  }, [isFocused]);
 
   return (
     <View
@@ -85,13 +70,13 @@ export const CustomTabBarCardsIcon = ({ color, currentTheme, focused }) => {
         <FontAwesome name="address-book-o" size={25} color={color} />
       </Pressable>
       {/* Animated border */}
-      <Animated.View
+      <View
         style={{
           position: "absolute",
           top: 0,
           left: 0,
           height: 2,
-          width: animateValue, // this is the width we're animating
+          width: focused ? 60 : 0, // this is the width we're animating
           backgroundColor: currentTheme.pink,
         }}
       />

@@ -95,7 +95,7 @@ export const Feed = (props) => {
       if (response.data.data.feeds?.length > 0) {
         setUserFeeds((prev) => prev?.filter((i) => i._id === props?.feed._id));
         setUserFeeds((prev) => [...prev, ...response.data.data.feeds]);
-
+        console.log("length: " + response.data.result);
         setFeedsLength(response.data.result);
       }
     } catch (error) {
